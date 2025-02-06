@@ -1,0 +1,14 @@
+/home/zack/Workshop/mojolog/rust-core/target/wasm32-unknown-unknown/release/deps/serde-6d703c78d66fc586.d: /home/zack/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.229/src/lib.rs /home/zack/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.229/src/integer128.rs /home/zack/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.229/src/private/mod.rs /home/zack/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.229/src/private/de.rs /home/zack/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.229/src/private/ser.rs /home/zack/Workshop/mojolog/rust-core/target/wasm32-unknown-unknown/release/build/serde-fde142e50f4d8d9c/out/private.rs
+
+/home/zack/Workshop/mojolog/rust-core/target/wasm32-unknown-unknown/release/deps/libserde-6d703c78d66fc586.rlib: /home/zack/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.229/src/lib.rs /home/zack/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.229/src/integer128.rs /home/zack/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.229/src/private/mod.rs /home/zack/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.229/src/private/de.rs /home/zack/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.229/src/private/ser.rs /home/zack/Workshop/mojolog/rust-core/target/wasm32-unknown-unknown/release/build/serde-fde142e50f4d8d9c/out/private.rs
+
+/home/zack/Workshop/mojolog/rust-core/target/wasm32-unknown-unknown/release/deps/libserde-6d703c78d66fc586.rmeta: /home/zack/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.229/src/lib.rs /home/zack/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.229/src/integer128.rs /home/zack/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.229/src/private/mod.rs /home/zack/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.229/src/private/de.rs /home/zack/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.229/src/private/ser.rs /home/zack/Workshop/mojolog/rust-core/target/wasm32-unknown-unknown/release/build/serde-fde142e50f4d8d9c/out/private.rs
+
+/home/zack/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.229/src/lib.rs:
+/home/zack/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.229/src/integer128.rs:
+/home/zack/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.229/src/private/mod.rs:
+/home/zack/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.229/src/private/de.rs:
+/home/zack/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.229/src/private/ser.rs:
+/home/zack/Workshop/mojolog/rust-core/target/wasm32-unknown-unknown/release/build/serde-fde142e50f4d8d9c/out/private.rs:
+
+# env-dep:OUT_DIR=/home/zack/Workshop/mojolog/rust-core/target/wasm32-unknown-unknown/release/build/serde-fde142e50f4d8d9c/out
