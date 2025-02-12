@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import confetti from 'canvas-confetti';
 import { ListFilter, Map as MapIcon, Sparkles, Zap } from 'lucide-react';
+import { AuthModal } from './components/AuthModal';
 import { DaySelector } from './components/DaySelector';
 import { DistancePill } from './components/DistancePill';
 import { Header } from './components/Header';
@@ -9,6 +10,8 @@ import { ReadinessModal } from './components/ReadinessModal';
 import { StopDetailModal } from './components/StopDetailModal';
 import { TimelineCard } from './components/TimelineCard';
 import { WeatherBanner } from './components/WeatherBanner';
+import { clearVaultSession, getVaultSession, VaultSession } from './auth/crypto';
+import { saveItineraryToEdge } from './auth/syncService';
 import { mockTripData } from './data/mockTrip';
 import { ItineraryStop, TransitLeg, TransitMode, TripDay } from './types/trip';
 import {
@@ -24,6 +27,8 @@ export function App() {
   const [activeDayIdx, setActiveDayIdx] = useState<number>(1); // Day 2 by default
   const [selectedStop, setSelectedStop] = useState<ItineraryStop | null>(null);
   const [isReadinessOpen, setIsReadinessOpen] = useState(false);
+  const [isAuthOpen, setIsAuthOpen] = useState(false);
+  const [vaultSession, setVaultSession] = useState<VaultSession | null>(getVaultSession());
   const [isWasmActive, setIsWasmActive] = useState(false);
   const [transitModes, setTransitModes] = useState<Record<string, TransitMode>>({});
   const [optimizedDays, setOptimizedDays] = useState<Record<string, boolean>>({});
@@ -35,6 +40,13 @@ export function App() {
       setIsWasmActive(ready && isRustReady());
     });
   }, []);
+
+  // Auto-sync itinerary to edge/local vault whenever trip or session updates
+  useEffect(() => {
+    if (vaultSession) {
+      saveItineraryToEdge(vaultSession.userId, trip);
+    }
+  }, [trip, vaultSession]);
 
   const activeDay: TripDay = trip.days[activeDayIdx] || trip.days[0];
 
@@ -177,7 +189,9 @@ export function App() {
         dates={trip.dates}
         readinessScore={trip.readinessScore}
         isWasmActive={isWasmActive}
+        activeSession={vaultSession}
         onOpenReadiness={() => setIsReadinessOpen(true)}
+        onOpenAuth={() => setIsAuthOpen(true)}
         onShare={handleShare}
       />
 
@@ -285,6 +299,19 @@ export function App() {
         stop={selectedStop}
         themeColor={activeDay.themeColor}
         onClose={() => setSelectedStop(null)}
+      />
+
+      <AuthModal
+        isOpen={isAuthOpen}
+        activeSession={vaultSession}
+        onLoginSuccess={(session) => {
+          setVaultSession(session);
+        }}
+        onLogout={() => {
+          clearVaultSession();
+          setVaultSession(null);
+        }}
+        onClose={() => setIsAuthOpen(false)}
       />
     </div>
   );
