@@ -31,6 +31,18 @@ All core mathematical, geospatial, and combinatorial optimization routines are w
   * Embedded between consecutive stops: `🚗 14 min · 4.8 km`.
   * Click to cycle modes: **Drive ➔ Walk ➔ Transit** with instant recalculation via Rust WASM.
   * Backtracking / long-leg alerts (`⚠️ Long Leg`).
+* **Flight Boarding Passes & Live Radar**:
+  * Airline boarding pass cards with departure/arrival IATA badges (`JFK ➔ HND`), flight numbers, times, terminals, and seats.
+  * Direct 1-tap live flight tracking via free **FlightRadar24** (`https://www.flightradar24.com/data/flights/{flightNumber}`).
+* **Dynamic Expense Tracker & Budgeting**:
+  * Client-side JavaScript reduction computing category-wise totals across 7 categories (Flights, Lodging, Food & Drinks, Transport, Activities, Shopping, Misc).
+  * Multi-colored visual distribution progress bar and transaction ledger.
+* **Portable Import / Export & Zero-Login Sharing**:
+  * **Method A (Universal Portable JSON)**: 1-click export to `${title}_itinerary.json` and drag-and-drop import with collision-free ID regeneration.
+  * **Method B (Read-Only Share Link)**: Cloudflare Worker edge route `GET /api/share/:token` providing instant, zero-login read-only web view.
+* **Cryptographic 12-Word Seed Auth (BIP-39)**:
+  * Zero SMS costs, zero third-party lock-in.
+  * Uses Web Crypto SHA-256 for public User ID derivation and Turso (libSQL) database persistence.
 * **Trip Readiness Hub**:
   * Circular progress gauge tracking passports, visas, bookings, and eSIM prerequisites.
 * **Zero Spreadsheet Clutter**:
@@ -45,27 +57,37 @@ mojolog/
 ├── rust-core/              # Native Rust engine compiled to WASM
 │   ├── Cargo.toml
 │   └── src/lib.rs          # TSP 2-opt optimizer, Haversine formula, comfort index
+├── worker/                 # Cloudflare Worker + Turso (libSQL) edge backend
+│   ├── src/index.ts        # Hono edge API (BIP-39 auth, itinerary upsert, read-only share)
+│   ├── schema.sql          # Turso database migration
+│   └── wrangler.toml       # Edge deployment configuration
 ├── src/
 │   ├── pkg/                # Generated WebAssembly binary & TypeScript glue
-│   │   ├── rust_core_bg.wasm
-│   │   ├── rust_core.js
-│   │   └── rust_core.d.ts
 │   ├── wasm/
 │   │   └── engine.ts       # Bridge loading WASM with automatic JS fallback
+│   ├── auth/
+│   │   ├── crypto.ts       # BIP-39 mnemonic generation & Web Crypto SHA-256
+│   │   └── syncService.ts  # Edge sync service with local vault fallback
 │   ├── types/
-│   │   └── trip.ts         # Trip, TripDay, DayWeather, ItineraryStop, TransitLeg
+│   │   └── trip.ts         # Unified Trip, Flight, Expense, DayWeather, Stop models
 │   ├── data/
-│   │   └── mockTrip.ts     # Tokyo 4-day trip with realistic coordinates & forecasts
+│   │   └── mockTrip.ts     # Tokyo 4-day trip with flights, expenses, & forecasts
+│   ├── utils/
+│   │   └── exportImport.ts # Method A (JSON export/import) & Method B (share token)
 │   ├── components/
-│   │   ├── Header.tsx           # App bar with Readiness Ring & Rust WASM badge
+│   │   ├── Header.tsx           # App bar with Vault status & Readiness Ring
 │   │   ├── DaySelector.tsx      # Day tabs with weather icons and temperature
-│   │   ├── WeatherBanner.tsx    # Detailed daily weather prediction & hourly stream
+│   │   ├── WeatherBanner.tsx    # Daily weather prediction & hourly forecast stream
 │   │   ├── TimelineCard.tsx     # Tactile stop card with category & ticket tags
 │   │   ├── DistancePill.tsx     # Inter-stop transit & distance connector
 │   │   ├── InteractiveMap.tsx   # SVG vector route map with numbered pins
+│   │   ├── FlightTracker.tsx    # Boarding pass cards & FlightRadar24 live links
+│   │   ├── ExpenseTracker.tsx   # Category-wise budget breakdown & spending log
+│   │   ├── ShareModal.tsx       # JSON file export/import & read-only link share
+│   │   ├── AuthModal.tsx        # 12-word cryptographic seed vault modal
 │   │   ├── ReadinessModal.tsx   # Trip readiness checklist drawer
 │   │   └── StopDetailModal.tsx  # Stop details with 1-tap navigation
-│   ├── App.tsx             # Master application component with dual-pane layout
+│   ├── App.tsx             # Master application component with tabbed navigation
 │   ├── main.tsx
 │   └── index.css           # Modern design system & responsive media queries
 ├── index.html
