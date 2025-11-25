@@ -2389,4 +2389,262 @@ body {
   line-height: 1.4;
 }
 
+/* User Flow & Account Lifecycle Styles */
+.vault-welcome-banner {
+  background: linear-gradient(135deg, #EFF6FF 0%, #F0FDF4 100%);
+  border-bottom: 1px solid #BFDBFE;
+  padding: 10px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.welcome-banner-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.welcome-banner-icon {
+  font-size: 18px;
+}
+
+.welcome-banner-title {
+  color: var(--brand-blue);
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.welcome-banner-desc {
+  color: var(--text-secondary);
+  font-size: 12.5px;
+}
+
+.welcome-banner-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.welcome-create-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 12px;
+  border-radius: var(--radius-full);
+  background-color: var(--brand-blue);
+  color: #FFFFFF;
+  border: none;
+  font-size: 11.5px;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 1px 3px rgba(37, 99, 235, 0.2);
+  transition: all 0.15s ease;
+}
+
+.welcome-create-btn:hover {
+  background-color: #1D4ED8;
+}
+
+.welcome-restore-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 12px;
+  border-radius: var(--radius-full);
+  background-color: #FFFFFF;
+  color: var(--text-primary);
+  border: 1px solid var(--border-strong);
+  font-size: 11.5px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.welcome-restore-btn:hover {
+  background-color: var(--bg-subtle);
+}
+
+.flow-intro-text {
+  font-size: 13px;
+  color: var(--text-secondary);
+  margin: 0 0 14px 0;
+  line-height: 1.45;
+}
+
+.backup-checkbox-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin: 14px 0 6px 0;
+  font-size: 12px;
+  color: var(--text-primary);
+  cursor: pointer;
+  user-select: none;
+}
+
+.backup-checkbox {
+  margin-top: 2px;
+  width: 16px;
+  height: 16px;
+  accent-color: var(--brand-blue);
+  cursor: pointer;
+}
+
+.restore-helper-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 4px;
+}
+
+.checksum-hint {
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.auth-success-banner {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background-color: #ECFDF5;
+  border: 1px solid #A7F3D0;
+  color: #065F46;
+  padding: 10px 14px;
+  border-radius: var(--radius-md);
+  font-size: 12px;
+  font-weight: 600;
+  margin-bottom: 12px;
+}
+
+/* Active Session & Danger Zone Styles */
+.vault-meta-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 14px 0;
+}
+
+.vault-meta-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--text-secondary);
+  background-color: var(--bg-subtle);
+  padding: 8px 12px;
+  border-radius: var(--radius-md);
+}
+
+.vault-meta-item.highlight-policy {
+  background-color: #FEF3C7;
+  color: #92400E;
+  font-weight: 600;
+  border: 1px solid #FDE68A;
+}
+
+.account-actions-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-top: 16px;
+}
+
+.danger-zone-strip {
+  border-top: 1px solid var(--border-light);
+  padding-top: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.danger-zone-title {
+  font-size: 12px;
+  font-weight: 800;
+  color: var(--brand-rose);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.delete-trigger-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background-color: #FEF2F2;
+  border: 1px solid #FECACA;
+  color: var(--brand-rose);
+  padding: 6px 12px;
+  border-radius: var(--radius-md);
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.delete-trigger-btn:hover {
+  background-color: #FEE2E2;
+  border-color: #FCA5A5;
+}
+
+.delete-account-confirm-box {
+  margin-top: 14px;
+  background-color: #FFF1F2;
+  border: 1px solid #FECDD3;
+  border-radius: var(--radius-lg);
+  padding: 18px;
+}
+
+.delete-warning-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.delete-warning-title {
+  font-size: 15px;
+  font-weight: 800;
+  color: #9F1239;
+  margin: 0 0 4px 0;
+}
+
+.delete-warning-desc {
+  font-size: 12px;
+  color: #881337;
+  line-height: 1.4;
+  margin: 0;
+}
+
+.confirm-type-row {
+  margin-top: 12px;
+}
+
+.delete-danger-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  background-color: #E11D48;
+  color: #FFFFFF;
+  border: none;
+  border-radius: var(--radius-md);
+  padding: 10px 14px;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.delete-danger-btn:hover:not(:disabled) {
+  background-color: #BE123C;
+}
+
+.delete-danger-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+
 
