@@ -1,0 +1,78 @@
+/* MojoLog Responsive Design & Utilities */
+
+/* 1. Tablet Viewport (<= 1024px) */
+@media (max-width: 1024px) {
+  .main-workspace {
+    grid-template-columns: 1fr;
+    padding: 16px 14px 40px;
+    gap: 16px;
+  }
+
+  .mobile-view-tabs {
+    display: flex;
+    gap: 10px;
+  }
+
+  .map-pane {
+    position: static;
+  }
+
+  .mobile-hidden {
+    display: none !important;
+  }
+}
+
+/* 2. Mobile Viewport (<= 640px) */
+@media (max-width: 640px) {
+  .header-container {
+    padding: 10px 14px;
+  }
+
+  .trip-title {
+    font-size: 15px;
+  }
+
+  .weather-metrics {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .metric-cell {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .flights-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .pass-route-row {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .route-graphic {
+    width: 100%;
+    margin: 8px 0;
+  }
+
+  .diagnostics-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  .welcome-banner-actions {
+    width: 100%;
+    justify-content: flex-start;
+    margin-top: 6px;
+  }
+
+  .nav-tabs-group {
+    overflow-x: auto;
+  }
+}
+
+/* Utility Accent Classes */
+.text-amber { color: #D97706; }
+.text-emerald { color: #059669; }
+.text-blue { color: #2563EB; }
+.text-slate { color: #64748B; }
