@@ -1,10 +1,11 @@
 import { generateMnemonic, validateMnemonic } from '@scure/bip39';
 import { wordlist } from '@scure/bip39/wordlists/english.js';
+import { AUTH_CONFIG, RETENTION_POLICY, STORAGE_KEYS } from '../config/constants';
 
-const SESSION_KEY = 'mojolog_vault_session';
+const SESSION_KEY = STORAGE_KEYS.VAULT_SESSION;
 
-// 3-Month Inactivity Retention Policy: 90 days in milliseconds
-export const INACTIVITY_PRUNE_MS = 90 * 24 * 60 * 60 * 1000;
+// Re-export for backward compatibility
+export const INACTIVITY_PRUNE_MS = RETENTION_POLICY.INACTIVITY_PRUNE_MS;
 
 export interface VaultSession {
   userId: string;
@@ -18,7 +19,7 @@ export interface VaultSession {
  */
 export function generateVaultPhrase(): string {
   // 128 bits entropy = 12 words
-  return generateMnemonic(wordlist, 128);
+  return generateMnemonic(wordlist, AUTH_CONFIG.ENTROPY_BITS);
 }
 
 /**
@@ -118,7 +119,7 @@ export function pruneInactiveLocalData(): number {
       const key = localStorage.key(i);
       if (!key) continue;
 
-      if (key.startsWith('mojolog_user_')) {
+      if (key.startsWith(STORAGE_KEYS.USER_PREFIX)) {
         const item = localStorage.getItem(key);
         if (item) {
           try {
@@ -152,13 +153,13 @@ export function clearVaultSession(): void {
  */
 export function deleteLocalAccount(userId: string): void {
   clearVaultSession();
-  localStorage.removeItem(`mojolog_user_${userId}`);
+  localStorage.removeItem(`${STORAGE_KEYS.USER_PREFIX}${userId}`);
   
   // Remove all cached itineraries associated with this app/vault
   const keysToRemove: string[] = [];
   for (let i = 0; i < localStorage.length; i++) {
     const key = localStorage.key(i);
-    if (key && (key.startsWith('mojolog_trip_') || key.startsWith(`mojolog_sync_${userId}`))) {
+    if (key && (key.startsWith(STORAGE_KEYS.TRIP_PREFIX) || key.startsWith(`mojolog_sync_${userId}`))) {
       keysToRemove.push(key);
     }
   }

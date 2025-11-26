@@ -1,5 +1,6 @@
 import { Trip } from '../types/trip';
 import { deleteLocalAccount, pruneInactiveLocalData } from './crypto';
+import { STORAGE_KEYS } from '../config/constants';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || '';
 
@@ -25,7 +26,7 @@ export function initAccountLifecycle(): void {
 export async function registerAccountOnEdge(mnemonic: string, userId: string): Promise<boolean> {
   if (!API_BASE_URL) {
     // Local mock fallback
-    localStorage.setItem(`mojolog_user_${userId}`, JSON.stringify({ userId, createdAt: Date.now(), lastAccessedAt: Date.now() }));
+    localStorage.setItem(`${STORAGE_KEYS.USER_PREFIX}${userId}`, JSON.stringify({ userId, createdAt: Date.now(), lastAccessedAt: Date.now() }));
     return true;
   }
 
@@ -92,7 +93,7 @@ export async function deleteAccountOnEdge(userId: string, phrase?: string): Prom
  */
 export async function saveItineraryToEdge(userId: string, trip: Trip): Promise<SyncResult> {
   // Always persist to local storage for instant offline access
-  localStorage.setItem(`mojolog_trip_${trip.id}`, JSON.stringify(trip));
+  localStorage.setItem(`${STORAGE_KEYS.TRIP_PREFIX}${trip.id}`, JSON.stringify(trip));
 
   if (!API_BASE_URL) {
     return { success: true, message: 'Saved to local encrypted vault' };
