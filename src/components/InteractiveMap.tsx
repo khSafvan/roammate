@@ -13,6 +13,7 @@ import {
 import { ItineraryStop, TripDay } from '../types/trip';
 import { computeDistanceKm } from '../wasm/engine';
 import { downloadGpx, formatGpxCoordinate, generateDayGpx } from '../utils/gpx';
+import { MAP_CONFIG, TRANSIT_CONFIG, UI_CONFIG } from '../config/constants';
 
 interface InteractiveMapProps {
   day: TripDay;
@@ -20,9 +21,6 @@ interface InteractiveMapProps {
   onOptimizeDay: () => void;
   isOptimized: boolean;
 }
-
-// Terraink Minimal Vector Cartographic Engine (OpenFreeMap Positron - Zero API Keys Required)
-const TERRAINK_VECTOR_STYLE = 'https://tiles.openfreemap.org/styles/positron';
 
 export const InteractiveMap: React.FC<InteractiveMapProps> = ({
   day,
@@ -54,7 +52,7 @@ export const InteractiveMap: React.FC<InteractiveMapProps> = ({
         day.stops[i + 1].coordinates.longitude
       );
     }
-    return Number((dist * 1.25).toFixed(1));
+    return Number((dist * TRANSIT_CONFIG.ROAD_WINDING_FACTOR).toFixed(1));
   }, [day.stops]);
 
   const activeIndex = day.stops.findIndex((s) => s.id === selectedStopId);
@@ -72,7 +70,7 @@ export const InteractiveMap: React.FC<InteractiveMapProps> = ({
         zoom: 14,
         pitch: 0,
         bearing: 0,
-        duration: immediate ? 0 : 500,
+        duration: immediate ? 0 : UI_CONFIG.MAP_FLY_DURATION_MS,
         essential: true,
       });
       return;
@@ -84,11 +82,11 @@ export const InteractiveMap: React.FC<InteractiveMapProps> = ({
     });
 
     map.fitBounds(bounds, {
-      padding: { top: 45, bottom: 45, left: 45, right: 45 },
+      padding: MAP_CONFIG.PADDING,
       maxZoom: 15,
       pitch: 0,
       bearing: 0,
-      duration: immediate ? 0 : 700,
+      duration: immediate ? 0 : UI_CONFIG.MAP_FIT_DURATION_MS,
     });
   }, [day.stops]);
 
@@ -210,7 +208,7 @@ export const InteractiveMap: React.FC<InteractiveMapProps> = ({
           zoom: Math.max(map.getZoom(), 14.5),
           pitch: 0,
           bearing: 0,
-          duration: 500,
+          duration: UI_CONFIG.MAP_FLY_DURATION_MS,
         });
       });
 
@@ -230,13 +228,13 @@ export const InteractiveMap: React.FC<InteractiveMapProps> = ({
       const initialCenter: [number, number] =
         day.stops.length > 0
           ? [day.stops[0].coordinates.longitude, day.stops[0].coordinates.latitude]
-          : [139.7005, 35.6895]; // Default center
+          : [MAP_CONFIG.DEFAULT_CENTER.longitude, MAP_CONFIG.DEFAULT_CENTER.latitude];
 
       const map = new MapLibreMap({
         container: mapContainerRef.current,
-        style: TERRAINK_VECTOR_STYLE,
+        style: MAP_CONFIG.TILE_STYLE_URL,
         center: initialCenter,
-        zoom: 12.5,
+        zoom: MAP_CONFIG.DEFAULT_ZOOM,
         // Pure 2D Planar Configuration - All 3D tilt & rotation disabled
         pitch: 0,
         maxPitch: 0,
@@ -319,7 +317,7 @@ export const InteractiveMap: React.FC<InteractiveMapProps> = ({
       zoom: 15,
       pitch: 0,
       bearing: 0,
-      duration: 500,
+      duration: UI_CONFIG.MAP_FLY_DURATION_MS,
     });
   };
 

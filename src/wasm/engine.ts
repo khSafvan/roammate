@@ -6,6 +6,7 @@ import initWasm, {
   wasm_weather_comfort_label,
 } from '../pkg/rust_core.js';
 import wasmUrl from '../pkg/rust_core_bg.wasm?url';
+import { TRANSIT_CONFIG } from '../config/constants';
 
 export interface OptimizationResult {
   optimized_ids: string[];
@@ -52,7 +53,7 @@ export function computeDistanceKm(lat1: number, lon1: number, lat2: number, lon2
     return wasm_haversine_distance_km(lat1, lon1, lat2, lon2);
   }
   // JS fallback
-  const R = 6371;
+  const R = TRANSIT_CONFIG.EARTH_RADIUS_KM;
   const toRad = (d: number) => (d * Math.PI) / 180;
   const dLat = toRad(lat2 - lat1);
   const dLon = toRad(lon2 - lon1);
@@ -70,16 +71,10 @@ export function estimateDurationMins(distanceKm: number, mode: 'drive' | 'walk' 
   if (isWasmLoaded) {
     return wasm_estimate_duration_minutes(distanceKm, mode);
   }
-  const roadDist = distanceKm * 1.25;
-  switch (mode) {
-    case 'walk':
-      return Math.max(3, Math.round((roadDist / 4.5) * 60));
-    case 'transit':
-      return Math.max(6, Math.round((roadDist / 30) * 60 + 5));
-    case 'drive':
-    default:
-      return Math.max(4, Math.round((roadDist / 24) * 60 + 2));
-  }
+  const roadDist = distanceKm * TRANSIT_CONFIG.ROAD_WINDING_FACTOR;
+  const cfg = TRANSIT_CONFIG.MODES[mode] || TRANSIT_CONFIG.MODES.drive;
+  const rawMins = (roadDist / cfg.speedKmH) * 60 + cfg.bufferMins;
+  return Math.max(cfg.minMins, Math.round(rawMins));
 }
 
 /**

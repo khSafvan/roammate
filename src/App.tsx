@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import confetti from 'canvas-confetti';
 import {
   CalendarDays,
@@ -23,17 +23,15 @@ import { ShareModal } from './components/ShareModal';
 import { StopDetailModal } from './components/StopDetailModal';
 import { TimelineCard } from './components/TimelineCard';
 import { WeatherBanner } from './components/WeatherBanner';
-import { clearVaultSession, getVaultSession, VaultSession } from './auth/crypto';
-import { initAccountLifecycle, saveItineraryToEdge } from './auth/syncService';
+import { clearVaultSession } from './auth/crypto';
 import { mockTripData } from './data/mockTrip';
-import { Expense, Flight, ItineraryStop, TransitLeg, TransitMode, Trip, TripDay } from './types/trip';
+import { Expense, Flight, ItineraryStop, Trip, TripDay } from './types/trip';
 import {
-  computeDistanceKm,
-  estimateDurationMins,
-  initRustCore,
-  isRustReady,
-  optimizeRouteTspWasm,
-} from './wasm/engine';
+  useRustCore,
+  useTransitLegs,
+  useTripOptimization,
+  useVault,
+} from './hooks';
 
 export function App() {
   const [trip, setTrip] = useState<Trip>(mockTripData);
@@ -43,143 +41,20 @@ export function App() {
   const [isReadinessOpen, setIsReadinessOpen] = useState(false);
   const [isAuthOpen, setIsAuthOpen] = useState(false);
   const [isShareModalOpen, setIsShareModalOpen] = useState(false);
-  const [vaultSession, setVaultSession] = useState<VaultSession | null>(getVaultSession());
-  const [isWasmActive, setIsWasmActive] = useState(false);
-  const [transitModes, setTransitModes] = useState<Record<string, TransitMode>>({});
-  const [optimizedDays, setOptimizedDays] = useState<Record<string, boolean>>({});
   const [mobileView, setMobileView] = useState<'timeline' | 'map'>('timeline');
-  const [isReadOnly, setIsReadOnly] = useState(false);
 
-  // Initialize lifecycle & Rust WebAssembly module on mount
-  useEffect(() => {
-    // 1. Sanitize route: If browser opened at /error, clean URL to / so user never lands in error state
-    if (window.location.pathname === '/error') {
-      window.history.replaceState({}, '', '/');
-    }
-
-    // 2. Initialize 3-month account inactivity auto-pruning
-    initAccountLifecycle();
-
-    // 3. Initialize Rust WebAssembly module
-    initRustCore().then((ready) => {
-      setIsWasmActive(ready && isRustReady());
-    });
-
-    // 4. Check if viewing via shared read-only link (?share=...)
-    const params = new URLSearchParams(window.location.search);
-    if (params.get('share')) {
-      setIsReadOnly(true);
-    }
-  }, []);
-
-  // Auto-sync itinerary to edge/local vault whenever trip or session updates
-  useEffect(() => {
-    if (vaultSession && !isReadOnly) {
-      saveItineraryToEdge(vaultSession.userId, trip);
-    }
-  }, [trip, vaultSession, isReadOnly]);
-
-  const handleDeleteAccount = useCallback(() => {
-    setVaultSession(null);
-    setTrip(mockTripData);
-    confetti({ particleCount: 30, spread: 40 });
-  }, []);
+  // Modular custom hooks for vault lifecycle, WASM readiness, transit calculation, and route optimization
+  const { vaultSession, setVaultSession, isReadOnly, handleDeleteAccount, exitReadOnly } =
+    useVault(trip, setTrip);
+  const isWasmActive = useRustCore();
 
   const activeDay: TripDay = trip.days[activeDayIdx] || trip.days[0];
-
-  // Compute transit legs between consecutive stops using Rust WASM
-  const transitLegs = useMemo(() => {
-    const legs: TransitLeg[] = [];
-    const stops = activeDay.stops;
-    for (let i = 0; i < stops.length - 1; i++) {
-      const from = stops[i];
-      const to = stops[i + 1];
-      const legKey = `${from.id}->${to.id}`;
-      const mode = transitModes[legKey] || 'drive';
-
-      const dist = computeDistanceKm(
-        from.coordinates.latitude,
-        from.coordinates.longitude,
-        to.coordinates.latitude,
-        to.coordinates.longitude
-      );
-      const duration = estimateDurationMins(dist, mode);
-
-      legs.push({
-        fromStopId: from.id,
-        toStopId: to.id,
-        mode,
-        distanceKm: dist,
-        durationMinutes: duration,
-        isOutlier: duration > 45 || dist > 20,
-      });
-    }
-    return legs;
-  }, [activeDay.stops, transitModes]);
-
-  // Toggle transport mode on click (drive -> walk -> transit -> drive)
-  const handleToggleMode = useCallback((leg: TransitLeg) => {
-    const modes: TransitMode[] = ['drive', 'walk', 'transit'];
-    const currIdx = modes.indexOf(leg.mode);
-    const nextMode = modes[(currIdx + 1) % modes.length];
-    const key = `${leg.fromStopId}->${leg.toStopId}`;
-
-    setTransitModes((prev) => ({
-      ...prev,
-      [key]: nextMode,
-    }));
-  }, []);
-
-  // 1-Click Traveling Salesperson Day Route Optimizer powered by Rust WASM
-  const handleOptimizeDay = useCallback(() => {
-    const stopsForWasm = activeDay.stops.map((s) => ({
-      id: s.id,
-      latitude: s.coordinates.latitude,
-      longitude: s.coordinates.longitude,
-    }));
-
-    const result = optimizeRouteTspWasm(stopsForWasm, 'drive');
-
-    if (result.optimized_ids && result.optimized_ids.length > 0) {
-      const idToStopMap = new Map(activeDay.stops.map((s) => [s.id, s]));
-      const reorderedStops: ItineraryStop[] = result.optimized_ids
-        .map((id, index) => {
-          const original = idToStopMap.get(id);
-          if (!original) return null;
-          return {
-            ...original,
-            orderIndex: index + 1,
-          };
-        })
-        .filter((s): s is ItineraryStop => s !== null);
-
-      setTrip((prev) => {
-        const updatedDays = [...prev.days];
-        updatedDays[activeDayIdx] = {
-          ...updatedDays[activeDayIdx],
-          stops: reorderedStops,
-        };
-        return {
-          ...prev,
-          days: updatedDays,
-        };
-      });
-
-      setOptimizedDays((prev) => ({
-        ...prev,
-        [activeDay.id]: true,
-      }));
-
-      // Fire celebration confetti
-      if (result.minutes_saved > 0) {
-        confetti({
-          particleCount: 80,
-          spread: 70,
-          origin: { y: 0.6 },
-        });
-      }
-    }
-  }, [activeDay, activeDayIdx]);
+  const { transitLegs, handleToggleMode } = useTransitLegs(activeDay.stops);
+  const { isDayOptimized, handleOptimizeDay } = useTripOptimization(
+    activeDay,
+    activeDayIdx,
+    setTrip
+  );
 
   // Flight Handlers
   const handleAddFlight = useCallback((flight: Flight) => {
@@ -238,21 +113,13 @@ export function App() {
     });
   }, []);
 
-  const isDayOptimized = !!optimizedDays[activeDay.id];
-
   return (
     <div className="app-shell">
       {/* Read-Only Notice Banner */}
       {isReadOnly && (
         <div className="read-only-banner">
           <span>👀 Viewing shared itinerary in read-only mode</span>
-          <button
-            className="read-only-exit-btn"
-            onClick={() => {
-              window.history.replaceState({}, '', window.location.pathname);
-              setIsReadOnly(false);
-            }}
-          >
+          <button className="read-only-exit-btn" onClick={exitReadOnly}>
             Exit Preview
           </button>
         </div>
