@@ -19,10 +19,10 @@ const getModeIcon = (mode: TransitMode) => {
   }
 };
 
-export const DistancePill: React.FC<DistancePillProps> = ({
+export const DistancePill = React.memo<DistancePillProps>(function DistancePill({
   leg,
   onToggleMode,
-}) => {
+}) {
   const isOutlier = leg.isOutlier;
 
   const formatDuration = (mins: number) => {
@@ -59,4 +59,4 @@ export const DistancePill: React.FC<DistancePillProps> = ({
       <div className="track-line" />
     </div>
   );
-};
+});
