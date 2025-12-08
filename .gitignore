@@ -25,9 +25,13 @@ dist-ssr
 
 # Rust build artifacts
 rust-core/target/
+packages/rust-core/target/
 src/pkg/package.json
+apps/web/src/pkg/package.json
 
-# Worker artifacts
-worker/node_modules/
+# Workspace build artifacts
+apps/web/dist/
+apps/api/node_modules/
 .wrangler/
 worker/.wrangler/
+apps/api/.wrangler/
