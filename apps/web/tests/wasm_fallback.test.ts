@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import {
   computeDistanceKm,
+  computeExpenseBreakdownWasm,
+  computeTransitLegsWasm,
   estimateDurationMins,
   getWeatherComfortLabel,
   optimizeRouteTspWasm,
@@ -91,6 +93,60 @@ describe('WASM Engine & JavaScript Fallbacks', () => {
       expect(result.optimized_ids[0]).toBe('start');
       expect(result.optimized_ids[result.optimized_ids.length - 1]).toBe('end');
       expect(result.optimized_ids).toHaveLength(4);
+    });
+  });
+
+  describe('computeTransitLegsWasm (Batch Transit)', () => {
+    it('computes legs array for consecutive stops', () => {
+      const stops = [
+        {
+          id: 's1',
+          orderIndex: 1,
+          title: 'Stop 1',
+          subtitle: '',
+          category: 'sight' as const,
+          startTime: '10:00',
+          durationMinutes: 60,
+          coordinates: { latitude: 35.68, longitude: 139.7 },
+          address: 'Tokyo',
+        },
+        {
+          id: 's2',
+          orderIndex: 2,
+          title: 'Stop 2',
+          subtitle: '',
+          category: 'dining' as const,
+          startTime: '11:30',
+          durationMinutes: 45,
+          coordinates: { latitude: 35.70, longitude: 139.72 },
+          address: 'Tokyo',
+        },
+      ];
+
+      const legs = computeTransitLegsWasm(stops, { 's1->s2': 'walk' });
+      expect(legs).toHaveLength(1);
+      expect(legs[0].fromStopId).toBe('s1');
+      expect(legs[0].toStopId).toBe('s2');
+      expect(legs[0].mode).toBe('walk');
+      expect(legs[0].distanceKm).toBeGreaterThan(0);
+      expect(legs[0].durationMinutes).toBeGreaterThanOrEqual(3);
+    });
+  });
+
+  describe('computeExpenseBreakdownWasm', () => {
+    it('accurately groups categories and sums total spending', () => {
+      const expenses = [
+        { id: 'e1', date: '2026-10-14', category: 'Flights' as const, amount: 800, currency: 'USD', paidBy: 'Me' },
+        { id: 'e2', date: '2026-10-14', category: 'Flights' as const, amount: 200, currency: 'USD', paidBy: 'Me' },
+        { id: 'e3', date: '2026-10-15', category: 'Food & Drinks' as const, amount: 150, currency: 'USD', paidBy: 'Me' },
+      ];
+
+      const res = computeExpenseBreakdownWasm(expenses);
+      expect(res.totalSpent).toBe(1150);
+      expect(res.categoryTotals['Flights']).toBe(1000);
+      expect(res.categoryTotals['Food & Drinks']).toBe(150);
+      expect(res.highestCategory).toBe('Flights');
+      expect(res.expenseCount).toBe(3);
     });
   });
 });
