@@ -1,6 +1,6 @@
 import { useCallback, useMemo, useState } from 'react';
 import { ItineraryStop, TransitLeg, TransitMode } from '../types/trip';
-import { computeDistanceKm, estimateDurationMins } from '../wasm/engine';
+import { computeTransitLegsWasm } from '../wasm/engine';
 
 export interface UseTransitLegsReturn {
   transitLegs: TransitLeg[];
@@ -15,33 +15,9 @@ export interface UseTransitLegsReturn {
 export function useTransitLegs(stops: ItineraryStop[]): UseTransitLegsReturn {
   const [transitModes, setTransitModes] = useState<Record<string, TransitMode>>({});
 
-  // Compute transit legs between consecutive stops using Rust WASM (with JS fallback)
+  // Compute transit legs between consecutive stops in high-performance batch via Rust WASM
   const transitLegs = useMemo(() => {
-    const legs: TransitLeg[] = [];
-    for (let i = 0; i < stops.length - 1; i++) {
-      const from = stops[i];
-      const to = stops[i + 1];
-      const legKey = `${from.id}->${to.id}`;
-      const mode = transitModes[legKey] || 'drive';
-
-      const dist = computeDistanceKm(
-        from.coordinates.latitude,
-        from.coordinates.longitude,
-        to.coordinates.latitude,
-        to.coordinates.longitude
-      );
-      const duration = estimateDurationMins(dist, mode);
-
-      legs.push({
-        fromStopId: from.id,
-        toStopId: to.id,
-        mode,
-        distanceKm: dist,
-        durationMinutes: duration,
-        isOutlier: duration > 45 || dist > 20,
-      });
-    }
-    return legs;
+    return computeTransitLegsWasm(stops, transitModes);
   }, [stops, transitModes]);
 
   // Toggle transport mode on click (drive -> walk -> transit -> drive)
