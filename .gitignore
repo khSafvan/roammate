@@ -35,3 +35,12 @@ apps/api/node_modules/
 .wrangler/
 worker/.wrangler/
 apps/api/.wrangler/
+
+# Environment & Secret credentials
+.env
+.env.*
+!.env.sample
+!.env.*.sample
+.dev.vars
+apps/api/.dev.vars
+
