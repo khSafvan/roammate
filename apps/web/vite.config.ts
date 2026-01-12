@@ -16,4 +16,15 @@ export default defineConfig({
   optimizeDeps: {
     exclude: ['maplibre-gl'],
   },
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          'vendor-maplibre': ['maplibre-gl'],
+          'vendor-react': ['react', 'react-dom'],
+          'vendor-crypto': ['@scure/bip39'],
+        },
+      },
+    },
+  },
 });
