@@ -1,7 +1,13 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import confetti from 'canvas-confetti';
 import { getVaultSession, VaultSession } from '../auth/crypto';
-import { initAccountLifecycle, saveItineraryToEdge } from '../auth/syncService';
+import {
+  fetchItinerariesFromEdge,
+  fetchSharedTrip,
+  initAccountLifecycle,
+  loadLocalTrip,
+  saveItineraryToEdge,
+} from '../auth/syncService';
 import { Trip } from '../types/trip';
 import { mockTripData } from '../data/mockTrip';
 
@@ -24,8 +30,9 @@ export function useVault(
 ): UseVaultReturn {
   const [vaultSession, setVaultSession] = useState<VaultSession | null>(getVaultSession());
   const [isReadOnly, setIsReadOnly] = useState(false);
+  const isHydratedRef = useRef(false);
 
-  // Initialize lifecycle & URL routing on mount
+  // Initialize lifecycle, hydration & URL routing on mount
   useEffect(() => {
     // 1. Sanitize route: If browser opened at /error, clean URL to / so user never lands in error state
     if (window.location.pathname === '/error') {
@@ -37,13 +44,51 @@ export function useVault(
 
     // 3. Check if viewing via shared read-only link (?share=...)
     const params = new URLSearchParams(window.location.search);
-    if (params.get('share')) {
+    const shareToken = params.get('share');
+    if (shareToken) {
       setIsReadOnly(true);
+      fetchSharedTrip(shareToken).then((shared) => {
+        if (shared) {
+          setTrip(shared);
+        }
+        isHydratedRef.current = true;
+      });
+      return;
     }
-  }, []);
 
-  // Auto-sync itinerary to edge/local vault whenever trip or session updates
+    // 4. Safe hydration: load local cached trip or remote itinerary from Edge DB
+    const activeSession = getVaultSession();
+    const local = loadLocalTrip();
+    if (local) {
+      setTrip(local);
+    }
+
+    if (activeSession) {
+      fetchItinerariesFromEdge(activeSession.userId).then((itins) => {
+        if (itins && itins.length > 0) {
+          setTrip(itins[0]);
+        }
+        isHydratedRef.current = true;
+      });
+    } else {
+      isHydratedRef.current = true;
+    }
+  }, [setTrip]);
+
+  // Handle account restoration / login: fetch user's saved itineraries
   useEffect(() => {
+    if (vaultSession && !isReadOnly && isHydratedRef.current) {
+      fetchItinerariesFromEdge(vaultSession.userId).then((itins) => {
+        if (itins && itins.length > 0) {
+          setTrip(itins[0]);
+        }
+      });
+    }
+  }, [vaultSession?.userId]);
+
+  // Auto-sync itinerary to edge/local vault ONLY after initial hydration completes
+  useEffect(() => {
+    if (!isHydratedRef.current) return;
     if (vaultSession && !isReadOnly) {
       saveItineraryToEdge(vaultSession.userId, trip);
     }
@@ -60,7 +105,9 @@ export function useVault(
   const exitReadOnly = useCallback(() => {
     window.history.replaceState({}, '', window.location.pathname);
     setIsReadOnly(false);
-  }, []);
+    const local = loadLocalTrip();
+    setTrip(local || mockTripData);
+  }, [setTrip]);
 
   return {
     vaultSession,

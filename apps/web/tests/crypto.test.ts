@@ -112,6 +112,39 @@ describe('Cryptographic Vault & Retention Policy', () => {
       expect(localStorage.getItem(`${STORAGE_KEYS.USER_PREFIX}expired_user`)).toBeNull();
       expect(localStorage.getItem(`${STORAGE_KEYS.USER_PREFIX}active_user`)).not.toBeNull();
     });
+
+    it('correctly prunes multiple consecutive expired accounts and trips without skipping any', () => {
+      const expiredTime = Date.now() - (RETENTION_POLICY.INACTIVITY_PRUNE_MS + 5000);
+
+      localStorage.setItem(
+        `${STORAGE_KEYS.USER_PREFIX}exp_1`,
+        JSON.stringify({ userId: 'exp_1', lastAccessedAt: expiredTime })
+      );
+      localStorage.setItem(
+        `${STORAGE_KEYS.USER_PREFIX}exp_2`,
+        JSON.stringify({ userId: 'exp_2', lastAccessedAt: expiredTime })
+      );
+      localStorage.setItem(
+        `${STORAGE_KEYS.USER_PREFIX}exp_3`,
+        JSON.stringify({ userId: 'exp_3', lastAccessedAt: expiredTime })
+      );
+      localStorage.setItem(
+        `${STORAGE_KEYS.TRIP_PREFIX}trip_exp`,
+        JSON.stringify({ id: 'trip_exp', lastAccessedAt: expiredTime })
+      );
+      localStorage.setItem(
+        `${STORAGE_KEYS.USER_PREFIX}active_keeper`,
+        JSON.stringify({ userId: 'active_keeper', lastAccessedAt: Date.now() })
+      );
+
+      const pruned = pruneInactiveLocalData();
+      expect(pruned).toBe(4);
+      expect(localStorage.getItem(`${STORAGE_KEYS.USER_PREFIX}exp_1`)).toBeNull();
+      expect(localStorage.getItem(`${STORAGE_KEYS.USER_PREFIX}exp_2`)).toBeNull();
+      expect(localStorage.getItem(`${STORAGE_KEYS.USER_PREFIX}exp_3`)).toBeNull();
+      expect(localStorage.getItem(`${STORAGE_KEYS.TRIP_PREFIX}trip_exp`)).toBeNull();
+      expect(localStorage.getItem(`${STORAGE_KEYS.USER_PREFIX}active_keeper`)).not.toBeNull();
+    });
   });
 
   describe('deleteLocalAccount', () => {
