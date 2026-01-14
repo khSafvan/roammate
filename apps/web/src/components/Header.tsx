@@ -35,7 +35,7 @@ export const Header: React.FC<HeaderProps> = ({
             <span className="brand-name">MojoLog</span>
             {isWasmActive && (
               <span className="wasm-badge" title="Core math & route optimization running on WebAssembly compiled from Rust">
-                <Cpu size={12} />
+                <Cpu size={12} strokeWidth={1.75} />
                 <span>Rust WASM</span>
               </span>
             )}
@@ -44,12 +44,12 @@ export const Header: React.FC<HeaderProps> = ({
             <h1 className="trip-title">{title}</h1>
             <div className="trip-submeta">
               <span className="meta-pill">
-                <MapPin size={13} />
+                <MapPin size={13} strokeWidth={1.75} />
                 <span>{destination}</span>
               </span>
               <span className="meta-dot">•</span>
               <span className="meta-pill">
-                <Calendar size={13} />
+                <Calendar size={13} strokeWidth={1.75} />
                 <span>{dates}</span>
               </span>
             </div>
@@ -58,7 +58,7 @@ export const Header: React.FC<HeaderProps> = ({
 
         {/* Right: Vault Auth, Readiness Score & Action Buttons */}
         <div className="header-actions">
-          {/* Cryptographic 12-Word Vault Button */}
+          {/* Cryptographic 12-Word Vault Button - Calm Utility */}
           <button
             className={`vault-auth-btn ${activeSession ? 'authenticated' : ''}`}
             onClick={onOpenAuth}
@@ -66,12 +66,12 @@ export const Header: React.FC<HeaderProps> = ({
           >
             {activeSession ? (
               <>
-                <Lock size={14} className="text-emerald" />
+                <Lock size={13} strokeWidth={1.75} className="text-emerald" />
                 <span className="vault-btn-text">{formatAccountId(activeSession.userId)}</span>
               </>
             ) : (
               <>
-                <Key size={14} className="text-amber" />
+                <Key size={13} strokeWidth={1.75} className="text-amber" />
                 <span className="vault-btn-text">Connect Vault</span>
               </>
             )}
@@ -83,14 +83,14 @@ export const Header: React.FC<HeaderProps> = ({
             title="View Trip Readiness Checklist"
           >
             <div className="readiness-badge">
-              <CheckCircle2 size={16} className="text-emerald" />
-              <span className="readiness-val">{readinessScore}%</span>
+              <CheckCircle2 size={15} strokeWidth={1.75} className="text-emerald" />
+              <span className="readiness-val tabular">{readinessScore}%</span>
             </div>
             <span className="readiness-label">Readiness</span>
           </button>
 
           <button className="icon-btn" onClick={onShare} title="Share One-Link Itinerary">
-            <Share2 size={18} />
+            <Share2 size={16} strokeWidth={1.75} />
           </button>
         </div>
       </div>

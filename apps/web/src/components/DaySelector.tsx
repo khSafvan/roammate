@@ -8,18 +8,18 @@ interface DaySelectorProps {
   onSelectDay: (index: number) => void;
 }
 
-const getWeatherIcon = (condition: WeatherCondition, size = 14) => {
+const getWeatherIcon = (condition: WeatherCondition, size = 13) => {
   switch (condition) {
     case 'sunny':
     case 'clear':
-      return <Sun size={size} className="text-amber" />;
+      return <Sun size={size} strokeWidth={1.75} className="text-amber" />;
     case 'partly_cloudy':
-      return <CloudSun size={size} className="text-amber" />;
+      return <CloudSun size={size} strokeWidth={1.75} className="text-amber" />;
     case 'rainy':
-      return <CloudRain size={size} className="text-blue" />;
+      return <CloudRain size={size} strokeWidth={1.75} className="text-blue" />;
     case 'cloudy':
     default:
-      return <Cloud size={size} className="text-slate" />;
+      return <Cloud size={size} strokeWidth={1.75} className="text-slate" />;
   }
 };
 
@@ -37,10 +37,6 @@ export const DaySelector = React.memo<DaySelectorProps>(function DaySelector({
             <button
               key={day.id}
               className={`day-tab-pill ${isActive ? 'active' : ''}`}
-              style={{
-                borderColor: isActive ? day.themeColor : undefined,
-                boxShadow: isActive ? `0 0 0 1px ${day.themeColor}33` : undefined,
-              }}
               onClick={() => onSelectDay(idx)}
             >
               <span
