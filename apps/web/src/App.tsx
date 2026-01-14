@@ -50,7 +50,7 @@ export function App() {
   const isWasmActive = useRustCore();
 
   const activeDay: TripDay = trip?.days?.[activeDayIdx] || trip?.days?.[0] || mockTripData.days[0];
-  const { transitLegs, handleToggleMode } = useTransitLegs(activeDay?.stops || []);
+  const { transitLegs, transitModes, handleToggleMode } = useTransitLegs(activeDay?.stops || []);
   const { isDayOptimized, handleOptimizeDay } = useTripOptimization(
     activeDay,
     activeDayIdx,
@@ -296,6 +296,7 @@ export function App() {
                 onSelectStop={setSelectedStop}
                 onOptimizeDay={handleOptimizeDay}
                 isOptimized={isDayOptimized}
+                transitModes={transitModes}
               />
             </section>
           </main>
