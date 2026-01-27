@@ -1,10 +1,10 @@
-/* MojoLog Map Styles: MapLibre GL Container, Terraink GPX Waypoints & Floating Dock */
+/* MojoLog Map Styles: Soft Utility MapLibre GL Container, Terralink Waypoints & Floating Dock */
 
 .map-view-card {
   background-color: var(--bg-card);
   border: 1px solid var(--border-light);
-  border-radius: var(--radius-xl);
-  padding: 16px;
+  border-radius: var(--radius-card);
+  padding: 18px;
   box-shadow: var(--shadow-card);
 }
 
@@ -12,7 +12,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 12px;
+  margin-bottom: 14px;
 }
 
 .map-title-row {
@@ -22,14 +22,14 @@
 }
 
 .map-day-indicator {
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
+  width: 8px;
+  height: 8px;
+  border-radius: var(--radius-pill);
 }
 
 .map-title {
   font-size: 15px;
-  font-weight: 700;
+  font-weight: 600;
   color: var(--text-primary);
 }
 
@@ -37,40 +37,43 @@
   font-size: 12px;
   color: var(--text-secondary);
   margin-top: 1px;
+  font-variant-numeric: tabular-nums;
 }
 
-.terraink-engine-badge {
+.terraink-engine-badge,
+.terralink-engine-badge {
   font-size: 10px;
-  font-weight: 800;
+  font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  background-color: #EFF6FF;
+  background-color: rgba(37, 99, 235, 0.08);
   color: var(--brand-blue);
-  border: 1px solid #BFDBFE;
-  padding: 2px 7px;
-  border-radius: var(--radius-full);
+  border: 1px solid rgba(37, 99, 235, 0.2);
+  padding: 2px 8px;
+  border-radius: var(--radius-pill);
 }
 
-/* Action Controls: Export GPX, Fit Track, Optimize */
+/* Action Controls: Export GPX, Fit Track, Optimize - Calm Utility */
 .gpx-action-btn {
   display: inline-flex;
   align-items: center;
   gap: 5px;
-  padding: 6px 11px;
-  border-radius: var(--radius-md);
-  font-size: 11px;
-  font-weight: 700;
+  padding: 5px 12px;
+  border-radius: var(--radius-pill);
+  font-size: 11.5px;
+  font-weight: 500;
   border: 1px solid var(--border-light);
   background-color: var(--bg-card);
   color: var(--text-secondary);
   cursor: pointer;
   transition: all 0.15s ease;
   white-space: nowrap;
+  box-shadow: var(--shadow-sm);
 }
 
 .gpx-action-btn:hover {
-  background-color: #F1F5F9;
-  border-color: #CBD5E1;
+  background-color: var(--bg-subtle);
+  border-color: var(--border-strong);
   color: var(--text-primary);
 }
 
@@ -79,30 +82,30 @@
 }
 
 .optimize-route-btn {
-  display: flex;
+  display: inline-flex;
   align-items: center;
   gap: 6px;
   background-color: var(--brand-blue);
   color: #FFFFFF;
   border: none;
-  border-radius: var(--radius-full);
+  border-radius: var(--radius-pill);
   padding: 6px 14px;
   font-size: 12px;
-  font-weight: 700;
+  font-weight: 600;
   cursor: pointer;
-  box-shadow: 0 2px 5px rgba(37, 99, 235, 0.25);
+  box-shadow: 0 1px 3px rgba(37, 99, 235, 0.25);
   transition: all 0.15s ease;
 }
 
 .optimize-route-btn:hover {
-  background-color: #1D4ED8;
-  transform: translateY(-1px);
+  background-color: var(--brand-blue-hover);
+  transform: translateY(-0.5px);
 }
 
 .optimize-route-btn.optimized {
-  background-color: #ECFDF5;
+  background-color: rgba(16, 185, 129, 0.1);
   color: #059669;
-  border: 1px solid #10B981;
+  border: 1px solid rgba(16, 185, 129, 0.25);
   box-shadow: none;
 }
 
@@ -125,103 +128,194 @@
   height: 100%;
 }
 
-/* Terraink GPX Waypoint Pins (Terraink Approach) */
-.terraink-gpx-pin {
-  width: 28px;
-  height: 28px;
-  border-radius: 50%;
+/* Terralink GPS Waypoint Markers */
+.terralink-marker-anchor {
   display: flex;
+  flex-direction: column;
   align-items: center;
-  justify-content: center;
-  color: #FFFFFF;
-  border: 2px solid #FFFFFF;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.28);
   cursor: pointer;
   position: relative;
-  transition: transform 0.18s cubic-bezier(0.34, 1.56, 0.64, 1);
+  transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
   user-select: none;
 }
 
-.terraink-gpx-pin:hover {
-  transform: scale(1.22);
-  z-index: 10;
+.terralink-marker-anchor:hover {
+  transform: scale(1.15);
+  z-index: 50;
 }
 
-.terraink-gpx-pin.active {
-  transform: scale(1.25);
-  box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.35), 0 3px 10px rgba(0, 0, 0, 0.32);
-  z-index: 20;
+.terralink-marker-anchor.active {
+  transform: scale(1.2);
+  z-index: 60;
 }
 
-.terraink-gpx-pin.pin-start {
-  border-color: #A7F3D0;
+.terralink-pin-head {
+  width: 30px;
+  height: 30px;
+  border-radius: var(--radius-pill);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  border: 2px solid #FFFFFF;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+  color: #FFFFFF;
+  font-weight: 700;
+  position: relative;
+  z-index: 2;
+  transition: box-shadow 0.2s ease;
 }
 
-.terraink-gpx-pin.pin-finish {
-  border-color: #FECACA;
+.terralink-marker-anchor.active .terralink-pin-head {
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.35), 0 4px 12px rgba(0, 0, 0, 0.3);
 }
 
-.gpx-pin-label {
+.terralink-pin-label {
   font-size: 11px;
-  font-weight: 800;
+  font-weight: 700;
   font-family: 'JetBrains Mono', monospace;
   letter-spacing: -0.5px;
 }
 
-.terraink-pin-pulse {
-  position: absolute;
-  inset: -6px;
-  border-radius: 50%;
-  border: 2px solid currentColor;
-  animation: pulse 1.8s infinite ease-in-out;
-  pointer-events: none;
+.terralink-pin-needle {
+  width: 0;
+  height: 0;
+  border-left: 5px solid transparent;
+  border-right: 5px solid transparent;
+  border-top: 7px solid currentColor;
+  margin-top: -2px;
+  z-index: 1;
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.2));
 }
 
-.terraink-watermark {
+.terralink-pulse-ring {
+  position: absolute;
+  bottom: -4px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 14px;
+  height: 14px;
+  border-radius: var(--radius-pill);
+  border: 2px solid var(--brand-blue);
+  animation: terralink-sonar 1.8s infinite ease-out;
+  pointer-events: none;
+  z-index: 0;
+}
+
+@keyframes terralink-sonar {
+  0% {
+    transform: translateX(-50%) scale(0.5);
+    opacity: 1;
+  }
+  100% {
+    transform: translateX(-50%) scale(2.6);
+    opacity: 0;
+  }
+}
+
+/* Hover & Active Waypoint Label Callout - Calm Utility */
+.terralink-pin-callout {
+  position: absolute;
+  bottom: calc(100% + 6px);
+  left: 50%;
+  transform: translateX(-50%) translateY(0);
+  background: rgba(15, 23, 42, 0.92);
+  color: #FFFFFF;
+  padding: 4px 10px;
+  border-radius: var(--radius-sm);
+  font-size: 11px;
+  font-weight: 500;
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0;
+  box-shadow: var(--shadow-card);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  z-index: 40;
+  transition: opacity 0.15s ease, transform 0.15s ease;
+}
+
+.terralink-marker-anchor:hover .terralink-pin-callout,
+.terralink-marker-anchor.active .terralink-pin-callout {
+  opacity: 1;
+  transform: translateX(-50%) translateY(-3px);
+}
+
+.callout-badge {
+  font-size: 10px;
+  font-weight: 700;
+  padding: 1px 5px;
+  border-radius: var(--radius-pill);
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.callout-title {
+  color: #F8FAFC;
+  font-weight: 500;
+}
+
+.callout-time {
+  color: #94A3B8;
+  font-size: 10.5px;
+  font-variant-numeric: tabular-nums;
+}
+
+.terraink-watermark,
+.terralink-watermark {
   position: absolute;
   bottom: 8px;
   left: 8px;
   z-index: 5;
-  background: rgba(255, 255, 255, 0.85);
-  backdrop-filter: blur(4px);
+  background: rgba(255, 255, 255, 0.88);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
   padding: 2px 8px;
-  border-radius: 4px;
+  border-radius: var(--radius-pill);
   border: 1px solid rgba(0, 0, 0, 0.08);
 }
 
-.terraink-watermark-link {
+.terraink-watermark-link,
+.terralink-watermark-link {
   font-size: 10px;
-  font-weight: 700;
+  font-weight: 600;
   color: var(--text-secondary);
   text-decoration: none;
 }
 
-.terraink-watermark-link:hover {
+.terraink-watermark-link:hover,
+.terralink-watermark-link:hover {
   color: var(--brand-blue);
 }
 
-/* Selected GPX Waypoint Floating Dock */
+/* Selected Terralink Waypoint Floating Dock - Glassmorphism & Soft Elevation */
 .map-selected-dock {
-  margin-top: 12px;
+  margin-top: 14px;
   display: flex;
   align-items: center;
   gap: 12px;
-  background-color: var(--bg-subtle);
+  background: rgba(255, 255, 255, 0.96);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
   border-radius: var(--radius-lg);
-  padding: 12px 14px;
+  padding: 12px 16px;
   border: 1px solid var(--border-light);
+  box-shadow: var(--shadow-card);
 }
 
 .dock-badge {
   width: 32px;
   height: 32px;
-  border-radius: 50%;
+  border-radius: var(--radius-pill);
   color: #FFFFFF;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 13px;
-  font-weight: 800;
+  font-size: 12px;
+  font-weight: 700;
   flex-shrink: 0;
 }
 
@@ -239,25 +333,25 @@
 
 .dock-time {
   font-size: 11px;
-  font-weight: 700;
-  color: var(--brand-blue);
-  font-family: 'JetBrains Mono', monospace;
+  font-weight: 600;
+  color: var(--text-primary);
+  font-variant-numeric: tabular-nums;
 }
 
 .dock-coord-pill {
   font-size: 10px;
   font-family: 'JetBrains Mono', monospace;
-  font-weight: 600;
+  font-weight: 500;
   color: var(--text-tertiary);
-  background-color: var(--bg-card);
-  border: 1px solid var(--border-light);
+  background-color: var(--bg-subtle);
+  border: 1px solid var(--border-subtle);
   padding: 1px 6px;
-  border-radius: var(--radius-sm);
+  border-radius: var(--radius-pill);
 }
 
 .dock-title {
   font-size: 14px;
-  font-weight: 700;
+  font-weight: 600;
   color: var(--text-primary);
   white-space: nowrap;
   overflow: hidden;
@@ -265,7 +359,7 @@
 }
 
 .dock-address {
-  font-size: 11px;
+  font-size: 11.5px;
   color: var(--text-tertiary);
   white-space: nowrap;
   overflow: hidden;
@@ -284,36 +378,39 @@
   gap: 4px;
   background-color: var(--bg-card);
   border: 1px solid var(--border-light);
-  border-radius: var(--radius-md);
-  padding: 6px 10px;
+  border-radius: var(--radius-pill);
+  padding: 5px 11px;
   font-size: 11px;
-  font-weight: 700;
+  font-weight: 500;
   color: var(--text-secondary);
   cursor: pointer;
   transition: all 0.15s ease;
+  box-shadow: var(--shadow-sm);
 }
 
 .dock-focus-btn:hover {
-  background-color: #E2E8F0;
+  background-color: var(--bg-subtle);
   color: var(--text-primary);
+  border-color: var(--border-strong);
 }
 
 .dock-nav-btn {
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  background-color: var(--brand-blue-subtle);
-  border: 1px solid #BFDBFE;
-  border-radius: var(--radius-md);
-  padding: 6px 10px;
+  background-color: var(--bg-subtle);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-pill);
+  padding: 5px 11px;
   font-size: 11px;
-  font-weight: 700;
-  color: var(--brand-blue);
+  font-weight: 500;
+  color: var(--text-primary);
   cursor: pointer;
   text-decoration: none;
   transition: all 0.15s ease;
 }
 
 .dock-nav-btn:hover {
-  background-color: #DBEAFE;
+  background-color: var(--bg-subtle-hover);
+  border-color: var(--border-strong);
 }
