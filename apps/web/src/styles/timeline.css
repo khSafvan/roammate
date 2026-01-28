@@ -1,10 +1,10 @@
-/* MojoLog Timeline Styles: Day Selector, Weather Banner, Stop Cards, and Distance Connectors */
+/* MojoLog Timeline Styles: Soft Utility / Calm Utility Design System */
 
 /* 1. Horizontal Day Selector Tabs */
 .day-selector-container {
   background-color: var(--bg-card);
   border-bottom: 1px solid var(--border-light);
-  padding: 8px 20px;
+  padding: 10px 20px;
 }
 
 .day-selector-scroll {
@@ -12,7 +12,7 @@
   margin: 0 auto;
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
   overflow-x: auto;
   scrollbar-width: none;
 }
@@ -22,31 +22,37 @@
 }
 
 .day-tab-pill {
-  display: flex;
+  display: inline-flex;
   align-items: center;
   gap: 10px;
   background-color: var(--bg-card);
-  border: 1.5px solid var(--border-light);
-  border-radius: var(--radius-full);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-pill);
   padding: 6px 14px;
   cursor: pointer;
   white-space: nowrap;
   transition: all 0.15s ease;
+  box-shadow: var(--shadow-sm);
+  color: var(--text-secondary);
 }
 
 .day-tab-pill:hover {
   background-color: var(--bg-subtle);
+  color: var(--text-primary);
+  border-color: var(--border-strong);
 }
 
 .day-tab-pill.active {
   background-color: var(--bg-card);
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
+  color: var(--text-primary);
+  border-color: rgba(15, 23, 42, 0.22);
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.05), 0 3px 8px -1px rgba(15, 23, 42, 0.04);
 }
 
 .day-color-dot {
-  width: 9px;
-  height: 9px;
-  border-radius: 50%;
+  width: 8px;
+  height: 8px;
+  border-radius: var(--radius-pill);
   flex-shrink: 0;
 }
 
@@ -58,38 +64,42 @@
 
 .day-title {
   font-size: 13px;
-  font-weight: 700;
+  font-weight: 600;
   color: var(--text-primary);
+  line-height: 1.2;
 }
 
 .day-date {
   font-size: 11px;
   color: var(--text-tertiary);
   font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
 }
 
 .day-weather-chip {
-  display: flex;
+  display: inline-flex;
   align-items: center;
   gap: 4px;
   background-color: var(--bg-subtle);
-  padding: 3px 7px;
-  border-radius: var(--radius-sm);
+  padding: 2px 7px;
+  border-radius: var(--radius-pill);
   font-size: 11px;
   font-weight: 600;
   color: var(--text-secondary);
+  font-variant-numeric: tabular-nums;
 }
 
-/* 2. Weather Prediction Card */
+/* 2. Weather Prediction Card - Calm Utility */
 .weather-card {
   background-color: var(--bg-card);
   border: 1px solid var(--border-light);
-  border-radius: var(--radius-xl);
-  padding: 16px;
+  border-radius: var(--radius-card);
+  padding: 18px 20px;
   box-shadow: var(--shadow-card);
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 14px;
 }
 
 .weather-header-row {
@@ -109,39 +119,50 @@
 .weather-temp-block {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
 }
 
 .weather-icon-wrapper {
-  width: 46px;
-  height: 46px;
-  border-radius: var(--radius-lg);
+  width: 44px;
+  height: 44px;
+  border-radius: var(--radius-pill);
   display: flex;
   align-items: center;
   justify-content: center;
+  flex-shrink: 0;
 }
 
 .weather-temp-main {
   font-size: 26px;
-  font-weight: 800;
+  font-weight: 700;
   color: var(--text-primary);
   line-height: 1;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.5px;
 }
 
 .weather-unit {
-  font-size: 15px;
-  font-weight: 600;
+  font-size: 14px;
+  font-weight: 500;
   color: var(--text-tertiary);
+  margin-left: 1px;
 }
 
 .weather-highlow {
   font-size: 11px;
-  font-weight: 600;
-  color: var(--text-secondary);
+  font-weight: 500;
+  color: var(--text-tertiary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
   display: flex;
   align-items: center;
-  gap: 4px;
-  margin-top: 2px;
+  gap: 5px;
+  margin-top: 3px;
+  font-variant-numeric: tabular-nums;
+}
+
+.weather-highlow .sep {
+  opacity: 0.4;
 }
 
 .weather-condition-info {
@@ -152,7 +173,7 @@
 
 .weather-condition-text {
   font-size: 14px;
-  font-weight: 700;
+  font-weight: 600;
   color: var(--text-primary);
 }
 
@@ -160,89 +181,101 @@
   display: inline-flex;
   align-items: center;
   gap: 5px;
-  background-color: #FEF3C7;
-  color: #92400E;
+  background-color: rgba(245, 158, 11, 0.1);
+  color: #B45309;
   padding: 2px 8px;
-  border-radius: var(--radius-full);
+  border-radius: var(--radius-pill);
   font-size: 11px;
-  font-weight: 600;
+  font-weight: 500;
+  width: fit-content;
 }
 
 .weather-metrics {
   display: flex;
   align-items: center;
-  gap: 14px;
+  gap: 10px;
 }
 
 .metric-cell {
   background-color: var(--bg-subtle);
-  padding: 6px 10px;
+  padding: 8px 12px;
   border-radius: var(--radius-md);
   display: flex;
   flex-direction: column;
-  align-items: center;
-  min-width: 75px;
+  align-items: flex-start;
+  min-width: 82px;
+  border: 1px solid var(--border-subtle);
 }
 
 .metric-label {
   display: flex;
   align-items: center;
   gap: 4px;
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 600;
-  color: var(--text-secondary);
+  color: var(--text-tertiary);
   text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
 .metric-value {
-  font-size: 13px;
-  font-weight: 700;
+  font-size: 13.5px;
+  font-weight: 600;
   color: var(--text-primary);
   margin-top: 2px;
+  font-variant-numeric: tabular-nums;
 }
 
 .metric-value.text-rain {
-  color: #2563EB;
+  color: var(--brand-blue);
 }
 
 .weather-tip-strip {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
   background-color: var(--bg-subtle);
-  padding: 8px 12px;
+  padding: 9px 14px;
   border-radius: var(--radius-md);
-  font-size: 12px;
+  font-size: 12.5px;
   color: var(--text-secondary);
+  border: 1px solid var(--border-subtle);
 }
 
 .weather-tip-text strong {
   color: var(--text-primary);
+  font-weight: 600;
 }
 
 .hourly-forecast-row {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
   overflow-x: auto;
-  padding-top: 4px;
+  padding-top: 2px;
+  scrollbar-width: none;
+}
+
+.hourly-forecast-row::-webkit-scrollbar {
+  display: none;
 }
 
 .hourly-chip {
   background-color: var(--bg-subtle);
   border-radius: var(--radius-md);
-  padding: 6px 10px;
+  padding: 7px 10px;
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 3px;
   min-width: 58px;
+  border: 1px solid var(--border-subtle);
 }
 
 .hourly-time {
   font-size: 11px;
   color: var(--text-tertiary);
-  font-weight: 600;
+  font-weight: 500;
 }
 
 .hourly-icon {
@@ -251,206 +284,273 @@
 
 .hourly-temp {
   font-size: 13px;
-  font-weight: 700;
+  font-weight: 600;
   color: var(--text-primary);
+  font-variant-numeric: tabular-nums;
 }
 
 .hourly-rain {
-  font-size: 9px;
-  font-weight: 700;
-  color: #2563EB;
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--brand-blue);
+  font-variant-numeric: tabular-nums;
 }
 
-/* 3. Timeline Cards Stream */
+/* 3. Sequential Timeline Stream & Categorical Nodes */
 .itinerary-stream {
   display: flex;
   flex-direction: column;
+  position: relative;
 }
 
-.timeline-card {
-  background-color: var(--bg-card);
-  border: 1px solid var(--border-light);
-  border-radius: var(--radius-xl);
-  padding: 14px 16px;
-  box-shadow: var(--shadow-card);
-  cursor: pointer;
-  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-.timeline-card:hover {
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-elevated);
-  border-color: #CBD5E1;
-}
-
-.card-inner {
+.timeline-item-wrapper {
   display: flex;
   align-items: flex-start;
   gap: 14px;
+  position: relative;
 }
 
-.stop-badge {
-  width: 28px;
-  height: 28px;
-  border-radius: 50%;
-  color: #FFFFFF;
+/* Category Node Anchored on the Sequential Axis */
+.category-node {
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-pill);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 13px;
-  font-weight: 800;
   flex-shrink: 0;
-  margin-top: 2px;
+  margin-top: 14px;
+  box-shadow: 0 0 0 3px var(--bg-canvas);
+  position: relative;
+  z-index: 2;
+  transition: all 0.15s ease;
+}
+
+/* Soft 10-15% Tinted Washes for Categorical Nodes */
+.node-flight {
+  background-color: var(--cat-flight-bg);
+  color: var(--cat-flight-fg);
+}
+
+.node-lodging {
+  background-color: var(--cat-lodging-bg);
+  color: var(--cat-lodging-fg);
+}
+
+.node-sight {
+  background-color: var(--cat-sight-bg);
+  color: var(--cat-sight-fg);
+}
+
+.node-dining {
+  background-color: var(--cat-dining-bg);
+  color: var(--cat-dining-fg);
+}
+
+.node-transit {
+  background-color: var(--cat-transit-bg);
+  color: var(--cat-transit-fg);
+}
+
+/* Timeline Modular Card */
+.timeline-card {
+  flex: 1;
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-card);
+  padding: 16px 18px;
+  box-shadow: var(--shadow-card);
+  cursor: pointer;
+  transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+  min-width: 0;
+}
+
+.timeline-card:hover {
+  box-shadow: var(--shadow-card-hover);
+  border-color: var(--border-strong);
+  transform: translateY(-1px);
 }
 
 .card-body {
-  flex: 1;
-  min-width: 0;
+  width: 100%;
 }
 
 .card-meta-line {
   display: flex;
   align-items: center;
   gap: 8px;
-  margin-bottom: 4px;
+  flex-wrap: wrap;
+  margin-bottom: 5px;
+}
+
+.card-order-pill {
+  font-size: 11px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-secondary);
+  background-color: var(--bg-subtle);
+  padding: 1px 7px;
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--border-subtle);
 }
 
 .card-time {
   font-size: 12px;
-  font-weight: 800;
-  color: var(--brand-blue);
-  font-family: 'JetBrains Mono', monospace;
+  font-weight: 600;
+  color: var(--text-primary);
+  font-variant-numeric: tabular-nums;
 }
 
-.card-category-tag {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  background-color: var(--bg-subtle);
-  padding: 2px 7px;
-  border-radius: var(--radius-sm);
-  font-size: 10px;
-  font-weight: 700;
-  color: var(--text-secondary);
+.card-category-sublabel {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
   letter-spacing: 0.5px;
+  color: var(--text-tertiary);
 }
 
-.card-ticket-tag {
-  display: flex;
+.card-duration-pill {
+  display: inline-flex;
   align-items: center;
   gap: 3px;
-  background-color: #ECFDF5;
+  font-size: 11px;
+  color: var(--text-tertiary);
+  font-variant-numeric: tabular-nums;
+}
+
+.card-ticket-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  font-weight: 600;
+  background-color: rgba(16, 185, 129, 0.08);
   color: #059669;
-  padding: 2px 6px;
-  border-radius: var(--radius-sm);
-  font-size: 10px;
-  font-weight: 700;
+  border: 1px solid rgba(16, 185, 129, 0.2);
+  border-radius: var(--radius-pill);
+  padding: 1px 7px;
 }
 
 .card-title {
   font-size: 15px;
-  font-weight: 700;
+  font-weight: 600;
   color: var(--text-primary);
-  line-height: 1.3;
+  line-height: 1.35;
 }
 
 .card-subtitle {
-  font-size: 12px;
+  font-size: 13px;
+  font-weight: 400;
   color: var(--text-secondary);
-  margin-top: 2px;
-  line-height: 1.4;
+  margin-top: 3px;
+  line-height: 1.45;
 }
 
 .card-footer-line {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-top: 8px;
-  padding-top: 6px;
-  border-top: 1px solid var(--bg-subtle);
+  margin-top: 10px;
+  padding-top: 8px;
+  border-top: 1px solid var(--border-subtle);
 }
 
 .card-address {
   display: flex;
   align-items: center;
   gap: 4px;
-  font-size: 11px;
+  font-size: 12px;
   color: var(--text-tertiary);
 }
 
 .card-ref-badge {
-  font-size: 10px;
-  font-weight: 700;
+  font-size: 11px;
+  font-weight: 600;
   font-family: 'JetBrains Mono', monospace;
   color: var(--text-secondary);
   background-color: var(--bg-subtle);
-  padding: 2px 6px;
-  border-radius: 4px;
+  padding: 2px 7px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-subtle);
 }
 
-/* 4. Inter-Stop Distance Connector Pill */
+/* 4. Inter-Stop Distance Connector Pill (De-emphasized Transit State) */
 .distance-connector-track {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin: 3px 0;
+  position: relative;
+}
+
+.track-spine-node {
+  width: 32px;
   display: flex;
   flex-direction: column;
   align-items: center;
-  margin: -2px 0;
+  flex-shrink: 0;
 }
 
-.track-line {
-  width: 2px;
-  height: 12px;
-  background-color: var(--border-strong);
+.track-spine-dash {
+  width: 0;
+  height: 22px;
+  border-left: var(--border-dashed);
 }
 
 .distance-pill-btn {
-  display: flex;
+  display: inline-flex;
   align-items: center;
   gap: 6px;
   background-color: var(--bg-card);
-  border: 1px solid var(--border-light);
-  border-radius: var(--radius-full);
-  padding: 4px 12px;
+  border: var(--border-dashed);
+  border-radius: var(--radius-pill);
+  padding: 3px 11px;
   cursor: pointer;
   box-shadow: var(--shadow-sm);
   transition: all 0.15s ease;
+  color: var(--text-secondary);
 }
 
 .distance-pill-btn:hover {
   background-color: var(--bg-subtle);
   border-color: var(--border-strong);
-  transform: scale(1.02);
+  color: var(--text-primary);
+  transform: translateY(-0.5px);
 }
 
 .distance-pill-btn.outlier {
-  background-color: #FFFBEB;
-  border-color: #FCD34D;
+  background-color: #FFFDF5;
+  border-color: rgba(245, 158, 11, 0.4);
 }
 
 .mode-icon {
   display: flex;
   align-items: center;
-  color: var(--brand-blue);
+  color: var(--text-secondary);
 }
 
 .distance-text {
-  font-size: 12px;
-  font-weight: 700;
-  color: var(--text-primary);
-  font-family: 'JetBrains Mono', monospace;
+  font-size: 11.5px;
+  font-weight: 500;
+  color: var(--text-secondary);
 }
 
 .outlier-alert {
-  display: flex;
+  display: inline-flex;
   align-items: center;
   gap: 3px;
   color: #B45309;
-  font-size: 10px;
-  font-weight: 700;
+  font-size: 10.5px;
+  font-weight: 600;
+  background-color: rgba(245, 158, 11, 0.1);
+  padding: 1px 5px;
+  border-radius: var(--radius-pill);
 }
 
 .mode-tag {
   font-size: 10px;
   font-weight: 600;
   color: var(--text-tertiary);
-  text-transform: capitalize;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
