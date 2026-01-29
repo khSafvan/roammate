@@ -1,10 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import { AlertTriangle, Check, Key, Sparkles, X } from 'lucide-react';
 import {
-  generateVaultPhrase,
+  formatAccountId,
+  generateAccountUuid,
+  hashCredentials,
   hashPhrase,
   saveVaultSession,
-  validateVaultPhrase,
   VaultSession,
 } from '../auth/crypto';
 import { deleteAccountOnEdge, loginAccountOnEdge, registerAccountOnEdge } from '../auth/syncService';
@@ -13,6 +14,7 @@ import { ActiveSessionView, CreateAccountView, RestoreAccountView } from './auth
 interface AuthModalProps {
   isOpen: boolean;
   activeSession: VaultSession | null;
+  prefilledUuid?: string;
   onLoginSuccess: (session: VaultSession) => void;
   onLogout: () => void;
   onDeleteAccount: () => void;
@@ -22,51 +24,57 @@ interface AuthModalProps {
 export const AuthModal: React.FC<AuthModalProps> = ({
   isOpen,
   activeSession,
+  prefilledUuid,
   onLoginSuccess,
   onLogout,
   onDeleteAccount,
   onClose,
 }) => {
   const [activeTab, setActiveTab] = useState<'create' | 'restore'>('create');
-  const [generatedPhrase, setGeneratedPhrase] = useState('');
+  const [accountUuid, setAccountUuid] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
 
-  // Generate a fresh 12-word BIP-39 phrase when opening create tab
   useEffect(() => {
-    if (isOpen && !activeSession && !generatedPhrase) {
-      setGeneratedPhrase(generateVaultPhrase());
+    if (prefilledUuid) {
+      setActiveTab('restore');
     }
-  }, [isOpen, activeSession, generatedPhrase]);
+  }, [prefilledUuid]);
+
+  // Generate a fresh UUID when opening create tab
+  useEffect(() => {
+    if (isOpen && !activeSession && !accountUuid) {
+      setAccountUuid(generateAccountUuid());
+    }
+  }, [isOpen, activeSession, accountUuid]);
 
   if (!isOpen) return null;
 
   const handleRegenerate = () => {
-    setGeneratedPhrase(generateVaultPhrase());
+    setAccountUuid(generateAccountUuid());
     setErrorMessage('');
     setSuccessMessage('');
   };
 
-  // 1. Generate New Account Flow
-  const handleConfirmCreate = async (backedUpChecked: boolean) => {
+  // 1. Generate New Account Flow (AIOStreams UUID + Password)
+  const handleConfirmCreate = async (password: string, backedUpChecked: boolean) => {
     if (!backedUpChecked) {
-      setErrorMessage('Please check the box confirming you saved your 12 recovery words.');
+      setErrorMessage('Please confirm you have saved your Account UUID and Password.');
       return;
     }
 
     setIsProcessing(true);
     setErrorMessage('');
     try {
-      const userId = await hashPhrase(generatedPhrase);
-      await registerAccountOnEdge(generatedPhrase, userId);
+      const passwordHash = await hashCredentials(accountUuid, password);
+      await registerAccountOnEdge(accountUuid, passwordHash);
       const now = Date.now();
-      saveVaultSession(userId, generatedPhrase, now);
+      saveVaultSession(accountUuid, undefined, now);
 
-      const words = generatedPhrase.trim().split(/\s+/);
       const session: VaultSession = {
-        userId,
-        phraseSnippet: `${words[0]} ... ${words[11]}`,
+        userId: accountUuid,
+        accountTag: formatAccountId(accountUuid),
         createdAt: now,
         lastAccessedAt: now,
       };
@@ -74,46 +82,62 @@ export const AuthModal: React.FC<AuthModalProps> = ({
       onLoginSuccess(session);
       onClose();
     } catch {
-      setErrorMessage('Failed to initialize cryptographic vault. Please try again.');
+      setErrorMessage('Failed to initialize account vault. Please try again.');
     } finally {
       setIsProcessing(false);
     }
   };
 
-  // 2. Use Old Key / Restore Flow
-  const handleRestoreSubmit = async (phraseInput: string) => {
+  // 2. Use UUID + Password / Restore Flow
+  const handleRestoreSubmit = async (identifier: string, password?: string) => {
     setErrorMessage('');
     setSuccessMessage('');
-
-    const clean = phraseInput.trim().toLowerCase().replace(/\s+/g, ' ');
-    const words = clean.split(' ');
-
-    if (words.length !== 12) {
-      setErrorMessage(`Please enter exactly 12 words (currently entered: ${clean ? words.length : 0}).`);
-      return;
-    }
-
-    if (!validateVaultPhrase(clean)) {
-      setErrorMessage('Invalid BIP-39 recovery phrase checksum or unknown dictionary word.');
-      return;
-    }
-
     setIsProcessing(true);
+
     try {
-      const userId = await hashPhrase(clean);
-      await loginAccountOnEdge(clean);
-      const now = Date.now();
-      saveVaultSession(userId, clean, now);
+      if (password) {
+        // AIOStreams UUID + Password
+        const cleanUuid = identifier.trim().toLowerCase();
+        const passwordHash = await hashCredentials(cleanUuid, password);
+        const ok = await loginAccountOnEdge(cleanUuid, passwordHash);
+        if (!ok) {
+          setErrorMessage('Invalid Account UUID or incorrect password.');
+          setIsProcessing(false);
+          return;
+        }
 
-      const session: VaultSession = {
-        userId,
-        phraseSnippet: `${words[0]} ... ${words[11]}`,
-        createdAt: now,
-        lastAccessedAt: now,
-      };
+        const now = Date.now();
+        saveVaultSession(cleanUuid, undefined, now);
 
-      onLoginSuccess(session);
-      onClose();
+        const session: VaultSession = {
+          userId: cleanUuid,
+          accountTag: formatAccountId(cleanUuid),
+          createdAt: now,
+          lastAccessedAt: now,
+        };
+
+        onLoginSuccess(session);
+        onClose();
+      } else {
+        // Legacy 12-word mnemonic
+        const clean = identifier.trim().toLowerCase().replace(/\s+/g, ' ');
+        const userId = await hashPhrase(clean);
+        await loginAccountOnEdge(clean);
+        const now = Date.now();
+        saveVaultSession(userId, clean, now);
+
+        const words = clean.split(' ');
+        const session: VaultSession = {
+          userId,
+          accountTag: formatAccountId(userId),
+          phraseSnippet: `${words[0]} ... ${words[11]}`,
+          createdAt: now,
+          lastAccessedAt: now,
+        };
+
+        onLoginSuccess(session);
+        onClose();
+      }
     } catch {
       setErrorMessage('Authentication verification failed.');
     } finally {
@@ -149,12 +173,12 @@ export const AuthModal: React.FC<AuthModalProps> = ({
             </div>
             <div>
               <h2 className="modal-title">
-                {activeSession ? 'Account & Security Vault' : 'Cryptographic User Vault'}
+                {activeSession ? 'Account & Security Vault' : 'Private Travel Vault'}
               </h2>
               <p className="modal-subtitle">
                 {activeSession
-                  ? 'Manage your private key, retention policy, or erase account'
-                  : 'Zero SMS, zero passwords, zero tracking · 12-Word BIP-39 Seed'}
+                  ? 'Manage your account credentials, retention policy, or erase data'
+                  : 'Zero emails, zero tracking · Secured by UUID & Password'}
               </p>
             </div>
           </div>
@@ -186,7 +210,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                 }}
               >
                 <Sparkles size={14} />
-                <span>Generate New Account</span>
+                <span>Create Account</span>
               </button>
               <button
                 className={`auth-tab-pill ${activeTab === 'restore' ? 'active' : ''}`}
@@ -197,7 +221,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                 }}
               >
                 <Key size={14} />
-                <span>Use Old Key (Restore)</span>
+                <span>Log In / Restore</span>
               </button>
             </div>
 
@@ -217,9 +241,9 @@ export const AuthModal: React.FC<AuthModalProps> = ({
 
             {activeTab === 'create' && (
               <CreateAccountView
-                phrase={generatedPhrase}
+                accountUuid={accountUuid}
                 isProcessing={isProcessing}
-                onRegenerate={handleRegenerate}
+                onRegenerateUuid={handleRegenerate}
                 onSubmit={handleConfirmCreate}
               />
             )}
@@ -227,6 +251,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
             {activeTab === 'restore' && (
               <RestoreAccountView
                 isProcessing={isProcessing}
+                prefilledUuid={prefilledUuid}
                 onSubmit={handleRestoreSubmit}
               />
             )}

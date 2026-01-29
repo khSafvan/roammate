@@ -9,13 +9,52 @@ export const INACTIVITY_PRUNE_MS = RETENTION_POLICY.INACTIVITY_PRUNE_MS;
 
 export interface VaultSession {
   userId: string;
-  phraseSnippet: string; // First & last word e.g. "apple ... winter"
+  accountTag?: string; // Short preview e.g. "c7a1...0814"
+  phraseSnippet?: string; // Legacy mnemonic snippet
   createdAt: number;
   lastAccessedAt: number;
 }
 
 /**
- * Generates a cryptographically secure 12-word BIP-39 recovery mnemonic
+ * Generates an RFC 4122 v4 UUID for new accounts (AIOStreams pattern)
+ */
+export function generateAccountUuid(): string {
+  if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+    return crypto.randomUUID();
+  }
+  // Fallback for environments lacking crypto.randomUUID
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
+    const r = (Math.random() * 16) | 0;
+    const v = c === 'x' ? r : (r & 0x3) | 0x8;
+    return v.toString(16);
+  });
+}
+
+/**
+ * Validates whether an input string is a valid UUID format
+ */
+export function validateAccountUuid(uuid: string): boolean {
+  if (!uuid || typeof uuid !== 'string') return false;
+  const clean = uuid.trim().toLowerCase();
+  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+  return uuidRegex.test(clean);
+}
+
+/**
+ * Hashes user credentials (UUID + Password) via native Web Crypto API (SHA-256)
+ * Produces an irreversible, deterministic zero-knowledge auth token / password hash
+ */
+export async function hashCredentials(uuid: string, password: string): Promise<string> {
+  const normalized = `${uuid.trim().toLowerCase()}:${password}`;
+  const encoder = new TextEncoder();
+  const data = encoder.encode(normalized);
+  const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  return hashArray.map((b) => b.toString(16).padStart(2, '0')).join('');
+}
+
+/**
+ * Generates a cryptographically secure 12-word BIP-39 recovery mnemonic (legacy support)
  */
 export function generateVaultPhrase(): string {
   // 128 bits entropy = 12 words
@@ -23,7 +62,7 @@ export function generateVaultPhrase(): string {
 }
 
 /**
- * Validates whether an input phrase is a legal BIP-39 mnemonic
+ * Validates whether an input phrase is a legal BIP-39 mnemonic (legacy support)
  */
 export function validateVaultPhrase(phrase: string): boolean {
   const normalized = phrase.trim().toLowerCase().replace(/\s+/g, ' ');
@@ -32,7 +71,7 @@ export function validateVaultPhrase(phrase: string): boolean {
 
 /**
  * Hashes a 12-word phrase to derive an irreversible public User ID / Account Key
- * Using native Web Crypto API (SHA-256)
+ * Using native Web Crypto API (SHA-256) (legacy support)
  */
 export async function hashPhrase(phrase: string): Promise<string> {
   const normalized = phrase.trim().toLowerCase().replace(/\s+/g, ' ');
@@ -44,22 +83,43 @@ export async function hashPhrase(phrase: string): Promise<string> {
 }
 
 /**
- * Formats a 64-char SHA-256 hash into a compact wallet-style address (e.g. 0x4f9a...3b21)
+ * Formats a UUID or 64-char SHA-256 hash into a compact display badge (e.g. c7a1...0814)
  */
-export function formatAccountId(hash: string): string {
-  if (!hash || hash.length < 12) return hash;
-  return `0x${hash.slice(0, 4)}...${hash.slice(-4)}`;
+export function formatAccountId(id: string): string {
+  if (!id || typeof id !== 'string') return id;
+  const clean = id.trim();
+  if (clean.length <= 10) return clean;
+  // If it's a UUID (e.g. 12345678-1234-...)
+  if (clean.includes('-')) {
+    const parts = clean.split('-');
+    return `${parts[0].slice(0, 4)}...${parts[parts.length - 1].slice(-4)}`;
+  }
+  // If it's a 64-char hex hash
+  if (clean.length === 64) {
+    return `0x${clean.slice(0, 4)}...${clean.slice(-4)}`;
+  }
+  return `${clean.slice(0, 4)}...${clean.slice(-4)}`;
 }
 
 /**
  * Persists authenticated session in localStorage with initial lastAccessedAt
  */
-export function saveVaultSession(userId: string, phrase: string, customLastAccessed?: number): void {
-  const words = phrase.trim().split(/\s+/);
-  const snippet = words.length >= 2 ? `${words[0]} ... ${words[words.length - 1]}` : 'vault';
+export function saveVaultSession(
+  userId: string,
+  phraseOrCredential?: string,
+  customLastAccessed?: number
+): void {
   const now = customLastAccessed || Date.now();
+  let snippet: string | undefined;
+
+  if (phraseOrCredential && phraseOrCredential.includes(' ')) {
+    const words = phraseOrCredential.trim().split(/\s+/);
+    snippet = words.length >= 2 ? `${words[0]} ... ${words[words.length - 1]}` : 'vault';
+  }
+
   const session: VaultSession = {
     userId,
+    accountTag: formatAccountId(userId),
     phraseSnippet: snippet,
     createdAt: now,
     lastAccessedAt: now,
