@@ -95,7 +95,100 @@
   color: var(--text-primary);
 }
 
-/* 1. Flights Boarding Pass Styles - Soft Utility */
+/* Passenger Filter Bar for Multi-Origin Companion Flights */
+.passenger-filter-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  overflow-x: auto;
+  padding-bottom: 14px;
+  margin-bottom: 12px;
+}
+
+.passenger-filter-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--text-tertiary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.passenger-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-pill);
+  padding: 4px 12px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.15s ease;
+}
+
+.passenger-chip:hover {
+  background-color: var(--bg-subtle);
+  color: var(--text-primary);
+}
+
+.passenger-chip.active {
+  background-color: #EFF6FF;
+  border-color: rgba(37, 99, 235, 0.4);
+  color: var(--brand-blue);
+  font-weight: 600;
+}
+
+/* Passenger Ticket Ribbon on Boarding Pass */
+.passenger-ticket-ribbon {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  padding: 6px 10px;
+  background-color: var(--bg-subtle);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-subtle);
+}
+
+.passenger-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  color: var(--text-primary);
+}
+
+.origin-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 11px;
+  color: var(--text-secondary);
+}
+
+.cabin-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 10.5px;
+  font-weight: 600;
+  color: var(--brand-blue);
+  background-color: rgba(37, 99, 235, 0.08);
+  padding: 2px 7px;
+  border-radius: var(--radius-pill);
+}
+
+.stub-eticket {
+  color: var(--text-tertiary);
+  font-size: 11px;
+}
+
 .flights-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(440px, 1fr));
