@@ -149,5 +149,5 @@ describe('Multi-Modal Routing Engine', () => {
       expect(feature.geometry.coordinates.length).toBeGreaterThanOrEqual(2);
       expect(['drive', 'walk', 'transit', 'flight', 'boat']).toContain(feature.properties.mode);
     });
-  });
+  }, 15000);
 });

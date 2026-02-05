@@ -1,9 +1,14 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import {
+  createDefaultTrip,
+  deleteTripOnEdge,
   fetchItinerariesFromEdge,
   fetchSharedTrip,
+  getActiveTripIdLocal,
+  loadAllLocalTrips,
   loadLocalTrip,
   saveItineraryToEdge,
+  setActiveTripIdLocal,
 } from '../src/auth/syncService';
 import { STORAGE_KEYS } from '../src/config/constants';
 import { Trip } from '../src/types/trip';
@@ -109,4 +114,137 @@ describe('SyncService & Itinerary Persistence', () => {
       expect(itineraries[0].title).toBe('Autumn in Kyoto');
     });
   });
+
+  describe('AIOStreams-Style Auth in Local Vault Mode', () => {
+    it('registers and logs in with UUID and password hash', async () => {
+      const { registerAccountOnEdge, loginAccountOnEdge } = await import('../src/auth/syncService');
+      const testUuid = '9f8b417e-3294-4cd0-9aa8-ec16d4ea71b2';
+      const testHash = 'abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789';
+
+      const regOk = await registerAccountOnEdge(testUuid, testHash);
+      expect(regOk).toBe(true);
+
+      const loginOk = await loginAccountOnEdge(testUuid, testHash);
+      expect(loginOk).toBe(true);
+
+      const wrongLogin = await loginAccountOnEdge(testUuid, 'wrong_hash');
+      expect(wrongLogin).toBe(false);
+    });
+  });
+
+  describe('Multi-Trip Support & Date-Time Scheduling', () => {
+    it('creates a new trip with custom start/end dates and times', () => {
+      const newTrip = createDefaultTrip(
+        'Amalfi Coast Adventure',
+        'Amalfi, Italy',
+        '2027-06-01',
+        '2027-06-08',
+        '08:30',
+        '22:00'
+      );
+
+      expect(newTrip.title).toBe('Amalfi Coast Adventure');
+      expect(newTrip.destination).toBe('Amalfi, Italy');
+      expect(newTrip.startDate).toBe('2027-06-01');
+      expect(newTrip.endDate).toBe('2027-06-08');
+      expect(newTrip.startTime).toBe('08:30');
+      expect(newTrip.endTime).toBe('22:00');
+      expect(newTrip.guestKey).toMatch(/^guest_/);
+      expect(newTrip.id).toMatch(/^trip_/);
+    });
+
+    it('loads and manages multiple trips independently in local vault', async () => {
+      const trip1 = createDefaultTrip('Iceland Northern Lights', 'Reykjavik, Iceland');
+      const trip2 = createDefaultTrip('Swiss Alps Hiking', 'Interlaken, Switzerland');
+
+      await saveItineraryToEdge('user_multi', trip1);
+      await saveItineraryToEdge('user_multi', trip2);
+
+      setActiveTripIdLocal(trip2.id);
+      expect(getActiveTripIdLocal()).toBe(trip2.id);
+
+      const allTrips = loadAllLocalTrips();
+      expect(allTrips.some((t: any) => t.id === trip1.id)).toBe(true);
+      expect(allTrips.some((t: any) => t.id === trip2.id)).toBe(true);
+
+      // Delete trip1 only
+      await deleteTripOnEdge('user_multi', trip1.id);
+      const remainingTrips = loadAllLocalTrips();
+      expect(remainingTrips.some((t: any) => t.id === trip1.id)).toBe(false);
+      expect(remainingTrips.some((t: any) => t.id === trip2.id)).toBe(true);
+    });
+  });
+
+  describe('Multi-Origin Flight Tickets & Passenger Details', () => {
+    it('persists passenger name, origin country/city, cabin class, and eTicketNumber', async () => {
+      const companionFlightTrip: Trip = {
+        ...sampleTrip,
+        id: 'trip_companion_flights',
+        flights: [
+          {
+            id: 'fl_comp_1',
+            flightNumber: 'JL005',
+            carrier: 'Japan Airlines',
+            date: '2026-10-14',
+            passengerName: 'Alex',
+            originCountry: 'United States',
+            originCity: 'New York',
+            cabinClass: 'Premium Economy',
+            eTicketNumber: 'ETKT-99120',
+            departure: { airport: 'JFK', city: 'New York', time: '13:15' },
+            arrival: { airport: 'HND', city: 'Tokyo', time: '16:30' },
+          },
+          {
+            id: 'fl_comp_2',
+            flightNumber: 'BA007',
+            carrier: 'British Airways',
+            date: '2026-10-14',
+            passengerName: 'Elena',
+            originCountry: 'United Kingdom',
+            originCity: 'London',
+            cabinClass: 'Economy',
+            eTicketNumber: 'ETKT-88412',
+            departure: { airport: 'LHR', city: 'London', time: '09:40' },
+            arrival: { airport: 'HND', city: 'Tokyo', time: '17:15' },
+          },
+        ],
+      };
+
+      await saveItineraryToEdge('user_123', companionFlightTrip);
+      const loaded = loadLocalTrip('trip_companion_flights');
+
+      expect(loaded?.flights).toHaveLength(2);
+      expect(loaded?.flights[0].passengerName).toBe('Alex');
+      expect(loaded?.flights[0].originCountry).toBe('United States');
+      expect(loaded?.flights[1].passengerName).toBe('Elena');
+      expect(loaded?.flights[1].originCity).toBe('London');
+    });
+  });
+
+  describe('Secret Guest Invite Links & Privacy Enforcement', () => {
+    it('allows guest access only when valid secret guestKey is provided', async () => {
+      const privateTrip: Trip = {
+        ...sampleTrip,
+        id: 'trip_private_vault',
+        guestKey: 'secret_guest_key_7788',
+        shareToken: 'tok_share_88',
+      };
+
+      await saveItineraryToEdge('user_123', privateTrip);
+
+      // Access with valid guest key -> SUCCESS
+      const guestAccess = await fetchSharedTrip('tok_share_88', 'secret_guest_key_7788');
+      expect(guestAccess).not.toBeNull();
+      expect(guestAccess?.id).toBe('trip_private_vault');
+
+      // Access with token match -> SUCCESS
+      const tokenAccess = await fetchSharedTrip('secret_guest_key_7788');
+      expect(tokenAccess).not.toBeNull();
+
+      // Access attempt by unauthorized party without valid key -> DENIED (null)
+      const unauthorized = await fetchSharedTrip('trip_private_vault', 'wrong_guest_key');
+      expect(unauthorized).toBeNull();
+    });
+  });
 });
+
