@@ -71,16 +71,22 @@ export interface ReadinessItem {
   critical: boolean;
 }
 
-// 1. Unified Flight Model
+// 1. Unified Flight Model with Multi-Origin Passenger Ticket Support
 export interface Flight {
   id: string;
   flightNumber: string;
   carrier: string;
   date: string;
+  passengerName?: string; // Passenger / companion name (e.g. "Alex (NYC)", "Elena (London)")
+  originCountry?: string; // e.g. "United States", "United Kingdom"
+  originCity?: string;    // e.g. "New York", "London"
+  cabinClass?: 'Economy' | 'Premium Economy' | 'Business' | 'First';
+  eTicketNumber?: string;
   departure: {
     airport: string;
     city: string;
     time: string;
+    country?: string;
     terminal?: string;
     gate?: string;
   };
@@ -88,6 +94,7 @@ export interface Flight {
     airport: string;
     city: string;
     time: string;
+    country?: string;
     terminal?: string;
     gate?: string;
     nextDay?: boolean;
@@ -126,20 +133,47 @@ export interface Trip {
   tripId?: string; // Unified identifier alias
   title: string;
   dates: string;
+  startDate?: string; // YYYY-MM-DD
+  endDate?: string;   // YYYY-MM-DD
+  startTime?: string; // HH:mm
+  endTime?: string;   // HH:mm
   destination: string;
   baseCurrency: string;
   shareToken?: string;
+  guestKey?: string;  // Secret guest link key - only persons with this key can view the trip
   readinessScore: number;
   flights: Flight[];
   days: TripDay[];
   expenses: Expense[];
   readinessChecklist: ReadinessItem[];
+  createdAt?: number;
+  updatedAt?: number;
 }
 
+export interface TripSummary {
+  id: string;
+  title: string;
+  destination: string;
+  dates: string;
+  startDate?: string;
+  endDate?: string;
+  readinessScore: number;
+  daysCount: number;
+  flightsCount: number;
+  updatedAt?: number;
+}
+
+
 // 4. Cryptographic Vault Session & Edge Sync Result
+export interface AuthCredentials {
+  uuid: string;
+  passwordHash: string;
+}
+
 export interface VaultSession {
   userId: string;
-  phraseSnippet: string;
+  accountTag?: string; // Short preview e.g. "c7a1...0814"
+  phraseSnippet?: string; // Legacy mnemonic snippet
   createdAt: number;
   lastAccessedAt: number;
 }

@@ -7,6 +7,7 @@ export const STORAGE_KEYS = {
   VAULT_SESSION: 'mojolog_vault_session',
   USER_PREFIX: 'mojolog_user_',
   TRIP_PREFIX: 'mojolog_trip_',
+  ACTIVE_TRIP_ID: 'mojolog_active_trip_id',
 } as const;
 
 // 3-Month Inactivity Retention Policy (90 days in milliseconds)
