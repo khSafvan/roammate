@@ -254,7 +254,7 @@ export function deleteLocalAccount(userId: string): void {
   const keysToRemove: string[] = [];
   for (let i = 0; i < localStorage.length; i++) {
     const key = localStorage.key(i);
-    if (key && (key.startsWith(STORAGE_KEYS.TRIP_PREFIX) || key.startsWith(`mojolog_sync_${userId}`))) {
+    if (key && (key.startsWith(STORAGE_KEYS.TRIP_PREFIX) || key.startsWith(`roammate_sync_${userId}`) || key.startsWith(`mojolog_sync_${userId}`))) {
       keysToRemove.push(key);
     }
   }

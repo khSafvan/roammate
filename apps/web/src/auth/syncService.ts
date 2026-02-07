@@ -219,14 +219,22 @@ export function loadAllLocalTrips(): Trip[] {
     const isValidTrip = (t: any): t is Trip =>
       t && typeof t === 'object' && typeof t.title === 'string' && Array.isArray(t.days);
 
+    // Purge legacy sample trips so only Dubai & Malaysia remain as defaults
+    ['mojolog_trip_tokyo-2026', 'mojolog_trip_paris-2027', `${STORAGE_KEYS.TRIP_PREFIX}tokyo-2026`, `${STORAGE_KEYS.TRIP_PREFIX}paris-2027`].forEach(
+      (k) => localStorage.removeItem(k)
+    );
+
     for (let i = 0; i < localStorage.length; i++) {
       const key = localStorage.key(i);
-      if (key && key.startsWith(STORAGE_KEYS.TRIP_PREFIX)) {
+      if (key && (key.startsWith(STORAGE_KEYS.TRIP_PREFIX) || key.startsWith('mojolog_trip_'))) {
+        if (key.includes('tokyo-2026') || key.includes('paris-2027')) {
+          continue;
+        }
         const item = localStorage.getItem(key);
         if (item) {
           try {
             const parsed = JSON.parse(item);
-            if (isValidTrip(parsed)) {
+            if (isValidTrip(parsed) && parsed.id !== 'tokyo-2026' && parsed.id !== 'paris-2027') {
               trips.push(parsed);
             }
           } catch {}
@@ -235,7 +243,7 @@ export function loadAllLocalTrips(): Trip[] {
     }
 
     if (trips.length === 0) {
-      // Seed default catalog
+      // Seed default catalog (Dubai & Malaysia)
       for (const trip of INITIAL_TRIPS_CATALOG) {
         localStorage.setItem(`${STORAGE_KEYS.TRIP_PREFIX}${trip.id}`, JSON.stringify(trip));
         trips.push(trip);
