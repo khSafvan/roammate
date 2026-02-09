@@ -19,7 +19,7 @@ export const ErrorView: React.FC<ErrorViewProps> = ({ onGoHome }) => {
   const wasmReady = isRustReady();
 
   if (testCrash) {
-    throw new Error('Simulated MojoLog Diagnostic Test Error: Error Boundary verified successfully!');
+    throw new Error('Simulated roammate Diagnostic Test Error: Error Boundary verified successfully!');
   }
 
   return (
@@ -30,7 +30,7 @@ export const ErrorView: React.FC<ErrorViewProps> = ({ onGoHome }) => {
             <CheckCircle2 size={32} className="text-emerald" />
           </div>
           <div>
-            <h2 className="error-title">MojoLog Diagnostics & System Status</h2>
+            <h2 className="error-title">roammate Diagnostics & System Status</h2>
             <p className="error-description">
               You visited <code>/error</code>. All core services, WASM algorithms, and cryptographic vaults are operational.
             </p>

@@ -31,7 +31,7 @@ export class ErrorBoundary extends Component<Props, State> {
   }
 
   public componentDidCatch(error: Error, errorInfo: ErrorInfo) {
-    console.error('MojoLog Uncaught Application Error:', error, errorInfo);
+    console.error('roammate Uncaught Application Error:', error, errorInfo);
     this.setState({ error, errorInfo });
   }
 
@@ -57,7 +57,7 @@ export class ErrorBoundary extends Component<Props, State> {
 
             <h2 className="error-title">Application Error Encountered</h2>
             <p className="error-description">
-              MojoLog encountered an unexpected error while rendering this view. Your cryptographic vault and data are safe.
+              roammate encountered an unexpected error while rendering this view. Your cryptographic vault and data are safe.
             </p>
 
             <div className="error-actions-group">

@@ -1,5 +1,6 @@
 import React from 'react';
 import {
+  ArrowLeft,
   Calendar,
   CheckCircle2,
   ChevronDown,
@@ -9,6 +10,7 @@ import {
   Key,
   Lock,
   MapPin,
+  Settings,
   Share2,
 } from 'lucide-react';
 import { formatAccountId, VaultSession } from '../auth/crypto';
@@ -23,10 +25,13 @@ interface HeaderProps {
   isWasmActive: boolean;
   activeSession: VaultSession | null;
   tripsCount?: number;
+  currentView?: 'trips_list' | 'trip_detail' | 'trip_settings';
+  onNavigateView?: (view: 'trips_list' | 'trip_detail' | 'trip_settings') => void;
   onOpenTripManager?: () => void;
   onOpenReadiness: () => void;
   onOpenAuth: () => void;
   onShare: () => void;
+  onOpenSettings?: () => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -39,19 +44,29 @@ export const Header: React.FC<HeaderProps> = ({
   isWasmActive,
   activeSession,
   tripsCount = 1,
+  currentView,
+  onNavigateView,
   onOpenTripManager,
   onOpenReadiness,
   onOpenAuth,
   onShare,
+  onOpenSettings,
 }) => {
   return (
     <header className="header-root">
       <div className="header-container">
-        {/* Left: Branding & Trip Meta */}
+        {/* Left: Branding, All Trips Breadcrumb & Trip Meta */}
         <div className="header-left">
           <div className="header-brand">
-            <span className="brand-logo">✈️</span>
-            <span className="brand-name">MojoLog</span>
+            <button
+              type="button"
+              className="brand-logo-btn"
+              onClick={() => onNavigateView && onNavigateView('trips_list')}
+              title="Return to All Trips"
+            >
+              <span className="brand-logo">✈️</span>
+              <span className="brand-name">roammate</span>
+            </button>
             {isWasmActive && (
               <span className="wasm-badge" title="Core math & route optimization running on WebAssembly compiled from Rust">
                 <Cpu size={12} strokeWidth={1.75} />
@@ -59,6 +74,19 @@ export const Header: React.FC<HeaderProps> = ({
               </span>
             )}
           </div>
+
+          {currentView !== 'trips_list' && onNavigateView && (
+            <button
+              type="button"
+              className="all-trips-nav-btn"
+              onClick={() => onNavigateView('trips_list')}
+              title="Return to Trips Overview"
+            >
+              <ArrowLeft size={13} strokeWidth={2} />
+              <span>All Trips</span>
+            </button>
+          )}
+
           <div className="header-meta">
             <div className="trip-title-row">
               <button
@@ -144,6 +172,16 @@ export const Header: React.FC<HeaderProps> = ({
           <button className="icon-btn" onClick={onShare} title="Share One-Link Itinerary">
             <Share2 size={16} strokeWidth={1.75} />
           </button>
+
+          {onOpenSettings && (
+            <button
+              className="icon-btn"
+              onClick={onOpenSettings}
+              title="Edit Trip Settings & Preferences"
+            >
+              <Settings size={16} strokeWidth={1.75} />
+            </button>
+          )}
         </div>
       </div>
     </header>

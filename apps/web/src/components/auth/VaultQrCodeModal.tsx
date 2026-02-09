@@ -48,7 +48,7 @@ export const VaultQrCodeModal: React.FC<VaultQrCodeModalProps> = ({
     if (!qrDataUrl) return;
     const link = document.createElement('a');
     link.href = qrDataUrl;
-    link.download = `mojolog-vault-${accountUuid.slice(0, 8)}.png`;
+    link.download = `roammate-vault-${accountUuid.slice(0, 8)}.png`;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -81,7 +81,7 @@ export const VaultQrCodeModal: React.FC<VaultQrCodeModalProps> = ({
             {qrDataUrl ? (
               <img
                 src={qrDataUrl}
-                alt={`MojoLog Login QR for ${accountUuid}`}
+                alt={`roammate Login QR for ${accountUuid}`}
                 className="qr-image"
               />
             ) : (
@@ -126,7 +126,7 @@ export const VaultQrCodeModal: React.FC<VaultQrCodeModalProps> = ({
             <Smartphone size={16} className="text-blue flex-shrink-0" />
             <div className="auth-warning-text">
               <p>
-                <strong>Cross-Device Access:</strong> Scanning this QR code opens MojoLog on your phone or new device and prompts for your password once.
+                <strong>Cross-Device Access:</strong> Scanning this QR code opens roammate on your phone or new device and prompts for your password once.
               </p>
               <p className="mt-1 text-tertiary">
                 Your password is only required the first time you connect from a new browser.
