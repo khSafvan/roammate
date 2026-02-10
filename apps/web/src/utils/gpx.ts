@@ -15,7 +15,7 @@ export function formatGpxCoordinate(lat: number, lon: number): string {
  * containing waypoints (<wpt>) for all stops and a track (<trk>/<trkseg>) for the route.
  * Powered by native Rust WASM (with JS fallback).
  */
-export function generateDayGpx(day: TripDay, tripTitle = 'MojoLog Trip'): string {
+export function generateDayGpx(day: TripDay, tripTitle = 'roammate Trip'): string {
   return generateDayGpxWasm(day, tripTitle);
 }
 

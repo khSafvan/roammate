@@ -27,7 +27,7 @@ export async function importItineraryFile(file: File): Promise<Trip> {
   const parsed = JSON.parse(text);
 
   if (!parsed.title || !Array.isArray(parsed.days)) {
-    throw new Error('Invalid MojoLog itinerary file structure.');
+    throw new Error('Invalid roammate itinerary file structure.');
   }
 
   // Regenerate tripId to prevent collision
