@@ -1,13 +1,13 @@
 /**
- * MojoLog Shared Configuration & Constants
+ * roammate Shared Configuration & Constants
  */
 
 // LocalStorage & Cache Persistence Keys
 export const STORAGE_KEYS = {
-  VAULT_SESSION: 'mojolog_vault_session',
-  USER_PREFIX: 'mojolog_user_',
-  TRIP_PREFIX: 'mojolog_trip_',
-  ACTIVE_TRIP_ID: 'mojolog_active_trip_id',
+  VAULT_SESSION: 'roammate_vault_session',
+  USER_PREFIX: 'roammate_user_',
+  TRIP_PREFIX: 'roammate_trip_',
+  ACTIVE_TRIP_ID: 'roammate_active_trip_id',
 } as const;
 
 // 3-Month Inactivity Retention Policy (90 days in milliseconds)
@@ -22,12 +22,12 @@ export const AUTH_CONFIG = {
   DELETE_CONFIRM_KEYWORD: 'DELETE',
 } as const;
 
-// Cartography & Map Settings (Terraink Minimalist Vector Engine)
+// Cartography & Map Settings (TerraWay Minimalist Vector Engine)
 export const MAP_CONFIG = {
   TILE_STYLE_URL: 'https://tiles.openfreemap.org/styles/positron',
   DEFAULT_CENTER: {
-    longitude: 139.7005,
-    latitude: 35.6895,
+    longitude: 55.2744,
+    latitude: 25.1972,
   },
   DEFAULT_ZOOM: 12.5,
   PADDING: {

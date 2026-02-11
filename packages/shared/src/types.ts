@@ -127,6 +127,28 @@ export interface Expense {
   notes?: string;
 }
 
+export type ReservationCategory = 'flight' | 'hotel' | 'activity' | 'transit' | 'doc';
+
+export interface BookingDocument {
+  id: string;
+  category: ReservationCategory;
+  title: string;
+  subtitle?: string;
+  confirmationCode?: string;
+  date?: string;
+  time?: string;
+  endDate?: string;
+  endTime?: string;
+  location?: string;
+  passengerOrGuestName?: string;
+  cabinOrRoomType?: string;
+  seatOrRoomNumber?: string;
+  qrCodeData?: string;
+  attachmentName?: string;
+  notes?: string;
+  flightData?: Flight;
+}
+
 // 3. Unified Itinerary Document (Single flexible JSON document)
 export interface Trip {
   id: string;
@@ -143,6 +165,7 @@ export interface Trip {
   guestKey?: string;  // Secret guest link key - only persons with this key can view the trip
   readinessScore: number;
   flights: Flight[];
+  documents?: BookingDocument[];
   days: TripDay[];
   expenses: Expense[];
   readinessChecklist: ReadinessItem[];
