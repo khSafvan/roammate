@@ -1,6 +1,6 @@
-# ✈️ MojoLog — Responsive React.js + Rust WebAssembly Trip Planner
+# ✈️ roammate — Responsive React.js + Rust WebAssembly Trip Planner
 
-> A responsive, high-performance trip planning web application synthesizing **TripMojo’s clean, tactile card UI** with **Wanderlog’s spatial distance computation**, an **open-source Terraink 2D planar GPX vector map engine**, and a native **Rust WebAssembly (WASM) TSP optimizer**.
+> A responsive, high-performance trip planning web application with an **open-source TerraWay 2D planar GPX vector map engine** and a native **Rust WebAssembly (WASM) TSP optimizer**.
 
 ---
 
@@ -19,8 +19,8 @@ All core mathematical, geospatial, and combinatorial optimization routines are w
 
 * **Dual-Pane Split Screen (Desktop)**:
   * Left: Day selector, comprehensive daily weather forecast, 1-click TSP route optimizer, and chronological tactile timeline cards.
-  * Right: Terraink 2D planar vector map with continuous GPX track polyline and custom themed waypoint markers (`S`, `02`, `03`, `F`).
-* **Terraink GPX Vector Cartography & Export**:
+  * Right: TerraWay 2D planar vector map with continuous GPX track polyline and custom themed waypoint markers (`S`, `02`, `03`, `F`).
+* **TerraWay GPX Vector Cartography & Export**:
   * Powered by MapLibre GL with OpenFreeMap Positron vector tiles (zero API keys, zero 3D tilt overhead).
   * 1-click RFC/Topografix compliant **GPX 1.1 XML export** for Garmin, Strava, and offline GPS devices.
 * **Mobile-First Responsive Layout**:
@@ -57,7 +57,7 @@ All core mathematical, geospatial, and combinatorial optimization routines are w
 ## 🛠️ Monorepo Workspace Architecture
 
 ```
-mojolog/
+roammate/
 ├── apps/
 │   ├── web/                    # React 18 + Vite + WASM Frontend SPA (@mojolog/web)
 │   │   ├── public/             # Web App Manifest (manifest.webmanifest) & Service Worker (sw.js)
@@ -69,9 +69,9 @@ mojolog/
 │   │   │   ├── styles/         # 8-layer modular CSS architecture
 │   │   │   ├── utils/          # GPX 1.1 Topografix exporter & JSON import/export
 │   │   │   └── wasm/           # Rust WASM loader & JS fallbacks
-│   │   ├── tests/              # 25 automated Vitest unit tests
+│   │   ├── tests/              # Automated Vitest unit tests
 │   │   ├── index.html          # PWA meta tags & root container
-│   │   ├── vite.config.ts      # Vite bundler & @mojolog/shared path alias
+│   │   ├── vite.config.ts      # Vite bundler & path aliases
 │   │   └── package.json        # Frontend workspace dependencies
 │   │
 │   └── api/                    # Cloudflare Worker + Hono Edge API (@mojolog/api)
@@ -93,6 +93,7 @@ mojolog/
 │       └── Cargo.toml          # Rust crate configuration
 │
 ├── package.json                # Root npm workspaces coordinator
+├── TODO.md                     # Bug catalog & feature roadmap
 └── .gitignore
 ```
 
@@ -112,7 +113,7 @@ Starts Vite dev server at `http://localhost:3000`.
 ```bash
 npm test
 ```
-Executes 25 comprehensive Vitest tests across GPX Topografix serialization, BIP-39 crypto retention, and WASM JS fallbacks.
+Executes comprehensive Vitest tests across GPX Topografix serialization, BIP-39 crypto retention, and WASM JS fallbacks.
 
 ### 3. Build Production Bundle
 ```bash

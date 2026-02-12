@@ -1,14 +1,14 @@
-# 🚀 MojoLog Deployment & Environment Setup Guide
+# 🚀 roammate — Deployment & Environment Setup Guide
 
-This guide covers everything required to configure, obtain keys for, and deploy **MojoLog** to production.
+This guide covers everything required to configure, obtain keys for, and deploy **roammate** to production.
 
 ---
 
 ## 📋 Architecture Overview
 
-MojoLog consists of three decoupled components orchestrated within a single monorepo:
+roammate consists of three decoupled components orchestrated within a single monorepo:
 
-1. **Frontend (`apps/web`)**: React 18 SPA + Vite + Rust WebAssembly + PWA Offline Service Worker + Terraink GPX Vector Map engine.
+1. **Frontend (`apps/web`)**: React 18 SPA + Vite + Rust WebAssembly + PWA Offline Service Worker + TerraWay GPX Vector Map engine.
 2. **Backend API (`apps/api`)**: Cloudflare Worker + Hono edge router providing zero-knowledge BIP-39 authentication, itinerary synchronization, read-only link sharing, and 3-month account auto-pruning.
 3. **Database (Turso libSQL)**: Globally distributed serverless SQLite database.
 
@@ -18,10 +18,10 @@ MojoLog consists of three decoupled components orchestrated within a single mono
 
 | Variable | Workspace | Required? | Default / Example | Purpose & Description |
 | :--- | :--- | :--- | :--- | :--- |
-| `VITE_API_URL` | `apps/web` | Optional | `https://mojolog-api.workers.dev` | Points the frontend to the Cloudflare Worker API. If left empty, MojoLog runs 100% offline in client-only vault mode. |
-| `VITE_MAP_STYLE_URL` | `apps/web` | Optional | `https://tiles.openfreemap.org/styles/positron` | Vector tile stylesheet URL for the Terraink cartography engine. OpenFreeMap Positron requires **zero API keys and zero billing**. |
+| `VITE_API_URL` | `apps/web` | Optional | `https://roammate-api.workers.dev` | Points the frontend to the Cloudflare Worker API. If left empty, roammate runs 100% offline in client-only vault mode. |
+| `VITE_MAP_STYLE_URL` | `apps/web` | Optional | `https://tiles.openfreemap.org/styles/positron` | Vector tile stylesheet URL for the TerraWay cartography engine. OpenFreeMap Positron requires **zero API keys and zero billing**. |
 | `VITE_OSRM_ROUTER_URL` | `apps/web` | Optional | `https://router.project-osrm.org` | Multi-modal real-world road and pedestrian routing engine endpoint. |
-| `TURSO_DATABASE_URL` | `apps/api` | Required (Cloud Sync) | `libsql://mojolog-db-[user].turso.io` | Connection URL for your distributed Turso edge database. |
+| `TURSO_DATABASE_URL` | `apps/api` | Required (Cloud Sync) | `libsql://roammate-db-[user].turso.io` | Connection URL for your distributed Turso edge database. |
 | `TURSO_AUTH_TOKEN` | `apps/api` | Required (Cloud Sync) | `eyJhbGciOi...` | Encrypted JWT authentication token for database read/write queries. |
 
 > [!NOTE]
@@ -69,26 +69,25 @@ turso auth login
 
 #### 3. Create a Production Database
 ```bash
-turso db create mojolog-db
+turso db create roammate-db
 ```
 
 #### 4. Apply Database Schema
 Execute the pre-built schema containing the 3-month retention indexes and tables:
 ```bash
-cd ~/Workshop/mojolog
-turso db shell mojolog-db < apps/api/schema.sql
+turso db shell roammate-db < apps/api/schema.sql
 ```
 
 #### 5. Retrieve Your Database URL
 ```bash
-turso db show mojolog-db --url
+turso db show roammate-db --url
 ```
-> Example Output: `libsql://mojolog-db-yourusername.turso.io`  
+> Example Output: `libsql://roammate-db-yourusername.turso.io`  
 > 👉 Save this as `TURSO_DATABASE_URL`.
 
 #### 6. Generate an Auth Token
 ```bash
-turso db tokens create mojolog-db
+turso db tokens create roammate-db
 ```
 > Example Output: `eyJhbGciOi...` (long token string)  
 > 👉 Save this as `TURSO_AUTH_TOKEN`.
@@ -106,15 +105,15 @@ npx wrangler login
 *A browser window will open asking you to authorize Wrangler with your Cloudflare account.*
 
 #### 2. Configure `apps/api/wrangler.toml`
-Open [`apps/api/wrangler.toml`](file:///home/zack/Workshop/mojolog/apps/api/wrangler.toml) and set your database URL:
+Open `apps/api/wrangler.toml` and set your database URL:
 ```toml
-name = "mojolog-api"
+name = "roammate-api"
 main = "src/index.ts"
 compatibility_date = "2024-09-01"
 compatibility_flags = ["nodejs_compat"]
 
 [vars]
-TURSO_DATABASE_URL = "libsql://mojolog-db-yourusername.turso.io"
+TURSO_DATABASE_URL = "libsql://roammate-db-yourusername.turso.io"
 ```
 
 #### 3. Store the Secret Auth Token on Cloudflare
@@ -129,12 +128,12 @@ npx wrangler secret put TURSO_AUTH_TOKEN
 ```bash
 npm run deploy
 ```
-> Example Output: `Published mojolog-api (1.2s) at https://mojolog-api.yoursubdomain.workers.dev`  
+> Example Output: `Published roammate-api (1.2s) at https://roammate-api.yoursubdomain.workers.dev`  
 > 👉 This URL is your `VITE_API_URL` for the frontend!
 
 #### 5. Verify the Live Backend
 ```bash
-curl https://mojolog-api.yoursubdomain.workers.dev/api/auth/register
+curl https://roammate-api.yoursubdomain.workers.dev/api/auth/register
 ```
 
 ---
@@ -145,7 +144,7 @@ The frontend produces static HTML, CSS, JavaScript, and compiled `.wasm` files i
 
 #### Build Command
 ```bash
-cd ~/Workshop/mojolog
+# From the repository root:
 
 # 1. Compile Rust to WebAssembly (if changed)
 npm run build:wasm
@@ -168,7 +167,7 @@ Because your worker is already on Cloudflare, Pages gives you same-network speed
    * **Build command**: `npm run build`
    * **Build output directory**: `dist`
 3. Environment variables:
-   * `VITE_API_URL`: `https://mojolog-api.yoursubdomain.workers.dev`
+   * `VITE_API_URL`: `https://roammate-api.yoursubdomain.workers.dev`
    * `VITE_MAP_STYLE_URL`: `https://tiles.openfreemap.org/styles/positron`
 4. Click **Save and Deploy**.
 
@@ -222,7 +221,7 @@ npm run dev:api
 
 ### Step 6: Verifying PWA & Offline Support
 
-MojoLog is a Progressive Web App (PWA) with full offline caching:
+roammate is a Progressive Web App (PWA) with full offline caching:
 1. Production deployments **must be served over HTTPS** (Cloudflare Pages, Vercel, and Netlify provide this automatically).
 2. Open your deployed URL in Chrome/Brave/Edge.
 3. Open DevTools ➔ **Application** ➔ **Service Workers**; verify `sw.js` is active and running.
@@ -233,7 +232,7 @@ MojoLog is a Progressive Web App (PWA) with full offline caching:
 
 ### Step 7: Automated 3-Month Retention Policy
 
-MojoLog enforces strict zero-knowledge privacy:
+roammate enforces strict zero-knowledge privacy:
 * Inactive accounts not accessed for **90 days (3 months)** are automatically expunged from the database during edge access cycles.
 * To schedule proactive daily pruning, enable a cron trigger in `apps/api/wrangler.toml`:
   ```toml
