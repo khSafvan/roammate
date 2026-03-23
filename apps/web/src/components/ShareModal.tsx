@@ -1,10 +1,12 @@
 import React, { useRef, useState } from 'react';
 import {
+  Calendar,
   Check,
   Copy,
   Download,
   FileJson,
   KeyRound,
+  Printer,
   RefreshCw,
   ShieldCheck,
   Upload,
@@ -16,6 +18,7 @@ import {
   exportItinerary,
   importItineraryFile,
 } from '../utils/exportImport';
+import { downloadIcsCalendar } from '../utils/icalExport';
 
 interface ShareModalProps {
   isOpen: boolean;
@@ -196,6 +199,48 @@ export const ShareModal: React.FC<ShareModalProps> = ({
                 <span>{importError}</span>
               </div>
             )}
+          </div>
+
+          {/* Method 3: iCalendar (.ics) Calendar Feed (Feature F8) */}
+          <div className="share-option-card">
+            <div className="share-option-header">
+              <div className="flex items-center gap-2">
+                <Calendar size={16} className="text-blue" />
+                <span className="share-option-title">iCalendar (.ics) RFC 5545 Sync</span>
+              </div>
+            </div>
+            <p className="share-option-desc">
+              Sync all flights, hotel stays, and timed itinerary stops with Google Calendar, Apple Calendar (iOS / macOS), or Outlook.
+            </p>
+
+            <button
+              className="primary-action-btn w-full flex items-center justify-center gap-2"
+              onClick={() => downloadIcsCalendar(trip)}
+            >
+              <Calendar size={15} />
+              <span>Download iCalendar (.ics)</span>
+            </button>
+          </div>
+
+          {/* Method 4: Printable Travel Packet (Feature F10) */}
+          <div className="share-option-card">
+            <div className="share-option-header">
+              <div className="flex items-center gap-2">
+                <Printer size={16} className="text-slate" />
+                <span className="share-option-title">Print Emergency Travel Packet</span>
+              </div>
+            </div>
+            <p className="share-option-desc">
+              Formatted printer-friendly packet with flights, vouchers, hotel reservations, and daily schedules for offline emergency paper backup.
+            </p>
+
+            <button
+              className="secondary-action-btn w-full flex items-center justify-center gap-2"
+              onClick={() => window.print()}
+            >
+              <Printer size={15} />
+              <span>Print Travel Packet</span>
+            </button>
           </div>
         </div>
       </div>
