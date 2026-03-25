@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   Calendar,
   Check,
@@ -53,6 +53,15 @@ export const TripManagerModal: React.FC<TripManagerModalProps> = ({
   const [editEndDate, setEditEndDate] = useState(activeTrip.endDate || '');
   const [editStartTime, setEditStartTime] = useState(activeTrip.startTime || '09:00');
   const [editEndTime, setEditEndTime] = useState(activeTrip.endTime || '21:00');
+
+  useEffect(() => {
+    setEditTitle(activeTrip.title);
+    setEditDestination(activeTrip.destination);
+    setEditStartDate(activeTrip.startDate || '');
+    setEditEndDate(activeTrip.endDate || '');
+    setEditStartTime(activeTrip.startTime || '09:00');
+    setEditEndTime(activeTrip.endTime || '21:00');
+  }, [activeTrip]);
 
   if (!isOpen) return null;
 

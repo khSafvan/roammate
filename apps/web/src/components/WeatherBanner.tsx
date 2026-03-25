@@ -33,14 +33,28 @@ const getWeatherIcon = (condition: WeatherCondition, size = 20) => {
   }
 };
 
+const DEFAULT_DAY_WEATHER = {
+  tempC: 22,
+  highC: 24,
+  lowC: 16,
+  condition: 'sunny' as WeatherCondition,
+  conditionText: 'Fair',
+  rainProbability: 0,
+  humidity: 50,
+  uvIndex: 4,
+  clothingTip: 'Comfortable clothing recommended.',
+  hourly: [],
+};
+
 export const WeatherBanner = React.memo<WeatherBannerProps>(function WeatherBanner({
-  weather,
+  weather: rawWeather,
   themeColor,
 }) {
+  const weather = rawWeather || DEFAULT_DAY_WEATHER;
   const comfortLabel = getWeatherComfortLabel(
-    weather.tempC,
-    weather.humidity,
-    weather.rainProbability
+    weather.tempC ?? 22,
+    weather.humidity ?? 50,
+    weather.rainProbability ?? 0
   );
 
   return (
