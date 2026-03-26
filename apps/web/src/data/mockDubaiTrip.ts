@@ -748,7 +748,84 @@ export const mockDubaiTripData: Trip = {
       amount: 790.0,
       currency: 'AED',
       paidBy: 'Jordan Taylor',
+      splitWith: ['Alex Chen', 'Jordan Taylor'],
       notes: 'Atlantis Aquaventure & Lost Chambers passes',
     },
+  ],
+  placesToVisit: [
+    {
+      id: 'idea_dxb_1',
+      orderIndex: 1,
+      title: 'Dubai Miracle Garden',
+      subtitle: 'World largest natural flower garden with 150M+ blooms',
+      category: 'sight',
+      startTime: '10:00 AM',
+      durationMinutes: 90,
+      coordinates: { latitude: 25.0597, longitude: 55.2447 },
+      address: 'Street 3 - Al Barsha - Al Barsha South - Dubai',
+      notes: 'Best visited in morning hours or late afternoon before sunset.',
+    },
+    {
+      id: 'idea_dxb_2',
+      orderIndex: 2,
+      title: 'Al Fahidi Historical Neighbourhood',
+      subtitle: 'Traditional winding wind-tower alleyways and museums',
+      category: 'sight',
+      startTime: '03:00 PM',
+      durationMinutes: 75,
+      coordinates: { latitude: 25.2632, longitude: 55.2974 },
+      address: 'Bur Dubai - Al Fahidi - Dubai',
+      notes: 'Check out Arabian Tea House for Emirati iced mint tea and flatbreads.',
+    },
+    {
+      id: 'idea_dxb_3',
+      orderIndex: 3,
+      title: 'Time Out Market Dubai',
+      subtitle: 'Curated food hall overlooking Dubai Fountain',
+      category: 'dining',
+      startTime: '07:30 PM',
+      durationMinutes: 60,
+      coordinates: { latitude: 25.1952, longitude: 55.2798 },
+      address: 'Souk Al Bahar - Downtown Dubai',
+      notes: 'Great spot for dinner with terrace seating facing the fountain show.',
+    },
+  ],
+  emergencyContacts: `• Dubai Emergency Police: 999
+• Dubai Ambulance: 998 / 997 (Fire)
+• US Consulate General Dubai: +971 4 309 4000 (Corner of Al Seef Rd and Sheikh Khalifa bin Zayed Rd)
+• British Embassy Dubai: +971 4 309 4444 (Al Seef St, Bur Dubai)
+• Palace Downtown Concierge: +971 4 428 7888
+• Travel Insurance Policy: Allianz Global #AZ-9982104 (24/7 Assist: +1 800 555 0199)`,
+  generalNotes: `• Wifi Passwords:
+  - Palace Downtown: PalaceGuest / falcon2027
+  - Dubai Mall Free Wifi: "Dubai Mall by Emaar" (SMS OTP required)
+• Metro / Nol Card:
+  - Silver Nol card loaded with 50 AED each for Red Line metro trips
+• Dress Code Reminders:
+  - Modest dress required for Sheikh Zayed Grand Mosque (Abu Dhabi) — arms and legs covered, headscarf for women
+  - Desert Safari: breathable linen, sunglasses, sunscreen SPF 50+, closed sneakers for ATV quad biking`,
+  packingList: [
+    { id: 'pack_1', category: 'Clothes', name: 'Lightweight linen shirts (x4)', packed: true },
+    { id: 'pack_2', category: 'Clothes', name: 'Cotton trousers & chinos', packed: true },
+    { id: 'pack_3', category: 'Clothes', name: 'Swimwear / boardshorts for Aura Skypool', packed: true },
+    { id: 'pack_4', category: 'Clothes', name: 'Evening smart-casual dinner attire', packed: false },
+    { id: 'pack_5', category: 'Clothes', name: 'Comfortable walking sneakers', packed: true },
+    { id: 'pack_6', category: 'Clothes', name: 'Modest mosque clothing / scarf', packed: false },
+    { id: 'pack_7', category: 'Toiletries', name: 'Sunscreen SPF 50+ (mineral)', packed: true },
+    { id: 'pack_8', category: 'Toiletries', name: 'Hydrating face mist & lip balm', packed: true },
+    { id: 'pack_9', category: 'Toiletries', name: 'Travel toothbrush & paste', packed: true },
+    { id: 'pack_10', category: 'Toiletries', name: 'Electrolyte hydration tablets', packed: false },
+    { id: 'pack_11', category: 'Electronics', name: 'UK Type G travel plug adapter (UAE standard)', packed: true },
+    { id: 'pack_12', category: 'Electronics', name: 'Anker 20,000mAh Power Bank', packed: true },
+    { id: 'pack_13', category: 'Electronics', name: 'USB-C charging cables', packed: true },
+    { id: 'pack_14', category: 'Electronics', name: 'Noise-canceling headphones', packed: true },
+    { id: 'pack_15', category: 'Documents', name: 'Passports with 6+ months validity', packed: true },
+    { id: 'pack_16', category: 'Documents', name: 'UAE tourist visa approvals (PDF)', packed: true },
+    { id: 'pack_17', category: 'Documents', name: 'International Driving Permit (for ATV/car rental)', packed: true },
+    { id: 'pack_18', category: 'Documents', name: 'Printed travel insurance card', packed: false },
+    { id: 'pack_19', category: 'Essentials', name: 'Credit cards with zero foreign transaction fees', packed: true },
+    { id: 'pack_20', category: 'Essentials', name: 'Polarized sunglasses (UV400)', packed: true },
+    { id: 'pack_21', category: 'Essentials', name: 'Prescription medications in original containers', packed: true },
+    { id: 'pack_22', category: 'Essentials', name: 'Refillable insulated water bottle', packed: false },
   ],
 };

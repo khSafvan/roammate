@@ -8,9 +8,12 @@ import {
   Copy,
   DollarSign,
   Download,
+  FileText,
   KeyRound,
   MapPin,
   Palette,
+  PhoneCall,
+  Printer,
   RefreshCw,
   Save,
   ShieldCheck,
@@ -35,7 +38,7 @@ const THEME_COLORS = [
   { name: 'Slate Calm', hex: '#64748B' },
 ];
 
-const CURRENCIES = ['USD', 'EUR', 'JPY', 'GBP', 'CAD', 'AUD', 'CHF', 'SGD'];
+const CURRENCIES = ['USD', 'EUR', 'JPY', 'GBP', 'CAD', 'AUD', 'CHF', 'SGD', 'AED', 'MYR', 'INR', 'THB', 'IDR'];
 
 export const TripSettingsPage: React.FC<TripSettingsPageProps> = ({
   trip,
@@ -52,6 +55,8 @@ export const TripSettingsPage: React.FC<TripSettingsPageProps> = ({
   const [baseCurrency, setBaseCurrency] = useState(trip.baseCurrency || 'USD');
   const [themeColor, setThemeColor] = useState(trip.days?.[0]?.themeColor || '#3B82F6');
   const [guestKey, setGuestKey] = useState(trip.guestKey || trip.shareToken || 'guest_key');
+  const [emergencyContacts, setEmergencyContacts] = useState(trip.emergencyContacts || '');
+  const [generalNotes, setGeneralNotes] = useState(trip.generalNotes || '');
 
   const [copiedLink, setCopiedLink] = useState(false);
   const [isSaved, setIsSaved] = useState(false);
@@ -79,6 +84,11 @@ export const TripSettingsPage: React.FC<TripSettingsPageProps> = ({
     const formattedDates =
       startDate && endDate ? `${startDate} – ${endDate}` : trip.dates;
 
+    const updatedDays = (trip.days || []).map((day) => ({
+      ...day,
+      themeColor,
+    }));
+
     onUpdateTrip({
       title: title.trim() || trip.title,
       destination: destination.trim() || trip.destination,
@@ -89,6 +99,9 @@ export const TripSettingsPage: React.FC<TripSettingsPageProps> = ({
       dates: formattedDates,
       baseCurrency,
       guestKey,
+      emergencyContacts: emergencyContacts.trim() || undefined,
+      generalNotes: generalNotes.trim() || undefined,
+      days: updatedDays,
     });
 
     setIsSaved(true);
@@ -116,6 +129,15 @@ export const TripSettingsPage: React.FC<TripSettingsPageProps> = ({
           </div>
 
           <div className="header-actions">
+            <button
+              type="button"
+              className="secondary-action-btn"
+              onClick={() => window.print()}
+              title="Print formatted emergency travel packet"
+            >
+              <Printer size={14} />
+              <span>Print Travel Packet</span>
+            </button>
             <button
               className={`primary-action-btn ${isSaved ? 'bg-emerald' : ''}`}
               onClick={() => handleSave()}
@@ -332,7 +354,55 @@ export const TripSettingsPage: React.FC<TripSettingsPageProps> = ({
           </div>
         </div>
 
-        {/* Section 4: Data Management & Danger Zone */}
+        {/* Section 4: Scratchpad & Emergency Travel Notes */}
+        <div className="settings-card">
+          <div className="settings-card-header">
+            <div className="settings-icon-node">
+              <PhoneCall size={17} className="text-amber" />
+            </div>
+            <div>
+              <h2 className="settings-section-title">Emergency Contacts &amp; Trip Scratchpad</h2>
+              <p className="settings-section-subtitle">
+                Embassy phone numbers, local emergency services, wifi credentials, and offline notes
+              </p>
+            </div>
+          </div>
+
+          <div className="settings-fields-stack">
+            <div className="form-group">
+              <label className="form-label flex items-center gap-1.5">
+                <PhoneCall size={12} className="text-amber" />
+                <span>Emergency Contacts &amp; Embassy Details</span>
+              </label>
+              <textarea
+                className="form-input text-xs font-mono"
+                rows={3}
+                placeholder="e.g. Police: 999, Ambulance: 998, US Consulate: +971-4-309-4000"
+                value={emergencyContacts}
+                onChange={(e) => setEmergencyContacts(e.target.value)}
+              />
+              <span className="text-xs text-secondary mt-1 block">
+                Included on the formatted printable travel packet and offline emergency summary.
+              </span>
+            </div>
+
+            <div className="form-group">
+              <label className="form-label flex items-center gap-1.5">
+                <FileText size={12} className="text-blue" />
+                <span>General Travel Notes, Access Codes &amp; Wifi</span>
+              </label>
+              <textarea
+                className="form-input text-xs font-mono"
+                rows={3}
+                placeholder="e.g. Hotel Wifi: BurjGuest / Code: Burj2026, Lockbox code: 4892"
+                value={generalNotes}
+                onChange={(e) => setGeneralNotes(e.target.value)}
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* Section 5: Data Management & Danger Zone */}
         <div className="settings-card danger-card">
           <div className="settings-card-header">
             <div className="settings-icon-node danger-node">
