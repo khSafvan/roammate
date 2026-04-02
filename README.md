@@ -1,142 +1,139 @@
-# ✈️ roammate — Responsive React.js + Rust WebAssembly Trip Planner
+# ✈️ roammate — Responsive React + Rust/WASM Trip Planner
 
-> A responsive, high-performance trip planning web application with an **open-source TerraWay 2D planar GPX vector map engine** and a native **Rust WebAssembly (WASM) TSP optimizer**.
+> A fully offline-capable, privacy-first trip planning web app with a **TerraWay 2D GPX vector map engine**, a native **Rust WebAssembly TSP route optimizer**, and a cryptographic **BIP-39 seed vault**.
 
 ---
 
 ## ⚡ Rust WebAssembly Engine (`rust-core`)
 
-All core mathematical, geospatial, and combinatorial optimization routines are written in **Rust** and compiled directly to **WebAssembly (WASM)** via `wasm-pack`:
+All core math, geospatial, and combinatorial optimization routines are written in **Rust** and compiled to **WebAssembly** via `wasm-pack`:
 
-1. **`wasm_haversine_distance_km`**: High-precision spherical distance computation.
-2. **`wasm_estimate_duration_minutes`**: Multi-modal urban transit modeling (Driving with traffic buffer, Walking, and Transit with station buffers).
-3. **`wasm_optimize_route_tsp`**: 2-opt Traveling Salesperson Problem (TSP) algorithm executed at near-native speed to resequence intermediate stops, eliminate backtracking, and save travel time.
-4. **`wasm_weather_comfort_label`**: Comfort scoring index analyzing temperature, humidity, UV, and precipitation.
-
----
-
-## 🌟 Key Features
-
-* **Dual-Pane Split Screen (Desktop)**:
-  * Left: Day selector, comprehensive daily weather forecast, 1-click TSP route optimizer, and chronological tactile timeline cards.
-  * Right: TerraWay 2D planar vector map with continuous GPX track polyline and custom themed waypoint markers (`S`, `02`, `03`, `F`).
-* **TerraWay GPX Vector Cartography & Export**:
-  * Powered by MapLibre GL with OpenFreeMap Positron vector tiles (zero API keys, zero 3D tilt overhead).
-  * 1-click RFC/Topografix compliant **GPX 1.1 XML export** for Garmin, Strava, and offline GPS devices.
-* **Mobile-First Responsive Layout**:
-  * Seamlessly adapts to phones and tablets with an instant view switcher ("Timeline & Weather" vs "Route Map") and minimum 44px touch targets.
-* **Comprehensive Weather Predictions**:
-  * Temperature (Current, High, Low) & Condition.
-  * Precipitation percentage, Humidity, and UV Index.
-  * Contextual attire recommendation (e.g. *"Mild afternoon, light jacket needed after sunset"*).
-  * Hourly forecast stream (Temperature, condition icon, and rain chance).
-* **Inter-Stop Distance & Transit Pills**:
-  * Embedded between consecutive stops: `🚗 14 min · 4.8 km`.
-  * Click to cycle modes: **Drive ➔ Walk ➔ Transit** with instant recalculation via Rust WASM.
-  * Backtracking / long-leg alerts (`⚠️ Long Leg`).
-* **Flight Boarding Passes & Live Radar**:
-  * Airline boarding pass cards with departure/arrival IATA badges (`JFK ➔ HND`), flight numbers, times, terminals, and seats.
-  * Direct 1-tap live flight tracking via free **FlightRadar24** (`https://www.flightradar24.com/data/flights/{flightNumber}`).
-* **Dynamic Expense Tracker & Budgeting**:
-  * Client-side JavaScript reduction computing category-wise totals across 7 categories (Flights, Lodging, Food & Drinks, Transport, Activities, Shopping, Misc).
-  * Multi-colored visual distribution progress bar and transaction ledger.
-* **Portable Import / Export & Zero-Login Sharing**:
-  * **Method A (Universal Portable JSON)**: 1-click export to `${title}_itinerary.json` and drag-and-drop import with collision-free ID regeneration.
-  * **Method B (Read-Only Share Link)**: Cloudflare Worker edge route `GET /api/share/:token` providing instant, zero-login read-only web view.
-* **Cryptographic 12-Word Seed Vault (BIP-39)**:
-  * Zero SMS costs, zero third-party lock-in, zero tracking.
-  * Uses Web Crypto SHA-256 for public User ID derivation and Turso (libSQL) database persistence.
-  * **Automated 3-Month Retention Policy**: Inactive local data and edge records older than 90 days are automatically pruned.
-* **Trip Readiness Hub**:
-  * Circular progress gauge tracking passports, visas, bookings, and eSIM prerequisites.
-* **Offline-First PWA Support**:
-  * Complete Progressive Web App (PWA) manifest and Service Worker caching app shell, styles, and Rust WASM binary for 100% offline flight & itinerary access.
+| Function | Description |
+|---|---|
+| `wasm_haversine_distance_km` | High-precision spherical distance between two coordinates |
+| `wasm_estimate_duration_minutes` | Multi-modal transit modeling (Drive, Walk, Transit with station buffers) |
+| `wasm_optimize_route_tsp` | 2-opt TSP algorithm resequencing stops to minimize total travel distance |
+| `wasm_weather_comfort_label` | Comfort scoring combining temperature, humidity, UV, and precipitation |
 
 ---
 
-## 🛠️ Monorepo Workspace Architecture
+## 🌟 Features
+
+- **Dual-Pane Split Screen (Desktop)** — Day selector, weather forecast, 1-click TSP optimizer, and timeline cards on the left; TerraWay vector map with GPX polyline on the right.
+- **Stop & Day CRUD** — Add, edit, delete, and move stops between days. Add or remove trip days with auto-dating.
+- **Route Optimizer with Undo** — 2-opt TSP preview modal showing before/after savings; replace or revert.
+- **Places to Visit Drawer** — Unscheduled ideas bucket with OSM/Nominatim geocoding search and day assignment.
+- **Expense Tracker & Debt Settlement** — Multi-traveler balances, category totals, and greedy Settle Up debt minimization.
+- **Schedule Conflict Detection** — Transit conflict warnings (`⚠️ Late by Xm`) between consecutive stops.
+- **Categorized Packing Lists** — 5-category checklist with progress bar in the Readiness hub.
+- **iCalendar Export** — RFC 5545 compliant `.ics` download for Google/Apple/Outlook calendar sync.
+- **Scratchpad & Notes** — Trip-level emergency contacts, general notes, and per-day notes.
+- **Printable Travel Packet** — Clean `@media print` layout for offline paper backup.
+- **TerraWay GPX Export** — RFC/Topografix GPX 1.1 XML for Garmin, Strava, and offline GPS.
+- **Flight Boarding Passes** — IATA route cards with live FlightRadar24 deep-links.
+- **BIP-39 Seed Vault** — 12-word mnemonic cryptographic auth, zero SMS costs, zero lock-in.
+- **Offline-First PWA** — Service Worker caches app shell, styles, and WASM binary for 100% offline access.
+
+---
+
+## 🛠️ Monorepo Architecture
 
 ```
 roammate/
 ├── apps/
-│   ├── web/                    # React 18 + Vite + WASM Frontend SPA (@mojolog/web)
-│   │   ├── public/             # Web App Manifest (manifest.webmanifest) & Service Worker (sw.js)
+│   ├── web/                    # React 18 + Vite + WASM Frontend SPA
 │   │   ├── src/
 │   │   │   ├── auth/           # BIP-39 mnemonic generation & Web Crypto SHA-256
-│   │   │   ├── components/     # Memoized React UI components & Auth subviews
-│   │   │   ├── hooks/          # Custom hooks (useVault, useTransitLegs, useTripOptimization)
-│   │   │   ├── pkg/            # Compiled WebAssembly binary & JS bindings
-│   │   │   ├── styles/         # 8-layer modular CSS architecture
-│   │   │   ├── utils/          # GPX 1.1 Topografix exporter & JSON import/export
-│   │   │   └── wasm/           # Rust WASM loader & JS fallbacks
-│   │   ├── tests/              # Automated Vitest unit tests
-│   │   ├── index.html          # PWA meta tags & root container
-│   │   ├── vite.config.ts      # Vite bundler & path aliases
-│   │   └── package.json        # Frontend workspace dependencies
+│   │   │   ├── components/     # React UI components & modal system
+│   │   │   ├── hooks/          # useVault, useTransitLegs, useTripOptimization
+│   │   │   ├── pkg/            # Compiled WASM binary & JS bindings
+│   │   │   ├── styles/         # 9-layer modular CSS design system
+│   │   │   │   ├── variables.css   # Design tokens (color, spacing, radius, type)
+│   │   │   │   ├── base.css        # Reset & global primitives
+│   │   │   │   ├── layout.css      # Header, nav, workspace, map pane
+│   │   │   │   ├── timeline.css    # Day selector, timeline cards, distance pills
+│   │   │   │   ├── map.css         # MapLibre container & floating UI
+│   │   │   │   ├── subviews.css    # Settings, trips list, subview pages
+│   │   │   │   ├── modals.css      # Modal system & form primitives
+│   │   │   │   ├── responsive.css  # Breakpoints & touch target enforcement
+│   │   │   │   ├── utilities.css   # Utility class layer (spacing, color, layout)
+│   │   │   │   └── print.css       # @media print travel packet styles
+│   │   │   ├── utils/          # GPX exporter, iCal generator, expense settlement
+│   │   │   └── wasm/           # WASM loader & JS fallbacks
+│   │   └── tests/              # Vitest unit tests (87 passing)
 │   │
-│   └── api/                    # Cloudflare Worker + Hono Edge API (@mojolog/api)
-│       ├── src/index.ts        # Edge auth, sync, and 3-month auto-pruning
-│       ├── schema.sql          # Turso (libSQL) database migration
-│       ├── wrangler.toml       # Edge deployment configuration
-│       └── package.json        # Worker workspace dependencies
+│   └── api/                    # Cloudflare Worker + Hono Edge API
+│       ├── src/index.ts        # Edge auth, sync, share, 90-day auto-pruning
+│       ├── schema.sql          # Turso (libSQL) database schema
+│       └── wrangler.toml       # Edge deployment config
 │
 ├── packages/
-│   ├── shared/                 # Single Source of Truth (@mojolog/shared)
-│   │   ├── src/
-│   │   │   ├── types.ts        # Unified Trip, Stop, Flight, Expense, VaultSession models
-│   │   │   ├── constants.ts    # Storage keys, 90-day retention policy, transit speeds
-│   │   │   └── index.ts        # Shared module exports
-│   │   └── package.json
+│   ├── shared/                 # Shared types & constants (@mojolog/shared)
+│   │   └── src/
+│   │       ├── types.ts        # Trip, TripDay, ItineraryStop, Flight, Expense, PackingItem
+│   │       └── constants.ts    # Storage keys, 90-day retention, transit speeds
 │   │
-│   └── rust-core/              # Computational Core (compiled to WebAssembly)
-│       ├── src/lib.rs          # TSP 2-opt optimizer, Haversine formula, comfort index
-│       └── Cargo.toml          # Rust crate configuration
+│   └── rust-core/              # Computational core → WebAssembly
+│       └── src/lib.rs          # TSP 2-opt, Haversine, comfort index
 │
-├── package.json                # Root npm workspaces coordinator
-├── TODO.md                     # Bug catalog & feature roadmap
-└── .gitignore
+├── README.md
+├── DEPLOYMENT.md
+├── TODO.md
+└── DESIGN_LAWS.md              # Design system rules & token reference
 ```
 
 ---
 
-## 🚀 Workspace Commands
+## 🚀 Commands
 
-All commands can be run directly from the repository root:
-
-### 1. Start Frontend Development Server
 ```bash
-npm run dev
+npm run dev          # Start Vite dev server at http://localhost:3000
+npm test             # Run Vitest unit tests (87 tests)
+npm run build        # TypeScript check + production bundle → apps/web/dist/
+npm run dev:api      # Start local Cloudflare Worker (Wrangler)
+npm run build:wasm   # Recompile Rust → WebAssembly (wasm-pack)
 ```
-Starts Vite dev server at `http://localhost:3000`.
-
-### 2. Run Automated Unit Test Suite
-```bash
-npm test
-```
-Executes comprehensive Vitest tests across GPX Topografix serialization, BIP-39 crypto retention, and WASM JS fallbacks.
-
-### 3. Build Production Bundle
-```bash
-npm run build
-```
-Typechecks and compiles the production frontend bundle into `apps/web/dist/`.
-
-### 4. Start Edge API Worker (Optional)
-```bash
-npm run dev:api
-```
-Starts Wrangler local edge development server for `@mojolog/api`.
-
-### 5. Recompile Rust WebAssembly (Optional)
-```bash
-npm run build:wasm
-```
-Compiles `packages/rust-core` with `wasm-pack` directly into `apps/web/src/pkg/`.
 
 ---
 
-## 📖 Deployment & Production Setup
+## 🎨 Design System
 
-For full step-by-step instructions on provisioning a free Turso database, configuring Cloudflare Workers, managing environment variables, and deploying to Cloudflare Pages or Vercel, read the complete guide:
+roammate uses a hand-authored modular CSS design system — no Tailwind, no CSS-in-JS, no UI kit dependencies. All rules are documented in **[DESIGN_LAWS.md](DESIGN_LAWS.md)**.
+
+**Core principles:**
+- **Minimalist** — every element earns its place; whitespace is structure, not filler
+- **Flat design** — shapes and solid color, no gradients, no fake 3D; subtle shadows for elevation only
+- **Rounded, not circular** — 4/8/12/16/20/24px radius scale; `9999px` pill only for chips and tags; `50%` only for avatars/status dots
+- **4px spacing grid** — all padding and margin values are multiples of 4 (`4, 8, 12, 16, 20, 24, 32, 48, 64`)
+- **Responsive & touch-first** — 44px minimum touch targets, 768px + 1024px breakpoints, 16px minimum body font
+
+**Token quick-reference:**
+
+| Token | Value | Use |
+|---|---|---|
+| `--brand-blue` | `#2563EB` | Primary CTAs, active states, focus rings |
+| `--brand-emerald` | `#10B981` | Success, completion, checked |
+| `--brand-rose` | `#EF4444` | Danger, delete, errors |
+| `--brand-amber` | `#F59E0B` | Warning, conflict alerts |
+| `--bg-canvas` | `#F8F9FA` | App background |
+| `--bg-card` | `#FFFFFF` | Card & modal surfaces |
+| `--bg-subtle` | `#F1F3F5` | Muted backgrounds, inputs |
+| `--text-primary` | `#0F172A` | All primary labels |
+| `--text-secondary` | `#64748B` | Meta-info, subtitles |
+| `--text-tertiary` | `#94A3B8` | Placeholders, hints, labels |
+| `--radius-sm` | `8px` | Inputs, small interactive elements |
+| `--radius-md` | `12px` | Icon nodes, small cards |
+| `--radius-card` | `20px` | Timeline cards, modals |
+| `--radius-pill` | `9999px` | Chips, tags, nav tabs |
+| `--shadow-card` | very subtle multi-layer | Cards at rest |
+| `--shadow-modal` | deeper | Floating modals & drawers |
+
+See [DESIGN_LAWS.md](DESIGN_LAWS.md) for the complete rule set, utility class reference, component patterns, and do/don't cheat sheet.
+
+---
+
+## 📖 Deployment
+
+Full setup guide for Turso database, Cloudflare Workers, and production deployment:
 
 👉 **[DEPLOYMENT.md](DEPLOYMENT.md)**
