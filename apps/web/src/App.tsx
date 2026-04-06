@@ -1,5 +1,4 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import confetti from 'canvas-confetti';
 import {
   CalendarDays,
   FileText,
@@ -230,7 +229,6 @@ export function App() {
         };
         return { ...prev, days: updatedDays };
       });
-      confetti({ particleCount: 40, spread: 50 });
     },
     [activeDayIdx, setTrip]
   );
@@ -304,7 +302,6 @@ export function App() {
         return { ...prev, days: updatedDays };
       });
       setSelectedStop(null);
-      confetti({ particleCount: 50, spread: 60 });
     },
     [activeDay.id, setTrip]
   );
@@ -324,7 +321,6 @@ export function App() {
           placesToVisit: [...currentPlaces, newPlace],
         };
       });
-      confetti({ particleCount: 30, spread: 45 });
     },
     [setTrip]
   );
@@ -382,7 +378,6 @@ export function App() {
       });
       setActiveDayIdx(dayIndex);
       setIsPlacesToVisitActive(false);
-      confetti({ particleCount: 50, spread: 60 });
     },
     [setTrip]
   );
@@ -417,7 +412,6 @@ export function App() {
         };
       });
       setSelectedStop(null);
-      confetti({ particleCount: 35, spread: 45 });
     },
     [activeDayIdx, setTrip]
   );
@@ -469,7 +463,6 @@ export function App() {
     });
 
     setActiveDayIdx(trip.days.length);
-    confetti({ particleCount: 50, spread: 60 });
   }, [trip.days.length, setTrip, setActiveDayIdx]);
 
   const handleDeleteDay = useCallback(
@@ -495,7 +488,6 @@ export function App() {
   // Import Handler
   const handleImportSuccess = useCallback((importedTrip: Trip) => {
     setTrip(importedTrip);
-    confetti({ particleCount: 100, spread: 80 });
   }, [setTrip]);
 
   // Toggle readiness item
@@ -506,10 +498,6 @@ export function App() {
       );
       const completedCount = updatedList.filter((i) => i.completed).length;
       const newScore = Math.round((completedCount / (updatedList.length || 1)) * 100);
-
-      if (newScore === 100) {
-        confetti({ particleCount: 120, spread: 90 });
-      }
 
       return {
         ...prev,
