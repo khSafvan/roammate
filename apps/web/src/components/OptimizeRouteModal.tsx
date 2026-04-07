@@ -63,7 +63,7 @@ export const OptimizeRouteModal: React.FC<OptimizeRouteModalProps> = ({
               style={{
                 width: '48px',
                 height: '48px',
-                borderRadius: '50%',
+                borderRadius: 'var(--radius-lg, 16px)',
                 backgroundColor: 'rgba(16, 185, 129, 0.15)',
                 color: '#059669',
                 display: 'flex',
@@ -190,7 +190,7 @@ export const OptimizeRouteModal: React.FC<OptimizeRouteModalProps> = ({
                           style={{
                             width: '24px',
                             height: '24px',
-                            borderRadius: '50%',
+                            borderRadius: 'var(--radius-sm, 8px)',
                             backgroundColor: orderChanged ? '#3B82F6' : '#64748B',
                             color: '#ffffff',
                             fontSize: '11px',

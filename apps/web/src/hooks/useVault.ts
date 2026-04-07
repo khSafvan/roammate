@@ -1,5 +1,4 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import confetti from 'canvas-confetti';
 import { getVaultSession, VaultSession } from '../auth/crypto';
 import {
   createDefaultTrip,
@@ -170,7 +169,6 @@ export function useVault(): UseVaultReturn {
       if (found) {
         setActiveTrip(found);
         setActiveTripIdLocal(found.id);
-        confetti({ particleCount: 20, spread: 35 });
       }
     },
     [trips]
@@ -198,7 +196,6 @@ export function useVault(): UseVaultReturn {
         localStorage.setItem(`${STORAGE_KEYS.TRIP_PREFIX}${newTrip.id}`, JSON.stringify(newTrip));
       }
 
-      confetti({ particleCount: 60, spread: 60 });
       return newTrip;
     },
     [vaultSession]
@@ -244,8 +241,6 @@ export function useVault(): UseVaultReturn {
     } else {
       localStorage.setItem(`${STORAGE_KEYS.TRIP_PREFIX}${clonedTrip.id}`, JSON.stringify(clonedTrip));
     }
-
-    confetti({ particleCount: 90, spread: 75 });
   }, [activeTrip, vaultSession]);
 
   // Account deletion reset handler
@@ -254,7 +249,6 @@ export function useVault(): UseVaultReturn {
     setTrips([mockTripData]);
     setActiveTrip(mockTripData);
     setActiveTripIdLocal(mockTripData.id);
-    confetti({ particleCount: 30, spread: 40 });
   }, []);
 
   // Read-only / Guest preview exit handler
