@@ -1,0 +1,321 @@
+/* roammate Utility Layer (DESIGN_LAWS.md compliant) */
+
+/* 1. Flexbox & Grid Layouts */
+.flex {
+  display: flex;
+}
+
+.inline-flex {
+  display: inline-flex;
+}
+
+.flex-col {
+  display: flex;
+  flex-direction: column;
+}
+
+.flex-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.items-center {
+  align-items: center;
+}
+
+.items-start {
+  align-items: flex-start;
+}
+
+.justify-between {
+  justify-content: space-between;
+}
+
+.justify-center {
+  justify-content: center;
+}
+
+.justify-end {
+  justify-content: flex-end;
+}
+
+.flex-1 {
+  flex: 1 1 0%;
+}
+
+.flex-shrink-0 {
+  flex-shrink: 0;
+}
+
+.w-full {
+  width: 100%;
+}
+
+.block {
+  display: block;
+}
+
+.inline {
+  display: inline;
+}
+
+.text-center {
+  text-align: center;
+}
+
+.text-right {
+  text-align: right;
+}
+
+.full-span {
+  grid-column: 1 / -1;
+}
+
+/* 2. Gap Scale (4px grid) */
+.gap-1 {
+  gap: var(--sp-1, 4px);
+}
+
+.gap-1\.5 {
+  gap: 6px;
+}
+
+.gap-2 {
+  gap: var(--sp-2, 8px);
+}
+
+.gap-3 {
+  gap: var(--sp-3, 12px);
+}
+
+.gap-4 {
+  gap: var(--sp-4, 16px);
+}
+
+/* 3. Margins & Paddings */
+.mt-0\.5 {
+  margin-top: 2px;
+}
+
+.mt-1 {
+  margin-top: var(--sp-1, 4px);
+}
+
+.mt-2 {
+  margin-top: var(--sp-2, 8px);
+}
+
+.mt-3 {
+  margin-top: var(--sp-3, 12px);
+}
+
+.mb-1 {
+  margin-bottom: var(--sp-1, 4px);
+}
+
+.mb-2 {
+  margin-bottom: var(--sp-2, 8px);
+}
+
+.mr-1 {
+  margin-right: var(--sp-1, 4px);
+}
+
+.ml-1 {
+  margin-left: var(--sp-1, 4px);
+}
+
+.px-2 {
+  padding-left: var(--sp-2, 8px);
+  padding-right: var(--sp-2, 8px);
+}
+
+.px-2\.5 {
+  padding-left: 10px;
+  padding-right: 10px;
+}
+
+.py-1 {
+  padding-top: var(--sp-1, 4px);
+  padding-bottom: var(--sp-1, 4px);
+}
+
+.py-2\.5 {
+  padding-top: 10px;
+  padding-bottom: 10px;
+}
+
+/* 4. Typography Scale & Hierarchy */
+.text-xs {
+  font-size: var(--font-xs, 11px);
+}
+
+.text-sm {
+  font-size: var(--font-sm, 12px);
+}
+
+.text-base {
+  font-size: var(--font-base, 13.5px);
+}
+
+.text-lg {
+  font-size: var(--font-lg, 18px);
+}
+
+.leading-tight {
+  line-height: var(--leading-tight, 1.25);
+}
+
+.text-uppercase {
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+
+.font-normal {
+  font-weight: var(--fw-normal, 400);
+}
+
+.font-medium {
+  font-weight: var(--fw-medium, 500);
+}
+
+.font-semibold {
+  font-weight: var(--fw-semibold, 600);
+}
+
+.font-bold {
+  font-weight: var(--fw-bold, 700);
+}
+
+.font-mono {
+  font-family: 'JetBrains Mono', monospace;
+}
+
+.font-sans {
+  font-family: inherit;
+}
+
+.tabular {
+  font-variant-numeric: tabular-nums;
+}
+
+/* 5. Semantic & Brand Colors */
+.text-primary {
+  color: var(--text-primary);
+}
+
+.text-secondary {
+  color: var(--text-secondary);
+}
+
+.text-tertiary {
+  color: var(--text-tertiary);
+}
+
+.text-white {
+  color: var(--text-white, #ffffff);
+}
+
+.text-rose,
+.text-red-500 {
+  color: var(--brand-rose, #ef4444);
+}
+
+.text-amber {
+  color: var(--brand-amber, #f59e0b);
+}
+
+.text-emerald {
+  color: var(--brand-emerald, #10b981);
+}
+
+.text-blue {
+  color: var(--brand-blue, #2563eb);
+}
+
+.text-slate {
+  color: var(--text-secondary, #64748b);
+}
+
+.bg-blue-subtle {
+  background-color: var(--brand-blue-subtle, rgba(37, 99, 235, 0.08));
+}
+
+.bg-emerald {
+  background-color: var(--brand-emerald, #10b981) !important;
+  color: #ffffff !important;
+}
+
+/* 6. Animations */
+.animate-spin {
+  animation: spin 1s linear infinite;
+}
+
+.animate-spin-slow {
+  animation: spin 2.5s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* 7. Reusable Component Helpers */
+.empty-state-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 20px;
+  text-align: center;
+  border: 1.5px dashed var(--border-light);
+  border-radius: var(--radius-card, 20px);
+  background-color: var(--bg-subtle);
+}
+
+.empty-state-text {
+  font-size: var(--font-base, 13.5px);
+  font-weight: var(--fw-semibold, 600);
+  color: var(--text-secondary);
+  margin-top: var(--sp-2, 8px);
+}
+
+.empty-hint {
+  font-size: var(--font-sm, 12px);
+  color: var(--text-tertiary);
+  margin-top: var(--sp-1, 4px);
+}
+
+.count-tag {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2px 7px;
+  border-radius: var(--radius-pill);
+  font-size: var(--font-xs, 11px);
+  font-weight: var(--fw-bold, 700);
+  background-color: var(--brand-blue-subtle);
+  color: var(--brand-blue);
+  font-variant-numeric: tabular-nums;
+}
+
+.modal-actions-row {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--sp-2, 8px);
+  margin-top: var(--sp-3, 12px);
+}
+
+.modal-type-tabs {
+  display: flex;
+  background-color: var(--bg-subtle);
+  padding: 3px;
+  border-radius: var(--radius-md);
+  gap: 2px;
+}

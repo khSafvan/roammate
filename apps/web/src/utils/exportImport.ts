@@ -31,10 +31,10 @@ export async function importItineraryFile(file: File): Promise<Trip> {
   }
 
   // Regenerate tripId to prevent collision
-  const newId = 'trip_' + (crypto.randomUUID ? crypto.randomUUID().slice(0, 8) : Math.random().toString(36).slice(2, 10));
+  const newId = 'trip_' + crypto.randomUUID().slice(0, 8);
   parsed.id = newId;
   parsed.tripId = newId;
-  parsed.shareToken = (crypto.randomUUID ? crypto.randomUUID().slice(0, 8) : Math.random().toString(36).slice(2, 10));
+  parsed.shareToken = crypto.randomUUID().slice(0, 8);
 
   return parsed as Trip;
 }
@@ -43,10 +43,7 @@ export async function importItineraryFile(file: File): Promise<Trip> {
  * Method B: Generates an 8-character read-only share token
  */
 export function generateShareToken(): string {
-  if (typeof crypto !== 'undefined' && crypto.randomUUID) {
-    return crypto.randomUUID().slice(0, 8);
-  }
-  return Math.random().toString(36).slice(2, 10);
+  return crypto.randomUUID().slice(0, 8);
 }
 
 /**
