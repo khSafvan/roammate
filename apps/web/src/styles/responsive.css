@@ -1,6 +1,16 @@
-/* MojoLog Responsive Design & Utilities */
+/* MojoLog Responsive Design & Calm Utilities */
 
-/* 1. Tablet Viewport (<= 1024px) */
+/* 1. Desktop Max-Width Line Length Cap (>= 1280px) */
+@media (min-width: 1280px) {
+  .settings-content-container,
+  .subview-workspace,
+  .places-to-visit-container {
+    max-width: 960px;
+    margin: 0 auto;
+  }
+}
+
+/* 2. Tablet Viewport (<= 1024px) */
 @media (max-width: 1024px) {
   .main-workspace {
     grid-template-columns: 1fr;
@@ -22,7 +32,37 @@
   }
 }
 
-/* 2. Mobile Viewport (<= 640px) */
+/* 3. Mid-Tablet Viewport (<= 768px) */
+@media (max-width: 768px) {
+  .settings-content-container,
+  .trips-dashboard-container,
+  .places-to-visit-container {
+    padding: var(--sp-4, 16px) var(--sp-3, 12px) var(--sp-8, 32px);
+  }
+
+  .trips-hero-card {
+    padding: var(--sp-6, 24px) var(--sp-5, 20px);
+  }
+
+  .trips-hero-title {
+    font-size: var(--font-2xl, 24px);
+  }
+
+  .trips-stats-strip {
+    flex-wrap: wrap;
+    gap: var(--sp-4, 16px);
+  }
+
+  .form-row-2 {
+    grid-template-columns: 1fr;
+  }
+
+  .trips-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* 4. Mobile Viewport (<= 640px) */
 @media (max-width: 640px) {
   .header-container {
     padding: 10px 14px;
@@ -69,6 +109,47 @@
   .nav-tabs-group {
     overflow-x: auto;
   }
+
+  /* Bottom-Sheet Modal Docking */
+  .modal-backdrop {
+    align-items: flex-end;
+    padding: 0;
+  }
+
+  .modal-card {
+    border-radius: var(--radius-2xl, 24px) var(--radius-2xl, 24px) 0 0;
+    max-height: 88vh;
+    width: 100%;
+    max-width: 100%;
+    animation: modalSlideUp 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  /* Prevent iOS Auto-Zoom on form input focus */
+  input,
+  select,
+  textarea {
+    font-size: 16px !important;
+  }
+
+  /* Touch Target Floors */
+  .primary-action-btn,
+  .secondary-action-btn,
+  .primary-modal-btn,
+  .open-trip-primary-btn,
+  .breadcrumb-back-btn,
+  .copy-phrase-btn,
+  .delete-trigger-btn {
+    min-height: var(--tap-min, 44px);
+  }
+}
+
+@keyframes modalSlideUp {
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: translateY(0);
+  }
 }
 
 /* Utility Accent Classes */
@@ -76,3 +157,4 @@
 .text-emerald { color: #059669; }
 .text-blue { color: #2563EB; }
 .text-slate { color: #64748B; }
+
