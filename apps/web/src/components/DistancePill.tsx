@@ -49,7 +49,7 @@ export const DistancePill = React.memo<DistancePillProps>(function DistancePill(
           style={
             conflict
               ? {
-                  borderColor: '#EF4444',
+                  borderColor: 'var(--brand-rose)',
                   backgroundColor: 'rgba(239, 68, 68, 0.05)',
                 }
               : undefined
@@ -77,7 +77,7 @@ export const DistancePill = React.memo<DistancePillProps>(function DistancePill(
               alignItems: 'center',
               gap: '4px',
               backgroundColor: 'rgba(239, 68, 68, 0.12)',
-              color: '#DC2626',
+              color: 'var(--brand-rose)',
               border: '1px solid rgba(239, 68, 68, 0.3)',
               borderRadius: '20px',
               padding: '2px 8px',

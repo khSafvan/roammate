@@ -86,6 +86,17 @@ Cohesive design language applied across all styles, components, and responsive v
 - [x] Write canonical design law document at `/DESIGN_LAWS.md`
 - [x] Covers: 8 principles, token reference tables, spacing scale, radius rules, color palette, typography scale, shadow system, breakpoints, touch rules, component patterns, naming convention, icon rules, do/don't cheat sheet
 
+### 5J — Design, UI/UX & Feature Bug Audit
+- [x] Audited 607 CSS classes across all components; filled 20+ missing CSS classes into `subviews.css` and layout utilities into `utilities.css`
+- [x] Added out-of-bounds `activeDayIdx` clamping `useEffect` in `App.tsx` preventing stop-add failures and TSP optimization crashes
+- [x] Fixed trip switch state reset: resets `activeDayIdx` to 0 and exits Ideas bucket
+- [x] Fixed Add Day tab activation: auto-switches to newly added day index and closes Ideas bucket
+- [x] Fixed dynamic day search in `handleMoveStopToIdeas` (no longer hardcodes `activeDayIdx`)
+- [x] Added 1-click `Back to Itinerary` navigation breadcrumb in `PlacesToVisitDrawer.tsx`
+- [x] Replaced hardcoded `#F59E0B`, `#059669`, `#047857`, `#EF4444`, `#DC2626`, `#3B82F6` with semantic CSS variables across `ScratchpadModal`, `PlacesToVisitDrawer`, `OptimizeRouteModal`, `InteractiveMap`, `DistancePill`
+- [x] Aligned `ExpenseTracker` view switcher with `.category-filter-strip` and `.category-filter-btn` pill design
+- [x] Eliminated dead unreferenced `FlightTracker.tsx` component to reduce code bloat
+
 ---
 
 ## 🧪 Verification

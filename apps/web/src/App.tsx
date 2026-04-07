@@ -109,6 +109,15 @@ export function App() {
     }
   }, []);
 
+  // Safely clamp activeDayIdx whenever the trip or its days length changes
+  useEffect(() => {
+    if (trip?.days && trip.days.length > 0) {
+      if (activeDayIdx >= trip.days.length) {
+        setActiveDayIdx(Math.max(0, trip.days.length - 1));
+      }
+    }
+  }, [trip?.id, trip?.days?.length, activeDayIdx]);
+
   const activeDay: TripDay =
     trip?.days?.[activeDayIdx] || trip?.days?.[0] || {
       id: 'default_day',
@@ -386,15 +395,15 @@ export function App() {
     (stop: ItineraryStop) => {
       setTrip((prev) => {
         const updatedDays = [...prev.days];
-        const currentDay = updatedDays[activeDayIdx];
-        if (!currentDay) return prev;
+        const dayIdx = updatedDays.findIndex((d) => d.stops?.some((s) => s.id === stop.id));
+        if (dayIdx === -1) return prev;
 
-        // Remove from day stops and re-index
+        const currentDay = updatedDays[dayIdx];
         const remainingStops = currentDay.stops
           .filter((s) => s.id !== stop.id)
           .map((s, idx) => ({ ...s, orderIndex: idx + 1 }));
 
-        updatedDays[activeDayIdx] = {
+        updatedDays[dayIdx] = {
           ...currentDay,
           stops: remainingStops,
         };
@@ -413,11 +422,12 @@ export function App() {
       });
       setSelectedStop(null);
     },
-    [activeDayIdx, setTrip]
+    [setTrip]
   );
 
   // Day CRUD Handlers (Feature F5, Bug 6)
   const handleAddDay = useCallback(() => {
+    const nextIdx = trip.days.length;
     setTrip((prev) => {
       const nextDayNum = prev.days.length + 1;
       const lastDay = prev.days[prev.days.length - 1];
@@ -462,7 +472,8 @@ export function App() {
       };
     });
 
-    setActiveDayIdx(trip.days.length);
+    setIsPlacesToVisitActive(false);
+    setActiveDayIdx(nextIdx);
   }, [trip.days.length, setTrip, setActiveDayIdx]);
 
   const handleDeleteDay = useCallback(
@@ -588,6 +599,8 @@ export function App() {
           isWasmActive={isWasmActive}
           onSelectTrip={(id) => {
             switchTrip(id);
+            setActiveDayIdx(0);
+            setIsPlacesToVisitActive(false);
             setCurrentView('trip_detail');
           }}
           onOpenSettings={(id) => {
@@ -600,6 +613,8 @@ export function App() {
           }}
           onCreateTrip={(params) => {
             createTrip(params);
+            setActiveDayIdx(0);
+            setIsPlacesToVisitActive(false);
             setCurrentView('trip_detail');
           }}
           onDeleteTrip={(id) => {
@@ -788,6 +803,7 @@ export function App() {
                     onDeletePlace={handleDeletePlaceToVisit}
                     onAssignToDay={handleAssignPlaceToDay}
                     onUpdatePlace={handleUpdatePlaceToVisit}
+                    onBackToTimeline={() => setIsPlacesToVisitActive(false)}
                   />
                 </main>
               ) : (
@@ -1037,10 +1053,14 @@ export function App() {
         activeTrip={trip}
         onSwitchTrip={(id) => {
           switchTrip(id);
+          setActiveDayIdx(0);
+          setIsPlacesToVisitActive(false);
           setCurrentView('trip_detail');
         }}
         onCreateTrip={(params) => {
           createTrip(params);
+          setActiveDayIdx(0);
+          setIsPlacesToVisitActive(false);
           setCurrentView('trip_detail');
         }}
         onUpdateTrip={handleUpdateTrip}
