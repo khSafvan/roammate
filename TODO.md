@@ -99,9 +99,48 @@ Cohesive design language applied across all styles, components, and responsive v
 
 ---
 
+## 🚀 Active Roadmap: Phase 6 — Context-Aware Smart Travel Planner & UI/UX Overhaul
+
+### Priority 1: Core Interaction & Viewport Foundation (Critical UX Fixes)
+- [x] **Decouple Selection from Editing**: Separate `selectedStopId` (highlights stop and centers TerraWay map) from `editingStop` (opens `StopDetailModal` ONLY on explicit Edit action), ending the blocking modal-on-click trap.
+- [x] **Unified Header & Navigation Bar**: Consolidate header strips into a single 56px header; eliminate duplicate trip switchers and duplicate Share buttons; fix broken flex alignment.
+- [x] **Viewport-Locked Dual-Pane Layout**: Fix double scrollbars on `.main-workspace` with `height: 100vh; overflow: hidden;` and single natural vertical scrollbar on timeline pane.
+- [x] **Mobile Sheet Transitions**: Implement smooth bottom-sheet modals and tab-switching `map.resize()` on mobile (< 1024px).
+
+### Priority 2: Time-Window Aware Route Optimization (Food Timings, Hours & Locked Slots)
+- [x] **Type Extensions** (`packages/shared/src/types.ts`): Add `openTime`, `closeTime`, `isFixedTime`, and `mealType` to `ItineraryStop`.
+- [x] **Time-Window Optimizer (TSP-TW)** (`apps/web/src/utils/timeWindowOptimizer.ts`):
+  - Lunch window (12:00 PM – 2:00 PM) and Dinner window (6:30 PM – 9:00 PM) enforcement.
+  - Attraction operating hours evaluation (avoids arriving after closing time).
+  - Fixed-slot preservation for booked tickets/flights while optimizing intermediate flexible stops.
+- [x] **Modal Constraint Badges** (`OptimizeRouteModal.tsx`): Display badges for respected constraints (e.g. 🍽️ Lunch at 12:30 PM, 🏛️ Sights open, 🔒 Fixed slots kept).
+- [x] **TSP-TW Unit Tests** (`apps/web/tests/timeWindowOptimizer.test.ts`): Verify meal window alignment, operating hour adherence, and locked slot preservation.
+
+### Priority 3: Live Currency & Budget Conversion (Frankfurter ECB API)
+- [x] **Frankfurter API Integration** (`apps/web/src/utils/currencyService.ts`): Live exchange rates for 20+ currencies with 4h caching and offline fallback.
+- [x] **Dual-Currency Budget Switcher** (`ExpenseTracker.tsx`): Allow traveler to set Home Currency and view real-time converted spending totals (e.g. `1 AED = 0.2723 USD · ≈ $1,240 USD`).
+- [x] **Currency Settings Integration** (`TripSettingsPage.tsx`): Direct configuration and persistence of home currency on trip object.
+
+### Priority 4: Environmental, Daylight & Holiday Intelligence (Open-Meteo + Nager.Date)
+- [x] **Environmental API Integration** (`apps/web/src/utils/weatherService.ts`): Multi-day forecast, WMO code mapping, hourly chips, and Nominatim destination geocoding.
+- [x] **Daylight & Golden Hour Photography Timing** (`weatherService.ts`, `WeatherBanner.tsx`): Automatic sunset and golden hour timing (~45m prior to sunset) with camera recommendation pill.
+- [x] **Public Holiday Alerts** (`apps/web/src/utils/holidayService.ts`, `DaySelector.tsx`, `App.tsx`): Subtle bank holiday badges on dates matching destination national holidays and active-day alert banner.
+- [x] **Environmental & Holiday Unit Tests** (`apps/web/tests/holidayWeatherService.test.ts`): Verify tripDayToIso date calculation, range holiday matching, and offline fallback.
+
+### Priority 5: Destination Intelligence & Emergency Prep
+- [x] **Country Data Registry** (`apps/web/src/utils/countryIntelligence.ts`): Emergency numbers (112, 911, 110/119, 999), power plug types, and major passport visa rules.
+- [x] **Auto-Populate Scratchpad** (`ScratchpadModal.tsx`): One-click pre-fill of local emergency numbers, embassy contacts, and essential local phrases.
+- [x] **Country Intelligence Tests** (`apps/web/tests/countryIntelligence.test.ts`): Verify emergency numbers, electrical plug lookup, and visa matching.
+
+### Priority 6: Smart POI Discovery in Places to Visit & TerraWay Enhancements
+- [x] **Instant POI Discovery Chips** (`PlacesToVisitDrawer.tsx`): Quick discovery presets (`🏛️ Top Sights`, `🍜 Local Dining`, `☕ Specialty Cafes`, `🌳 Scenic Parks`, `🛍️ Shopping`) via OpenStreetMap with one-click additions.
+- [x] **TerraWay Map Preservation**: 100% preservation of OpenFreeMap + MapLibre GL engine with multi-modal routing and GPX export.
+
+---
+
 ## 🧪 Verification
 
 ```bash
-npm test         # Must remain 87/87 passing
+npm test         # Must maintain 100% pass rate
 npm run build    # Must produce 0 TypeScript errors
 ```

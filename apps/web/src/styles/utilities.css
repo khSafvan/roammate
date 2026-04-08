@@ -319,3 +319,16 @@
   border-radius: var(--radius-md);
   gap: 2px;
 }
+
+.relative {
+  position: relative;
+}
+
+.w-24 {
+  width: 96px;
+}
+
+.w-28 {
+  width: 112px;
+}
+

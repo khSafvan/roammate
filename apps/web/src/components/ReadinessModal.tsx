@@ -80,22 +80,22 @@ export const ReadinessModal: React.FC<ReadinessModalProps> = ({
         </div>
 
         {/* Tab Switcher */}
-        <div style={{ display: 'flex', gap: '8px', borderBottom: '1px solid var(--border-light, #e2e8f0)', paddingBottom: '10px' }}>
+        <div className="modal-type-tabs" style={{ marginBottom: '16px' }}>
           <button
-            className={`nav-tab-btn ${activeTab === 'readiness' ? 'active' : ''}`}
+            type="button"
+            className={`modal-type-tab ${activeTab === 'readiness' ? 'active' : ''}`}
             onClick={() => setActiveTab('readiness')}
-            style={{ padding: '6px 14px', borderRadius: '8px', fontSize: '13px' }}
           >
-            <FileCheck size={14} />
+            <FileCheck size={13} style={{ display: 'inline', marginRight: '5px' }} />
             <span>Flight Readiness ({score}%)</span>
           </button>
 
           <button
-            className={`nav-tab-btn ${activeTab === 'packing' ? 'active' : ''}`}
+            type="button"
+            className={`modal-type-tab ${activeTab === 'packing' ? 'active' : ''}`}
             onClick={() => setActiveTab('packing')}
-            style={{ padding: '6px 14px', borderRadius: '8px', fontSize: '13px' }}
           >
-            <Briefcase size={14} />
+            <Briefcase size={13} style={{ display: 'inline', marginRight: '5px' }} />
             <span>Packing List ({packingList.length > 0 ? `${packingProgress}%` : '0%'})</span>
           </button>
         </div>
