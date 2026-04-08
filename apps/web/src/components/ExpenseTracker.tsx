@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import {
   ArrowRight,
   CheckCircle2,
@@ -17,10 +17,12 @@ import {
   computeTravelerBalances,
   createSettlementExpense,
 } from '../utils/expenseSettlement';
+import { fetchRate, RateResult } from '../utils/currencyService';
 
 interface ExpenseTrackerProps {
   expenses: Expense[];
   baseCurrency: string;
+  homeCurrency?: string;
   onAddExpense: (expense: Expense) => void;
   onDeleteExpense: (id: string) => void;
   travelers?: string[];
@@ -59,6 +61,7 @@ const getCurrencySymbol = (currency: string = 'USD') => {
 export const ExpenseTracker = React.memo<ExpenseTrackerProps>(function ExpenseTracker({
   expenses,
   baseCurrency,
+  homeCurrency,
   onAddExpense,
   onDeleteExpense,
   travelers = ['Alex Chen', 'Jordan Taylor'],
@@ -72,6 +75,16 @@ export const ExpenseTracker = React.memo<ExpenseTrackerProps>(function ExpenseTr
   const [splitAll, setSplitAll] = useState(true);
   const [selectedSplitWith, setSelectedSplitWith] = useState<string[]>([]);
   const [notes, setNotes] = useState('');
+  const [liveRate, setLiveRate] = useState<RateResult | null>(null);
+
+  // Live currency rate — fetches from Frankfurter, falls back offline
+  useEffect(() => {
+    if (!homeCurrency || homeCurrency.toUpperCase() === baseCurrency.toUpperCase()) {
+      setLiveRate(null);
+      return;
+    }
+    fetchRate(baseCurrency, homeCurrency).then(setLiveRate);
+  }, [baseCurrency, homeCurrency]);
 
   // 1. Dynamic category aggregation
   const { categoryTotals, totalSpent } = useMemo(() => {
@@ -188,6 +201,22 @@ export const ExpenseTracker = React.memo<ExpenseTrackerProps>(function ExpenseTr
       {/* VIEW 1: CATEGORY BREAKDOWN */}
       {activeView === 'breakdown' && (
         <>
+          {/* Live currency conversion banner */}
+          {liveRate && (
+            <div className="currency-rate-banner">
+              <DollarSign size={14} />
+              <span>
+                1&nbsp;{baseCurrency}&nbsp;=&nbsp;
+                <strong>{liveRate.rate.toFixed(4)}</strong>&nbsp;{homeCurrency}
+                {liveRate.isOffline && <span className="rate-offline-tag">&nbsp;· offline rates</span>}
+                {!liveRate.isOffline && <span className="rate-date-tag">&nbsp;· {liveRate.date}</span>}
+              </span>
+              <span className="rate-total-home">
+                ≈&nbsp;{getCurrencySymbol(homeCurrency!)}{(totalSpent * liveRate.rate).toLocaleString('en-US', { maximumFractionDigits: 2 })}&nbsp;{homeCurrency}
+              </span>
+            </div>
+          )}
+
           {/* Summary Card with Category Breakdown Bar */}
           <div className="budget-summary-card">
             <div className="budget-top-row">
