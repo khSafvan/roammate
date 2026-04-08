@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import {
+  ArrowLeft,
   Calendar,
   Compass,
   Edit2,
@@ -20,6 +21,7 @@ interface PlacesToVisitDrawerProps {
   onDeletePlace: (id: string) => void;
   onAssignToDay: (placeId: string, dayIndex: number) => void;
   onUpdatePlace?: (updated: ItineraryStop) => void;
+  onBackToTimeline?: () => void;
 }
 
 const CATEGORY_COLORS: Record<StopCategory, string> = {
@@ -45,6 +47,7 @@ export const PlacesToVisitDrawer: React.FC<PlacesToVisitDrawerProps> = ({
   onDeletePlace,
   onAssignToDay,
   onUpdatePlace,
+  onBackToTimeline,
 }) => {
   const [selectedCategory, setSelectedCategory] = useState<StopCategory | 'all'>('all');
   const [editingPlace, setEditingPlace] = useState<ItineraryStop | null>(null);
@@ -125,7 +128,7 @@ export const PlacesToVisitDrawer: React.FC<PlacesToVisitDrawerProps> = ({
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                color: '#D97706',
+                color: 'var(--brand-amber)',
               }}
             >
               <Lightbulb size={18} />
@@ -139,30 +142,41 @@ export const PlacesToVisitDrawer: React.FC<PlacesToVisitDrawerProps> = ({
           </p>
         </div>
 
-        <button
-          className="secondary-action-btn"
-          onClick={() => setIsManualAddOpen(!isManualAddOpen)}
-          style={{ fontSize: '13px' }}
-        >
-          <Plus size={15} />
-          <span>{isManualAddOpen ? 'Close Form' : 'Custom Place'}</span>
-        </button>
+        <div className="flex items-center gap-2">
+          {onBackToTimeline && (
+            <button
+              className="breadcrumb-back-btn"
+              onClick={onBackToTimeline}
+              title="Return to Itinerary Timeline"
+            >
+              <ArrowLeft size={14} />
+              <span>Back to Itinerary</span>
+            </button>
+          )}
+          <button
+            className="secondary-action-btn"
+            onClick={() => setIsManualAddOpen(!isManualAddOpen)}
+          >
+            <Plus size={15} />
+            <span>{isManualAddOpen ? 'Close Form' : 'Custom Place'}</span>
+          </button>
+        </div>
       </div>
 
       {/* Instant Search Bar */}
       <div
         style={{
-          backgroundColor: 'var(--bg-card, #ffffff)',
+          backgroundColor: 'var(--bg-card)',
           padding: '16px 20px',
-          borderRadius: 'var(--radius-xl, 16px)',
-          border: '1px solid var(--border-light, #e2e8f0)',
-          boxShadow: 'var(--shadow-sm, 0 1px 3px rgba(0,0,0,0.05))',
+          borderRadius: 'var(--radius-lg, 16px)',
+          border: '1px solid var(--border-light)',
+          boxShadow: 'var(--shadow-sm)',
           marginBottom: '20px',
         }}
       >
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '10px' }}>
-          <Sparkles size={15} style={{ color: '#D97706' }} />
-          <span style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-primary, #0f172a)' }}>
+          <Sparkles size={15} className="text-amber" />
+          <span style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-primary)' }}>
             Quick Search & Add to Ideas (OpenStreetMap)
           </span>
         </div>
@@ -282,14 +296,6 @@ export const PlacesToVisitDrawer: React.FC<PlacesToVisitDrawerProps> = ({
             type="button"
             className={`cat-chip-btn ${selectedCategory === cat ? 'selected' : ''}`}
             onClick={() => setSelectedCategory(cat)}
-            style={{
-              padding: '6px 14px',
-              fontSize: '12px',
-              borderRadius: '20px',
-              borderColor: selectedCategory === cat ? '#D97706' : undefined,
-              backgroundColor: selectedCategory === cat ? 'rgba(245, 158, 11, 0.15)' : undefined,
-              color: selectedCategory === cat ? '#B45309' : undefined,
-            }}
           >
             {cat === 'all' ? `All Ideas (${places.length})` : `${CATEGORY_LABELS[cat] || cat}`}
           </button>
@@ -425,7 +431,7 @@ export const PlacesToVisitDrawer: React.FC<PlacesToVisitDrawerProps> = ({
                       padding: '8px 10px',
                       borderRadius: '8px',
                       color: 'var(--text-secondary, #475569)',
-                      borderLeft: '3px solid #D97706',
+                      borderLeft: '3px solid var(--brand-amber)',
                     }}
                   >
                     {place.notes}

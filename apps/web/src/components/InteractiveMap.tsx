@@ -638,8 +638,8 @@ export const InteractiveMap: React.FC<InteractiveMapProps> = ({
               onClick={onUndoOptimization}
               title="Undo route optimization and restore previous itinerary sequence"
               style={{
-                borderColor: '#F59E0B',
-                color: '#D97706',
+                borderColor: 'var(--brand-amber)',
+                color: 'var(--brand-amber)',
                 backgroundColor: 'rgba(245, 158, 11, 0.08)',
               }}
             >
@@ -677,10 +677,10 @@ export const InteractiveMap: React.FC<InteractiveMapProps> = ({
             className="dock-badge"
             style={{
               backgroundColor: isStartStop
-                ? '#059669'
+                ? 'var(--brand-emerald)'
                 : isFinishStop
-                ? '#DC2626'
-                : day.themeColor || '#2563EB',
+                ? 'var(--brand-rose)'
+                : day.themeColor || 'var(--brand-blue)',
             }}
           >
             {isStartStop ? 'S' : isFinishStop ? 'F' : String(activeStopIndex + 1).padStart(2, '0')}
