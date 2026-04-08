@@ -210,10 +210,31 @@ export function getActiveTripIdLocal(): string | null {
 }
 
 /**
- * Loads all cached itineraries from localStorage
- * Automatically seeds with starter catalog if store is completely empty
+ * Ensures all trip arrays and properties are strictly populated to prevent undefined crashes.
  */
-export function loadAllLocalTrips(): Trip[] {
+export function sanitizeTrip(t: any): Trip {
+  return {
+    ...t,
+    days: Array.isArray(t?.days) ? t.days : [],
+    flights: Array.isArray(t?.flights) ? t.flights : [],
+    expenses: Array.isArray(t?.expenses) ? t.expenses : [],
+    documents: Array.isArray(t?.documents) ? t.documents : [],
+    placesToVisit: Array.isArray(t?.placesToVisit) ? t.placesToVisit : [],
+    readinessChecklist: Array.isArray(t?.readinessChecklist) ? t.readinessChecklist : [],
+    packingList: Array.isArray(t?.packingList) ? t.packingList : [],
+    readinessScore: typeof t?.readinessScore === 'number' ? t.readinessScore : 0,
+    title: t?.title || 'Untitled Trip',
+    destination: t?.destination || 'Worldwide',
+    dates: t?.dates || 'Flexible Dates',
+  };
+}
+
+/**
+ * Loads all cached itineraries from localStorage.
+ * When userId is provided, returns only trips owned by that user.
+ * If a user has no trips, automatically seeds a fresh editable sample trip.
+ */
+export function loadAllLocalTrips(userId?: string): Trip[] {
   const trips: Trip[] = [];
   try {
     const isValidTrip = (t: any): t is Trip =>
@@ -235,18 +256,41 @@ export function loadAllLocalTrips(): Trip[] {
           try {
             const parsed = JSON.parse(item);
             if (isValidTrip(parsed) && parsed.id !== 'tokyo-2026' && parsed.id !== 'paris-2027') {
-              trips.push(parsed);
+              if (userId) {
+                // If user is specified, include owned trips or adopt unassigned legacy trips
+                if (parsed.userId === userId || !parsed.userId) {
+                  trips.push(sanitizeTrip({ ...parsed, userId: parsed.userId || userId }));
+                }
+              } else {
+                trips.push(sanitizeTrip(parsed));
+              }
             }
           } catch {}
         }
       }
     }
 
-    if (trips.length === 0) {
-      // Seed default catalog (Dubai & Malaysia)
+    if (userId && trips.length === 0) {
+      // Seed a brand new, editable sample trip for this specific user
+      const cleanPrefix = userId.replace(/[^a-zA-Z0-9]/g, '').slice(0, 8) || 'user';
+      const userTripId = `trip_${cleanPrefix}_${Date.now()}`;
+      const sampleTrip: Trip = sanitizeTrip({
+        ...JSON.parse(JSON.stringify(mockTripData)),
+        id: userTripId,
+        userId,
+        title: 'Dubai & Abu Dhabi Explorer',
+        createdAt: Date.now(),
+        updatedAt: Date.now(),
+      });
+      localStorage.setItem(`${STORAGE_KEYS.TRIP_PREFIX}${sampleTrip.id}`, JSON.stringify(sampleTrip));
+      setActiveTripIdLocal(sampleTrip.id);
+      trips.push(sampleTrip);
+    } else if (!userId && trips.length === 0) {
+      // Seed default catalog (Dubai & Malaysia) for fallback/unscoped tests
       for (const trip of INITIAL_TRIPS_CATALOG) {
-        localStorage.setItem(`${STORAGE_KEYS.TRIP_PREFIX}${trip.id}`, JSON.stringify(trip));
-        trips.push(trip);
+        const sanitized = sanitizeTrip(trip);
+        localStorage.setItem(`${STORAGE_KEYS.TRIP_PREFIX}${sanitized.id}`, JSON.stringify(sanitized));
+        trips.push(sanitized);
       }
       setActiveTripIdLocal(INITIAL_TRIPS_CATALOG[0].id);
     }
@@ -269,7 +313,7 @@ export function loadLocalTrip(tripId?: string): Trip | null {
       const item = localStorage.getItem(`${STORAGE_KEYS.TRIP_PREFIX}${tripId}`);
       if (item) {
         const parsed = JSON.parse(item);
-        if (isValidTrip(parsed)) return parsed;
+        if (isValidTrip(parsed)) return sanitizeTrip(parsed);
       }
       return null;
     }
@@ -279,12 +323,12 @@ export function loadLocalTrip(tripId?: string): Trip | null {
       const item = localStorage.getItem(`${STORAGE_KEYS.TRIP_PREFIX}${targetId}`);
       if (item) {
         const parsed = JSON.parse(item);
-        if (isValidTrip(parsed)) return parsed;
+        if (isValidTrip(parsed)) return sanitizeTrip(parsed);
       }
     }
 
     const all = loadAllLocalTrips();
-    return all.length > 0 ? all[0] : mockTripData;
+    return all.length > 0 ? sanitizeTrip(all[0]) : sanitizeTrip(mockTripData);
   } catch (err) {
     console.warn('Failed to load local trip:', err);
     return null;
@@ -296,7 +340,7 @@ export function loadLocalTrip(tripId?: string): Trip | null {
  */
 export async function fetchItinerariesFromEdge(userId: string): Promise<Trip[]> {
   if (!API_BASE_URL) {
-    return loadAllLocalTrips();
+    return loadAllLocalTrips(userId);
   }
 
   try {
@@ -304,7 +348,7 @@ export async function fetchItinerariesFromEdge(userId: string): Promise<Trip[]> 
     if (res.ok) {
       const data = (await res.json()) as { itineraries: Array<{ data: Trip }> };
       if (data.itineraries && data.itineraries.length > 0) {
-        const edgeTrips = data.itineraries.map((it) => it.data);
+        const edgeTrips = data.itineraries.map((it) => sanitizeTrip(it.data));
         // Sync edge trips to local cache
         edgeTrips.forEach((t) => {
           localStorage.setItem(`${STORAGE_KEYS.TRIP_PREFIX}${t.id}`, JSON.stringify(t));
@@ -316,7 +360,7 @@ export async function fetchItinerariesFromEdge(userId: string): Promise<Trip[]> 
     console.warn('Edge itineraries fetch error, falling back to local vault:', e);
   }
 
-  return loadAllLocalTrips();
+  return loadAllLocalTrips(userId);
 }
 
 /**

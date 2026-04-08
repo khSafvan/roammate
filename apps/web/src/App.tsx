@@ -1,15 +1,12 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
-  CalendarDays,
   FileText,
-  Key,
+  Hotel,
   ListFilter,
   Map as MapIcon,
   Plane,
   Plus,
-  Receipt,
   RotateCcw,
-  Share2,
   ShieldAlert,
   Sparkles,
   Trash2,
@@ -17,6 +14,7 @@ import {
   Zap,
 } from 'lucide-react';
 import { AddStopModal } from './components/AddStopModal';
+import { AuthLandingPage } from './components/auth';
 import { AuthModal } from './components/AuthModal';
 import { DaySelector } from './components/DaySelector';
 import { DistancePill } from './components/DistancePill';
@@ -37,9 +35,11 @@ import { TripManagerModal } from './components/TripManagerModal';
 import { TripsListPage } from './components/trips/TripsListPage';
 import { TripSettingsPage } from './components/trips/TripSettingsPage';
 import { WeatherBanner } from './components/WeatherBanner';
-import { clearVaultSession, getVaultSession } from './auth/crypto';
-import { BookingDocument, Expense, Flight, ItineraryStop, PackingCategory, PackingItem, Trip, TripDay } from './types/trip';
+import { getVaultSession } from './auth/crypto';
+import { BookingDocument, Expense, Flight, ItineraryStop, PackingCategory, PackingItem, StopCategory, Trip, TripDay } from './types/trip';
 import { detectTransitConflict } from './utils/scheduleConflicts';
+import { fetchHolidaysForRange } from './utils/holidayService';
+import { fetchWeeklyForecast, geocodeDestination, tripDayToIso } from './utils/weatherService';
 import {
   useRustCore,
   useTransitLegs,
@@ -58,16 +58,26 @@ export function App() {
   const [activeTab, setActiveTab] = useState<'timeline' | 'flights' | 'expenses'>('timeline');
   const [activeDayIdx, setActiveDayIdx] = useState<number>(0); // Day 1 by default
   const [isPlacesToVisitActive, setIsPlacesToVisitActive] = useState<boolean>(false);
-  const [selectedStop, setSelectedStop] = useState<ItineraryStop | null>(null);
+  const [selectedStopId, setSelectedStopId] = useState<string | null>(null);
+  const [editingStop, setEditingStop] = useState<ItineraryStop | null>(null);
   const [isReadinessOpen, setIsReadinessOpen] = useState(false);
   const [isScratchpadOpen, setIsScratchpadOpen] = useState(false);
   const [isAuthOpen, setIsAuthOpen] = useState(false);
   const [isShareModalOpen, setIsShareModalOpen] = useState(false);
   const [isTripManagerOpen, setIsTripManagerOpen] = useState(false);
   const [isAddStopModalOpen, setIsAddStopModalOpen] = useState(false);
+  const [addStopCategory, setAddStopCategory] = useState<StopCategory>('sight');
+
+  const handleOpenAddStop = useCallback((cat: StopCategory = 'sight') => {
+    setAddStopCategory(cat);
+    setIsAddStopModalOpen(true);
+  }, []);
   const [isDeleteDayConfirming, setIsDeleteDayConfirming] = useState(false);
   const [mobileView, setMobileView] = useState<'timeline' | 'map'>('timeline');
   const [prefilledUuid, setPrefilledUuid] = useState<string | undefined>(undefined);
+  const [holidaysByDate, setHolidaysByDate] = useState<Record<string, string>>({});
+  const [draggedStopIdx, setDraggedStopIdx] = useState<number | null>(null);
+  const [dragOverStopIdx, setDragOverStopIdx] = useState<number | null>(null);
 
   // Multi-trip vault hook managing sessions, multiple trips, switching, and guest access
   const {
@@ -83,6 +93,7 @@ export function App() {
     createTrip,
     deleteTrip,
     saveGuestTripToVault,
+    handleLogout,
     handleDeleteAccount,
     exitReadOnly,
   } = useVault();
@@ -117,6 +128,47 @@ export function App() {
       }
     }
   }, [trip?.id, trip?.days?.length, activeDayIdx]);
+
+  // Fetch live weather from Open-Meteo for all trip days
+  useEffect(() => {
+    if (!trip?.startDate || !trip?.destination || !trip?.days?.length) return;
+    let cancelled = false;
+
+    (async () => {
+      // Use first stop coords if available, else geocode destination string
+      const firstStopCoords = trip.days[0]?.stops?.[0]?.coordinates;
+      let lat = firstStopCoords?.latitude ?? 0;
+      let lng = firstStopCoords?.longitude ?? 0;
+
+      if (!lat && !lng) {
+        const geo = await geocodeDestination(trip.destination);
+        if (cancelled || !geo) return;
+        lat = geo.lat; lng = geo.lng;
+      }
+
+      const endDate = tripDayToIso(trip.startDate!, trip.days.length - 1);
+      const result = await fetchWeeklyForecast(lat, lng, trip.startDate!, endDate);
+      if (cancelled || Object.keys(result.byDate).length === 0) return;
+
+      setTrip((prev) => ({
+        ...prev,
+        days: prev.days.map((day, i) => {
+          const iso = tripDayToIso(trip.startDate!, i);
+          const fetched = result.byDate[iso];
+          return fetched ? { ...day, weather: fetched } : day;
+        }),
+      }));
+    })();
+
+    return () => { cancelled = true; };
+  }, [trip?.id, trip?.startDate, trip?.destination]);
+
+  // Fetch public holidays from Nager.Date when countryCode + date range is known
+  useEffect(() => {
+    if (!trip?.countryCode || !trip?.startDate || !trip?.endDate) return;
+    fetchHolidaysForRange(trip.countryCode, trip.startDate, trip.endDate)
+      .then(setHolidaysByDate);
+  }, [trip?.id, trip?.countryCode, trip?.startDate, trip?.endDate]);
 
   const activeDay: TripDay =
     trip?.days?.[activeDayIdx] || trip?.days?.[0] || {
@@ -166,6 +218,12 @@ export function App() {
       );
     });
   }, [trip?.flights, trip?.startDate, activeDay.dateStr, activeDayIdx]);
+
+  const activeDayHoliday = useMemo(() => {
+    if (!trip?.startDate) return undefined;
+    const iso = tripDayToIso(trip.startDate, activeDayIdx);
+    return holidaysByDate[iso];
+  }, [trip?.startDate, activeDayIdx, holidaysByDate]);
 
   // Flight Handlers
   const handleAddFlight = useCallback((flight: Flight) => {
@@ -254,7 +312,7 @@ export function App() {
         };
         return { ...prev, days: updatedDays };
       });
-      setSelectedStop((prev) => (prev && prev.id === stopId ? { ...prev, ...updated } : prev));
+      setEditingStop((prev) => (prev && prev.id === stopId ? { ...prev, ...updated } : prev));
     },
     [activeDayIdx, setTrip]
   );
@@ -274,10 +332,73 @@ export function App() {
         };
         return { ...prev, days: updatedDays };
       });
-      setSelectedStop((prev) => (prev?.id === stopId ? null : prev));
+      setEditingStop((prev) => (prev?.id === stopId ? null : prev));
+      setSelectedStopId((prev) => (prev === stopId ? null : prev));
     },
     [activeDayIdx, setTrip]
   );
+
+  const handleReorderStops = useCallback(
+    (sourceIndex: number, destinationIndex: number) => {
+      if (sourceIndex === destinationIndex) return;
+      setTrip((prev) => {
+        const updatedDays = [...prev.days];
+        const currentDay = updatedDays[activeDayIdx];
+        if (!currentDay || !currentDay.stops) return prev;
+        if (sourceIndex < 0 || sourceIndex >= currentDay.stops.length) return prev;
+        if (destinationIndex < 0 || destinationIndex >= currentDay.stops.length) return prev;
+
+        const newStops = [...currentDay.stops];
+        const [movedStop] = newStops.splice(sourceIndex, 1);
+        newStops.splice(destinationIndex, 0, movedStop);
+
+        const reindexedStops = newStops.map((s, idx) => ({
+          ...s,
+          orderIndex: idx + 1,
+        }));
+
+        updatedDays[activeDayIdx] = {
+          ...currentDay,
+          stops: reindexedStops,
+        };
+        return { ...prev, days: updatedDays };
+      });
+    },
+    [activeDayIdx, setTrip]
+  );
+
+  const handleDragStart = (e: React.DragEvent, index: number) => {
+    setDraggedStopIdx(index);
+    e.dataTransfer.setData('text/plain', String(index));
+    e.dataTransfer.effectAllowed = 'move';
+  };
+
+  const handleDragOver = (e: React.DragEvent, index: number) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+    if (dragOverStopIdx !== index) {
+      setDragOverStopIdx(index);
+    }
+  };
+
+  const handleDragLeave = () => {
+    setDragOverStopIdx(null);
+  };
+
+  const handleDragEnd = () => {
+    setDraggedStopIdx(null);
+    setDragOverStopIdx(null);
+  };
+
+  const handleDrop = (e: React.DragEvent, targetIndex: number) => {
+    e.preventDefault();
+    const sourceIndex = parseInt(e.dataTransfer.getData('text/plain'), 10);
+    if (!isNaN(sourceIndex) && sourceIndex !== targetIndex) {
+      handleReorderStops(sourceIndex, targetIndex);
+    }
+    setDraggedStopIdx(null);
+    setDragOverStopIdx(null);
+  };
 
   const handleMoveStopToDay = useCallback(
     (stopId: string, targetDayId: string) => {
@@ -310,7 +431,8 @@ export function App() {
 
         return { ...prev, days: updatedDays };
       });
-      setSelectedStop(null);
+      setEditingStop(null);
+      setSelectedStopId(null);
     },
     [activeDay.id, setTrip]
   );
@@ -370,7 +492,7 @@ export function App() {
         const targetStops = targetDay.stops || [];
         const newStop: ItineraryStop = {
           ...place,
-          id: `stop_${Date.now()}`,
+          id: `stop_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
           orderIndex: targetStops.length + 1,
         };
 
@@ -420,7 +542,8 @@ export function App() {
           placesToVisit: [...currentPlaces, unassignedIdea],
         };
       });
-      setSelectedStop(null);
+      setEditingStop(null);
+      setSelectedStopId(null);
     },
     [setTrip]
   );
@@ -588,8 +711,26 @@ export function App() {
     );
   }
 
+  // Mandatory Authentication Gate: No planning without login!
+  if (!vaultSession && !isGuestMode && !isReadOnly) {
+    return (
+      <AuthLandingPage
+        onLoginSuccess={(session) => {
+          setVaultSession(session);
+          setPrefilledUuid(undefined);
+        }}
+        prefilledUuid={prefilledUuid}
+      />
+    );
+  }
+
+  const isViewportLocked =
+    currentView === 'trip_detail' &&
+    activeTab === 'timeline' &&
+    !isPlacesToVisitActive;
+
   return (
-    <div className="app-shell">
+    <div className={`app-shell ${isViewportLocked ? 'viewport-locked' : ''}`}>
       {/* 1. TRIPS LIST LANDING VIEW */}
       {currentView === 'trips_list' && (
         <TripsListPage
@@ -681,110 +822,38 @@ export function App() {
 
           {/* 1. Global Navigation Bar with Multi-Trip Switcher & Timing Info */}
           <Header
-            title={trip.title}
-            destination={trip.destination}
-            dates={trip.dates}
-            startTime={trip.startTime}
-            endTime={trip.endTime}
-            readinessScore={trip.readinessScore}
+            title={trip?.title || 'Trip'}
+            destination={trip?.destination || ''}
+            dates={trip?.dates || ''}
+            startTime={trip?.startTime}
+            endTime={trip?.endTime}
+            readinessScore={trip?.readinessScore || 0}
             isWasmActive={isWasmActive}
             activeSession={vaultSession}
             tripsCount={trips.length}
             currentView={currentView}
+            activeTab={activeTab}
+            flightsCount={(trip?.flights?.length || 0) + (trip?.documents?.length || 0)}
+            expensesCount={trip?.expenses?.length || 0}
+            onSelectTab={setActiveTab}
             onNavigateView={setCurrentView}
             onOpenTripManager={() => setIsTripManagerOpen(true)}
             onOpenReadiness={() => setIsReadinessOpen(true)}
             onOpenAuth={() => setIsAuthOpen(true)}
             onShare={() => setIsShareModalOpen(true)}
+            onOpenScratchpad={() => setIsScratchpadOpen(true)}
             onOpenSettings={() => setCurrentView('trip_settings')}
           />
 
-          {/* Zero-Knowledge Vault Welcome Banner for Unauthenticated Users */}
-          {!vaultSession && !isReadOnly && !isGuestMode && (
-            <div className="vault-welcome-banner">
-              <div className="welcome-banner-left">
-                <span className="welcome-banner-icon">🔐</span>
-                <div>
-                  <strong className="welcome-banner-title">Private Travel Vault:</strong>
-                  <span className="welcome-banner-desc">
-                    {' '}Secure multiple trips with an anonymous Account UUID &amp; Password. Inactive accounts auto-expire after 3 months.
-                  </span>
-                </div>
-              </div>
-              <div className="welcome-banner-actions">
-                <button className="welcome-create-btn" onClick={() => setIsAuthOpen(true)}>
-                  <Sparkles size={13} />
-                  <span>Create Account</span>
-                </button>
-                <button className="welcome-restore-btn" onClick={() => setIsAuthOpen(true)}>
-                  <Key size={13} />
-                  <span>Log In</span>
-                </button>
-              </div>
-            </div>
-          )}
 
-          {/* 2. Top Navigation Tabs */}
-          <nav className="main-nav-bar">
-            <div className="nav-tabs-group">
-              <button
-                className={`nav-tab-btn ${activeTab === 'timeline' ? 'active' : ''}`}
-                onClick={() => setActiveTab('timeline')}
-              >
-                <CalendarDays size={15} />
-                <span>Itinerary &amp; Map</span>
-              </button>
-
-              <button
-                className={`nav-tab-btn ${activeTab === 'flights' ? 'active' : ''}`}
-                onClick={() => setActiveTab('flights')}
-              >
-                <Plane size={15} />
-                <span>Bookings &amp; Passes</span>
-                <span className="nav-counter-pill">
-                  {trip.flights.length + (trip.documents?.length || 0)}
-                </span>
-              </button>
-
-              <button
-                className={`nav-tab-btn ${activeTab === 'expenses' ? 'active' : ''}`}
-                onClick={() => setActiveTab('expenses')}
-              >
-                <Receipt size={15} />
-                <span>Expenses</span>
-                <span className="nav-counter-pill">{trip.expenses.length}</span>
-              </button>
-            </div>
-
-            <div className="nav-right-actions">
-              <button
-                className="share-export-nav-btn"
-                onClick={() => setIsScratchpadOpen(true)}
-                title="Trip scratchpad, emergency contacts & day notes"
-              >
-                <FileText size={14} />
-                <span>Notes &amp; Emergency</span>
-              </button>
-
-              <button
-                className="share-export-nav-btn"
-                onClick={() => setIsShareModalOpen(true)}
-                title="Invite companion via private link or export JSON"
-              >
-                <Share2 size={14} />
-                <span>Invite &amp; Share</span>
-              </button>
-            </div>
-          </nav>
-
-          {/* 3. TAB CONTENT */}
+          {/* 2. TAB CONTENT */}
           {activeTab === 'timeline' && (
             <>
               {/* Horizontal Day Selector Tabs with Ideas Bucket */}
               <DaySelector
-                days={trip.days}
+                days={trip?.days || []}
                 activeDayIndex={activeDayIdx}
-                placesCount={trip.placesToVisit?.length || 0}
+                placesCount={trip?.placesToVisit?.length || 0}
                 isPlacesActive={isPlacesToVisitActive}
                 onSelectPlaces={() => setIsPlacesToVisitActive(true)}
                 onSelectDay={(idx) => {
@@ -792,6 +861,8 @@ export function App() {
                   setActiveDayIdx(idx);
                 }}
                 onAddDay={handleAddDay}
+                holidaysByDate={holidaysByDate}
+                tripStartDate={trip.startDate}
               />
 
               {isPlacesToVisitActive ? (
@@ -799,6 +870,7 @@ export function App() {
                   <PlacesToVisitDrawer
                     places={trip.placesToVisit || []}
                     days={trip.days}
+                    destination={trip.destination}
                     onAddPlace={handleAddPlaceToVisit}
                     onDeletePlace={handleDeletePlaceToVisit}
                     onAssignToDay={handleAssignPlaceToDay}
@@ -931,6 +1003,16 @@ export function App() {
                     </div>
                   </div>
 
+                  {/* Public Holiday Banner for Active Day */}
+                  {activeDayHoliday && (
+                    <div className="active-day-holiday-banner">
+                      <Sparkles size={14} className="text-amber" />
+                      <span>
+                        Public Holiday: <strong>{activeDayHoliday}</strong> — sights, shops, or transit may run on holiday hours
+                      </span>
+                    </div>
+                  )}
+
                   {/* Weather Prediction Card */}
                   <WeatherBanner
                     weather={activeDay.weather}
@@ -952,12 +1034,27 @@ export function App() {
                       <React.Fragment key={stop.id}>
                         <TimelineCard
                           stop={stop}
+                          index={index}
+                          totalStops={activeDay.stops.length}
                           themeColor={activeDay.themeColor}
-                          onSelect={setSelectedStop}
+                          isSelected={stop.id === selectedStopId}
+                          onSelect={() => setSelectedStopId(stop.id)}
+                          onEdit={(s) => setEditingStop(s)}
+                          onMoveUp={() => handleReorderStops(index, index - 1)}
+                          onMoveDown={() => handleReorderStops(index, index + 1)}
+                          isDragging={draggedStopIdx === index}
+                          isDragOver={dragOverStopIdx === index}
+                          onDragStart={(e) => handleDragStart(e, index)}
+                          onDragOver={(e) => handleDragOver(e, index)}
+                          onDragLeave={handleDragLeave}
+                          onDragEnd={handleDragEnd}
+                          onDrop={(e) => handleDrop(e, index)}
                         />
 
                         {/* Distance & Transit duration connector */}
-                        {index < transitLegs.length && (
+                        {index < transitLegs.length &&
+                          stop.category !== 'note' &&
+                          activeDay.stops[index + 1]?.category !== 'note' && (
                           <DistancePill
                             leg={transitLegs[index]}
                             onToggleMode={handleToggleMode}
@@ -975,23 +1072,99 @@ export function App() {
                       </React.Fragment>
                     ))}
 
-                    {/* + Add Place to Day Action Button */}
-                    <div className="add-place-action-container mt-3 mb-2">
-                      <button
-                        className="secondary-action-btn w-full flex items-center justify-center gap-2 py-2.5"
-                        onClick={() => setIsAddStopModalOpen(true)}
+                    {/* Empty Day State */}
+                    {activeDay.stops.length === 0 && (
+                      <div
+                        className="empty-day-card"
                         style={{
-                          borderStyle: 'dashed',
-                          borderWidth: '1.5px',
                           backgroundColor: 'var(--bg-card)',
-                          borderRadius: 'var(--radius-lg)',
-                          cursor: 'pointer',
+                          border: '1px solid var(--border-light)',
+                          borderRadius: 'var(--radius-card)',
+                          padding: '36px 24px',
+                          textAlign: 'center',
+                          boxShadow: 'var(--shadow-card)',
                         }}
                       >
-                        <Plus size={15} />
-                        <span>Add Place to Day {activeDay.dayNumber}</span>
-                      </button>
-                    </div>
+                        <div style={{ fontSize: '32px', marginBottom: '8px' }}>🗺️</div>
+                        <h3 style={{ fontSize: '16px', fontWeight: 600, color: 'var(--text-primary)', marginBottom: '6px' }}>
+                          Day {activeDay.dayNumber} is wide open
+                        </h3>
+                        <p style={{ fontSize: '13px', color: 'var(--text-secondary)', maxWidth: '380px', margin: '0 auto 20px', lineHeight: '1.5' }}>
+                          Start building your day by adding places with Google Places/OSM search, hotels, flights, or quick notes and tips.
+                        </p>
+                        <div className="flex flex-center gap-2" style={{ flexWrap: 'wrap' }}>
+                          <button
+                            className="timeline-action-primary"
+                            onClick={() => handleOpenAddStop('sight')}
+                          >
+                            <Plus size={15} />
+                            <span>Add Place</span>
+                          </button>
+                          <button
+                            className="timeline-action-pill"
+                            onClick={() => handleOpenAddStop('note')}
+                          >
+                            <FileText size={14} className="text-amber" />
+                            <span>+ Note</span>
+                          </button>
+                          <button
+                            className="timeline-action-pill"
+                            onClick={() => handleOpenAddStop('lodging')}
+                          >
+                            <Hotel size={14} className="text-blue" />
+                            <span>+ Hotel</span>
+                          </button>
+                          <button
+                            className="timeline-action-pill"
+                            onClick={() => handleOpenAddStop('flight')}
+                          >
+                            <Plane size={14} className="text-emerald" />
+                            <span>+ Flight</span>
+                          </button>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* + Add Place / Note / Hotel / Flight Multi-Action Bar */}
+                    {activeDay.stops.length > 0 && (
+                      <div className="timeline-actions-bar">
+                        <button
+                          className="timeline-action-primary"
+                          onClick={() => handleOpenAddStop('sight')}
+                          title="Search and schedule places, sights, or restaurants with Google Places / OSM"
+                        >
+                          <Plus size={15} />
+                          <span>Add Place</span>
+                        </button>
+
+                        <button
+                          className="timeline-action-pill"
+                          onClick={() => handleOpenAddStop('note')}
+                          title="Add traveler notes, tips, bullet lists, or packing reminders"
+                        >
+                          <FileText size={14} className="text-amber" />
+                          <span>+ Note</span>
+                        </button>
+
+                        <button
+                          className="timeline-action-pill"
+                          onClick={() => handleOpenAddStop('lodging')}
+                          title="Search and add hotel, accommodation, or lodging"
+                        >
+                          <Hotel size={14} className="text-blue" />
+                          <span>+ Hotel</span>
+                        </button>
+
+                        <button
+                          className="timeline-action-pill"
+                          onClick={() => handleOpenAddStop('flight')}
+                          title="Schedule a flight, airport transit, or arrival"
+                        >
+                          <Plane size={14} className="text-emerald" />
+                          <span>+ Flight</span>
+                        </button>
+                      </div>
+                    )}
                   </div>
                 </section>
 
@@ -1001,13 +1174,14 @@ export function App() {
                 >
                   <InteractiveMap
                     day={activeDay}
-                    onSelectStop={setSelectedStop}
+                    onSelectStop={(s) => setSelectedStopId(s.id)}
+                    onEditStop={(s) => setEditingStop(s)}
                     onOptimizeDay={handleOptimizeDay}
                     isOptimized={isDayOptimized}
                     canUndo={canUndo}
                     onUndoOptimization={handleUndoOptimization}
                     transitModes={transitModes}
-                    selectedStopId={selectedStop?.id}
+                    selectedStopId={selectedStopId}
                     tripTitle={trip.title}
                   />
                 </section>
@@ -1037,6 +1211,7 @@ export function App() {
               <ExpenseTracker
                 expenses={trip.expenses}
                 baseCurrency={trip.baseCurrency}
+                homeCurrency={trip.homeCurrency}
                 onAddExpense={handleAddExpense}
                 onDeleteExpense={handleDeleteExpense}
               />
@@ -1090,11 +1265,11 @@ export function App() {
       <PrintTravelPacket trip={trip} />
 
       <StopDetailModal
-        stop={selectedStop}
+        stop={editingStop}
         themeColor={activeDay.themeColor}
         days={trip.days}
         currentDayId={activeDay.id}
-        onClose={() => setSelectedStop(null)}
+        onClose={() => setEditingStop(null)}
         onUpdateStop={handleUpdateStop}
         onDeleteStop={handleDeleteStop}
         onMoveStopToDay={handleMoveStopToDay}
@@ -1124,6 +1299,7 @@ export function App() {
         }
         onClose={() => setIsAddStopModalOpen(false)}
         onAddStop={handleAddStop}
+        defaultCategory={addStopCategory}
       />
 
       <AuthModal
@@ -1134,10 +1310,7 @@ export function App() {
           setVaultSession(session);
           setPrefilledUuid(undefined);
         }}
-        onLogout={() => {
-          clearVaultSession();
-          setVaultSession(null);
-        }}
+        onLogout={handleLogout}
         onDeleteAccount={handleDeleteAccount}
         onClose={() => {
           setIsAuthOpen(false);
