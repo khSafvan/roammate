@@ -1,5 +1,6 @@
 import React from 'react';
 import {
+  Camera,
   Cloud,
   CloudRain,
   CloudSun,
@@ -125,19 +126,35 @@ export const WeatherBanner = React.memo<WeatherBannerProps>(function WeatherBann
         </span>
       </div>
 
+      {/* Sunset & Golden Hour Photography Strip */}
+      {(weather.sunset || weather.goldenHour) && (
+        <div className="weather-tip-strip" style={{ backgroundColor: 'rgba(245, 158, 11, 0.08)', borderColor: 'rgba(245, 158, 11, 0.25)' }}>
+          <Camera size={14} strokeWidth={1.75} className="text-amber flex-shrink-0" />
+          <span className="weather-tip-text">
+            <strong>Golden Hour:</strong> {weather.goldenHour ? `${weather.goldenHour} – ${weather.sunset}` : weather.sunset} · Best warm daylight for photography &amp; outdoor sights
+          </span>
+        </div>
+      )}
+
       {/* Hourly Forecast Stream */}
       {weather.hourly && weather.hourly.length > 0 && (
         <div className="hourly-forecast-row">
-          {weather.hourly.map((hour, idx) => (
-            <div key={idx} className="hourly-chip">
-              <span className="hourly-time">{hour.time}</span>
-              <div className="hourly-icon">{getWeatherIcon(hour.condition, 15)}</div>
-              <span className="hourly-temp tabular">{hour.tempC}°</span>
-              {hour.rainChance > 10 && (
-                <span className="hourly-rain tabular">{hour.rainChance}%</span>
-              )}
-            </div>
-          ))}
+          {weather.hourly.map((hour, idx) => {
+            const hasRain = typeof hour.rainChance === 'number' && hour.rainChance > 10;
+            return (
+              <div key={idx} className="hourly-chip">
+                <span className="hourly-time">{hour.time}</span>
+                <div className="hourly-icon">{getWeatherIcon(hour.condition, 15)}</div>
+                <span className="hourly-temp tabular">{hour.tempC}°</span>
+                <span
+                  className="hourly-rain tabular"
+                  style={{ visibility: hasRain ? 'visible' : 'hidden' }}
+                >
+                  {hasRain ? `${hour.rainChance}%` : '0%'}
+                </span>
+              </div>
+            );
+          })}
         </div>
       )}
     </div>
