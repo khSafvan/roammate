@@ -6,6 +6,9 @@
   margin: 0 auto;
   width: 100%;
   padding: 24px 24px 48px;
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
 }
 
 .section-toolbar {
@@ -250,30 +253,6 @@
   gap: 8px;
 }
 
-.live-radar-tag {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  background-color: rgba(37, 99, 235, 0.08);
-  border: 1px solid rgba(37, 99, 235, 0.2);
-  color: var(--brand-blue);
-  padding: 3px 9px;
-  border-radius: var(--radius-pill);
-  font-size: 11px;
-  font-weight: 600;
-  text-decoration: none;
-  transition: all 0.15s ease;
-}
-
-.live-radar-tag:hover {
-  background-color: rgba(37, 99, 235, 0.14);
-}
-
-.radar-pulse {
-  color: var(--brand-rose);
-  animation: pulse 1.6s infinite;
-}
-
 .pass-delete-btn {
   background: none;
   border: none;
@@ -294,45 +273,73 @@
   align-items: center;
   justify-content: space-between;
   gap: 16px;
-  padding: 6px 0;
+  padding: 8px 0;
 }
 
 .airport-block {
   display: flex;
   flex-direction: column;
+  min-width: 0;
+}
+
+.airport-code-row {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
 }
 
 .airport-code {
-  font-size: 24px;
-  font-weight: 700;
+  font-size: 26px;
+  font-weight: 800;
   letter-spacing: -0.5px;
   color: var(--text-primary);
   font-family: 'JetBrains Mono', monospace;
-  line-height: 1.1;
+  line-height: 1;
 }
 
 .airport-time {
-  font-size: 15px;
-  font-weight: 600;
+  font-size: 16px;
+  font-weight: 700;
   color: var(--text-primary);
   font-variant-numeric: tabular-nums;
-  margin-top: 4px;
+}
+
+.airport-city-name {
+  font-size: 12px;
+  color: var(--text-secondary);
+  font-weight: 500;
+  margin-top: 2px;
+}
+
+.airport-terminal-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11px;
+  font-weight: 600;
+  background-color: rgba(37, 99, 235, 0.08);
+  border: 1px solid rgba(37, 99, 235, 0.18);
+  color: var(--brand-blue);
+  border-radius: var(--radius-pill);
+  padding: 2px 8px;
+  margin-top: 5px;
+  width: fit-content;
+}
+
+.airport-terminal-pill .terminal-gate {
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+
+.airport-block.text-right .airport-terminal-pill {
+  margin-left: auto;
 }
 
 .next-day-sup {
-  font-size: 10px;
+  font-size: 11px;
   color: var(--brand-rose);
   font-weight: 700;
   margin-left: 2px;
-}
-
-.airport-meta {
-  font-size: 11px;
-  color: var(--text-tertiary);
-  margin-top: 2px;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  font-weight: 500;
 }
 
 .route-graphic {
@@ -341,16 +348,29 @@
   align-items: center;
   justify-content: center;
   gap: 8px;
+  padding: 0 8px;
 }
 
 .route-line-decor {
   flex: 1;
   height: 1px;
-  border-top: var(--border-dashed);
+  border-top: 1px dashed var(--border-medium);
+}
+
+.plane-icon-wrap {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background-color: var(--bg-subtle);
+  border: 1px solid var(--border-light);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--brand-blue);
+  flex-shrink: 0;
 }
 
 .plane-graphic-icon {
-  color: var(--text-secondary);
   transform: rotate(45deg);
 }
 
@@ -392,6 +412,26 @@
   border: 1px solid var(--border-subtle);
   width: 100%;
 }
+
+
+/* Currency rate banner */
+.currency-rate-banner {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  border-radius: var(--radius-pill);
+  background-color: var(--bg-muted);
+  border: 1px solid var(--border-light);
+  font-size: 12px;
+  color: var(--text-secondary);
+  margin-bottom: 12px;
+  flex-wrap: wrap;
+}
+.currency-rate-banner strong { color: var(--text-primary); }
+.rate-offline-tag { color: var(--text-tertiary); font-style: italic; }
+.rate-date-tag { color: var(--text-tertiary); }
+.rate-total-home { margin-left: auto; font-weight: 600; color: var(--text-primary); }
 
 /* 2. Expense Tracker Styles - Calm Utility */
 .budget-summary-card {
