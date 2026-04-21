@@ -239,13 +239,13 @@ export const TripsListPage: React.FC<TripsListPageProps> = ({
             </div>
           ) : (
             filteredTrips.map((t) => {
-              const totalStops = t.days.reduce((acc, d) => acc + (d.stops?.length || 0), 0);
+              const totalStops = (t.days || []).reduce((acc, d) => acc + (d.stops?.length || 0), 0);
               const totalReservations = (t.flights?.length || 0) + (t.documents?.length || 0);
               const isActive = t.id === activeTripId;
 
               // Extract companion names from flights
               const companionNames = Array.from(
-                new Set(t.flights.map((f) => f.passengerName).filter(Boolean))
+                new Set((t.flights || []).map((f) => f.passengerName).filter(Boolean))
               );
 
               return (

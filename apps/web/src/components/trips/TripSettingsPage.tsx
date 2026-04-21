@@ -53,6 +53,8 @@ export const TripSettingsPage: React.FC<TripSettingsPageProps> = ({
   const [startTime, setStartTime] = useState(trip.startTime || '09:00');
   const [endTime, setEndTime] = useState(trip.endTime || '21:00');
   const [baseCurrency, setBaseCurrency] = useState(trip.baseCurrency || 'USD');
+  const [homeCurrency, setHomeCurrency] = useState(trip.homeCurrency || '');
+  const [countryCode, setCountryCode] = useState(trip.countryCode || '');
   const [themeColor, setThemeColor] = useState(trip.days?.[0]?.themeColor || '#3B82F6');
   const [guestKey, setGuestKey] = useState(trip.guestKey || trip.shareToken || 'guest_key');
   const [emergencyContacts, setEmergencyContacts] = useState(trip.emergencyContacts || '');
@@ -98,6 +100,8 @@ export const TripSettingsPage: React.FC<TripSettingsPageProps> = ({
       endTime: endTime || undefined,
       dates: formattedDates,
       baseCurrency,
+      homeCurrency: homeCurrency.trim().toUpperCase() || undefined,
+      countryCode: countryCode.trim().toUpperCase() || undefined,
       guestKey,
       emergencyContacts: emergencyContacts.trim() || undefined,
       generalNotes: generalNotes.trim() || undefined,
@@ -192,6 +196,22 @@ export const TripSettingsPage: React.FC<TripSettingsPageProps> = ({
 
               <div className="form-group">
                 <label className="form-label">
+                  <MapPin size={12} className="inline mr-1" />
+                  Country Code <span style={{ color: 'var(--text-tertiary)', fontWeight: 400 }}>(e.g. US, AE, MY)</span>
+                </label>
+                <input
+                  type="text"
+                  className="form-input"
+                  maxLength={2}
+                  placeholder="e.g. AE"
+                  value={countryCode}
+                  onChange={(e) => setCountryCode(e.target.value.toUpperCase())}
+                  style={{ textTransform: 'uppercase' }}
+                />
+              </div>
+
+              <div className="form-group">
+                <label className="form-label">
                   <DollarSign size={12} className="inline mr-1" />
                   Base Currency
                 </label>
@@ -204,6 +224,23 @@ export const TripSettingsPage: React.FC<TripSettingsPageProps> = ({
                     <option key={cur} value={cur}>
                       {cur}
                     </option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="form-label">
+                  <DollarSign size={12} className="inline mr-1" />
+                  Home Currency <span style={{ color: 'var(--text-tertiary)', fontWeight: 400 }}>(for live conversion)</span>
+                </label>
+                <select
+                  className="form-input"
+                  value={homeCurrency}
+                  onChange={(e) => setHomeCurrency(e.target.value)}
+                >
+                  <option value="">— none —</option>
+                  {CURRENCIES.map((cur) => (
+                    <option key={cur} value={cur}>{cur}</option>
                   ))}
                 </select>
               </div>
