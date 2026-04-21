@@ -15,7 +15,9 @@ export const mockDubaiTripData: Trip = {
   startTime: '09:00',
   endTime: '22:00',
   destination: 'Dubai & Abu Dhabi, UAE',
+  countryCode: 'AE',
   baseCurrency: 'AED',
+  homeCurrency: 'USD',
   shareToken: 'dubai-token-88z',
   guestKey: 'guest-dubai-442',
   readinessScore: 85,
@@ -177,6 +179,7 @@ export const mockDubaiTripData: Trip = {
           durationMinutes: 60,
           coordinates: { latitude: 25.1950, longitude: 55.2798 },
           address: 'Sheikh Mohammed bin Rashid Blvd, Downtown Dubai',
+          notes: '**Check-in code**: `PAL-9981`\n- Free airport shuttle every 30m\n- *Must see*: Burj Khalifa fountain show from terrace',
           isAnchor: true,
         },
         {
