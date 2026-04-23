@@ -156,4 +156,44 @@ describe('iCalendar (.ics) RFC 5545 Export (Feature F8)', () => {
     const ics = generateIcalendarFeed(tripWithSpecialChars);
     expect(ics).toContain('X-WR-CALNAME:Trip\\; Paris\\, London & Rome');
   });
+
+  it('exports note stops with reminder icon and 15 minute duration', () => {
+    const tripWithNote: Trip = {
+      ...mockSampleTrip,
+      flights: [],
+      documents: [],
+      days: [
+        {
+          id: 'day_1',
+          dayNumber: 1,
+          dateStr: 'Jan 8, 2027',
+          stops: [
+            {
+              id: 'note_1',
+              title: 'Buy Metro Day Pass',
+              category: 'note',
+              startTime: '09:00 AM',
+              durationMinutes: 0,
+              orderIndex: 1,
+              coordinates: { latitude: 0, longitude: 0 },
+              address: 'Itinerary Note',
+              notes: 'Red ticket machine near Exit 3',
+            },
+          ],
+        },
+      ],
+    };
+
+    const ics = generateIcalendarFeed(tripWithNote);
+    expect(ics).toContain('SUMMARY:📝 Buy Metro Day Pass');
+    expect(ics).toContain('Notes: Red ticket machine near Exit 3');
+    // Verify 15-minute event duration (e.g. 3000Z to 4500Z)
+    const match = ics.match(/DTSTART:(\d{8}T\d{6}Z)[\r\n]+DTEND:(\d{8}T\d{6}Z)/);
+    expect(match).not.toBeNull();
+    if (match) {
+      const startMs = Date.parse(`${match[1].slice(0, 4)}-${match[1].slice(4, 6)}-${match[1].slice(6, 11)}:${match[1].slice(11, 13)}:${match[1].slice(13)}`);
+      const endMs = Date.parse(`${match[2].slice(0, 4)}-${match[2].slice(4, 6)}-${match[2].slice(6, 11)}:${match[2].slice(11, 13)}:${match[2].slice(13)}`);
+      expect(endMs - startMs).toBe(15 * 60 * 1000);
+    }
+  });
 });

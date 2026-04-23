@@ -246,5 +246,38 @@ describe('SyncService & Itinerary Persistence', () => {
       expect(unauthorized).toBeNull();
     });
   });
+
+  describe('User-Scoped Isolation & Sample Trip Seeding', () => {
+    it('seeds a fresh sample trip for a new user who has 0 trips', () => {
+      const userA = 'user-uuid-1111-2222';
+      const trips = loadAllLocalTrips(userA);
+
+      expect(trips.length).toBe(1);
+      expect(trips[0].userId).toBe(userA);
+      expect(trips[0].title).toBe('Dubai & Abu Dhabi Explorer');
+      expect(trips[0].id).toContain('useruuid');
+      expect(getActiveTripIdLocal()).toBe(trips[0].id);
+    });
+
+    it('isolates trips between two different users', () => {
+      const userA = 'user-uuid-aaaa-1111';
+      const userB = 'user-uuid-bbbb-2222';
+
+      const tripsA = loadAllLocalTrips(userA);
+      const tripsB = loadAllLocalTrips(userB);
+
+      expect(tripsA[0].userId).toBe(userA);
+      expect(tripsB[0].userId).toBe(userB);
+      expect(tripsA[0].id).not.toBe(tripsB[0].id);
+
+      // Verify that user A only sees user A's trips
+      const fetchedA = loadAllLocalTrips(userA);
+      expect(fetchedA.every((t) => t.userId === userA)).toBe(true);
+
+      // Verify that user B only sees user B's trips
+      const fetchedB = loadAllLocalTrips(userB);
+      expect(fetchedB.every((t) => t.userId === userB)).toBe(true);
+    });
+  });
 });
 

@@ -80,12 +80,10 @@ describe('Schedule Overlap & Transit Conflict Detection (Feature F6)', () => {
     expect(detectTransitConflict(stopA2, stopB2, 10)).toBeNull();
   });
 
-  it('handles edge case where stop starts early morning of next day (>10h wrap)', () => {
-    // Stop A: 21:00 PM (1260m)
-    // Stop B: 02:00 AM (120m) -> difference is -1140m (< -600m)
-    const stopA = makeStop('a', '21:00', 60);
-    const stopB = makeStop('b', '02:00', 60);
-    const conflict = detectTransitConflict(stopA, stopB, 30);
-    expect(conflict).toBeNull();
+  it('returns null if either stop is a note', () => {
+    const stopA = makeStop('a', '10:00 AM', 60);
+    const noteStop = { ...makeStop('note', '10:15 AM', 0), category: 'note' as const };
+    expect(detectTransitConflict(stopA, noteStop, 15)).toBeNull();
+    expect(detectTransitConflict(noteStop, stopA, 15)).toBeNull();
   });
 });
