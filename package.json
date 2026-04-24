@@ -13,6 +13,7 @@
     "preview": "npm run preview --workspace=@mojolog/web",
     "test": "npm run test --workspace=@mojolog/web",
     "dev:api": "npm run dev --workspace=@mojolog/api",
+    "ui-skills": "npx -y ui-skills",
     "build:wasm": "cd packages/rust-core && npx wasm-pack build --target web --out-dir ../../apps/web/src/pkg"
   }
 }
