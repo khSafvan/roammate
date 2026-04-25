@@ -6,6 +6,9 @@ import {
   Plus,
   Receipt,
   Scale,
+  User,
+  UserRoundPen,
+  UserPlus,
   Trash2,
   Users,
   X,
@@ -25,7 +28,10 @@ interface ExpenseTrackerProps {
   homeCurrency?: string;
   onAddExpense: (expense: Expense) => void;
   onDeleteExpense: (id: string) => void;
-  travelers?: string[];
+  travelers: string[];
+  onAddTraveler: (name: string) => void;
+  onRenameTraveler: (oldName: string, newName: string) => void;
+  onRemoveTraveler: (name: string) => void;
 }
 
 const CATEGORY_COLORS: Record<ExpenseCategory, string> = {
@@ -64,18 +70,25 @@ export const ExpenseTracker = React.memo<ExpenseTrackerProps>(function ExpenseTr
   homeCurrency,
   onAddExpense,
   onDeleteExpense,
-  travelers = ['Alex Chen', 'Jordan Taylor'],
+  travelers,
+  onAddTraveler,
+  onRenameTraveler,
+  onRemoveTraveler,
 }) {
   const [activeView, setActiveView] = useState<'breakdown' | 'settlement'>('breakdown');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [amount, setAmount] = useState('');
   const [category, setCategory] = useState<ExpenseCategory>('Food & Drinks');
   const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
-  const [paidBy, setPaidBy] = useState('Alex Chen');
+  const [paidBy, setPaidBy] = useState(travelers[0] || 'Me');
   const [splitAll, setSplitAll] = useState(true);
   const [selectedSplitWith, setSelectedSplitWith] = useState<string[]>([]);
   const [notes, setNotes] = useState('');
   const [liveRate, setLiveRate] = useState<RateResult | null>(null);
+  const [isTravelerModalOpen, setIsTravelerModalOpen] = useState(false);
+  const [editingTraveler, setEditingTraveler] = useState<string | null>(null);
+  const [travelerNameDraft, setTravelerNameDraft] = useState('');
+  const [travelerNameError, setTravelerNameError] = useState('');
 
   // Live currency rate — fetches from Frankfurter, falls back offline
   useEffect(() => {
@@ -85,6 +98,11 @@ export const ExpenseTracker = React.memo<ExpenseTrackerProps>(function ExpenseTr
     }
     fetchRate(baseCurrency, homeCurrency).then(setLiveRate);
   }, [baseCurrency, homeCurrency]);
+
+  useEffect(() => {
+    if (!travelers.includes(paidBy)) setPaidBy(travelers[0] || 'Me');
+    setSelectedSplitWith((current) => current.filter((name) => travelers.includes(name)));
+  }, [travelers, paidBy]);
 
   // 1. Dynamic category aggregation
   const { categoryTotals, totalSpent } = useMemo(() => {
@@ -96,7 +114,7 @@ export const ExpenseTracker = React.memo<ExpenseTrackerProps>(function ExpenseTr
   }, [expenses]);
 
   // 2. Multi-traveler balance and debt settlement computation
-  const { balances, travelers: allTravelers } = useMemo(() => {
+  const { balances } = useMemo(() => {
     return computeTravelerBalances(expenses, travelers);
   }, [expenses, travelers]);
 
@@ -108,7 +126,7 @@ export const ExpenseTracker = React.memo<ExpenseTrackerProps>(function ExpenseTr
     if (splitAll) {
       // Transition from "All" to custom selection without this traveler
       setSplitAll(false);
-      setSelectedSplitWith(allTravelers.filter((t) => t !== traveler));
+      setSelectedSplitWith(travelers.filter((t) => t !== traveler));
     } else {
       if (selectedSplitWith.includes(traveler)) {
         const next = selectedSplitWith.filter((t) => t !== traveler);
@@ -116,7 +134,7 @@ export const ExpenseTracker = React.memo<ExpenseTrackerProps>(function ExpenseTr
       } else {
         const next = [...selectedSplitWith, traveler];
         setSelectedSplitWith(next);
-        if (next.length === allTravelers.length) {
+        if (next.length === travelers.length) {
           setSplitAll(true);
         }
       }
@@ -134,7 +152,7 @@ export const ExpenseTracker = React.memo<ExpenseTrackerProps>(function ExpenseTr
     if (isNaN(num) || num <= 0) return;
 
     const splitList = splitAll
-      ? undefined // defaults to all
+      ? travelers
       : selectedSplitWith.length > 0
       ? selectedSplitWith
       : [paidBy];
@@ -146,7 +164,7 @@ export const ExpenseTracker = React.memo<ExpenseTrackerProps>(function ExpenseTr
       amount: num,
       currency: baseCurrency,
       paidBy: paidBy.trim() || 'Me',
-      splitWith: splitList,
+      splitWith: splitList.length > 0 ? splitList : [paidBy],
       notes: notes.trim() || undefined,
     };
 
@@ -156,6 +174,35 @@ export const ExpenseTracker = React.memo<ExpenseTrackerProps>(function ExpenseTr
     setNotes('');
     setSplitAll(true);
     setSelectedSplitWith([]);
+  };
+
+  const openTravelerModal = (traveler?: string) => {
+    setEditingTraveler(traveler || null);
+    setTravelerNameDraft(traveler || '');
+    setTravelerNameError('');
+    setIsTravelerModalOpen(true);
+  };
+
+  const handleTravelerSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    const name = travelerNameDraft.trim();
+    if (!name) {
+      setTravelerNameError('Enter a traveler name.');
+      return;
+    }
+    if (travelers.some((traveler) => traveler !== editingTraveler && traveler.toLowerCase() === name.toLowerCase())) {
+      setTravelerNameError('That traveler is already in this trip.');
+      return;
+    }
+
+    if (editingTraveler) {
+      onRenameTraveler(editingTraveler, name);
+      if (paidBy === editingTraveler) setPaidBy(name);
+      setSelectedSplitWith((current) => current.map((traveler) => traveler === editingTraveler ? name : traveler));
+    } else {
+      onAddTraveler(name);
+    }
+    setIsTravelerModalOpen(false);
   };
 
   return (
@@ -348,181 +395,122 @@ export const ExpenseTracker = React.memo<ExpenseTrackerProps>(function ExpenseTr
 
       {/* VIEW 2: SPLIT & DEBT SETTLEMENT ("WHO OWES WHOM") */}
       {activeView === 'settlement' && (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+        <div className="settlement-view">
+          <section className="traveler-management-section">
+            <div className="traveler-management-header">
+              <div className="traveler-management-title">
+                <Users size={18} />
+                <h3>Trip Travelers</h3>
+              </div>
+              <button className="primary-action-btn" onClick={() => openTravelerModal()}>
+                <UserPlus size={15} />
+                <span>Add Traveler</span>
+              </button>
+            </div>
+            <div className="traveler-roster-grid">
+              {travelers.map((traveler, index) => (
+                <article key={traveler} className="booking-voucher-card traveler-voucher-card">
+                  <div className="traveler-card-head">
+                    <div className="traveler-identity">
+                      <span className="traveler-avatar" aria-hidden="true">
+                        {traveler.trim().charAt(0).toUpperCase() || <User size={16} />}
+                      </span>
+                      <div className="traveler-name-stack">
+                        <span className="traveler-index">TRAVELER {String(index + 1).padStart(2, '0')}</span>
+                        <h3 className="traveler-name" title={traveler}>{traveler}</h3>
+                      </div>
+                    </div>
+                    <div className="traveler-card-actions">
+                      <button className="traveler-icon-btn" onClick={() => openTravelerModal(traveler)} title={`Edit ${traveler}`} aria-label={`Edit ${traveler}`}>
+                        <UserRoundPen size={15} />
+                      </button>
+                      <button
+                        className="traveler-icon-btn danger"
+                        onClick={() => onRemoveTraveler(traveler)}
+                        title={travelers.length === 1 ? 'A trip needs at least one active traveler' : `Remove ${traveler}; preserve their records`}
+                        aria-label={`Remove ${traveler}`}
+                        disabled={travelers.length === 1}
+                      >
+                        <Trash2 size={15} />
+                      </button>
+                    </div>
+                  </div>
+                </article>
+              ))}
+            </div>
+          </section>
+
           {/* Individual Balances Card Grid */}
-          <div
-            style={{
-              backgroundColor: 'var(--bg-card, #ffffff)',
-              borderRadius: 'var(--radius-xl, 16px)',
-              border: '1px solid var(--border-light, #e2e8f0)',
-              padding: '20px',
-              boxShadow: 'var(--shadow-sm, 0 1px 3px rgba(0,0,0,0.05))',
-            }}
-          >
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px' }}>
+          <section className="traveler-balances-section">
+            <div className="traveler-section-heading">
               <Users size={18} className="text-blue" />
-              <h3 style={{ fontSize: '16px', fontWeight: 600, margin: 0 }}>
-                Traveler Balances Summary
-              </h3>
+              <h3>Traveler Balances Summary</h3>
             </div>
 
-            <div
-              style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))',
-                gap: '12px',
-              }}
-            >
+            <div className="traveler-balance-grid">
               {balances.map((b) => {
                 const isOwed = b.net > 0.005;
                 const owes = b.net < -0.005;
 
                 return (
-                  <div
-                    key={b.name}
-                    style={{
-                      padding: '14px 16px',
-                      borderRadius: 'var(--radius-lg, 12px)',
-                      border: '1px solid var(--border-light, #e2e8f0)',
-                      backgroundColor: isOwed
-                        ? 'rgba(16, 185, 129, 0.05)'
-                        : owes
-                        ? 'rgba(239, 68, 68, 0.05)'
-                        : 'var(--bg-subtle, #f8fafc)',
-                      display: 'flex',
-                      flexDirection: 'column',
-                      gap: '8px',
-                    }}
-                  >
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <span style={{ fontWeight: 600, fontSize: '14px', color: 'var(--text-primary, #0f172a)' }}>
-                        {b.name}
-                      </span>
-                      <span
-                        style={{
-                          fontSize: '11px',
-                          fontWeight: 600,
-                          padding: '3px 8px',
-                          borderRadius: '12px',
-                          backgroundColor: isOwed
-                            ? 'rgba(16, 185, 129, 0.15)'
-                            : owes
-                            ? 'rgba(239, 68, 68, 0.15)'
-                            : 'rgba(100, 116, 139, 0.15)',
-                          color: isOwed ? '#059669' : owes ? '#DC2626' : '#64748B',
-                        }}
-                      >
-                        {isOwed ? 'Gets back' : owes ? 'Owes' : 'Settled'}
-                      </span>
+                  <article key={b.name} className={`booking-voucher-card traveler-balance-card ${isOwed ? 'is-owed' : owes ? 'owes' : 'is-settled'}`}>
+                    <div className="traveler-balance-head">
+                      <h4 className="traveler-balance-name" title={b.name}>{b.name}</h4>
+                      <span className="traveler-balance-status">{isOwed ? 'Gets back' : owes ? 'Owes' : 'Settled'}</span>
                     </div>
-
-                    <div style={{ fontSize: '20px', fontWeight: 700, color: isOwed ? '#059669' : owes ? '#DC2626' : 'var(--text-secondary, #64748b)' }}>
-                      {getCurrencySymbol(baseCurrency)}
-                      {Math.abs(b.net).toFixed(2)}
+                    <div className="traveler-balance-main">
+                      <span className="traveler-balance-label">Net balance</span>
+                      <strong className="traveler-balance-amount">
+                        {getCurrencySymbol(baseCurrency)}{Math.abs(b.net).toFixed(2)}
+                      </strong>
                     </div>
-
-                    <div style={{ fontSize: '11px', color: 'var(--text-tertiary, #64748b)', display: 'flex', gap: '8px' }}>
-                      <span>Paid: {getCurrencySymbol(baseCurrency)}{b.paid.toFixed(2)}</span>
-                      <span>•</span>
-                      <span>Share: {getCurrencySymbol(baseCurrency)}{b.share.toFixed(2)}</span>
+                    <div className="traveler-balance-footer">
+                      <div><span>Paid</span><strong>{getCurrencySymbol(baseCurrency)}{b.paid.toFixed(2)}</strong></div>
+                      <div><span>Share</span><strong>{getCurrencySymbol(baseCurrency)}{b.share.toFixed(2)}</strong></div>
                     </div>
-                  </div>
+                  </article>
                 );
               })}
             </div>
-          </div>
+          </section>
 
           {/* Who Owes Whom Debt Settlements */}
-          <div
-            style={{
-              backgroundColor: 'var(--bg-card, #ffffff)',
-              borderRadius: 'var(--radius-xl, 16px)',
-              border: '1px solid var(--border-light, #e2e8f0)',
-              padding: '20px',
-              boxShadow: 'var(--shadow-sm, 0 1px 3px rgba(0,0,0,0.05))',
-            }}
-          >
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px' }}>
+          <section className="debt-settlement-section">
+            <div className="traveler-section-heading">
               <Scale size={18} className="text-emerald" />
-              <h3 style={{ fontSize: '16px', fontWeight: 600, margin: 0 }}>
+              <h3>
                 Suggested Debt Settlement ("Who Owes Whom")
               </h3>
             </div>
 
             {debtSettlements.length === 0 ? (
-              <div
-                style={{
-                  padding: '32px 16px',
-                  textAlign: 'center',
-                  color: 'var(--text-secondary, #64748b)',
-                  borderRadius: '12px',
-                  border: '1px dashed var(--border-light, #e2e8f0)',
-                }}
-              >
-                <CheckCircle2 size={32} className="text-emerald" style={{ margin: '0 auto 8px' }} />
-                <p style={{ margin: 0, fontWeight: 600, color: 'var(--text-primary, #0f172a)' }}>
+              <div className="debt-empty-state">
+                <CheckCircle2 size={30} className="text-emerald" />
+                <p>
                   All group balances are settled!
                 </p>
-                <p style={{ fontSize: '12px', margin: '4px 0 0' }}>
+                <p className="debt-empty-detail">
                   No outstanding reimbursements are needed among travelers.
                 </p>
               </div>
             ) : (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+              <div className="debt-settlement-list">
                 {debtSettlements.map((debt, idx) => (
-                  <div
-                    key={`${debt.from}-${debt.to}-${idx}`}
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'space-between',
-                      padding: '12px 16px',
-                      borderRadius: '12px',
-                      border: '1px solid var(--border-light, #e2e8f0)',
-                      backgroundColor: 'var(--bg-subtle, #f8fafc)',
-                      flexWrap: 'wrap',
-                      gap: '10px',
-                    }}
-                  >
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flex: 1, minWidth: '220px' }}>
-                      <span style={{ fontWeight: 600, color: 'var(--text-primary, #0f172a)' }}>
-                        {debt.from}
-                      </span>
-                      <div
-                        style={{
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: '4px',
-                          color: '#64748B',
-                          fontSize: '12px',
-                          backgroundColor: '#e2e8f0',
-                          padding: '2px 8px',
-                          borderRadius: '12px',
-                        }}
-                      >
-                        <span>pays</span>
-                        <ArrowRight size={12} />
-                      </div>
-                      <span style={{ fontWeight: 600, color: 'var(--text-primary, #0f172a)' }}>
-                        {debt.to}
-                      </span>
+                  <article key={`${debt.from}-${debt.to}-${idx}`} className="debt-settlement-row">
+                    <div className="debt-parties">
+                      <strong title={debt.from}>{debt.from}</strong>
+                      <span className="debt-transfer-label">pays <ArrowRight size={13} /></span>
+                      <strong title={debt.to}>{debt.to}</strong>
                     </div>
 
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                      <span
-                        style={{
-                          fontSize: '17px',
-                          fontWeight: 700,
-                          color: 'var(--text-primary, #0f172a)',
-                        }}
-                      >
+                    <div className="debt-settlement-action">
+                      <strong className="debt-amount">
                         {getCurrencySymbol(baseCurrency)}
                         {debt.amount.toFixed(2)}
-                      </span>
+                      </strong>
 
                       <button
                         className="primary-action-btn"
-                        style={{ padding: '6px 12px', fontSize: '12px' }}
                         onClick={() => handleSettleDebt(debt.from, debt.to, debt.amount)}
                         title="Record a payment transaction to settle this debt"
                       >
@@ -530,11 +518,11 @@ export const ExpenseTracker = React.memo<ExpenseTrackerProps>(function ExpenseTr
                         <span>Settle Up</span>
                       </button>
                     </div>
-                  </div>
+                  </article>
                 ))}
               </div>
             )}
-          </div>
+          </section>
         </div>
       )}
 
@@ -610,7 +598,7 @@ export const ExpenseTracker = React.memo<ExpenseTrackerProps>(function ExpenseTr
                     value={paidBy}
                     onChange={(e) => setPaidBy(e.target.value)}
                   >
-                    {allTravelers.map((t) => (
+                    {travelers.map((t) => (
                       <option key={t} value={t}>
                         {t}
                       </option>
@@ -628,7 +616,7 @@ export const ExpenseTracker = React.memo<ExpenseTrackerProps>(function ExpenseTr
                     className={`cat-chip-btn ${splitAll ? 'selected' : ''}`}
                     onClick={() => {
                       setSplitAll(true);
-                      setSelectedSplitWith(allTravelers);
+                      setSelectedSplitWith(travelers);
                     }}
                     style={{
                       borderColor: splitAll ? '#10B981' : undefined,
@@ -636,10 +624,10 @@ export const ExpenseTracker = React.memo<ExpenseTrackerProps>(function ExpenseTr
                       color: splitAll ? '#059669' : undefined,
                     }}
                   >
-                    <span>All Group Members ({allTravelers.length})</span>
+                    <span>All Group Members ({travelers.length})</span>
                   </button>
 
-                  {allTravelers.map((t) => {
+                  {travelers.map((t) => {
                     const isSelected = splitAll || selectedSplitWith.includes(t);
                     return (
                       <button
@@ -673,6 +661,46 @@ export const ExpenseTracker = React.memo<ExpenseTrackerProps>(function ExpenseTr
 
               <button type="submit" className="primary-modal-btn">
                 Add Expense
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {isTravelerModalOpen && (
+        <div className="modal-backdrop" onClick={() => setIsTravelerModalOpen(false)}>
+          <div className="modal-card traveler-modal-card" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <div className="modal-header-left">
+                <div className="auth-header-icon"><User size={18} className="text-blue" /></div>
+                <div>
+                  <h3 className="modal-title">{editingTraveler ? 'Edit Traveler' : 'Add Traveler'}</h3>
+                  <p className="modal-subtitle">{editingTraveler ? 'Update this traveler across the trip.' : 'Add someone to this trip.'}</p>
+                </div>
+              </div>
+              <button className="modal-close-btn" onClick={() => setIsTravelerModalOpen(false)} title="Close">
+                <X size={18} />
+              </button>
+            </div>
+            <form className="auth-content-col" onSubmit={handleTravelerSubmit}>
+              <div>
+                <label className="form-label" htmlFor="traveler-name">Name</label>
+                <input
+                  id="traveler-name"
+                  autoFocus
+                  className="form-input"
+                  value={travelerNameDraft}
+                  onChange={(e) => {
+                    setTravelerNameDraft(e.target.value);
+                    setTravelerNameError('');
+                  }}
+                  maxLength={80}
+                  required
+                />
+                {travelerNameError && <p className="form-error-text">{travelerNameError}</p>}
+              </div>
+              <button className="primary-modal-btn" type="submit">
+                {editingTraveler ? 'Save Changes' : 'Add Traveler'}
               </button>
             </form>
           </div>

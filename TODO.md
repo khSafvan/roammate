@@ -138,6 +138,40 @@ Cohesive design language applied across all styles, components, and responsive v
 
 ---
 
+## 🚀 Upcoming Roadmap: Phases 7–12
+
+### Phase 7 — Authentication & Device Persistence
+- [ ] Gate private planner access behind login and redirect unauthenticated users to login.
+- [ ] Keep the device session active across browser/app restarts until the user logs out manually.
+- [ ] Restore the last active page and trip state after reopening or hard reset.
+
+### Phase 8 — Trip Identity & Collaboration
+- [ ] Add unique trip IDs and unique usernames.
+- [ ] Define one trip-code invitation flow for both inviter and invitee.
+- [ ] Let invitees request to join with a username; show the request to the inviter with accept/decline actions.
+- [ ] Grant shared-trip access only after the inviter approves the request.
+
+### Phase 9 — First-Run Onboarding
+- [ ] Add a tutorial for new users and persist its completion state.
+
+### Phase 10 — Stay-Aware Itinerary
+- [ ] Treat hotels/stays as itinerary locations.
+- [ ] Use a stay as the trip's start and end location by default until the user changes either point.
+
+### Phase 11 — Map Workspace & Focus
+- [ ] Keep itinerary focus and map focus synchronized for stops and places to visit.
+- [ ] Show focused-place details and notes in a lower map information panel, including user-added places.
+- [ ] Use a half-screen map beside the itinerary on desktop.
+- [ ] Use separate full-screen itinerary and map views on mobile, with a clear back path from place details.
+- [ ] Keep map markers above other map overlays with the highest marker z-index.
+
+### Phase 12 — Visual Consistency & Layout Hardening
+- [x] Unify voucher and flight card styling, alignment, and spacing.
+- [x] Keep card text geometry stable and truncate long text with ellipses.
+- [ ] Keep category icons (food, hotel, and similar) inside their stop cards and aligned to the card width.
+
+---
+
 ## 🧪 Verification
 
 ```bash
