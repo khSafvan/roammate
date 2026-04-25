@@ -566,19 +566,18 @@ export const DocumentsAndTicketsHub: React.FC<DocumentsAndTicketsHubProps> = ({
               </div>
 
               <div className="voucher-footer">
-                {doc.confirmationCode && (
-                  <div className="voucher-code-pill font-mono">
-                    <span>Ref:</span>
-                    <strong>{doc.confirmationCode}</strong>
-                  </div>
-                )}
-
                 {doc.qrCodeData && (
                   <div className="voucher-qr-tag" title="Digital QR Pass Ready">
                     <QrCode size={13} className="text-emerald" />
                     <span>Digital Pass Ready</span>
                   </div>
                 )}
+                {doc.confirmationCode && (
+                  <div className="voucher-code-pill font-mono">
+                    <span>Ref:</span>
+                    <strong>{doc.confirmationCode}</strong>
+                  </div>
+                )}  
               </div>
 
               {doc.notes && <div className="voucher-notes-strip">{doc.notes}</div>}
