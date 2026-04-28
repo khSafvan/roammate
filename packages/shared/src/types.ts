@@ -205,6 +205,7 @@ export interface Trip {
   shareToken?: string;
   guestKey?: string;  // Secret guest link key - only persons with this key can view the trip
   readinessScore: number;
+  travelers?: string[];
   flights: Flight[];
   documents?: BookingDocument[];
   days: TripDay[];
