@@ -225,6 +225,20 @@ export function App() {
     handleUndoOptimization,
   } = useTripOptimization(activeDay, activeDayIdx, setTrip);
 
+  const activeDayScheduleConflicts = useMemo(
+    () => activeDay.stops.map((stop, index) => {
+      const nextStop = activeDay.stops[index + 1];
+      if (!nextStop || stop.category === 'note' || nextStop.category === 'note') return null;
+
+      return detectTransitConflict(
+        stop,
+        nextStop,
+        transitLegs[index]?.durationMinutes || 0
+      );
+    }),
+    [activeDay.stops, transitLegs]
+  );
+
   // Filter flights scheduled on the active itinerary day
   const dayFlights = useMemo(() => {
     if (!trip?.flights || trip.flights.length === 0) return [];
@@ -1153,15 +1167,7 @@ export function App() {
                           <DistancePill
                             leg={transitLegs[index]}
                             onToggleMode={handleToggleMode}
-                            conflict={
-                              index < activeDay.stops.length - 1
-                                ? detectTransitConflict(
-                                    stop,
-                                    activeDay.stops[index + 1],
-                                    transitLegs[index]?.durationMinutes || 0
-                                  )
-                                : null
-                            }
+                            conflict={activeDayScheduleConflicts[index]}
                           />
                         )}
                       </React.Fragment>

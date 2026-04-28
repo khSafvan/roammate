@@ -273,7 +273,7 @@ export function loadAllLocalTrips(userId?: string): Trip[] {
     if (userId && trips.length === 0) {
       // Seed a brand new, editable sample trip for this specific user
       const cleanPrefix = userId.replace(/[^a-zA-Z0-9]/g, '').slice(0, 8) || 'user';
-      const userTripId = `trip_${cleanPrefix}_${Date.now()}`;
+      const userTripId = `trip_${cleanPrefix}_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
       const sampleTrip: Trip = sanitizeTrip({
         ...JSON.parse(JSON.stringify(mockTripData)),
         id: userTripId,
@@ -286,7 +286,7 @@ export function loadAllLocalTrips(userId?: string): Trip[] {
       setActiveTripIdLocal(sampleTrip.id);
       trips.push(sampleTrip);
     } else if (!userId && trips.length === 0) {
-      // Seed default catalog (Dubai & Malaysia) for fallback/unscoped tests
+      // Seed the single canonical tutorial itinerary for fallback/unscoped tests.
       for (const trip of INITIAL_TRIPS_CATALOG) {
         const sanitized = sanitizeTrip(trip);
         localStorage.setItem(`${STORAGE_KEYS.TRIP_PREFIX}${sanitized.id}`, JSON.stringify(sanitized));
