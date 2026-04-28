@@ -25,14 +25,14 @@ export const TimelineFlightCard: React.FC<TimelineFlightCardProps> = ({
 
   return (
     <div className="timeline-item-wrapper timeline-flight-item">
-      {/* Category Node Anchored on the Sequential Axis */}
-      <div className="category-node node-flight" title="FLIGHTS">
-        <Plane size={16} strokeWidth={1.75} style={{ flexShrink: 0 }} />
-      </div>
-
       {/* Card Content */}
       <div className="timeline-card timeline-flight-card">
-        <div className="flight-card-header">
+        <div className="flight-card-content">
+          <div className="category-node node-flight" title="FLIGHTS">
+            <Plane size={16} strokeWidth={1.75} style={{ flexShrink: 0 }} />
+          </div>
+          <div className="flight-card-main">
+            <div className="flight-card-header">
           <div className="flight-header-left">
             <span className="flight-card-type-tag">
               {isMultiCompanion ? (
@@ -63,10 +63,10 @@ export const TimelineFlightCard: React.FC<TimelineFlightCardProps> = ({
             <Ticket size={13} />
             <span>All Boarding Passes</span>
           </button>
-        </div>
+          </div>
 
-        {/* Flight Legs List */}
-        <div className="companion-flights-list">
+          {/* Flight Legs List */}
+          <div className="companion-flights-list">
           {flights.map((fl) => {
             return (
               <div key={fl.id} className="companion-flight-row">
@@ -121,6 +121,8 @@ export const TimelineFlightCard: React.FC<TimelineFlightCardProps> = ({
               </div>
             );
           })}
+            </div>
+          </div>
         </div>
       </div>
     </div>
