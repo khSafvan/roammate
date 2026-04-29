@@ -24,8 +24,8 @@ export function detectTransitConflict(
   const prevStartMins = parseTimeToMinutes(prevStop.startTime);
   const nextStartMins = parseTimeToMinutes(nextStop.startTime);
 
-  // If next stop is on the next morning or wrapped around, skip simple day conflict
-  if (nextStartMins < prevStartMins - 600) return null;
+  // Stops are grouped by itinerary day, so a backwards clock transition is an overnight boundary.
+  if (nextStartMins < prevStartMins) return null;
 
   const duration = prevStop.durationMinutes > 0 ? prevStop.durationMinutes : 60;
   const departureMins = prevStartMins + duration;
