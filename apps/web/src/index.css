@@ -1,4 +1,4 @@
-/* MojoLog Design System — Modular CSS Aggregator */
+/* roammate modular CSS entrypoint */
 
 @import './styles/variables.css';
 @import './styles/base.css';

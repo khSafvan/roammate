@@ -1,4 +1,4 @@
-/* MojoLog Layout Styles: Soft Utility / Calm Utility Architecture */
+/* roammate layout styles */
 
 /* 1. Global Header */
 .header-root {
@@ -39,7 +39,11 @@
 }
 
 .brand-logo {
-  font-size: 20px;
+  display: block;
+  width: 28px;
+  height: 28px;
+  flex: 0 0 28px;
+  border-radius: var(--radius-xs);
 }
 
 .brand-name {
