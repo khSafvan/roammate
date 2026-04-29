@@ -162,7 +162,7 @@ export const AuthLandingPage: React.FC<AuthLandingPageProps> = ({
         {/* Brand Header */}
         <div className="auth-landing-header">
           <div className="auth-landing-badge">
-            <span className="auth-landing-logo">✈️</span>
+            <img className="auth-landing-logo" src="/icon.svg" alt="" />
             <span className="auth-landing-brand">roammate</span>
           </div>
           <h1 className="auth-landing-title">Private Travel Itineraries</h1>
