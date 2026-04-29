@@ -25,6 +25,13 @@ describe('Schedule Overlap & Transit Conflict Detection (Feature F6)', () => {
     expect(conflict).toBeNull();
   });
 
+  it('does not report an overnight stop as late when its clock time is earlier', () => {
+    const stopA = makeStop('a', '09:00 AM', 90);
+    const stopB = makeStop('b', '01:00 AM', 60);
+
+    expect(detectTransitConflict(stopA, stopB, 45)).toBeNull();
+  });
+
   it('detects transit conflict when arrival exceeds next scheduled start time', () => {
     // Stop A: 10:00 AM, 90 mins -> leaves 11:30 AM
     // Transit: 45 mins -> arrives 12:15 PM
