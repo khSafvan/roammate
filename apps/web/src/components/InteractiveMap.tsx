@@ -13,7 +13,7 @@ import {
   Zap,
 } from 'lucide-react';
 import { ItineraryStop, TransitMode, TripDay } from '../types/trip';
-import { computeDistanceKm } from '../wasm/engine';
+import { computeDistanceKm } from '../utils/routeEngine';
 import { downloadGpx, formatGpxCoordinate, generateDayGpx } from '../utils/gpx';
 import { MAP_CONFIG, TRANSIT_CONFIG, UI_CONFIG } from '../config/constants';
 import { computeDayRouteData } from '../utils/routing';
@@ -634,10 +634,10 @@ export const InteractiveMap: React.FC<InteractiveMapProps> = ({
           <button
             className={`optimize-route-btn ${isOptimized ? 'optimized' : ''}`}
             onClick={onOptimizeDay}
-            title="Optimize intermediate stop sequence using Rust WebAssembly 2-opt TSP engine"
+            title="Optimize intermediate stop sequence using 2-opt route planning"
           >
             {isOptimized ? <Zap size={15} /> : <Sparkles size={15} />}
-            <span>{isOptimized ? 'Optimized (WASM)' : '1-Click Optimize'}</span>
+            <span>{isOptimized ? 'Optimized' : '1-Click Optimize'}</span>
           </button>
 
           {canUndo && onUndoOptimization && (

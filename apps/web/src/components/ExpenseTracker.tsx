@@ -14,7 +14,7 @@ import {
   X,
 } from 'lucide-react';
 import { Expense, EXPENSE_CATEGORIES, ExpenseCategory } from '../types/trip';
-import { computeExpenseBreakdownWasm } from '../wasm/engine';
+import { computeExpenseBreakdown } from '../utils/routeEngine';
 import {
   computeDebtSettlements,
   computeTravelerBalances,
@@ -106,7 +106,7 @@ export const ExpenseTracker = React.memo<ExpenseTrackerProps>(function ExpenseTr
 
   // 1. Dynamic category aggregation
   const { categoryTotals, totalSpent } = useMemo(() => {
-    const res = computeExpenseBreakdownWasm(expenses);
+    const res = computeExpenseBreakdown(expenses);
     return {
       categoryTotals: res.categoryTotals as Record<ExpenseCategory, number>,
       totalSpent: res.totalSpent,

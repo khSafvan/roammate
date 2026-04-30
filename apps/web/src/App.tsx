@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { Suspense, lazy, useCallback, useEffect, useMemo, useState } from 'react';
 import {
   FileText,
   Hotel,
@@ -21,7 +21,6 @@ import { DistancePill } from './components/DistancePill';
 import { DocumentsAndTicketsHub } from './components/documents/DocumentsAndTicketsHub';
 import { ExpenseTracker } from './components/ExpenseTracker';
 import { Header } from './components/Header';
-import { InteractiveMap } from './components/InteractiveMap';
 import { OptimizeRouteModal } from './components/OptimizeRouteModal';
 import { PlacesToVisitDrawer } from './components/PlacesToVisitDrawer';
 import { PrintTravelPacket } from './components/PrintTravelPacket';
@@ -41,11 +40,14 @@ import { detectTransitConflict } from './utils/scheduleConflicts';
 import { fetchHolidaysForRange } from './utils/holidayService';
 import { fetchWeeklyForecast, geocodeDestination, tripDayToIso } from './utils/weatherService';
 import {
-  useRustCore,
   useTransitLegs,
   useTripOptimization,
   useVault,
 } from './hooks';
+
+const InteractiveMap = lazy(() =>
+  import('./components/InteractiveMap').then((module) => ({ default: module.InteractiveMap }))
+);
 
 function getTripTravelerNames(trip: Trip): string[] {
   if (trip.travelers) return trip.travelers;
@@ -119,8 +121,6 @@ export function App() {
     () => getTripTravelerNames(trip),
     [trip.travelers, trip.flights, trip.documents, trip.expenses]
   );
-
-  const isWasmActive = useRustCore();
 
   // Check for incoming QR code scan parameter (?account=... or ?vault=...)
   useEffect(() => {
@@ -846,7 +846,6 @@ export function App() {
           trips={trips}
           activeTripId={trip.id}
           vaultSession={vaultSession}
-          isWasmActive={isWasmActive}
           onSelectTrip={(id) => {
             switchTrip(id);
             setActiveDayIdx(0);
@@ -937,7 +936,6 @@ export function App() {
             startTime={trip?.startTime}
             endTime={trip?.endTime}
             readinessScore={trip?.readinessScore || 0}
-            isWasmActive={isWasmActive}
             activeSession={vaultSession}
             tripsCount={trips.length}
             currentView={currentView}
@@ -1088,10 +1086,10 @@ export function App() {
                       <button
                         className={`optimize-pill-btn ${isDayOptimized ? 'optimized' : ''}`}
                         onClick={handleOptimizeDay}
-                        title="Analyze and preview 2-opt Traveling Salesperson route optimization via Rust WebAssembly"
+                        title="Analyze and preview 2-opt route optimization"
                       >
                         {isDayOptimized ? <Zap size={14} /> : <Sparkles size={14} />}
-                        <span>{isDayOptimized ? 'Optimized' : 'Optimize Route (WASM)'}</span>
+                        <span>{isDayOptimized ? 'Optimized' : 'Optimize Route'}</span>
                       </button>
 
                       {canUndo && (
@@ -1273,18 +1271,20 @@ export function App() {
                 <section
                   className={`map-pane ${mobileView === 'timeline' ? 'mobile-hidden' : ''}`}
                 >
-                  <InteractiveMap
-                    day={activeDay}
-                    onSelectStop={(s) => setSelectedStopId(s.id)}
-                    onEditStop={(s) => setEditingStop(s)}
-                    onOptimizeDay={handleOptimizeDay}
-                    isOptimized={isDayOptimized}
-                    canUndo={canUndo}
-                    onUndoOptimization={handleUndoOptimization}
-                    transitModes={transitModes}
-                    selectedStopId={selectedStopId}
-                    tripTitle={trip.title}
-                  />
+                  <Suspense fallback={<div className="map-loading-state" aria-label="Loading map" />}>
+                    <InteractiveMap
+                      day={activeDay}
+                      onSelectStop={(s) => setSelectedStopId(s.id)}
+                      onEditStop={(s) => setEditingStop(s)}
+                      onOptimizeDay={handleOptimizeDay}
+                      isOptimized={isDayOptimized}
+                      canUndo={canUndo}
+                      onUndoOptimization={handleUndoOptimization}
+                      transitModes={transitModes}
+                      selectedStopId={selectedStopId}
+                      tripTitle={trip.title}
+                    />
+                  </Suspense>
                 </section>
               </main>
             </>
