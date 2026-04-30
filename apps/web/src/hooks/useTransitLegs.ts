@@ -1,6 +1,6 @@
 import { useCallback, useMemo, useState } from 'react';
 import { ItineraryStop, TransitLeg, TransitMode } from '../types/trip';
-import { computeTransitLegsWasm } from '../wasm/engine';
+import { computeTransitLegs } from '../utils/routeEngine';
 
 export interface UseTransitLegsReturn {
   transitLegs: TransitLeg[];
@@ -10,14 +10,14 @@ export interface UseTransitLegsReturn {
 
 /**
  * Custom hook calculating distances, durations, and multi-modal transit legs
- * between consecutive itinerary stops using the Rust WASM engine.
+ * between consecutive itinerary stops using the TypeScript route engine.
  */
 export function useTransitLegs(stops: ItineraryStop[]): UseTransitLegsReturn {
   const [transitModes, setTransitModes] = useState<Record<string, TransitMode>>({});
 
-  // Compute transit legs between consecutive stops in high-performance batch via Rust WASM
+  // Compute transit legs between consecutive stops in one pass.
   const transitLegs = useMemo(() => {
-    return computeTransitLegsWasm(stops, transitModes);
+    return computeTransitLegs(stops, transitModes);
   }, [stops, transitModes]);
 
   // Toggle transport mode on click (drive -> walk -> transit -> drive)
