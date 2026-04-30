@@ -1,5 +1,5 @@
 import { ItineraryStop, TransitMode } from '../types/trip';
-import { computeDistanceKm } from '../wasm/engine';
+import { computeDistanceKm } from './routeEngine';
 import { parseTimeToMinutes, formatMinutesToTime } from '../hooks/useTripOptimization';
 
 export interface TimeWindowOptimizationResult {
