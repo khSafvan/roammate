@@ -1,6 +1,6 @@
 import { useCallback, useState } from 'react';
 import { ItineraryStop, Trip, TripDay } from '../types/trip';
-import { computeTransitLegsWasm } from '../wasm/engine';
+import { computeTransitLegs } from '../utils/routeEngine';
 import { optimizeTimeWindowRoute } from '../utils/timeWindowOptimizer';
 
 export interface ConstraintsRespected {
@@ -110,11 +110,11 @@ export function useTripOptimization(
     const reorderedStops = twResult.optimizedStops;
 
     // Compute transit legs for both sequences to get distance/time metrics
-    const originalLegs = computeTransitLegsWasm(activeDay.stops, {});
+    const originalLegs = computeTransitLegs(activeDay.stops, {});
     const originalTransitMinutes = originalLegs.reduce((sum, l) => sum + (l.durationMinutes || 0), 0);
     const originalDistanceKm = originalLegs.reduce((sum, l) => sum + (l.distanceKm || 0), 0);
 
-    const optimizedLegs = computeTransitLegsWasm(reorderedStops, {});
+    const optimizedLegs = computeTransitLegs(reorderedStops, {});
     const optimizedTransitMinutes = optimizedLegs.reduce((sum, l) => sum + (l.durationMinutes || 0), 0);
     const optimizedDistanceKm = optimizedLegs.reduce((sum, l) => sum + (l.distanceKm || 0), 0);
 

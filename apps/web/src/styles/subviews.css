@@ -175,18 +175,6 @@
   color: var(--text-secondary);
 }
 
-.cabin-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 3px;
-  font-size: 10.5px;
-  font-weight: 600;
-  color: var(--brand-blue);
-  background-color: rgba(37, 99, 235, 0.08);
-  padding: 2px 7px;
-  border-radius: var(--radius-pill);
-}
-
 .stub-eticket {
   color: var(--text-tertiary);
   font-size: 11px;
@@ -2194,19 +2182,6 @@
   font-weight: var(--fw-medium, 500);
   color: var(--brand-blue);
   margin-left: var(--sp-3, 12px);
-}
-
-.wasm-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  padding: 2px 7px;
-  background-color: rgba(16, 185, 129, 0.08);
-  border: 1px solid rgba(16, 185, 129, 0.2);
-  border-radius: var(--radius-pill);
-  font-size: 11px;
-  font-weight: var(--fw-medium, 500);
-  color: var(--brand-emerald, #10b981);
 }
 
 .trip-card-root.is-active-trip {
