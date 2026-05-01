@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { INITIAL_TRIPS_CATALOG, mockTripData } from '../src/data/mockTrip';
-import { computeTransitLegsWasm } from '../src/wasm/engine';
+import { computeTransitLegs } from '../src/utils/routeEngine';
 import { detectTransitConflict } from '../src/utils/scheduleConflicts';
 
 describe('Canonical tutorial demo itinerary', () => {
@@ -18,7 +18,7 @@ describe('Canonical tutorial demo itinerary', () => {
         expect(stop.orderIndex).toBe(index + 1);
       });
 
-      const legs = computeTransitLegsWasm(day.stops, {});
+      const legs = computeTransitLegs(day.stops, {});
       const conflicts = day.stops.flatMap((stop, index) => {
         const nextStop = day.stops[index + 1];
         if (!nextStop || stop.category === 'note' || nextStop.category === 'note') return [];

@@ -1,4 +1,4 @@
 [build]
   base = "."
-  command = "if ! command -v rustup >/dev/null 2>&1; then curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --profile minimal; fi && export PATH=\"$HOME/.cargo/bin:$PATH\" && rustup target add wasm32-unknown-unknown && npm run build:wasm && npm run build"
+  command = "npm run build"
   publish = "apps/web/dist"
