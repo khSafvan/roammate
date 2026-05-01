@@ -22,11 +22,11 @@ roammate consists of three decoupled components orchestrated within a single mon
 
 | Variable | Workspace | Required? | Default / Example | Purpose & Description |
 | :--- | :--- | :--- | :--- | :--- |
-| `VITE_API_URL` | `apps/web` | Optional | `https://roammate-api.workers.dev` | Points the frontend to the Cloudflare Worker API. If left empty, roammate runs 100% offline in client-only vault mode. |
+| `VITE_API_URL` | `apps/web` | Optional | `https://roammate-api.<your-account>.workers.dev` | Points the frontend to the Cloudflare Worker API. If left empty, roammate runs in browser-local vault mode. |
 | `VITE_MAP_STYLE_URL` | `apps/web` | Optional | `https://tiles.openfreemap.org/styles/positron` | Vector tile stylesheet URL for the TerraWay cartography engine. OpenFreeMap Positron requires **zero API keys and zero billing**. |
 | `VITE_OSRM_ROUTER_URL` | `apps/web` | Optional | `https://router.project-osrm.org` | Multi-modal real-world road and pedestrian routing engine endpoint. |
 | `TURSO_DATABASE_URL` | `apps/api` | Required (Cloud Sync) | `libsql://roammate-db-[user].turso.io` | Connection URL for your distributed Turso edge database. |
-| `TURSO_AUTH_TOKEN` | `apps/api` | Required (Cloud Sync) | `eyJhbGciOi...` | Encrypted JWT authentication token for database read/write queries. |
+| `TURSO_AUTH_TOKEN` | Cloudflare Worker secret | Required (Cloud Sync) | Set with Wrangler; never commit it | Private credential that lets the API Worker access Turso. Do not add it to Netlify frontend variables. |
 
 > [!NOTE]
 > All `.env` and `.dev.vars` files containing real keys are **strictly ignored by Git**. Only `.env.sample` and `.dev.vars.sample` templates are tracked in source control.
@@ -52,43 +52,55 @@ npm --version
 
 [Turso](https://turso.tech/) provides serverless SQLite at the edge with a generous free tier (up to 500 databases and 9GB storage).
 
-#### 1. Install the Turso CLI
+#### 1. Install and verify the Turso CLI
 ```bash
-# macOS / Linux
+# Linux or macOS
 curl -sSfL https://get.tur.so/install.sh | bash
 ```
 
+Open a new terminal after installation, then verify the command is available:
+```bash
+turso --version
+```
+
+If the shell still reports `turso: command not found`, restart the terminal/session so the installer can update PATH, then try again. The CLI is only needed to provision the database; it is not needed to build or host the frontend.
+
 #### 2. Authenticate or Sign Up
 ```bash
-turso auth signup
-# or if you already have an account:
 turso auth login
 ```
+Complete the browser sign-in flow. If you do not have a Turso account yet, use `turso auth signup` instead.
 
 #### 3. Create a Production Database
 ```bash
 turso db create roammate-db
 ```
+If that database name is already taken in your account, choose another name and use it in the commands below.
 
 #### 4. Apply Database Schema
-Execute the pre-built schema containing the 3-month retention indexes and tables:
+Run this from the repository root so the schema path resolves:
 ```bash
 turso db shell roammate-db < apps/api/schema.sql
 ```
 
-#### 5. Retrieve Your Database URL
+#### 5. Retrieve the Database URL
 ```bash
 turso db show roammate-db --url
 ```
 > Example Output: `libsql://roammate-db-yourusername.turso.io`  
-> 👉 Save this as `TURSO_DATABASE_URL`.
+Save the full output as `TURSO_DATABASE_URL`.
 
 #### 6. Generate an Auth Token
 ```bash
 turso db tokens create roammate-db
 ```
 > Example Output: `eyJhbGciOi...` (long token string)  
-> 👉 Save this as `TURSO_AUTH_TOKEN`.
+Keep this token private. You will enter it directly into Wrangler in Step 3; do not put it in the frontend `.env` or Netlify environment variables.
+
+You can verify the database is reachable with:
+```bash
+turso db show roammate-db
+```
 
 ---
 
@@ -103,15 +115,15 @@ npx wrangler login
 *A browser window will open asking you to authorize Wrangler with your Cloudflare account.*
 
 #### 2. Configure `apps/api/wrangler.toml`
-Open `apps/api/wrangler.toml` and set your database URL:
+Replace the placeholder `TURSO_DATABASE_URL` with the URL returned by `turso db show`. Keep the Worker name `mojolog-api` unless you intentionally want a different public Worker URL:
 ```toml
-name = "roammate-api"
+name = "mojolog-api"
 main = "src/index.ts"
 compatibility_date = "2024-09-01"
 compatibility_flags = ["nodejs_compat"]
 
 [vars]
-TURSO_DATABASE_URL = "libsql://roammate-db-yourusername.turso.io"
+TURSO_DATABASE_URL = "libsql://your-database-name-youraccount.turso.io"
 ```
 
 #### 3. Store the Secret Auth Token on Cloudflare
@@ -119,20 +131,24 @@ Do **not** place your secret token in `wrangler.toml`. Use Cloudflare Secrets:
 ```bash
 cd apps/api
 npx wrangler secret put TURSO_AUTH_TOKEN
-# When prompted, paste your Turso auth token and press Enter
+# Paste the Turso token into this terminal prompt (do not paste it into chat or source files).
 ```
 
 #### 4. Deploy the Worker
+Still in `apps/api`, deploy the API:
 ```bash
 npm run deploy
 ```
-> Example Output: `Published roammate-api (1.2s) at https://roammate-api.yoursubdomain.workers.dev`  
-> 👉 This URL is your `VITE_API_URL` for the frontend!
+Wrangler prints the deployed URL, usually `https://mojolog-api.<your-account>.workers.dev`. That base URL is the frontend's `VITE_API_URL`; do not append `/api/auth/login` or another route.
 
 #### 5. Verify the Live Backend
+There is no health route at `/`. To confirm the deployed Worker is serving its API without writing to the database, send an empty login request and expect HTTP `400`:
 ```bash
-curl https://roammate-api.yoursubdomain.workers.dev/api/auth/register
+curl -i -X POST "https://mojolog-api.<your-account>.workers.dev/api/auth/login" \
+   -H "Content-Type: application/json" \
+   --data '{}'
 ```
+This checks Worker routing only, not database connectivity. To check Turso end to end, run `npx wrangler tail` from `apps/api`, then create an account through the deployed app and confirm the Worker logs show no Turso errors. The login endpoint auto-provisions unknown UUIDs, so do not use an invented UUID as a supposedly read-only test.
 
 ---
 
@@ -165,11 +181,11 @@ The repository's root `netlify.toml` is configured for the monorepo layout and t
 Connect the repository to Netlify and allow it to read these settings from `netlify.toml`. In **Site configuration → Build & deploy → Build settings**, remove any dashboard overrides that set the base directory to `apps/api` or publish `apps/api/dist`.
 
 Set these site environment variables as needed:
-- `VITE_API_URL`: your deployed Cloudflare Worker URL; optional for local-only vault mode.
+- `VITE_API_URL`: the deployed Cloudflare Worker base URL from Step 3; optional for local-only vault mode.
 - `VITE_MAP_STYLE_URL`: optional; defaults to the OpenFreeMap Positron style.
 - `VITE_OSRM_ROUTER_URL`: optional; defaults to the public OSRM router.
 
-After the first successful deploy, copy the production URL from **Site overview** or **Domain management** and replace the public URL placeholder above. Netlify may use a generated site name unless a custom domain is configured.
+After setting `VITE_API_URL`, trigger a new Netlify deploy because Vite embeds `VITE_*` values at build time. After the first successful frontend deploy, copy the public URL from **Site overview** or **Domain management** and replace the public URL placeholder above. Netlify may use a generated site name unless a custom domain is configured.
 
 #### Option B: Cloudflare Pages
 Because your worker is already on Cloudflare, Pages gives you same-network speed and $0 global hosting.
@@ -180,7 +196,7 @@ Because your worker is already on Cloudflare, Pages gives you same-network speed
    * **Build command**: `npm run build`
    * **Build output directory**: `dist`
 3. Environment variables:
-   * `VITE_API_URL`: `https://roammate-api.yoursubdomain.workers.dev`
+   * `VITE_API_URL`: the exact `https://mojolog-api.<your-account>.workers.dev` URL printed by Wrangler
    * `VITE_MAP_STYLE_URL`: `https://tiles.openfreemap.org/styles/positron`
 4. Click **Save and Deploy**.
 
@@ -209,22 +225,26 @@ CMD ["nginx", "-g", "daemon off;"]
 
 ### Step 5: Local Development Setup
 
-For local testing without deploying to Cloudflare:
+For local frontend testing without cloud sync, leave `VITE_API_URL` blank. To run the API locally against Turso, configure the API-specific secrets file instead of the frontend `.env`:
 
 ```bash
-# 1. Copy sample environment files
-cp .env.sample .env
-cp apps/web/.env.sample apps/web/.env
+# From the repository root. Edit apps/api/.dev.vars with real Turso values.
 cp apps/api/.dev.vars.sample apps/api/.dev.vars
 
-# 2. Start frontend dev server
+# Configure the local API variables in apps/api/.dev.vars:
+# TURSO_DATABASE_URL=libsql://your-database-youraccount.turso.io
+# TURSO_AUTH_TOKEN=<private token>
+
+# Start the frontend in one terminal
 npm run dev
 # Running on http://localhost:3000
 
-# 3. (Optional) Start local Cloudflare Worker
+# Start the Worker in another terminal
 npm run dev:api
 # Running on http://localhost:8787
 ```
+
+For local cloud-sync testing, set `VITE_API_URL=http://localhost:8787` in `apps/web/.env` and restart Vite. Never put `TURSO_AUTH_TOKEN` in `apps/web/.env`, the root frontend `.env`, or Netlify frontend variables.
 
 ---
 
