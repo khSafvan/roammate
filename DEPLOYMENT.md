@@ -2,6 +2,10 @@
 
 This guide covers everything required to configure, obtain keys for, and deploy **roammate** to production.
 
+**Public Netlify URL:** `https://<your-site-name>.netlify.app`
+
+Replace the placeholder with the production domain assigned to the Netlify site.
+
 ---
 
 ## 📋 Architecture Overview
@@ -149,7 +153,25 @@ Build output directory: `apps/web/dist/`
 
 ### Platform-Specific Frontend Deployment Options
 
-#### Option A: Cloudflare Pages (Recommended)
+#### Option A: Netlify (Current Configuration)
+The repository's root `netlify.toml` is configured for the monorepo layout and the TypeScript-only build:
+
+| Setting | Value |
+|---|---|
+| Base directory | `.` (repository root) |
+| Build command | `npm run build` |
+| Publish directory | `apps/web/dist` |
+
+Connect the repository to Netlify and allow it to read these settings from `netlify.toml`. In **Site configuration → Build & deploy → Build settings**, remove any dashboard overrides that set the base directory to `apps/api` or publish `apps/api/dist`.
+
+Set these site environment variables as needed:
+- `VITE_API_URL`: your deployed Cloudflare Worker URL; optional for local-only vault mode.
+- `VITE_MAP_STYLE_URL`: optional; defaults to the OpenFreeMap Positron style.
+- `VITE_OSRM_ROUTER_URL`: optional; defaults to the public OSRM router.
+
+After the first successful deploy, copy the production URL from **Site overview** or **Domain management** and replace the public URL placeholder above. Netlify may use a generated site name unless a custom domain is configured.
+
+#### Option B: Cloudflare Pages
 Because your worker is already on Cloudflare, Pages gives you same-network speed and $0 global hosting.
 1. In Cloudflare Dashboard, go to **Workers & Pages** ➔ **Create application** ➔ **Pages** ➔ **Connect to Git**.
 2. Build settings:
@@ -162,14 +184,14 @@ Because your worker is already on Cloudflare, Pages gives you same-network speed
    * `VITE_MAP_STYLE_URL`: `https://tiles.openfreemap.org/styles/positron`
 4. Click **Save and Deploy**.
 
-#### Option B: Vercel
+#### Option C: Vercel
 1. Run `npx vercel` from `apps/web` or import the GitHub repository in the Vercel dashboard.
 2. Root directory: `apps/web`
 3. Build command: `npm run build`
 4. Output directory: `dist`
 5. Add environment variable `VITE_API_URL`.
 
-#### Option C: Self-Hosted Docker / Nginx
+#### Option D: Self-Hosted Docker / Nginx
 ```dockerfile
 FROM node:20-alpine AS builder
 WORKDIR /app
