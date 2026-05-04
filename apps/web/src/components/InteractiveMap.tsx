@@ -13,10 +13,10 @@ import {
   Zap,
 } from 'lucide-react';
 import { ItineraryStop, TransitMode, TripDay } from '../types/trip';
-import { computeDistanceKm } from '../utils/routeEngine';
-import { downloadGpx, formatGpxCoordinate, generateDayGpx } from '../utils/gpx';
+import { computeDistanceKm } from '@mojolog/core';
+import { downloadGpx, formatGpxCoordinate, generateDayGpx } from '@mojolog/core';
 import { MAP_CONFIG, TRANSIT_CONFIG, UI_CONFIG } from '../config/constants';
-import { computeDayRouteData } from '../utils/routing';
+import { computeDayRouteData } from '@mojolog/core';
 
 interface InteractiveMapProps {
   day: TripDay;
