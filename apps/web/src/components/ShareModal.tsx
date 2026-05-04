@@ -18,7 +18,7 @@ import {
   exportItinerary,
   importItineraryFile,
 } from '../utils/exportImport';
-import { downloadIcsCalendar } from '../utils/icalExport';
+import { downloadIcsCalendar } from '@mojolog/core';
 
 interface ShareModalProps {
   isOpen: boolean;

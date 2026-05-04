@@ -22,7 +22,7 @@ import {
 } from 'lucide-react';
 import { BookingDocument, Flight, ReservationCategory } from '../../types/trip';
 import { PlaceSearchInput } from '../PlaceSearchInput';
-import { lookupAirport } from '../../utils/airportDatabase';
+import { lookupAirport } from '@mojolog/core';
 
 interface DocumentsAndTicketsHubProps {
   flights: Flight[];
