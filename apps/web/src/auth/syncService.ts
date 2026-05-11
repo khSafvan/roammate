@@ -2,8 +2,23 @@ import { Trip, TripDay } from '../types/trip';
 import { deleteLocalAccount, pruneInactiveLocalData } from './crypto';
 import { STORAGE_KEYS } from '../config/constants';
 import { INITIAL_TRIPS_CATALOG, mockTripData } from '../data/mockTrip';
+import { createApiClient } from '@mojolog/api-client';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || '';
+
+export const apiClient = createApiClient({
+  baseUrl: API_BASE_URL || 'http://localhost:8787',
+  getToken: () => {
+    try {
+      const sessionRaw = localStorage.getItem(STORAGE_KEYS.VAULT_SESSION);
+      if (sessionRaw) {
+        const session = JSON.parse(sessionRaw);
+        return session.token || null;
+      }
+    } catch {}
+    return null;
+  },
+});
 
 export interface SyncResult {
   success: boolean;
@@ -51,12 +66,8 @@ export async function registerAccountOnEdge(
       ? { uuid: uuidOrMnemonic, passwordHash: userIdOrPasswordHash }
       : { mnemonic: uuidOrMnemonic, userId: userIdOrPasswordHash };
 
-    const res = await fetch(`${API_BASE_URL}/api/auth/register`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload),
-    });
-    return res.ok;
+    const res = await apiClient.register(payload);
+    return !!res.success || !!res.userId;
   } catch (e) {
     console.warn('Edge sync unavailable, falling back to local vault:', e);
     return true;
@@ -90,12 +101,8 @@ export async function loginAccountOnEdge(
       ? { uuid: uuidOrPhrase, passwordHash }
       : { phrase: uuidOrPhrase };
 
-    const res = await fetch(`${API_BASE_URL}/api/auth/login`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload),
-    });
-    return res.ok;
+    const res = await apiClient.login(payload);
+    return !!res.success || !!res.userId;
   } catch (e) {
     console.warn('Edge sync unavailable, using local vault session:', e);
     return true;
@@ -116,16 +123,12 @@ export async function deleteAccountOnEdge(
   }
 
   try {
-    const res = await fetch(`${API_BASE_URL}/api/auth/account`, {
-      method: 'DELETE',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        userId,
-        passwordHash: passwordHashOrPhrase,
-        phrase: passwordHashOrPhrase,
-      }),
+    await apiClient.deleteAccount({
+      userId,
+      passwordHash: passwordHashOrPhrase,
+      phrase: passwordHashOrPhrase,
     });
-    return res.ok;
+    return true;
   } catch (e) {
     console.warn('Edge account deletion error (local cache was purged):', e);
     return true;
@@ -152,17 +155,8 @@ export async function saveItineraryToEdge(userId: string, trip: Trip): Promise<S
   }
 
   try {
-    const res = await fetch(`${API_BASE_URL}/api/itinerary`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        userId,
-        id: trip.id,
-        title: trip.title,
-        data: tripWithAccess,
-      }),
-    });
-    if (res.ok) {
+    const res = await apiClient.saveItinerary(userId, tripWithAccess);
+    if (res.success) {
       return { success: true, message: 'Synced to Turso (libSQL) Edge DB' };
     }
     return { success: false, message: 'Edge database sync error' };
@@ -182,11 +176,7 @@ export async function deleteTripOnEdge(userId: string | undefined, tripId: strin
     }
 
     if (API_BASE_URL && userId) {
-      await fetch(`${API_BASE_URL}/api/itinerary/${tripId}`, {
-        method: 'DELETE',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId }),
-      });
+      await apiClient.deleteItinerary(tripId, userId);
     }
     return true;
   } catch (err) {
@@ -344,17 +334,14 @@ export async function fetchItinerariesFromEdge(userId: string): Promise<Trip[]> 
   }
 
   try {
-    const res = await fetch(`${API_BASE_URL}/api/itineraries/${userId}`);
-    if (res.ok) {
-      const data = (await res.json()) as { itineraries: Array<{ data: Trip }> };
-      if (data.itineraries && data.itineraries.length > 0) {
-        const edgeTrips = data.itineraries.map((it) => sanitizeTrip(it.data));
-        // Sync edge trips to local cache
-        edgeTrips.forEach((t) => {
-          localStorage.setItem(`${STORAGE_KEYS.TRIP_PREFIX}${t.id}`, JSON.stringify(t));
-        });
-        return edgeTrips;
-      }
+    const edgeTrips = await apiClient.fetchItineraries(userId);
+    if (edgeTrips && edgeTrips.length > 0) {
+      const sanitized = edgeTrips.map(sanitizeTrip);
+      // Sync edge trips to local cache
+      sanitized.forEach((t) => {
+        localStorage.setItem(`${STORAGE_KEYS.TRIP_PREFIX}${t.id}`, JSON.stringify(t));
+      });
+      return sanitized;
     }
   } catch (e) {
     console.warn('Edge itineraries fetch error, falling back to local vault:', e);
@@ -370,11 +357,9 @@ export async function fetchItinerariesFromEdge(userId: string): Promise<Trip[]> 
 export async function fetchSharedTrip(token: string, guestKey?: string): Promise<Trip | null> {
   if (API_BASE_URL) {
     try {
-      const query = guestKey ? `?guestKey=${encodeURIComponent(guestKey)}` : '';
-      const res = await fetch(`${API_BASE_URL}/api/share/${encodeURIComponent(token)}${query}`);
-      if (res.ok) {
-        const data = (await res.json()) as { trip: Trip };
-        return data.trip;
+      const trip = await apiClient.fetchSharedTrip(token, guestKey);
+      if (trip) {
+        return trip;
       }
     } catch (e) {
       console.warn('Edge shared trip fetch error, checking local vault:', e);
