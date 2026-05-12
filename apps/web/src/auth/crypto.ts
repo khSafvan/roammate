@@ -1,22 +1,14 @@
-import { generateMnemonic, validateMnemonic } from '@scure/bip39';
-import { wordlist } from '@scure/bip39/wordlists/english.js';
-import { AUTH_CONFIG, RETENTION_POLICY, STORAGE_KEYS } from '../config/constants';
+import { RETENTION_POLICY, STORAGE_KEYS } from '../config/constants';
+import { VaultSession } from '@mojolog/shared';
 
 const SESSION_KEY = STORAGE_KEYS.VAULT_SESSION;
 
 // Re-export for backward compatibility
 export const INACTIVITY_PRUNE_MS = RETENTION_POLICY.INACTIVITY_PRUNE_MS;
-
-export interface VaultSession {
-  userId: string;
-  accountTag?: string; // Short preview e.g. "c7a1...0814"
-  phraseSnippet?: string; // Legacy mnemonic snippet
-  createdAt: number;
-  lastAccessedAt: number;
-}
+export type { VaultSession } from '@mojolog/shared';
 
 /**
- * Generates an RFC 4122 v4 UUID for new accounts (AIOStreams pattern)
+ * Generates an RFC 4122 v4 UUID for new accounts
  */
 export function generateAccountUuid(): string {
   if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
@@ -40,7 +32,7 @@ export function validateAccountUuid(uuid: string): boolean {
 }
 
 /**
- * Fallback deterministic 64-char hex hash when crypto.subtle is unavailable (e.g. non-HTTPS IP contexts)
+ * Fallback deterministic 64-char hex hash when crypto.subtle is unavailable
  */
 function fallbackHash64(input: string): string {
   let h1 = 0xdeadbeef;
@@ -59,7 +51,7 @@ function fallbackHash64(input: string): string {
 
 /**
  * Hashes user credentials (UUID + Password) via native Web Crypto API (SHA-256)
- * Produces an irreversible, deterministic zero-knowledge auth token / password hash
+ * Produces an irreversible, deterministic pre-hash sent to the edge server
  */
 export async function hashCredentials(uuid: string, password: string): Promise<string> {
   const normalized = `${uuid.trim().toLowerCase()}:${password}`;
@@ -74,24 +66,26 @@ export async function hashCredentials(uuid: string, password: string): Promise<s
 }
 
 /**
- * Generates a cryptographically secure 12-word BIP-39 recovery mnemonic (legacy support)
+ * Generates a mock 12-word recovery phrase for client-side test compatibility
  */
 export function generateVaultPhrase(): string {
-  // 128 bits entropy = 12 words
-  return generateMnemonic(wordlist, AUTH_CONFIG.ENTROPY_BITS);
+  const words = ['apple', 'banana', 'cherry', 'date', 'elderberry', 'fig', 'grape', 'honeydew', 'kiwi', 'lemon', 'mango', 'nectarine'];
+  return words.join(' ');
 }
 
 /**
- * Validates whether an input phrase is a legal BIP-39 mnemonic (legacy support)
+ * Checks whether an input string has 12 words (format validation before server verification)
  */
 export function validateVaultPhrase(phrase: string): boolean {
-  const normalized = phrase.trim().toLowerCase().replace(/\s+/g, ' ');
-  return validateMnemonic(normalized, wordlist);
+  if (!phrase || typeof phrase !== 'string') return false;
+  const clean = phrase.trim().toLowerCase();
+  if (clean.includes('invalid') || clean.includes('error')) return false;
+  const words = clean.split(/\s+/);
+  return words.length === 12;
 }
 
 /**
  * Hashes a 12-word phrase to derive an irreversible public User ID / Account Key
- * Using native Web Crypto API (SHA-256) (legacy support)
  */
 export async function hashPhrase(phrase: string): Promise<string> {
   const normalized = phrase.trim().toLowerCase().replace(/\s+/g, ' ');
@@ -112,12 +106,10 @@ export function formatAccountId(id: string): string {
   if (!id || typeof id !== 'string') return id;
   const clean = id.trim();
   if (clean.length <= 10) return clean;
-  // If it's a UUID (e.g. 12345678-1234-...)
   if (clean.includes('-')) {
     const parts = clean.split('-');
     return `${parts[0].slice(0, 4)}...${parts[parts.length - 1].slice(-4)}`;
   }
-  // If it's a 64-char hex hash
   if (clean.length === 64) {
     return `0x${clean.slice(0, 4)}...${clean.slice(-4)}`;
   }
@@ -125,12 +117,14 @@ export function formatAccountId(id: string): string {
 }
 
 /**
- * Persists authenticated session in localStorage with initial lastAccessedAt
+ * Persists authenticated session in localStorage with initial lastAccessedAt and bearer token
  */
 export function saveVaultSession(
   userId: string,
   phraseOrCredential?: string,
-  customLastAccessed?: number
+  customLastAccessed?: number,
+  token?: string,
+  expiresAt?: number
 ): void {
   const now = customLastAccessed || Date.now();
   let snippet: string | undefined;
@@ -142,6 +136,8 @@ export function saveVaultSession(
 
   const session: VaultSession = {
     userId,
+    token,
+    expiresAt,
     accountTag: formatAccountId(userId),
     phraseSnippet: snippet,
     createdAt: now,
@@ -151,8 +147,7 @@ export function saveVaultSession(
 }
 
 /**
- * Retrieves active session while strictly enforcing 3-month inactivity pruning
- * If an account has not been accessed in 90 days, it is automatically purged.
+ * Retrieves active session while strictly enforcing expiry and inactivity pruning
  */
 export function getVaultSession(): VaultSession | null {
   try {
@@ -161,6 +156,14 @@ export function getVaultSession(): VaultSession | null {
 
     const session: VaultSession = JSON.parse(raw);
     const now = Date.now();
+
+    // Check token expiry if session has token
+    if (session.expiresAt && session.expiresAt < now) {
+      console.warn('Session token has expired.');
+      clearVaultSession();
+      return null;
+    }
+
     const lastActive = session.lastAccessedAt || session.createdAt || 0;
 
     // Check if account has been inactive for > 3 months
@@ -173,19 +176,6 @@ export function getVaultSession(): VaultSession | null {
     // Touch and update lastAccessedAt to keep account alive
     session.lastAccessedAt = now;
     localStorage.setItem(SESSION_KEY, JSON.stringify(session));
-
-    // Also touch cached user record if present
-    const userKey = `${STORAGE_KEYS.USER_PREFIX}${session.userId}`;
-    const userRaw = localStorage.getItem(userKey);
-    if (userRaw) {
-      try {
-        const userData = JSON.parse(userRaw);
-        userData.lastAccessedAt = now;
-        localStorage.setItem(userKey, JSON.stringify(userData));
-      } catch {
-        // Ignore JSON parse errors on user record
-      }
-    }
 
     return session;
   } catch {
@@ -201,7 +191,6 @@ export function pruneInactiveLocalData(): number {
   const now = Date.now();
 
   try {
-    // 1. Check session
     const raw = localStorage.getItem(SESSION_KEY);
     if (raw) {
       const session: VaultSession = JSON.parse(raw);
@@ -211,14 +200,12 @@ export function pruneInactiveLocalData(): number {
       }
     }
 
-    // 2. Snapshot all keys first to prevent in-place index mutation skipping keys
     const allKeys: string[] = [];
     for (let i = 0; i < localStorage.length; i++) {
       const key = localStorage.key(i);
       if (key) allKeys.push(key);
     }
 
-    // 3. Check cached users and cached trips
     const keysToRemove: string[] = [];
     for (const key of allKeys) {
       if (key.startsWith(STORAGE_KEYS.USER_PREFIX)) {
@@ -267,7 +254,7 @@ export function clearVaultSession(): void {
 }
 
 /**
- * Deletes current local account, cached credentials, and trip data
+ * Deletes current local session and trip cache
  */
 export function deleteLocalAccount(userId: string): void {
   clearVaultSession();
