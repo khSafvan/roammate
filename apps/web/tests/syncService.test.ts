@@ -115,20 +115,62 @@ describe('SyncService & Itinerary Persistence', () => {
     });
   });
 
-  describe('AIOStreams-Style Auth in Local Vault Mode', () => {
-    it('registers and logs in with UUID and password hash', async () => {
-      const { registerAccountOnEdge, loginAccountOnEdge } = await import('../src/auth/syncService');
+  describe('Backend-Delegated Auth via ApiClient', () => {
+    it('registers and logs in via backend api-client and caches token session', async () => {
+      const originalFetch = globalThis.fetch;
       const testUuid = '9f8b417e-3294-4cd0-9aa8-ec16d4ea71b2';
       const testHash = 'abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789';
 
-      const regOk = await registerAccountOnEdge(testUuid, testHash);
-      expect(regOk).toBe(true);
+      globalThis.fetch = (async (url: string, init?: RequestInit) => {
+        const body = JSON.parse((init?.body as string) || '{}');
+        if (url.includes('/auth/register') || url.includes('/api/auth/register')) {
+          return {
+            ok: true,
+            headers: new Headers({ 'content-type': 'application/json' }),
+            json: async () => ({
+              success: true,
+              token: 'jwt-token-123',
+              userId: testUuid,
+              expiresAt: Date.now() + 60000,
+            }),
+          };
+        }
+        if (url.includes('/auth/login') || url.includes('/api/auth/login')) {
+          if (body.passwordHash === testHash) {
+            return {
+              ok: true,
+              headers: new Headers({ 'content-type': 'application/json' }),
+              json: async () => ({
+                success: true,
+                token: 'jwt-token-123',
+                userId: testUuid,
+                expiresAt: Date.now() + 60000,
+              }),
+            };
+          }
+          return {
+            ok: false,
+            status: 401,
+            headers: new Headers({ 'content-type': 'application/json' }),
+            json: async () => ({ error: 'Invalid credentials' }),
+          };
+        }
+        return { ok: false, status: 404 };
+      }) as any;
 
-      const loginOk = await loginAccountOnEdge(testUuid, testHash);
-      expect(loginOk).toBe(true);
+      try {
+        const { registerAccountOnEdge, loginAccountOnEdge } = await import('../src/auth/syncService');
+        const regOk = await registerAccountOnEdge(testUuid, testHash);
+        expect(regOk).toBe(true);
 
-      const wrongLogin = await loginAccountOnEdge(testUuid, 'wrong_hash');
-      expect(wrongLogin).toBe(false);
+        const loginOk = await loginAccountOnEdge(testUuid, testHash);
+        expect(loginOk).toBe(true);
+
+        const wrongLogin = await loginAccountOnEdge(testUuid, 'wrong_hash');
+        expect(wrongLogin).toBe(false);
+      } finally {
+        globalThis.fetch = originalFetch;
+      }
     });
   });
 

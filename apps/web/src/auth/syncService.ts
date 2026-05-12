@@ -1,5 +1,5 @@
 import { Trip, TripDay } from '../types/trip';
-import { deleteLocalAccount, pruneInactiveLocalData } from './crypto';
+import { deleteLocalAccount, pruneInactiveLocalData, saveVaultSession } from './crypto';
 import { STORAGE_KEYS } from '../config/constants';
 import { INITIAL_TRIPS_CATALOG, mockTripData } from '../data/mockTrip';
 import { createApiClient } from '@mojolog/api-client';
@@ -37,8 +37,8 @@ export function initAccountLifecycle(): void {
 }
 
 /**
- * Registers a new account via Cloudflare Worker / Turso
- * Supports AIOStreams-style (UUID + passwordHash) or legacy (mnemonic + userId)
+ * Registers a new account via Cloudflare Worker / Turso backend
+ * Issues a bearer JWT token saved in session
  */
 export async function registerAccountOnEdge(
   uuidOrMnemonic: string,
@@ -47,65 +47,43 @@ export async function registerAccountOnEdge(
   const isUuid = uuidOrMnemonic.includes('-') || !uuidOrMnemonic.includes(' ');
   const userId = isUuid ? uuidOrMnemonic : userIdOrPasswordHash;
 
-  if (!API_BASE_URL) {
-    // Local mock fallback
-    localStorage.setItem(
-      `${STORAGE_KEYS.USER_PREFIX}${userId}`,
-      JSON.stringify({
-        userId,
-        passwordHash: isUuid ? userIdOrPasswordHash : undefined,
-        createdAt: Date.now(),
-        lastAccessedAt: Date.now(),
-      })
-    );
-    return true;
-  }
-
   try {
     const payload = isUuid
       ? { uuid: uuidOrMnemonic, passwordHash: userIdOrPasswordHash }
       : { mnemonic: uuidOrMnemonic, userId: userIdOrPasswordHash };
 
     const res = await apiClient.register(payload);
-    return !!res.success || !!res.userId;
-  } catch (e) {
-    console.warn('Edge sync unavailable, falling back to local vault:', e);
+    const assignedUserId = res.userId || userId;
+    const now = res.lastAccessedAt || Date.now();
+    saveVaultSession(assignedUserId, undefined, now, res.token, res.expiresAt);
     return true;
+  } catch (e) {
+    console.warn('Backend registration failed:', e);
+    return false;
   }
 }
 
 /**
- * Verifies account credentials on Cloudflare Worker / Turso and updates last_accessed_at
- * Supports AIOStreams-style (UUID + passwordHash) or legacy (12-word phrase)
+ * Authenticates account via Cloudflare Worker / Turso backend
+ * Validates on the backend only; never verifies credentials locally
  */
 export async function loginAccountOnEdge(
   uuidOrPhrase: string,
   passwordHash?: string
 ): Promise<boolean> {
-  if (!API_BASE_URL) {
-    // Local mock fallback: check stored password hash if available
-    const userRaw = localStorage.getItem(`${STORAGE_KEYS.USER_PREFIX}${uuidOrPhrase}`);
-    if (userRaw && passwordHash) {
-      try {
-        const u = JSON.parse(userRaw);
-        if (u.passwordHash && u.passwordHash !== passwordHash) {
-          return false; // Wrong password
-        }
-      } catch {}
-    }
-    return true;
-  }
-
   try {
     const payload = passwordHash
       ? { uuid: uuidOrPhrase, passwordHash }
       : { phrase: uuidOrPhrase };
 
     const res = await apiClient.login(payload);
-    return !!res.success || !!res.userId;
-  } catch (e) {
-    console.warn('Edge sync unavailable, using local vault session:', e);
+    const assignedUserId = res.userId || uuidOrPhrase;
+    const now = res.lastAccessedAt || Date.now();
+    saveVaultSession(assignedUserId, undefined, now, res.token, res.expiresAt);
     return true;
+  } catch (e) {
+    console.warn('Backend login failed:', e);
+    return false;
   }
 }
 

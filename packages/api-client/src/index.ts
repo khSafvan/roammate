@@ -22,12 +22,12 @@ export class ApiError extends Error {
 export class ApiClient {
   private baseUrl: string;
   private getToken?: () => string | null | Promise<string | null>;
-  private fetchFn: typeof fetch;
+  private fetchFn?: typeof fetch;
 
   constructor(config: ApiClientConfig) {
     this.baseUrl = config.baseUrl.replace(/\/+$/, '');
     this.getToken = config.getToken;
-    this.fetchFn = config.fetchFn || (typeof fetch !== 'undefined' ? fetch.bind(globalThis) : (undefined as any));
+    this.fetchFn = config.fetchFn;
   }
 
   private async request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
@@ -45,7 +45,8 @@ export class ApiClient {
       }
     }
 
-    const response = await this.fetchFn(url, {
+    const fetchToUse = this.fetchFn || globalThis.fetch;
+    const response = await fetchToUse(url, {
       ...options,
       headers,
     });
