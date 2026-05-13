@@ -3,6 +3,7 @@ import { deleteLocalAccount, pruneInactiveLocalData, saveVaultSession } from './
 import { STORAGE_KEYS } from '../config/constants';
 import { INITIAL_TRIPS_CATALOG, mockTripData } from '../data/mockTrip';
 import { createApiClient } from '@mojolog/api-client';
+import { createSyncEngine, LocalStorageSyncStorage } from '@mojolog/sync';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || '';
 
@@ -17,6 +18,28 @@ export const apiClient = createApiClient({
       }
     } catch {}
     return null;
+  },
+});
+
+export const syncEngine = createSyncEngine({
+  apiClient,
+  storage: new LocalStorageSyncStorage(),
+  storagePrefix: 'roammate_sync',
+  onRecordApplied: (record) => {
+    try {
+      if (record.op === 'delete') {
+        localStorage.removeItem(`${STORAGE_KEYS.TRIP_PREFIX}${record.id}`);
+      } else if (record.op === 'upsert' && record.data) {
+        const existingRaw = localStorage.getItem(`${STORAGE_KEYS.TRIP_PREFIX}${record.id}`);
+        const existing = existingRaw ? JSON.parse(existingRaw) : null;
+        const resolution = syncEngine.resolveConflict(existing, record.data, record.updatedAt);
+        if (resolution.winner === 'server' || !existing) {
+          localStorage.setItem(`${STORAGE_KEYS.TRIP_PREFIX}${record.id}`, JSON.stringify(resolution.record));
+        }
+      }
+    } catch (e) {
+      console.warn('Failed to apply sync record:', e);
+    }
   },
 });
 
@@ -128,16 +151,19 @@ export async function saveItineraryToEdge(userId: string, trip: Trip): Promise<S
   localStorage.setItem(`${STORAGE_KEYS.TRIP_PREFIX}${trip.id}`, JSON.stringify(tripWithAccess));
   setActiveTripIdLocal(trip.id);
 
+  // Queue to outbox for sync
+  await syncEngine.enqueue('trip', 'upsert', tripWithAccess, trip.id);
+
   if (!API_BASE_URL) {
     return { success: true, message: 'Saved to local encrypted vault' };
   }
 
   try {
-    const res = await apiClient.saveItinerary(userId, tripWithAccess);
-    if (res.success) {
+    const syncRes = await syncEngine.sync();
+    if (syncRes.success) {
       return { success: true, message: 'Synced to Turso (libSQL) Edge DB' };
     }
-    return { success: false, message: 'Edge database sync error' };
+    return { success: true, message: 'Offline: queued in outbox' };
   } catch {
     return { success: true, message: 'Offline: cached locally in vault' };
   }
@@ -153,8 +179,11 @@ export async function deleteTripOnEdge(userId: string | undefined, tripId: strin
       localStorage.removeItem(STORAGE_KEYS.ACTIVE_TRIP_ID);
     }
 
+    // Queue deletion in outbox
+    await syncEngine.enqueue('trip', 'delete', { id: tripId }, tripId);
+
     if (API_BASE_URL && userId) {
-      await apiClient.deleteItinerary(tripId, userId);
+      await syncEngine.sync();
     }
     return true;
   } catch (err) {
