@@ -4,5 +4,9 @@ compatibility_date = "2024-09-01"
 compatibility_flags = ["nodejs_compat"]
 
 [vars]
+ALLOWED_ORIGINS = "*"
 
-# TURSO_AUTH_TOKEN is managed via: wrangler secret put TURSO_AUTH_TOKEN
+# Production Secrets (managed via `wrangler secret put`):
+# - TURSO_DATABASE_URL
+# - TURSO_AUTH_TOKEN
+# - JWT_SECRET
