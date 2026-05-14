@@ -22,7 +22,6 @@ export default defineConfig({
         manualChunks: {
           'vendor-maplibre': ['maplibre-gl'],
           'vendor-react': ['react', 'react-dom'],
-          'vendor-crypto': ['@scure/bip39'],
         },
       },
     },
