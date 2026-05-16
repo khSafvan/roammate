@@ -1,9 +1,9 @@
--- Turso (libSQL) Schema for Zero-Knowledge 12-Word Mnemonic Vault
--- Includes 3-Month Auto-Pruning Index & Retention Policy
+-- Turso (libSQL) Schema for fresh database setup
+-- Users & Itineraries with Bearer Auth, Sync Outbox, and 3-Month Retention Policy
 
 CREATE TABLE IF NOT EXISTS users (
-    id TEXT PRIMARY KEY,          -- Account UUID or SHA-256 hash of legacy mnemonic
-    password_hash TEXT,           -- SHA-256 client-derived credential hash (AIOStreams style)
+    id TEXT PRIMARY KEY,
+    password_hash TEXT,
     created_at INTEGER NOT NULL,
     last_accessed_at INTEGER NOT NULL
 );
@@ -14,11 +14,13 @@ CREATE TABLE IF NOT EXISTS itineraries (
     title TEXT NOT NULL,
     start_date TEXT,
     end_date TEXT,
-    data TEXT NOT NULL,           -- Flexible JSON blob for stops, flight info, etc.
+    data TEXT NOT NULL,
     updated_at INTEGER NOT NULL,
-    last_accessed_at INTEGER NOT NULL
+    last_accessed_at INTEGER NOT NULL,
+    deleted_at INTEGER
 );
 
 CREATE INDEX IF NOT EXISTS idx_itineraries_user ON itineraries(user_id);
 CREATE INDEX IF NOT EXISTS idx_users_last_accessed ON users(last_accessed_at);
 CREATE INDEX IF NOT EXISTS idx_itineraries_last_accessed ON itineraries(last_accessed_at);
+CREATE INDEX IF NOT EXISTS idx_itineraries_sync ON itineraries(user_id, updated_at);
