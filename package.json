@@ -16,7 +16,6 @@
     "test": "npm run test --workspaces --if-present",
     "deploy:web": "npm run build --workspace=@mojolog/web && wrangler pages deploy apps/web/dist --project-name=mojolog-web",
     "deploy:api": "npm run deploy --workspace=@mojolog/api",
-    "db:migrate": "npm run db:migrate --workspace=@mojolog/api",
     "ui-skills": "npx -y ui-skills"
   }
 }
