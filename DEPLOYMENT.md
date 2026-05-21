@@ -109,15 +109,22 @@ This guide covers setting up and hosting Roammate completely from scratch:
 
 ---
 
-## 5. Automated CI/CD (GitHub Actions)
+## 5. Deployment Pipelines (CI/CD & CLI)
 
-Workflows in `.github/workflows/` automatically deploy updates:
-- `.github/workflows/deploy-web.yml`: Deploys frontend to Pages on push to `main` when `apps/web/**` or `packages/**` change.
-- `.github/workflows/deploy-api.yml`: Deploys backend to Workers on push to `main` when `apps/api/**` or `packages/shared/**` change.
+### Automated GitHub Actions
+Workflows in `.github/workflows/` run automatically when code changes on `main` (or via manual `workflow_dispatch` trigger):
+- **`.github/workflows/deploy-web.yml`**: Builds and deploys frontend to Cloudflare Pages when `apps/web/**` or `packages/**` change.
+- **`.github/workflows/deploy-api.yml`**: Deploys backend to Cloudflare Workers when `apps/api/**` or `packages/shared/**` change.
 
-### Required GitHub Repository Secrets
+> **Note:** The workflows have a guard check (`if: ${{ secrets.CLOUDFLARE_API_TOKEN != '' }}`) so they cleanly skip until you configure your Cloudflare credentials in GitHub.
 
-Under your GitHub repository **Settings** ➔ **Secrets and variables** ➔ **Actions**:
-- `CLOUDFLARE_API_TOKEN`: Cloudflare API token with `Cloudflare Pages: Edit` and `Workers Scripts: Edit` permissions.
-- `CLOUDFLARE_ACCOUNT_ID`: Your Cloudflare Account ID (found on the Workers dashboard).
-- `VITE_API_URL`: Deployed Worker URL (e.g. `https://mojolog-api.<your-account>.workers.dev`).
+#### Required GitHub Secrets
+In GitHub repository **Settings** ➔ **Secrets and variables** ➔ **Actions**:
+- `CLOUDFLARE_API_TOKEN`: Cloudflare API token with Pages and Workers edit permissions.
+- `CLOUDFLARE_ACCOUNT_ID`: Your Cloudflare Account ID.
+- `VITE_API_URL`: Deployed API Worker URL (e.g. `https://mojolog-api.<your-account>.workers.dev`).
+
+### Manual CLI Deployment Commands
+Deployments can also be invoked locally at any time:
+- **Deploy Backend (API Worker)**: `npm run deploy:api`
+- **Deploy Frontend (Pages)**: `npm run deploy:web`
