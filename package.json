@@ -16,6 +16,8 @@
     "test": "npm run test --workspaces --if-present",
     "deploy:web": "npm run build --workspace=@mojolog/web && wrangler pages deploy apps/web/dist --project-name=mojolog-web",
     "deploy:api": "npm run deploy --workspace=@mojolog/api",
+    "secret:put": "wrangler secret put --config apps/api/wrangler.toml",
+    "secret:list": "wrangler secret list --config apps/api/wrangler.toml",
     "ui-skills": "npx -y ui-skills"
   }
 }

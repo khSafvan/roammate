@@ -10,7 +10,7 @@
 - [x] Implement storage-agnostic `@mojolog/sync` engine with offline outbox and last-write-wins conflict resolution.
 - [x] Convert `apps/web` into a static SPA with zero database drivers and zero local credential verification.
 - [x] Implement Bearer JWT authentication, `/sync/pull`, `/sync/push`, and origin-restricted CORS on `apps/api`.
-- [x] Configure independent deployment scripts for Cloudflare Pages (`npm run deploy:web`) and Cloudflare Workers (`npm run deploy:api`).
+- [x] Configure independent CI/CD pipelines (`deploy-web.yml`, `deploy-api.yml`) and deploy scripts (`npm run deploy:web`, `npm run deploy:api`).
 
 ### Core Features (Phases 1–6)
 - [x] TerraWay 2D vector map engine with MapLibre GL & OpenFreeMap styles.
