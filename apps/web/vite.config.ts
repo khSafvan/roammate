@@ -17,6 +17,7 @@ export default defineConfig({
     exclude: ['maplibre-gl'],
   },
   build: {
+    chunkSizeWarningLimit: 1200,
     rollupOptions: {
       output: {
         manualChunks: {
