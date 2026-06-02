@@ -10,7 +10,6 @@
   "dependencies": {
     "@libsql/client": "^0.14.0",
     "@mojolog/shared": "*",
-    "@scure/bip39": "^1.5.4",
     "hono": "^4.6.3"
   },
   "devDependencies": {
