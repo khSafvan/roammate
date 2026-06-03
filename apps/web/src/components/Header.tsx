@@ -11,7 +11,7 @@ import {
   Settings,
   Share2,
 } from 'lucide-react';
-import { formatAccountId, VaultSession } from '../auth/crypto';
+import { VaultSession } from '../auth/crypto';
 
 interface HeaderProps {
   title: string;
@@ -172,21 +172,21 @@ export const Header: React.FC<HeaderProps> = ({
             <span className="btn-label-responsive">Share</span>
           </button>
 
-          {/* Cryptographic Vault Button */}
+          {/* Personal Vault Button */}
           <button
             className={`vault-auth-btn ${activeSession ? 'authenticated' : ''}`}
             onClick={onOpenAuth}
-            title={activeSession ? 'Vault Authenticated via UUID' : 'Unlock or Create Private Travel Vault'}
+            title={activeSession ? 'Personal Vault Connected' : 'Unlock Personal Vault with Passcode'}
           >
             {activeSession ? (
               <>
                 <Lock size={12} strokeWidth={2} className="text-emerald" />
-                <span className="vault-btn-text btn-label-responsive">{formatAccountId(activeSession.userId)}</span>
+                <span className="vault-btn-text btn-label-responsive">Vault Active</span>
               </>
             ) : (
               <>
                 <Key size={12} strokeWidth={2} className="text-amber" />
-                <span className="vault-btn-text btn-label-responsive">Connect</span>
+                <span className="vault-btn-text btn-label-responsive">Passcode</span>
               </>
             )}
           </button>
