@@ -53,56 +53,30 @@ export interface SyncResult {
  * Wipes any account or local trip data not accessed in 3 months (90 days)
  */
 export function initAccountLifecycle(): void {
-  const pruned = pruneInactiveLocalData();
-  if (pruned > 0) {
-    console.log(`🧹 Auto-pruned ${pruned} account(s)/trip(s) inactive for > 3 months.`);
-  }
+  pruneInactiveLocalData();
 }
 
-/**
- * Registers a new account via Cloudflare Worker / Turso backend
- * Issues a bearer JWT token saved in session
- */
 export async function registerAccountOnEdge(
-  uuidOrMnemonic: string,
-  userIdOrPasswordHash: string
+  uuidOrMnemonic?: string,
+  userIdOrPasswordHash?: string
 ): Promise<boolean> {
-  const isUuid = uuidOrMnemonic.includes('-') || !uuidOrMnemonic.includes(' ');
-  const userId = isUuid ? uuidOrMnemonic : userIdOrPasswordHash;
-
-  try {
-    const payload = isUuid
-      ? { uuid: uuidOrMnemonic, passwordHash: userIdOrPasswordHash }
-      : { mnemonic: uuidOrMnemonic, userId: userIdOrPasswordHash };
-
-    const res = await apiClient.register(payload);
-    const assignedUserId = res.userId || userId;
-    const now = res.lastAccessedAt || Date.now();
-    saveVaultSession(assignedUserId, undefined, now, res.token, res.expiresAt);
-    return true;
-  } catch (e) {
-    console.warn('Backend registration failed:', e);
-    return false;
-  }
+  return loginAccountOnEdge(uuidOrMnemonic || userIdOrPasswordHash);
 }
 
-/**
- * Authenticates account via Cloudflare Worker / Turso backend
- * Validates on the backend only; never verifies credentials locally
- */
 export async function loginAccountOnEdge(
-  uuidOrPhrase: string,
+  passcodeOrCredential?: string,
   passwordHash?: string
 ): Promise<boolean> {
   try {
-    const payload = passwordHash
-      ? { uuid: uuidOrPhrase, passwordHash }
-      : { phrase: uuidOrPhrase };
+    const payload = {
+      passcode: passcodeOrCredential,
+      password: passwordHash,
+      uuid: passcodeOrCredential,
+      phrase: passcodeOrCredential,
+    };
 
     const res = await apiClient.login(payload);
-    const assignedUserId = res.userId || uuidOrPhrase;
-    const now = res.lastAccessedAt || Date.now();
-    saveVaultSession(assignedUserId, undefined, now, res.token, res.expiresAt);
+    saveVaultSession(res.token || passcodeOrCredential || 'personal_vault', undefined, Date.now(), res.token, res.expiresAt);
     return true;
   } catch (e) {
     console.warn('Backend login failed:', e);
@@ -110,80 +84,65 @@ export async function loginAccountOnEdge(
   }
 }
 
-/**
- * Permanently deletes user account and all itineraries from both Local Storage and Edge Database
- */
 export async function deleteAccountOnEdge(
-  userId: string,
+  userId?: string,
   passwordHashOrPhrase?: string
 ): Promise<boolean> {
   deleteLocalAccount(userId);
-
-  if (!API_BASE_URL) {
-    return true;
-  }
-
+  if (!API_BASE_URL) return true;
   try {
     await apiClient.deleteAccount({
       userId,
-      passwordHash: passwordHashOrPhrase,
       phrase: passwordHashOrPhrase,
     });
     return true;
-  } catch (e) {
-    console.warn('Edge account deletion error (local cache was purged):', e);
+  } catch {
     return true;
   }
 }
 
-/**
- * Saves itinerary to Turso database via Cloudflare Worker and local encrypted vault
- */
-export async function saveItineraryToEdge(userId: string, trip: Trip): Promise<SyncResult> {
+export async function saveItineraryToEdge(userIdOrTrip: string | Trip, tripArg?: Trip): Promise<SyncResult> {
+  const trip = (typeof userIdOrTrip === 'object' ? userIdOrTrip : tripArg) as Trip;
   const now = Date.now();
   const tripWithAccess: Trip & { lastAccessedAt: number } = {
     ...trip,
-    userId: trip.userId || userId,
     updatedAt: now,
     lastAccessedAt: now,
   };
 
-  // Always persist to local storage for instant offline access
   localStorage.setItem(`${STORAGE_KEYS.TRIP_PREFIX}${trip.id}`, JSON.stringify(tripWithAccess));
   setActiveTripIdLocal(trip.id);
 
-  // Queue to outbox for sync
   await syncEngine.enqueue('trip', 'upsert', tripWithAccess, trip.id);
 
   if (!API_BASE_URL) {
-    return { success: true, message: 'Saved to local encrypted vault' };
+    return { success: true, message: 'Saved to local personal vault' };
   }
 
   try {
     const syncRes = await syncEngine.sync();
     if (syncRes.success) {
-      return { success: true, message: 'Synced to Turso (libSQL) Edge DB' };
+      return { success: true, message: 'Synced to Edge DB' };
     }
     return { success: true, message: 'Offline: queued in outbox' };
   } catch {
-    return { success: true, message: 'Offline: cached locally in vault' };
+    return { success: true, message: 'Offline: cached locally' };
   }
 }
 
-/**
- * Permanently deletes a single trip from local vault and edge database
- */
-export async function deleteTripOnEdge(userId: string | undefined, tripId: string): Promise<boolean> {
+export async function deleteTripOnEdge(userIdOrTripId?: string, tripIdArg?: string): Promise<boolean> {
+  const tripId = tripIdArg || userIdOrTripId;
+  if (!tripId) return true;
+
   try {
     localStorage.removeItem(`${STORAGE_KEYS.TRIP_PREFIX}${tripId}`);
     if (getActiveTripIdLocal() === tripId) {
       localStorage.removeItem(STORAGE_KEYS.ACTIVE_TRIP_ID);
     }
 
-    // Queue deletion in outbox
     await syncEngine.enqueue('trip', 'delete', { id: tripId }, tripId);
 
-    if (API_BASE_URL && userId) {
+    if (API_BASE_URL) {
       await syncEngine.sync();
     }
     return true;
@@ -336,7 +295,7 @@ export function loadLocalTrip(tripId?: string): Trip | null {
 /**
  * Fetches itineraries for a user from Edge database, falling back to local vault
  */
-export async function fetchItinerariesFromEdge(userId: string): Promise<Trip[]> {
+export async function fetchItinerariesFromEdge(userId?: string): Promise<Trip[]> {
   if (!API_BASE_URL) {
     return loadAllLocalTrips(userId);
   }

@@ -14,7 +14,7 @@ import {
   Zap,
 } from 'lucide-react';
 import { AddStopModal } from './components/AddStopModal';
-import { AuthLandingPage } from './components/auth';
+import { PasscodeAuthModal } from './components/auth';
 import { AuthModal } from './components/AuthModal';
 import { DaySelector } from './components/DaySelector';
 import { DistancePill } from './components/DistancePill';
@@ -34,7 +34,6 @@ import { TripManagerModal } from './components/TripManagerModal';
 import { TripsListPage } from './components/trips/TripsListPage';
 import { TripSettingsPage } from './components/trips/TripSettingsPage';
 import { WeatherBanner } from './components/WeatherBanner';
-import { getVaultSession } from './auth/crypto';
 import { BookingDocument, Expense, Flight, ItineraryStop, PackingCategory, PackingItem, StopCategory, Trip, TripDay } from './types/trip';
 import { detectTransitConflict } from '@mojolog/core';
 import { fetchHolidaysForRange } from './utils/holidayService';
@@ -93,7 +92,6 @@ export function App() {
   }, []);
   const [isDeleteDayConfirming, setIsDeleteDayConfirming] = useState(false);
   const [mobileView, setMobileView] = useState<'timeline' | 'map'>('timeline');
-  const [prefilledUuid, setPrefilledUuid] = useState<string | undefined>(undefined);
   const [holidaysByDate, setHolidaysByDate] = useState<Record<string, string>>({});
   const [draggedStopIdx, setDraggedStopIdx] = useState<number | null>(null);
   const [dragOverStopIdx, setDragOverStopIdx] = useState<number | null>(null);
@@ -113,7 +111,6 @@ export function App() {
     deleteTrip,
     saveGuestTripToVault,
     handleLogout,
-    handleDeleteAccount,
     exitReadOnly,
   } = useVault();
 
@@ -122,19 +119,12 @@ export function App() {
     [trip.travelers, trip.flights, trip.documents, trip.expenses]
   );
 
-  // Check for incoming QR code scan parameter (?account=... or ?vault=...)
+  // Check for incoming QR code scan or vault parameter
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const scannedAccount = params.get('account') || params.get('vault');
     if (scannedAccount) {
-      const active = getVaultSession();
-      // If already logged in as this account, password is NOT needed!
-      if (!active || active.userId.toLowerCase() !== scannedAccount.toLowerCase()) {
-        // New browser or device: prompt for password with pre-filled UUID
-        setPrefilledUuid(scannedAccount);
-        setIsAuthOpen(true);
-      }
-      // Clean URL parameter so it doesn't linger
+      setIsAuthOpen(true);
       params.delete('account');
       params.delete('vault');
       const newSearch = params.toString() ? `?${params.toString()}` : '';
@@ -820,15 +810,14 @@ export function App() {
     );
   }
 
-  // Mandatory Authentication Gate: No planning without login!
+  // Passcode Auth Gate
   if (!vaultSession && !isGuestMode && !isReadOnly) {
     return (
-      <AuthLandingPage
-        onLoginSuccess={(session) => {
+      <PasscodeAuthModal
+        isOpen={true}
+        onSuccess={(session) => {
           setVaultSession(session);
-          setPrefilledUuid(undefined);
         }}
-        prefilledUuid={prefilledUuid}
       />
     );
   }
@@ -1410,16 +1399,12 @@ export function App() {
       <AuthModal
         isOpen={isAuthOpen}
         activeSession={vaultSession}
-        prefilledUuid={prefilledUuid}
         onLoginSuccess={(session) => {
           setVaultSession(session);
-          setPrefilledUuid(undefined);
         }}
         onLogout={handleLogout}
-        onDeleteAccount={handleDeleteAccount}
         onClose={() => {
           setIsAuthOpen(false);
-          setPrefilledUuid(undefined);
         }}
       />
 
