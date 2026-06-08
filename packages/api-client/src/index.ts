@@ -79,6 +79,7 @@ export class ApiClient {
     passwordHash?: string;
     mnemonic?: string;
     userId?: string;
+    passcode?: string;
   }): Promise<AuthResponse> {
     try {
       return await this.request<AuthResponse>('/auth/register', {
@@ -87,7 +88,6 @@ export class ApiClient {
       });
     } catch (err) {
       if (err instanceof ApiError && err.status === 404) {
-        // Fallback for legacy /api prefix
         return await this.request<AuthResponse>('/api/auth/register', {
           method: 'POST',
           body: JSON.stringify(body),
@@ -98,6 +98,8 @@ export class ApiClient {
   }
 
   async login(body: {
+    passcode?: string;
+    password?: string;
     uuid?: string;
     passwordHash?: string;
     phrase?: string;
@@ -133,32 +135,32 @@ export class ApiClient {
     }
   }
 
-  async getMe(): Promise<{ userId: string; createdAt: number; lastAccessedAt: number }> {
+  async getMe(): Promise<{ authenticated: boolean; passcodeProtected?: boolean; userId?: string }> {
     try {
-      return await this.request<{ userId: string; createdAt: number; lastAccessedAt: number }>('/me');
+      return await this.request<{ authenticated: boolean; passcodeProtected?: boolean; userId?: string }>('/me');
     } catch (err) {
       if (err instanceof ApiError && err.status === 404) {
-        return await this.request<{ userId: string; createdAt: number; lastAccessedAt: number }>('/api/me');
+        return await this.request<{ authenticated: boolean; passcodeProtected?: boolean; userId?: string }>('/api/me');
       }
       throw err;
     }
   }
 
-  async deleteAccount(body: {
-    userId: string;
+  async deleteAccount(body?: {
+    userId?: string;
     phrase?: string;
     passwordHash?: string;
   }): Promise<{ success: boolean; message?: string }> {
     try {
       return await this.request<{ success: boolean; message?: string }>('/auth/account', {
         method: 'DELETE',
-        body: JSON.stringify(body),
+        body: JSON.stringify(body || {}),
       });
     } catch (err) {
       if (err instanceof ApiError && err.status === 404) {
         return await this.request<{ success: boolean; message?: string }>('/api/auth/account', {
           method: 'DELETE',
-          body: JSON.stringify(body),
+          body: JSON.stringify(body || {}),
         });
       }
       throw err;
@@ -198,16 +200,18 @@ export class ApiClient {
   // --- Itinerary Direct / Legacy Endpoints ---
 
   async saveItinerary(
-    userId: string,
-    trip: Trip
+    userIdOrTrip: string | Trip,
+    trip?: Trip
   ): Promise<{ success: boolean; message?: string }> {
+    const actualTrip = (typeof userIdOrTrip === 'object' ? userIdOrTrip : trip) as Trip;
+    const userId = typeof userIdOrTrip === 'string' ? userIdOrTrip : undefined;
     return await this.request<{ success: boolean; message?: string }>('/api/itinerary', {
       method: 'POST',
       body: JSON.stringify({
         userId,
-        id: trip.id,
-        title: trip.title,
-        data: trip,
+        id: actualTrip.id,
+        title: actualTrip.title,
+        data: actualTrip,
       }),
     });
   }
@@ -222,10 +226,9 @@ export class ApiClient {
     });
   }
 
-  async fetchItineraries(userId: string): Promise<Trip[]> {
-    const res = await this.request<{ itineraries: Array<{ data: Trip }> }>(
-      `/api/itineraries/${userId}`
-    );
+  async fetchItineraries(userId?: string): Promise<Trip[]> {
+    const endpoint = userId ? `/api/itineraries/${userId}` : '/api/itineraries';
+    const res = await this.request<{ itineraries: Array<{ data: Trip }> }>(endpoint);
     return res.itineraries?.map((it) => it.data) || [];
   }
 

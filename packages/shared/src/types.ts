@@ -240,13 +240,13 @@ export interface AuthCredentials {
 }
 
 export interface VaultSession {
-  userId: string;
+  userId?: string;
   token?: string;
   expiresAt?: number;
-  accountTag?: string; // Short preview e.g. "c7a1...0814"
-  phraseSnippet?: string; // Legacy mnemonic snippet
-  createdAt: number;
-  lastAccessedAt: number;
+  authenticated?: boolean;
+  passcodeProtected?: boolean;
+  createdAt?: number;
+  lastAccessedAt?: number;
 }
 
 export interface SyncResult {
