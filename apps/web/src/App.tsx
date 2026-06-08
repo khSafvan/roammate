@@ -7,10 +7,8 @@ import {
   Plane,
   Plus,
   RotateCcw,
-  ShieldAlert,
   Sparkles,
   Trash2,
-  UserPlus,
   Zap,
 } from 'lucide-react';
 import { AddStopModal } from './components/AddStopModal';
@@ -35,7 +33,7 @@ import { TripsListPage } from './components/trips/TripsListPage';
 import { TripSettingsPage } from './components/trips/TripSettingsPage';
 import { WeatherBanner } from './components/WeatherBanner';
 import { BookingDocument, Expense, Flight, ItineraryStop, PackingCategory, PackingItem, StopCategory, Trip, TripDay } from './types/trip';
-import { detectTransitConflict } from '@mojolog/core';
+import { detectTransitConflict, getEffectiveStayForDay } from '@mojolog/core';
 import { getNextSuggestedStartTime, recalculateStopTimes } from './utils/timeSchedule';
 import { fetchHolidaysForRange } from './utils/holidayService';
 import { fetchWeeklyForecast, geocodeDestination, tripDayToIso } from './utils/weatherService';
@@ -105,12 +103,9 @@ export function App() {
     activeTrip: trip,
     setTrip,
     isReadOnly,
-    isGuestMode,
-    guestError,
     switchTrip,
     createTrip,
     deleteTrip,
-    saveGuestTripToVault,
     handleLogout,
     exitReadOnly,
   } = useVault();
@@ -228,6 +223,11 @@ export function App() {
       );
     }),
     [activeDay.stops, transitLegs]
+  );
+
+  const effectiveStay = useMemo(
+    () => getEffectiveStayForDay(trip?.days || [], activeDayIdx),
+    [trip?.days, activeDayIdx]
   );
 
   // Filter flights scheduled on the active itinerary day
@@ -784,29 +784,8 @@ export function App() {
     [setTrip]
   );
 
-  // If a private trip link failed guest verification
-  if (guestError) {
-    return (
-      <div className="guest-error-screen">
-        <div className="guest-error-card">
-          <div className="guest-error-icon">
-            <ShieldAlert size={36} className="text-amber" />
-          </div>
-          <h2 className="guest-error-title">Private Travel Itinerary</h2>
-          <p className="guest-error-message">{guestError}</p>
-          <p className="guest-error-hint">
-            The organizer has set this trip to invite-only. Please contact the trip creator for an updated secret guest link.
-          </p>
-          <button className="primary-modal-btn w-full mt-3" onClick={exitReadOnly}>
-            <span>Return to My Vault</span>
-          </button>
-        </div>
-      </div>
-    );
-  }
-
   // Passcode Auth Gate
-  if (!vaultSession && !isGuestMode && !isReadOnly) {
+  if (!vaultSession && !isReadOnly) {
     return (
       <PasscodeAuthModal
         isOpen={true}
@@ -873,37 +852,8 @@ export function App() {
       {/* 3. TRIP WORKSPACE DETAIL VIEW */}
       {currentView === 'trip_detail' && (
         <>
-          {/* Guest Mode Invitation Banner */}
-          {isGuestMode && (
-            <div className="guest-banner">
-              <div className="guest-banner-left">
-                <span className="guest-badge">Invited Companion</span>
-                <span>You are viewing this itinerary with private guest access.</span>
-              </div>
-              <div className="guest-banner-actions">
-                <button
-                  className="guest-join-btn"
-                  onClick={saveGuestTripToVault}
-                  title="Save a synchronized copy into your own private vault"
-                >
-                  <UserPlus size={13} />
-                  <span>Join Trip &amp; Save to Vault</span>
-                </button>
-                <button
-                  className="guest-create-account-btn"
-                  onClick={() => setIsAuthOpen(true)}
-                >
-                  <span>Create Account</span>
-                </button>
-                <button className="read-only-exit-btn" onClick={exitReadOnly}>
-                  Exit
-                </button>
-              </div>
-            </div>
-          )}
-
-          {/* Read-Only Notice Banner (Legacy Share) */}
-          {!isGuestMode && isReadOnly && (
+          {/* Read-Only Notice Banner */}
+          {isReadOnly && (
             <div className="read-only-banner">
               <span>👀 Viewing shared itinerary in read-only mode</span>
               <button className="read-only-exit-btn" onClick={exitReadOnly}>
@@ -1109,6 +1059,76 @@ export function App() {
                     weather={activeDay.weather}
                     themeColor={activeDay.themeColor}
                   />
+
+                  {/* Phase 9 Stay-Aware Itinerary Lodging Banner */}
+                  {effectiveStay && (
+                    <div
+                      className="stay-base-banner"
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        backgroundColor: effectiveStay.isInherited ? 'rgba(59, 130, 246, 0.08)' : 'rgba(16, 185, 129, 0.08)',
+                        border: `1px solid ${effectiveStay.isInherited ? 'rgba(59, 130, 246, 0.25)' : 'rgba(16, 185, 129, 0.25)'}`,
+                        borderRadius: 'var(--radius-card)',
+                        padding: '12px 16px',
+                        marginTop: '12px',
+                        marginBottom: '16px',
+                        gap: '12px',
+                      }}
+                    >
+                      <div className="flex items-center gap-3" style={{ flex: 1 }}>
+                        <div
+                          style={{
+                            width: '36px',
+                            height: '36px',
+                            borderRadius: '50%',
+                            backgroundColor: effectiveStay.isInherited ? '#3B82F6' : '#10B981',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            color: '#fff',
+                            flexShrink: 0,
+                          }}
+                        >
+                          <Hotel size={18} />
+                        </div>
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <span style={{ fontSize: '14px', fontWeight: 600, color: 'var(--text-primary)' }}>
+                              {effectiveStay.stay.title}
+                            </span>
+                            <span
+                              style={{
+                                fontSize: '11px',
+                                fontWeight: 600,
+                                padding: '2px 8px',
+                                borderRadius: '12px',
+                                backgroundColor: effectiveStay.isInherited ? 'rgba(59, 130, 246, 0.15)' : 'rgba(16, 185, 129, 0.15)',
+                                color: effectiveStay.isInherited ? '#2563EB' : '#059669',
+                                textTransform: 'uppercase',
+                                letterSpacing: '0.05em',
+                              }}
+                            >
+                              {effectiveStay.isInherited ? 'Active Stay (Base)' : 'Check-in Anchor'}
+                            </span>
+                          </div>
+                          {effectiveStay.stay.address && (
+                            <p style={{ fontSize: '12px', color: 'var(--text-secondary)', margin: '2px 0 0 0' }}>
+                              {effectiveStay.stay.address}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                      <button
+                        className="timeline-action-pill"
+                        onClick={() => handleOpenAddStop('lodging')}
+                        style={{ fontSize: '12px', padding: '6px 12px', flexShrink: 0 }}
+                      >
+                        <span>{effectiveStay.isInherited ? 'Change Hotel' : 'Edit Stay'}</span>
+                      </button>
+                    </div>
+                  )}
 
                   {/* Itinerary Stream with Distance Connectors and Inbound Flights */}
                   <div className="itinerary-stream">
