@@ -36,6 +36,7 @@ import { TripSettingsPage } from './components/trips/TripSettingsPage';
 import { WeatherBanner } from './components/WeatherBanner';
 import { BookingDocument, Expense, Flight, ItineraryStop, PackingCategory, PackingItem, StopCategory, Trip, TripDay } from './types/trip';
 import { detectTransitConflict } from '@mojolog/core';
+import { getNextSuggestedStartTime, recalculateStopTimes } from './utils/timeSchedule';
 import { fetchHolidaysForRange } from './utils/holidayService';
 import { fetchWeeklyForecast, geocodeDestination, tripDayToIso } from './utils/weatherService';
 import {
@@ -384,14 +385,15 @@ export function App() {
         const updatedDays = [...prev.days];
         const currentDay = updatedDays[activeDayIdx];
         if (!currentDay) return prev;
+        const currentStops = currentDay.stops || [];
         const newStop: ItineraryStop = {
           ...stopData,
           id: `stop_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
-          orderIndex: (currentDay.stops?.length || 0) + 1,
+          orderIndex: (currentStops.length) + 1,
         };
         updatedDays[activeDayIdx] = {
           ...currentDay,
-          stops: [...(currentDay.stops || []), newStop],
+          stops: recalculateStopTimes([...currentStops, newStop]),
         };
         return { ...prev, days: updatedDays };
       });
@@ -451,10 +453,7 @@ export function App() {
         const [movedStop] = newStops.splice(sourceIndex, 1);
         newStops.splice(destinationIndex, 0, movedStop);
 
-        const reindexedStops = newStops.map((s, idx) => ({
-          ...s,
-          orderIndex: idx + 1,
-        }));
+        const reindexedStops = recalculateStopTimes(newStops, currentDay.stops[0]?.startTime || '09:00 AM');
 
         updatedDays[activeDayIdx] = {
           ...currentDay,
@@ -510,22 +509,18 @@ export function App() {
         const stopToMove = updatedDays[sourceDayIdx].stops.find((s) => s.id === stopId);
         if (!stopToMove) return prev;
 
-        // Remove from source day and re-index
+        // Remove from source day and recalculate schedule
+        const remainingSourceStops = updatedDays[sourceDayIdx].stops.filter((s) => s.id !== stopId);
         updatedDays[sourceDayIdx] = {
           ...updatedDays[sourceDayIdx],
-          stops: updatedDays[sourceDayIdx].stops
-            .filter((s) => s.id !== stopId)
-            .map((s, idx) => ({ ...s, orderIndex: idx + 1 })),
+          stops: recalculateStopTimes(remainingSourceStops),
         };
 
-        // Append to target day
+        // Append to target day and recalculate schedule
         const targetStops = updatedDays[targetDayIdx].stops || [];
         updatedDays[targetDayIdx] = {
           ...updatedDays[targetDayIdx],
-          stops: [
-            ...targetStops,
-            { ...stopToMove, orderIndex: targetStops.length + 1 },
-          ],
+          stops: recalculateStopTimes([...targetStops, stopToMove]),
         };
 
         return { ...prev, days: updatedDays };
@@ -597,7 +592,7 @@ export function App() {
 
         updatedDays[dayIndex] = {
           ...targetDay,
-          stops: [...targetStops, newStop],
+          stops: recalculateStopTimes([...targetStops, newStop]),
         };
 
         return {
@@ -1381,11 +1376,8 @@ export function App() {
         isOpen={isAddStopModalOpen}
         dayNumber={activeDay.dayNumber}
         themeColor={activeDay.themeColor}
-        defaultStartTime={
-          activeDay.stops && activeDay.stops.length > 0
-            ? activeDay.stops[activeDay.stops.length - 1].startTime
-            : trip.startTime || '09:30 AM'
-        }
+        destination={trip.destination}
+        defaultStartTime={getNextSuggestedStartTime(activeDay.stops, trip.startTime || '09:00 AM')}
         fallbackCoordinates={
           activeDay.stops && activeDay.stops.length > 0
             ? activeDay.stops[activeDay.stops.length - 1].coordinates

@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Loader2, MapPin, Search, X } from 'lucide-react';
 import { Coordinates, StopCategory } from '../types/trip';
+import { fuzzySortResults } from '../utils/fuzzySearch';
 
 export interface PlaceSearchResult {
   title: string;
@@ -12,6 +13,7 @@ export interface PlaceSearchResult {
 
 interface PlaceSearchInputProps {
   onSelectPlace: (place: PlaceSearchResult) => void;
+  searchContext?: string;
   placeholder?: string;
   className?: string;
   autoFocus?: boolean;
@@ -74,6 +76,7 @@ const CATEGORY_EMOJIS: Record<StopCategory, string> = {
 
 export const PlaceSearchInput: React.FC<PlaceSearchInputProps> = ({
   onSelectPlace,
+  searchContext,
   placeholder = 'Search places, attractions, restaurants (OSM)...',
   className = '',
   autoFocus = false,
@@ -95,7 +98,7 @@ export const PlaceSearchInput: React.FC<PlaceSearchInputProps> = ({
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  // Debounced search query
+  // Debounced search query with context awareness and fuzzy matching
   useEffect(() => {
     const trimmed = query.trim();
     if (trimmed.length < 2) {
@@ -107,19 +110,37 @@ export const PlaceSearchInput: React.FC<PlaceSearchInputProps> = ({
     setIsLoading(true);
     const timeout = setTimeout(async () => {
       try {
-        const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(
-          trimmed
-        )}&addressdetails=1&limit=5`;
-        const res = await fetch(url, {
-          headers: {
-            'Accept-Language': 'en',
-          },
-        });
+        const cleanContext = searchContext ? searchContext.split(',')[0].trim() : '';
+        const hasContextInQuery = cleanContext && trimmed.toLowerCase().includes(cleanContext.toLowerCase());
 
-        if (!res.ok) throw new Error('OSM request failed');
-        const data = await res.json();
+        let searchQuery = trimmed;
+        if (cleanContext && !hasContextInQuery) {
+          searchQuery = `${trimmed}, ${cleanContext}`;
+        }
 
-        if (Array.isArray(data)) {
+        const fetchResultsForQuery = async (q: string): Promise<any[]> => {
+          const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(
+            q
+          )}&addressdetails=1&limit=8`;
+          const res = await fetch(url, {
+            headers: {
+              'Accept-Language': 'en',
+              'User-Agent': 'roammate/1.0',
+            },
+          });
+          if (!res.ok) return [];
+          const data = await res.json();
+          return Array.isArray(data) ? data : [];
+        };
+
+        let data = await fetchResultsForQuery(searchQuery);
+
+        // Fallback to searching without appended context if primary context query yielded 0 results
+        if (data.length === 0 && searchQuery !== trimmed) {
+          data = await fetchResultsForQuery(trimmed);
+        }
+
+        if (data.length > 0) {
           const mapped: PlaceSearchResult[] = data.map((item: any) => {
             const rawName = item.name || item.display_name.split(',')[0] || trimmed;
             const fullAddress = item.display_name || '';
@@ -137,8 +158,13 @@ export const PlaceSearchInput: React.FC<PlaceSearchInputProps> = ({
             };
           });
 
-          setResults(mapped);
-          setIsOpen(mapped.length > 0);
+          // Apply fuzzy ranking and sorting
+          const fuzzySorted = fuzzySortResults(mapped, trimmed, (r) => r.title, (r) => r.address);
+          setResults(fuzzySorted);
+          setIsOpen(fuzzySorted.length > 0);
+        } else {
+          setResults([]);
+          setIsOpen(false);
         }
       } catch (err) {
         console.warn('Nominatim geocode query error:', err);
@@ -146,10 +172,10 @@ export const PlaceSearchInput: React.FC<PlaceSearchInputProps> = ({
       } finally {
         setIsLoading(false);
       }
-    }, 350);
+    }, 300);
 
     return () => clearTimeout(timeout);
-  }, [query]);
+  }, [query, searchContext]);
 
   const handleSelect = (place: PlaceSearchResult) => {
     onSelectPlace(place);

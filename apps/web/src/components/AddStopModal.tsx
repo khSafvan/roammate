@@ -8,6 +8,7 @@ interface AddStopModalProps {
   isOpen: boolean;
   dayNumber: number;
   themeColor: string;
+  destination?: string;
   defaultStartTime?: string;
   defaultCategory?: StopCategory;
   fallbackCoordinates?: Coordinates;
@@ -28,6 +29,7 @@ export const AddStopModal: React.FC<AddStopModalProps> = ({
   isOpen,
   dayNumber,
   themeColor,
+  destination,
   defaultStartTime = '10:00 AM',
   defaultCategory = 'sight',
   fallbackCoordinates = { latitude: 35.6762, longitude: 139.6503 },
@@ -204,6 +206,7 @@ export const AddStopModal: React.FC<AddStopModalProps> = ({
               </label>
               <PlaceSearchInput
                 onSelectPlace={handlePlaceSelect}
+                searchContext={destination}
                 placeholder={
                   isHotel
                     ? 'Search hotel e.g. Hilton Tokyo, Park Hyatt, Hotel Gracery...'
