@@ -39,6 +39,32 @@ export function estimateDurationMins(distanceKm: number, mode: TransitMode): num
   return Math.max(modeConfig.minMins, Math.round(rawMinutes));
 }
 
+/**
+ * Detects hotel / accommodation stay on a day or inherits active stay from previous days.
+ */
+export function getEffectiveStayForDay(
+  days: Array<{ id: string; dayNumber: number; stops?: Array<{ id: string; category?: string; title: string; address?: string; coordinates?: { latitude: number; longitude: number } }> }>,
+  dayIdx: number
+): { stay: { id: string; title: string; address?: string; coordinates?: { latitude: number; longitude: number } }; isInherited: boolean } | null {
+  if (!days || dayIdx < 0 || dayIdx >= days.length) return null;
+
+  const currentDayStops = days[dayIdx].stops || [];
+  const explicitStay = currentDayStops.find((s) => s.category === 'lodging');
+  if (explicitStay) {
+    return { stay: explicitStay, isInherited: false };
+  }
+
+  for (let i = dayIdx - 1; i >= 0; i--) {
+    const prevStops = days[i].stops || [];
+    const prevStay = prevStops.find((s) => s.category === 'lodging');
+    if (prevStay) {
+      return { stay: prevStay, isInherited: true };
+    }
+  }
+
+  return null;
+}
+
 /** 2-opt route optimization with fixed start and end stops. */
 export function optimizeRouteTsp(
   stops: Array<{ id: string; latitude: number; longitude: number }>,

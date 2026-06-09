@@ -42,15 +42,16 @@
 - [ ] Add an interactive step-by-step tutorial for new users and persist its completion state.
 
 ### Phase 9 — Stay-Aware Itinerary
-- [ ] Treat hotels/stays as itinerary locations.
-- [ ] Use a stay as the trip's start and end location by default until the user changes either point.
+- [x] Treat hotels/stays as itinerary locations with continuity across days.
+- [x] Render Stay Hub Banner showing active hotel base and check-in anchors.
+- [x] Use stay anchors for daily routing context and hotel switching.
 
 ### Phase 10 — Map Workspace & Focus
-- [ ] Keep itinerary focus and map focus synchronized for stops and places to visit.
-- [ ] Show focused-place details and notes in a lower map information panel, including user-added places.
-- [ ] Use a half-screen map beside the itinerary on desktop.
-- [ ] Use separate full-screen itinerary and map views on mobile, with a clear back path from place details.
-- [ ] Keep map markers above other map overlays with the highest marker z-index.
+- [x] Keep itinerary focus and map focus synchronized for stops and places to visit with camera flyTo animations.
+- [x] Show focused-place details and notes in lower map information dock panel.
+- [x] Use a half-screen (50:50) split map beside the itinerary on desktop workspace.
+- [x] Use separate full-screen itinerary and map views on mobile, with a clear back path to timeline.
+- [x] Keep map markers above other map polylines and overlays with highest MapLibre GPU z-index layer stack.
 
 ---
 

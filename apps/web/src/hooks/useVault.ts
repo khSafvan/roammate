@@ -32,12 +32,9 @@ export interface UseVaultReturn {
   activeTrip: Trip;
   setTrip: React.Dispatch<React.SetStateAction<Trip>>;
   isReadOnly: boolean;
-  isGuestMode: boolean;
-  guestError: string | null;
   switchTrip: (tripId: string) => void;
   createTrip: (params: CreateTripParams) => Trip;
   deleteTrip: (tripId: string) => Promise<void>;
-  saveGuestTripToVault: () => Promise<void>;
   handleLogout: () => void;
   handleDeleteAccount: () => void;
   exitReadOnly: () => void;
@@ -52,8 +49,6 @@ export function useVault(): UseVaultReturn {
     return userTrips.find((t) => t.id === preferred) || userTrips[0] || mockTripData;
   });
   const [isReadOnly, setIsReadOnly] = useState(false);
-  const [isGuestMode, setIsGuestMode] = useState(false);
-  const [guestError, setGuestError] = useState<string | null>(null);
   const isHydratedRef = useRef(false);
 
   useEffect(() => {
@@ -65,31 +60,12 @@ export function useVault(): UseVaultReturn {
 
     const params = new URLSearchParams(window.location.search);
     const shareToken = params.get('share');
-    const guestKey = params.get('guest') || params.get('guestKey');
-    const tripId = params.get('trip');
-
-    if (guestKey) {
-      const lookupToken = tripId || guestKey;
-      fetchSharedTrip(lookupToken, guestKey).then((shared) => {
-        if (shared) {
-          setActiveTrip(shared);
-          setIsGuestMode(true);
-          setIsReadOnly(true);
-        } else {
-          setGuestError('This trip is private. Only individuals with a valid invitation link can access it.');
-        }
-        isHydratedRef.current = true;
-      });
-      return;
-    }
 
     if (shareToken) {
       setIsReadOnly(true);
       fetchSharedTrip(shareToken).then((shared) => {
         if (shared) {
           setActiveTrip(shared);
-        } else {
-          setGuestError('Shared itinerary not found or expired.');
         }
         isHydratedRef.current = true;
       });
@@ -117,7 +93,7 @@ export function useVault(): UseVaultReturn {
   }, []);
 
   useEffect(() => {
-    if (!isHydratedRef.current || isReadOnly || isGuestMode) return;
+    if (!isHydratedRef.current || isReadOnly) return;
 
     setTrips((prevTrips) => {
       const exists = prevTrips.some((t) => t.id === activeTrip.id);
@@ -131,7 +107,7 @@ export function useVault(): UseVaultReturn {
     setActiveTripIdLocal(activeTrip.id);
 
     saveItineraryToEdge(activeTrip);
-  }, [activeTrip, isReadOnly, isGuestMode]);
+  }, [activeTrip, isReadOnly]);
 
   const switchTrip = useCallback(
     (tripId: string) => {
@@ -182,25 +158,6 @@ export function useVault(): UseVaultReturn {
     [trips, activeTrip.id]
   );
 
-  const saveGuestTripToVault = useCallback(async () => {
-    const clonedTrip: Trip = {
-      ...activeTrip,
-      id: `trip_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
-      title: `${activeTrip.title} (Saved)`,
-      shareToken: Math.random().toString(36).substring(2, 10),
-      guestKey: `guest_${Math.random().toString(36).substring(2, 12)}`,
-    };
-
-    setTrips((prev) => [clonedTrip, ...prev]);
-    setActiveTrip(clonedTrip);
-    setActiveTripIdLocal(clonedTrip.id);
-    setIsGuestMode(false);
-    setIsReadOnly(false);
-
-    window.history.replaceState({}, '', window.location.pathname);
-    await saveItineraryToEdge(clonedTrip);
-  }, [activeTrip]);
-
   const handleLogout = useCallback(() => {
     clearVaultSession();
     setVaultSession(null);
@@ -215,8 +172,6 @@ export function useVault(): UseVaultReturn {
   const exitReadOnly = useCallback(() => {
     window.history.replaceState({}, '', window.location.pathname);
     setIsReadOnly(false);
-    setIsGuestMode(false);
-    setGuestError(null);
     const local = loadLocalTrip();
     if (local) {
       setActiveTrip(local);
@@ -230,12 +185,9 @@ export function useVault(): UseVaultReturn {
     activeTrip,
     setTrip: setActiveTrip,
     isReadOnly,
-    isGuestMode,
-    guestError,
     switchTrip,
     createTrip,
     deleteTrip,
-    saveGuestTripToVault,
     handleLogout,
     handleDeleteAccount,
     exitReadOnly,
