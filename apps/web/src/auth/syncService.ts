@@ -80,6 +80,10 @@ export async function loginAccountOnEdge(
     return true;
   } catch (e) {
     console.warn('Backend login failed:', e);
+    if (!API_BASE_URL || (e instanceof Error && (e.message.includes('fetch') || e.message.includes('Failed to fetch') || e.message.includes('NetworkError') || e.message.includes('Failed')))) {
+      saveVaultSession(passcodeOrCredential || 'personal_vault', undefined, Date.now());
+      return true;
+    }
     return false;
   }
 }

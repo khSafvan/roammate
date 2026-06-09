@@ -6,6 +6,7 @@ import {
   Edit2,
   ExternalLink,
   Eye,
+  ListFilter,
   Maximize2,
   Navigation,
   RotateCcw,
@@ -29,6 +30,7 @@ interface InteractiveMapProps {
   transitModes?: Record<string, TransitMode>;
   selectedStopId?: string | null;
   tripTitle?: string;
+  onBackToTimeline?: () => void;
 }
 
 export const InteractiveMap: React.FC<InteractiveMapProps> = ({
@@ -42,6 +44,7 @@ export const InteractiveMap: React.FC<InteractiveMapProps> = ({
   transitModes = {},
   selectedStopId: propSelectedStopId,
   tripTitle,
+  onBackToTimeline,
 }) => {
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<MapLibreMap | null>(null);
@@ -479,6 +482,19 @@ export const InteractiveMap: React.FC<InteractiveMapProps> = ({
       type: 'FeatureCollection',
       features,
     });
+
+    const WAYPOINT_LAYERS = [
+      'terraway-waypoints-pulse',
+      'terraway-waypoints-halo',
+      'terraway-waypoints-circle',
+      'terraway-waypoints-label',
+      'terraway-waypoints-title',
+    ];
+    WAYPOINT_LAYERS.forEach((layerId) => {
+      if (map.getLayer(layerId)) {
+        map.moveLayer(layerId);
+      }
+    });
   }, [geographicStops, day.themeColor, selectedStopId, ensureWaypointLayers]);
 
   // Keep refs for callback execution during map initialization
@@ -562,6 +578,24 @@ export const InteractiveMap: React.FC<InteractiveMapProps> = ({
       fitToStops(false);
     }
   }, [geographicStops, day.themeColor, transitModes, selectedStopId, updateWaypointLayer, updateRouteLayer, fitToStops]);
+
+  // Synchronize map camera when selectedStopId changes from timeline card click
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || !selectedStopId) return;
+
+    const stop = geographicStops.find((s) => s.id === selectedStopId);
+    if (stop && map.isStyleLoaded()) {
+      map.flyTo({
+        center: [stop.coordinates.longitude, stop.coordinates.latitude],
+        zoom: Math.max(map.getZoom(), 14.5),
+        pitch: 0,
+        bearing: 0,
+        duration: UI_CONFIG.MAP_FLY_DURATION_MS,
+        essential: true,
+      });
+    }
+  }, [selectedStopId, geographicStops]);
 
   // Export RFC / Topografix Compliant GPX 1.1 file
   const handleExportGpx = () => {
@@ -702,8 +736,36 @@ export const InteractiveMap: React.FC<InteractiveMapProps> = ({
             </div>
             <div className="dock-title">{activeStop.title}</div>
             <div className="dock-address">{activeStop.address}</div>
+            {activeStop.notes && (
+              <div
+                className="dock-notes"
+                style={{
+                  fontSize: '11.5px',
+                  color: 'var(--text-secondary)',
+                  marginTop: '4px',
+                  lineHeight: '1.4',
+                  backgroundColor: 'var(--bg-subtle)',
+                  padding: '4px 8px',
+                  borderRadius: 'var(--radius-xs)',
+                  borderLeft: '2px solid var(--brand-blue)',
+                }}
+              >
+                📝 {activeStop.notes}
+              </div>
+            )}
           </div>
           <div className="dock-actions">
+            {onBackToTimeline && (
+              <button
+                type="button"
+                className="dock-edit-btn"
+                onClick={onBackToTimeline}
+                title="Switch view back to itinerary timeline"
+              >
+                <ListFilter size={13} />
+                <span>Timeline</span>
+              </button>
+            )}
             {onEditStop && (
               <button
                 type="button"
