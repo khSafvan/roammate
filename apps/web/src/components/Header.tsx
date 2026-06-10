@@ -6,6 +6,7 @@ import {
   FileText,
   Key,
   Lock,
+  LogOut,
   Plane,
   Receipt,
   Settings,
@@ -34,6 +35,7 @@ interface HeaderProps {
   onShare: () => void;
   onOpenScratchpad?: () => void;
   onOpenSettings?: () => void;
+  onLogout?: () => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -57,6 +59,7 @@ export const Header: React.FC<HeaderProps> = ({
   onShare,
   onOpenScratchpad,
   onOpenSettings,
+  onLogout,
 }) => {
   return (
     <header className="header-root">
@@ -166,17 +169,17 @@ export const Header: React.FC<HeaderProps> = ({
             type="button"
             className="header-action-pill"
             onClick={onShare}
-            title="Invite Companion via Private Link or Export Itinerary"
+            title="Export Itinerary or Print Travel Packet"
           >
             <Share2 size={13} strokeWidth={1.75} />
-            <span className="btn-label-responsive">Share</span>
+            <span className="btn-label-responsive">Export</span>
           </button>
 
           {/* Personal Vault Button */}
           <button
             className={`vault-auth-btn ${activeSession ? 'authenticated' : ''}`}
             onClick={onOpenAuth}
-            title={activeSession ? 'Personal Vault Connected' : 'Unlock Personal Vault with Passcode'}
+            title={activeSession ? 'Personal Vault Connected' : 'Unlock Personal Vault'}
           >
             {activeSession ? (
               <>
@@ -186,10 +189,22 @@ export const Header: React.FC<HeaderProps> = ({
             ) : (
               <>
                 <Key size={12} strokeWidth={2} className="text-amber" />
-                <span className="vault-btn-text btn-label-responsive">Passcode</span>
+                <span className="vault-btn-text btn-label-responsive">Unlock</span>
               </>
             )}
           </button>
+
+          {/* Explicit Lock / Logout Button when authenticated */}
+          {activeSession && onLogout && (
+            <button
+              className="header-action-pill text-rose"
+              onClick={onLogout}
+              title="Lock Vault & Log Out"
+            >
+              <LogOut size={13} strokeWidth={1.75} />
+              <span className="btn-label-responsive">Lock</span>
+            </button>
+          )}
 
           <button
             className="readiness-btn"

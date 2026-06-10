@@ -18,7 +18,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
   onLogout,
   onClose,
 }) => {
-  const [passcode, setPasscode] = useState('');
+  const [password, setPassword] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
 
@@ -30,20 +30,19 @@ export const AuthModal: React.FC<AuthModalProps> = ({
     setIsProcessing(true);
 
     try {
-      const ok = await loginAccountOnEdge(passcode.trim());
+      const ok = await loginAccountOnEdge(password.trim());
       if (ok) {
         const session: VaultSession = {
-          userId: 'personal_vault',
           authenticated: true,
           createdAt: Date.now(),
         };
         onLoginSuccess(session);
         onClose();
       } else {
-        setErrorMessage('Incorrect passcode.');
+        setErrorMessage('Incorrect password.');
       }
     } catch {
-      setErrorMessage('Connection error while verifying passcode.');
+      setErrorMessage('Connection error while verifying password.');
     } finally {
       setIsProcessing(false);
     }
@@ -63,7 +62,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
               <p className="modal-subtitle">
                 {activeSession
                   ? 'Your vault is connected and synced'
-                  : 'Enter your backend PASSCODE to connect'}
+                  : 'Enter your PASSWORD to connect'}
               </p>
             </div>
           </div>
@@ -87,10 +86,10 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                 onLogout();
                 onClose();
               }}
-              className="w-full py-2.5 px-4 border border-gray-300 hover:bg-gray-50 text-gray-700 font-medium rounded-lg text-sm flex items-center justify-center gap-2 transition-colors"
+              className="w-full py-2.5 px-4 border border-rose-300 hover:bg-rose-50 text-rose-700 font-medium rounded-lg text-sm flex items-center justify-center gap-2 transition-colors"
             >
               <LogOut size={16} />
-              <span>Lock / Disconnect Session</span>
+              <span>Lock Vault &amp; Disconnect Session</span>
             </button>
           </div>
         ) : (
@@ -103,15 +102,15 @@ export const AuthModal: React.FC<AuthModalProps> = ({
             )}
 
             <div className="form-group">
-              <label className="block text-xs font-semibold text-secondary mb-1.5">Passcode</label>
+              <label className="block text-xs font-semibold text-secondary mb-1.5">Password</label>
               <div className="relative flex items-center">
                 <Key size={16} className="absolute left-3 text-tertiary" />
                 <input
                   type="password"
                   className="w-full pl-9 pr-3 py-2 border border-subtle rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder="Enter backend PASSCODE"
-                  value={passcode}
-                  onChange={(e) => setPasscode(e.target.value)}
+                  placeholder="Enter PASSWORD"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
                   autoFocus
                 />
               </div>
@@ -119,11 +118,11 @@ export const AuthModal: React.FC<AuthModalProps> = ({
 
             <button
               type="submit"
-              disabled={isProcessing || !passcode.trim()}
+              disabled={isProcessing || !password.trim()}
               className="w-full py-2.5 px-4 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg text-sm flex items-center justify-center gap-2 transition-colors disabled:opacity-50"
             >
               <Lock size={16} />
-              <span>{isProcessing ? 'Verifying...' : 'Connect Vault'}</span>
+              <span>{isProcessing ? 'Verifying...' : 'Unlock Vault'}</span>
             </button>
           </form>
         )}

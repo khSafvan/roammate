@@ -48,65 +48,34 @@ export interface SyncResult {
   message?: string;
 }
 
-/**
- * Initializes client-side auto-pruning on application boot
- * Wipes any account or local trip data not accessed in 3 months (90 days)
- */
 export function initAccountLifecycle(): void {
   pruneInactiveLocalData();
 }
 
-export async function registerAccountOnEdge(
-  uuidOrMnemonic?: string,
-  userIdOrPasswordHash?: string
-): Promise<boolean> {
-  return loginAccountOnEdge(uuidOrMnemonic || userIdOrPasswordHash);
-}
-
-export async function loginAccountOnEdge(
-  passcodeOrCredential?: string,
-  passwordHash?: string
-): Promise<boolean> {
+/**
+ * Personal vault login using password set directly in .env
+ * Strictly verifies against backend API. Rejects incorrect passwords with false.
+ */
+export async function loginAccountOnEdge(password: string): Promise<boolean> {
   try {
-    const payload = {
-      passcode: passcodeOrCredential,
-      password: passwordHash,
-      uuid: passcodeOrCredential,
-      phrase: passcodeOrCredential,
-    };
-
-    const res = await apiClient.login(payload);
-    saveVaultSession(res.token || passcodeOrCredential || 'personal_vault', undefined, Date.now(), res.token, res.expiresAt);
-    return true;
-  } catch (e) {
-    console.warn('Backend login failed:', e);
-    if (!API_BASE_URL || (e instanceof Error && (e.message.includes('fetch') || e.message.includes('Failed to fetch') || e.message.includes('NetworkError') || e.message.includes('Failed')))) {
-      saveVaultSession(passcodeOrCredential || 'personal_vault', undefined, Date.now());
+    const res = await apiClient.login({ password, passcode: password });
+    if (res?.token) {
+      saveVaultSession(res.token, res.expiresAt);
       return true;
     }
+    return false;
+  } catch (e) {
+    console.warn('Backend login failed:', e);
     return false;
   }
 }
 
-export async function deleteAccountOnEdge(
-  userId?: string,
-  passwordHashOrPhrase?: string
-): Promise<boolean> {
-  deleteLocalAccount(userId);
-  if (!API_BASE_URL) return true;
-  try {
-    await apiClient.deleteAccount({
-      userId,
-      phrase: passwordHashOrPhrase,
-    });
-    return true;
-  } catch {
-    return true;
-  }
+export async function deleteAccountOnEdge(): Promise<boolean> {
+  deleteLocalAccount();
+  return true;
 }
 
-export async function saveItineraryToEdge(userIdOrTrip: string | Trip, tripArg?: Trip): Promise<SyncResult> {
-  const trip = (typeof userIdOrTrip === 'object' ? userIdOrTrip : tripArg) as Trip;
+export async function saveItineraryToEdge(trip: Trip): Promise<SyncResult> {
   const now = Date.now();
   const tripWithAccess: Trip & { lastAccessedAt: number } = {
     ...trip,
@@ -134,8 +103,7 @@ export async function saveItineraryToEdge(userIdOrTrip: string | Trip, tripArg?:
   }
 }
 
-export async function deleteTripOnEdge(userIdOrTripId?: string, tripIdArg?: string): Promise<boolean> {
-  const tripId = tripIdArg || userIdOrTripId;
+export async function deleteTripOnEdge(tripId?: string): Promise<boolean> {
   if (!tripId) return true;
 
   try {
@@ -170,9 +138,6 @@ export function getActiveTripIdLocal(): string | null {
   }
 }
 
-/**
- * Ensures all trip arrays and properties are strictly populated to prevent undefined crashes.
- */
 export function sanitizeTrip(t: any): Trip {
   return {
     ...t,
@@ -190,18 +155,13 @@ export function sanitizeTrip(t: any): Trip {
   };
 }
 
-/**
- * Loads all cached itineraries from localStorage.
- * When userId is provided, returns only trips owned by that user.
- * If a user has no trips, automatically seeds a fresh editable sample trip.
- */
-export function loadAllLocalTrips(userId?: string): Trip[] {
+export function loadAllLocalTrips(): Trip[] {
   const trips: Trip[] = [];
   try {
     const isValidTrip = (t: any): t is Trip =>
       t && typeof t === 'object' && typeof t.title === 'string' && Array.isArray(t.days);
 
-    // Purge legacy sample trips so only Dubai & Malaysia remain as defaults
+    // Purge legacy sample trips
     ['mojolog_trip_tokyo-2026', 'mojolog_trip_paris-2027', `${STORAGE_KEYS.TRIP_PREFIX}tokyo-2026`, `${STORAGE_KEYS.TRIP_PREFIX}paris-2027`].forEach(
       (k) => localStorage.removeItem(k)
     );
@@ -217,37 +177,14 @@ export function loadAllLocalTrips(userId?: string): Trip[] {
           try {
             const parsed = JSON.parse(item);
             if (isValidTrip(parsed) && parsed.id !== 'tokyo-2026' && parsed.id !== 'paris-2027') {
-              if (userId) {
-                // If user is specified, include owned trips or adopt unassigned legacy trips
-                if (parsed.userId === userId || !parsed.userId) {
-                  trips.push(sanitizeTrip({ ...parsed, userId: parsed.userId || userId }));
-                }
-              } else {
-                trips.push(sanitizeTrip(parsed));
-              }
+              trips.push(sanitizeTrip(parsed));
             }
           } catch {}
         }
       }
     }
 
-    if (userId && trips.length === 0) {
-      // Seed a brand new, editable sample trip for this specific user
-      const cleanPrefix = userId.replace(/[^a-zA-Z0-9]/g, '').slice(0, 8) || 'user';
-      const userTripId = `trip_${cleanPrefix}_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
-      const sampleTrip: Trip = sanitizeTrip({
-        ...JSON.parse(JSON.stringify(mockTripData)),
-        id: userTripId,
-        userId,
-        title: 'Dubai & Abu Dhabi Explorer',
-        createdAt: Date.now(),
-        updatedAt: Date.now(),
-      });
-      localStorage.setItem(`${STORAGE_KEYS.TRIP_PREFIX}${sampleTrip.id}`, JSON.stringify(sampleTrip));
-      setActiveTripIdLocal(sampleTrip.id);
-      trips.push(sampleTrip);
-    } else if (!userId && trips.length === 0) {
-      // Seed the single canonical tutorial itinerary for fallback/unscoped tests.
+    if (trips.length === 0) {
       for (const trip of INITIAL_TRIPS_CATALOG) {
         const sanitized = sanitizeTrip(trip);
         localStorage.setItem(`${STORAGE_KEYS.TRIP_PREFIX}${sanitized.id}`, JSON.stringify(sanitized));
@@ -262,9 +199,6 @@ export function loadAllLocalTrips(userId?: string): Trip[] {
   return trips;
 }
 
-/**
- * Loads a cached itinerary from localStorage
- */
 export function loadLocalTrip(tripId?: string): Trip | null {
   try {
     const isValidTrip = (t: any): t is Trip =>
@@ -296,19 +230,15 @@ export function loadLocalTrip(tripId?: string): Trip | null {
   }
 }
 
-/**
- * Fetches itineraries for a user from Edge database, falling back to local vault
- */
-export async function fetchItinerariesFromEdge(userId?: string): Promise<Trip[]> {
+export async function fetchItinerariesFromEdge(): Promise<Trip[]> {
   if (!API_BASE_URL) {
-    return loadAllLocalTrips(userId);
+    return loadAllLocalTrips();
   }
 
   try {
-    const edgeTrips = await apiClient.fetchItineraries(userId);
+    const edgeTrips = await apiClient.fetchItineraries();
     if (edgeTrips && edgeTrips.length > 0) {
       const sanitized = edgeTrips.map(sanitizeTrip);
-      // Sync edge trips to local cache
       sanitized.forEach((t) => {
         localStorage.setItem(`${STORAGE_KEYS.TRIP_PREFIX}${t.id}`, JSON.stringify(t));
       });
@@ -318,17 +248,13 @@ export async function fetchItinerariesFromEdge(userId?: string): Promise<Trip[]>
     console.warn('Edge itineraries fetch error, falling back to local vault:', e);
   }
 
-  return loadAllLocalTrips(userId);
+  return loadAllLocalTrips();
 }
 
-/**
- * Fetches a shared trip by shareToken or guestKey from Edge API or local storage.
- * Enforces privacy: only persons with the secret link or key can view the trip.
- */
-export async function fetchSharedTrip(token: string, guestKey?: string): Promise<Trip | null> {
+export async function fetchSharedTrip(token: string): Promise<Trip | null> {
   if (API_BASE_URL) {
     try {
-      const trip = await apiClient.fetchSharedTrip(token, guestKey);
+      const trip = await apiClient.fetchSharedTrip(token);
       if (trip) {
         return trip;
       }
@@ -337,7 +263,6 @@ export async function fetchSharedTrip(token: string, guestKey?: string): Promise
     }
   }
 
-  // Local fallback: search by shareToken, guestKey, or id in localStorage
   try {
     for (let i = 0; i < localStorage.length; i++) {
       const key = localStorage.key(i);
@@ -345,13 +270,7 @@ export async function fetchSharedTrip(token: string, guestKey?: string): Promise
         const item = localStorage.getItem(key);
         if (item) {
           const parsed: Trip = JSON.parse(item);
-          // Privacy verification
-          const matchesToken = parsed.shareToken === token || parsed.id === token || parsed.guestKey === token;
-          if (matchesToken) {
-            // If trip has guestKey, verify caller provided valid guestKey or token
-            if (parsed.guestKey && parsed.guestKey !== guestKey && parsed.guestKey !== token && parsed.shareToken !== token) {
-              return null; // Deny access without secret link
-            }
+          if (parsed.shareToken === token || parsed.id === token) {
             return parsed;
           }
         }
@@ -362,9 +281,6 @@ export async function fetchSharedTrip(token: string, guestKey?: string): Promise
   return null;
 }
 
-/**
- * Creates a brand-new customized trip document with unique ID and secret guest key
- */
 export function createDefaultTrip(
   title: string,
   destination: string,
@@ -375,7 +291,6 @@ export function createDefaultTrip(
 ): Trip {
   const id = `trip_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
   const shareToken = Math.random().toString(36).substring(2, 10);
-  const guestKey = `guest_${Math.random().toString(36).substring(2, 12)}`;
   const datesFormatted = startDate && endDate ? `${startDate} – ${endDate}` : 'Flexible Dates';
 
   let numDays = 1;
@@ -437,7 +352,6 @@ export function createDefaultTrip(
     endTime: endTime || '21:00',
     baseCurrency: 'USD',
     shareToken,
-    guestKey,
     readinessScore: 0,
     flights: [],
     days,
@@ -452,4 +366,3 @@ export function createDefaultTrip(
     updatedAt: Date.now(),
   };
 }
-
