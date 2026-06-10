@@ -6,21 +6,12 @@ const SESSION_KEY = STORAGE_KEYS.VAULT_SESSION;
 export const INACTIVITY_PRUNE_MS = RETENTION_POLICY.INACTIVITY_PRUNE_MS;
 export type { VaultSession } from '@mojolog/shared';
 
-export function saveVaultSession(
-  tokenOrUserId?: string,
-  _credential?: string,
-  customLastAccessed?: number,
-  token?: string,
-  expiresAt?: number
-): void {
-  const now = customLastAccessed || Date.now();
-  const actualToken = token || (tokenOrUserId && !tokenOrUserId.includes('-') ? tokenOrUserId : undefined);
-
+export function saveVaultSession(token?: string, expiresAt?: number): void {
+  const now = Date.now();
   const session: VaultSession = {
-    userId: tokenOrUserId || 'personal_vault',
-    token: actualToken,
-    expiresAt,
     authenticated: true,
+    token,
+    expiresAt,
     createdAt: now,
     lastAccessedAt: now,
   };
@@ -53,35 +44,10 @@ export function clearVaultSession(): void {
   localStorage.removeItem(SESSION_KEY);
 }
 
-export function deleteLocalAccount(_userId?: string): void {
+export function deleteLocalAccount(): void {
   clearVaultSession();
 }
 
 export function pruneInactiveLocalData(): number {
   return 0;
-}
-
-export function formatAccountId(id?: string): string {
-  if (!id) return 'Personal Vault';
-  return id.length > 12 ? `${id.slice(0, 4)}...${id.slice(-4)}` : id;
-}
-
-// Stubs for backward compatibility in test suites
-export function generateAccountUuid(): string {
-  return 'personal-vault-uuid';
-}
-export function validateAccountUuid(_uuid: string): boolean {
-  return true;
-}
-export async function hashCredentials(_uuid: string, _pass: string): Promise<string> {
-  return 'hash';
-}
-export function generateVaultPhrase(): string {
-  return 'apple banana cherry date elderberry fig grape honeydew kiwi lemon mango nectarine';
-}
-export function validateVaultPhrase(_phrase: string): boolean {
-  return true;
-}
-export async function hashPhrase(_phrase: string): Promise<string> {
-  return 'phrase_hash';
 }

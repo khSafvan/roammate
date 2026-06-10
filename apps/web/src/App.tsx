@@ -67,7 +67,7 @@ function getTripTravelerNames(trip: Trip): string[] {
 export function App() {
   const [currentView, setCurrentView] = useState<'trips_list' | 'trip_detail' | 'trip_settings'>(() => {
     const params = new URLSearchParams(window.location.search);
-    if (params.get('trip') || params.get('guest') || params.get('share') || params.get('view') === 'detail') {
+    if (params.get('trip') || params.get('share') || params.get('view') === 'detail') {
       return 'trip_detail';
     }
     return 'trips_list';
@@ -833,6 +833,7 @@ export function App() {
             deleteTrip(id);
           }}
           onOpenAuth={() => setIsAuthOpen(true)}
+          onLogout={handleLogout}
         />
       )}
 
@@ -846,6 +847,7 @@ export function App() {
             setCurrentView('trips_list');
           }}
           onBackToWorkspace={() => setCurrentView('trip_detail')}
+          onLogout={handleLogout}
         />
       )}
 
@@ -884,6 +886,7 @@ export function App() {
             onShare={() => setIsShareModalOpen(true)}
             onOpenScratchpad={() => setIsScratchpadOpen(true)}
             onOpenSettings={() => setCurrentView('trip_settings')}
+            onLogout={handleLogout}
           />
 
 
