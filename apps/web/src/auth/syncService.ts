@@ -52,22 +52,63 @@ export function initAccountLifecycle(): void {
   pruneInactiveLocalData();
 }
 
+export const ENV_PASSWORD = (
+  import.meta.env.PASSWORD ||
+  import.meta.env.PASSCODE ||
+  import.meta.env.VITE_PASSWORD ||
+  ''
+).trim();
+
+/**
+ * Checks whether PASSWORD is configured in the environment (.env) or on the backend.
+ * If neither is configured, the application must be rendered unusable.
+ */
+export async function isPasswordConfigured(): Promise<boolean> {
+  if (ENV_PASSWORD) {
+    return true;
+  }
+
+  if (API_BASE_URL) {
+    try {
+      const status = await apiClient.checkAuthStatus();
+      return Boolean(status?.configured);
+    } catch {
+      return false;
+    }
+  }
+
+  return false;
+}
+
 /**
  * Personal vault login using password set directly in .env
- * Strictly verifies against backend API. Rejects incorrect passwords with false.
+ * Strictly verifies against backend API or local environment. Rejects incorrect passwords with false.
  */
 export async function loginAccountOnEdge(password: string): Promise<boolean> {
-  try {
-    const res = await apiClient.login({ password, passcode: password });
-    if (res?.token) {
-      saveVaultSession(res.token, res.expiresAt);
-      return true;
+  const trimmed = password.trim();
+  if (!trimmed) return false;
+
+  if (API_BASE_URL) {
+    try {
+      const res = await apiClient.login({ password: trimmed, passcode: trimmed });
+      if (res?.token) {
+        saveVaultSession(res.token, res.expiresAt);
+        return true;
+      }
+      return false;
+    } catch (e) {
+      console.warn('Backend login failed:', e);
+      return false;
     }
-    return false;
-  } catch (e) {
-    console.warn('Backend login failed:', e);
-    return false;
   }
+
+  // Pure local offline mode: compare against ENV_PASSWORD
+  if (ENV_PASSWORD && trimmed === ENV_PASSWORD) {
+    saveVaultSession('local_personal_vault_' + Date.now());
+    return true;
+  }
+
+  return false;
 }
 
 export async function deleteAccountOnEdge(): Promise<boolean> {
