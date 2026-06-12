@@ -190,7 +190,6 @@ export interface BookingDocument {
 // 3. Unified Itinerary Document (Single flexible JSON document)
 export interface Trip {
   id: string;
-  userId?: string; // Owning account UUID
   tripId?: string; // Unified identifier alias
   title: string;
   dates: string;
@@ -203,7 +202,6 @@ export interface Trip {
   baseCurrency: string;   // destination/trip currency
   homeCurrency?: string;  // user's home currency for live conversion
   shareToken?: string;
-  guestKey?: string;  // Secret guest link key - only persons with this key can view the trip
   readinessScore: number;
   travelers?: string[];
   flights: Flight[];
@@ -232,19 +230,11 @@ export interface TripSummary {
   updatedAt?: number;
 }
 
-
-// 4. Cryptographic Vault Session & Edge Sync Result
-export interface AuthCredentials {
-  uuid: string;
-  passwordHash: string;
-}
-
+// 4. Single-User Personal Vault Session & Edge Sync Result
 export interface VaultSession {
-  userId?: string;
+  authenticated: boolean;
   token?: string;
   expiresAt?: number;
-  authenticated?: boolean;
-  passcodeProtected?: boolean;
   createdAt?: number;
   lastAccessedAt?: number;
 }
@@ -288,10 +278,7 @@ export interface SyncPullResponse {
 export interface AuthResponse {
   success?: boolean;
   token?: string;
-  userId?: string;
-  uuid?: string;
+  authenticated?: boolean;
   expiresAt?: number;
-  lastAccessedAt?: number;
   error?: string;
-  status?: string;
 }

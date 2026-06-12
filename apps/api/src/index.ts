@@ -152,6 +152,18 @@ const handleMe = async (c: any) => {
 app.get('/me', handleMe);
 app.get('/api/me', handleMe);
 
+// 3. Check Server Password Status (/auth/status)
+const handleAuthStatus = (c: any) => {
+  const required = getPassword(c);
+  return c.json({
+    configured: Boolean(required),
+    error: required ? undefined : 'PASSWORD environment variable is not configured on the server.',
+  });
+};
+
+app.get('/auth/status', handleAuthStatus);
+app.get('/api/auth/status', handleAuthStatus);
+
 // --- Sync Routes (Offline Push / Pull) ---
 
 // 3. Pull Sync: GET /sync/pull?since=...
