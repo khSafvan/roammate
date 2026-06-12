@@ -5,16 +5,15 @@ import {
   Check,
   Clock,
   Compass,
-  Copy,
   DollarSign,
   Download,
   FileText,
-  KeyRound,
+  Lock,
+  LogOut,
   MapPin,
   Palette,
   PhoneCall,
   Printer,
-  RefreshCw,
   Save,
   ShieldCheck,
   Trash2,
@@ -27,6 +26,7 @@ interface TripSettingsPageProps {
   onUpdateTrip: (updated: Partial<Trip>) => void;
   onDeleteTrip: (tripId: string) => void;
   onBackToWorkspace: () => void;
+  onLogout?: () => void;
 }
 
 const THEME_COLORS = [
@@ -45,6 +45,7 @@ export const TripSettingsPage: React.FC<TripSettingsPageProps> = ({
   onUpdateTrip,
   onDeleteTrip,
   onBackToWorkspace,
+  onLogout,
 }) => {
   const [title, setTitle] = useState(trip.title);
   const [destination, setDestination] = useState(trip.destination);
@@ -56,30 +57,11 @@ export const TripSettingsPage: React.FC<TripSettingsPageProps> = ({
   const [homeCurrency, setHomeCurrency] = useState(trip.homeCurrency || '');
   const [countryCode, setCountryCode] = useState(trip.countryCode || '');
   const [themeColor, setThemeColor] = useState(trip.days?.[0]?.themeColor || '#3B82F6');
-  const [guestKey, setGuestKey] = useState(trip.guestKey || trip.shareToken || 'guest_key');
   const [emergencyContacts, setEmergencyContacts] = useState(trip.emergencyContacts || '');
   const [generalNotes, setGeneralNotes] = useState(trip.generalNotes || '');
 
-  const [copiedLink, setCopiedLink] = useState(false);
   const [isSaved, setIsSaved] = useState(false);
   const [isDeleteConfirming, setIsDeleteConfirming] = useState(false);
-
-  // Secret guest link
-  const guestInviteUrl = `${window.location.origin}/?trip=${encodeURIComponent(
-    trip.id
-  )}&guest=${encodeURIComponent(guestKey)}`;
-
-  const handleCopyGuestLink = () => {
-    navigator.clipboard.writeText(guestInviteUrl);
-    setCopiedLink(true);
-    setTimeout(() => setCopiedLink(false), 2500);
-  };
-
-  const handleRegenerateKey = () => {
-    const newKey = `guest_${Math.random().toString(36).substring(2, 12)}`;
-    setGuestKey(newKey);
-    onUpdateTrip({ guestKey: newKey });
-  };
 
   const handleSave = (e?: React.FormEvent) => {
     if (e) e.preventDefault();
@@ -102,7 +84,6 @@ export const TripSettingsPage: React.FC<TripSettingsPageProps> = ({
       baseCurrency,
       homeCurrency: homeCurrency.trim().toUpperCase() || undefined,
       countryCode: countryCode.trim().toUpperCase() || undefined,
-      guestKey,
       emergencyContacts: emergencyContacts.trim() || undefined,
       generalNotes: generalNotes.trim() || undefined,
       days: updatedDays,
@@ -335,16 +316,16 @@ export const TripSettingsPage: React.FC<TripSettingsPageProps> = ({
           </div>
         </div>
 
-        {/* Section 3: Privacy & Companion Guest Links */}
+        {/* Section 3: Personal Vault & Security */}
         <div className="settings-card">
           <div className="settings-card-header">
             <div className="settings-icon-node">
-              <KeyRound size={17} className="text-blue" />
+              <Lock size={17} className="text-blue" />
             </div>
             <div>
-              <h2 className="settings-section-title">Privacy &amp; Companion Guest Link</h2>
+              <h2 className="settings-section-title">Personal Vault &amp; Session Security</h2>
               <p className="settings-section-subtitle">
-                Only individuals with this secret key can view your itinerary
+                Manage your authenticated session and secure your personal itineraries
               </p>
             </div>
           </div>
@@ -353,41 +334,22 @@ export const TripSettingsPage: React.FC<TripSettingsPageProps> = ({
             <div className="share-privacy-notice">
               <ShieldCheck size={16} className="text-emerald flex-shrink-0" />
               <span>
-                <strong>Private Vault Policy:</strong> This trip is inaccessible to anyone without the secret invitation key. If shared accidentally, click <strong>&quot;Regenerate Key&quot;</strong> to immediately invalidate the old link.
+                <strong>Personal Vault Active:</strong> Your trips sync directly to your personal database. When finished, lock your vault to require your password on your next visit.
               </span>
             </div>
 
-            <div className="form-group">
-              <div className="flex items-center justify-between mb-1">
-                <label className="form-label">Secret Guest Invite Link</label>
+            {onLogout && (
+              <div className="form-group pt-2">
                 <button
                   type="button"
-                  className="regen-btn"
-                  onClick={handleRegenerateKey}
-                  title="Generate a new secret key and invalidate old link"
+                  className="secondary-action-btn text-rose flex items-center justify-center gap-2 w-full py-2.5"
+                  onClick={onLogout}
                 >
-                  <RefreshCw size={12} />
-                  <span>Regenerate Key</span>
+                  <LogOut size={15} />
+                  <span>Lock Vault &amp; Log Out</span>
                 </button>
               </div>
-
-              <div className="share-link-box">
-                <input
-                  type="text"
-                  readOnly
-                  value={guestInviteUrl}
-                  className="share-link-input font-mono text-xs"
-                />
-                <button
-                  type="button"
-                  className="copy-phrase-btn flex-shrink-0"
-                  onClick={handleCopyGuestLink}
-                >
-                  {copiedLink ? <Check size={14} className="text-emerald" /> : <Copy size={14} />}
-                  <span>{copiedLink ? 'Copied!' : 'Copy Guest Link'}</span>
-                </button>
-              </div>
-            </div>
+            )}
           </div>
         </div>
 

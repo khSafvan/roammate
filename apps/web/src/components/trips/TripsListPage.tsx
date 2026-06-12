@@ -15,9 +15,10 @@ import {
   Ticket,
   Trash2,
   Users,
+  LogOut,
 } from 'lucide-react';
 import { Trip } from '../../types/trip';
-import { formatAccountId, VaultSession } from '../../auth/crypto';
+import { VaultSession } from '../../auth/crypto';
 import { CreateTripParams } from '../../hooks/useVault';
 
 interface TripsListPageProps {
@@ -30,6 +31,7 @@ interface TripsListPageProps {
   onCreateTrip: (params: CreateTripParams) => void;
   onDeleteTrip: (tripId: string) => void;
   onOpenAuth: () => void;
+  onLogout?: () => void;
 }
 
 export const TripsListPage: React.FC<TripsListPageProps> = ({
@@ -42,6 +44,7 @@ export const TripsListPage: React.FC<TripsListPageProps> = ({
   onCreateTrip,
   onDeleteTrip,
   onOpenAuth,
+  onLogout,
 }) => {
   const [filter, setFilter] = useState<'all' | 'upcoming' | 'completed'>('all');
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
@@ -117,20 +120,31 @@ export const TripsListPage: React.FC<TripsListPageProps> = ({
             <button
               className={`vault-auth-btn ${vaultSession ? 'authenticated' : ''}`}
               onClick={onOpenAuth}
-              title={vaultSession ? 'Vault Authenticated' : 'Connect Vault'}
+              title={vaultSession ? 'Personal Vault Active' : 'Unlock Personal Vault'}
             >
               {vaultSession ? (
                 <>
                   <Lock size={13} strokeWidth={1.75} className="text-emerald" />
-                  <span className="vault-btn-text">{formatAccountId(vaultSession.userId)}</span>
+                  <span className="vault-btn-text">Personal Vault</span>
                 </>
               ) : (
                 <>
                   <Key size={13} strokeWidth={1.75} className="text-amber" />
-                  <span className="vault-btn-text">Connect Vault</span>
+                  <span className="vault-btn-text">Unlock Vault</span>
                 </>
               )}
             </button>
+
+            {vaultSession && onLogout && (
+              <button
+                className="secondary-action-btn text-rose"
+                onClick={onLogout}
+                title="Lock Vault & Log Out"
+              >
+                <LogOut size={14} />
+                <span>Lock</span>
+              </button>
+            )}
 
             <button
               className="primary-action-btn"
@@ -374,7 +388,7 @@ export const TripsListPage: React.FC<TripsListPageProps> = ({
                         <button
                           className="card-icon-action-btn"
                           onClick={() => onShareTrip(t)}
-                          title="Invite Companions with Secret Guest Link"
+                          title="Export or Backup Trip"
                         >
                           <Share2 size={15} />
                         </button>
