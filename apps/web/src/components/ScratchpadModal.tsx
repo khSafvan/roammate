@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { FileText, PhoneCall, Save, Sparkles, Wifi, X } from 'lucide-react';
 import { Trip, TripDay } from '../types/trip';
 import {
@@ -6,6 +6,7 @@ import {
   formatTravelUtilitySnippet,
   getCountryIntelligence,
 } from '@mojolog/core';
+import { useModalA11y } from '../hooks';
 
 interface ScratchpadModalProps {
   isOpen: boolean;
@@ -26,6 +27,17 @@ export const ScratchpadModal: React.FC<ScratchpadModalProps> = ({
   const [generalNotes, setGeneralNotes] = useState(trip.generalNotes || '');
   const [dayNotes, setDayNotes] = useState(activeDay?.notes || '');
   const [isSaved, setIsSaved] = useState(false);
+
+  useModalA11y(isOpen, onClose);
+
+  useEffect(() => {
+    if (isOpen) {
+      setEmergencyContacts(trip.emergencyContacts || '');
+      setGeneralNotes(trip.generalNotes || '');
+      setDayNotes(activeDay?.notes || '');
+      setIsSaved(false);
+    }
+  }, [isOpen, trip.emergencyContacts, trip.generalNotes, activeDay?.notes]);
 
   const intel = useMemo(
     () => getCountryIntelligence(trip.countryCode, trip.destination),
@@ -68,6 +80,9 @@ export const ScratchpadModal: React.FC<ScratchpadModalProps> = ({
         className="modal-card"
         onClick={(e) => e.stopPropagation()}
         style={{ maxWidth: '620px', maxHeight: '90vh' }}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="scratchpad-modal-title"
       >
         {/* Header */}
         <div className="modal-header">
@@ -79,13 +94,13 @@ export const ScratchpadModal: React.FC<ScratchpadModalProps> = ({
               <FileText size={18} />
             </div>
             <div>
-              <h2 className="modal-title">Trip Scratchpad &amp; Emergency Notes</h2>
+              <h2 id="scratchpad-modal-title" className="modal-title">Trip Scratchpad & Emergency Notes</h2>
               <p className="modal-subtitle">
-                Quick-reference contacts, embassy details, wifi codes &amp; day notes
+                Quick-reference contacts, embassy details, wifi codes & day notes
               </p>
             </div>
           </div>
-          <button className="modal-close-btn" onClick={onClose}>
+          <button className="modal-close-btn" onClick={onClose} aria-label="Close">
             <X size={18} />
           </button>
         </div>
