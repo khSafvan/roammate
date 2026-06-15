@@ -72,9 +72,10 @@ export const Header: React.FC<HeaderProps> = ({
               className="brand-logo-btn"
               onClick={() => onNavigateView && onNavigateView('trips_list')}
               title="Return to All Trips"
+              aria-label="MojoLog – Return to All Trips"
             >
               <img className="brand-logo" src="/icon.svg" alt="" />
-              <span className="brand-name">roammate</span>
+              <span className="brand-name">MojoLog</span>
             </button>
           </div>
 
@@ -87,6 +88,8 @@ export const Header: React.FC<HeaderProps> = ({
                 className="trip-switcher-trigger-btn"
                 onClick={onOpenTripManager}
                 title="Switch trips or create a new itinerary"
+                aria-label={`Switch trip: ${title}`}
+                aria-haspopup="dialog"
               >
                 <div className="trip-switcher-text">
                   <div className="trip-title-row">
@@ -114,9 +117,11 @@ export const Header: React.FC<HeaderProps> = ({
         {/* Center: View Switcher Tabs (Itinerary, Bookings/Passes, Expenses) */}
         {onSelectTab && currentView !== 'trips_list' && (
           <div className="header-center">
-            <nav className="header-nav-tabs" aria-label="Trip Views">
+            <nav className="header-nav-tabs" role="tablist" aria-label="Trip Views">
               <button
                 type="button"
+                role="tab"
+                aria-selected={activeTab === 'timeline'}
                 className={`header-tab-btn ${activeTab === 'timeline' ? 'active' : ''}`}
                 onClick={() => onSelectTab('timeline')}
               >
@@ -126,6 +131,8 @@ export const Header: React.FC<HeaderProps> = ({
 
               <button
                 type="button"
+                role="tab"
+                aria-selected={activeTab === 'flights'}
                 className={`header-tab-btn ${activeTab === 'flights' ? 'active' : ''}`}
                 onClick={() => onSelectTab('flights')}
               >
@@ -138,6 +145,8 @@ export const Header: React.FC<HeaderProps> = ({
 
               <button
                 type="button"
+                role="tab"
+                aria-selected={activeTab === 'expenses'}
                 className={`header-tab-btn ${activeTab === 'expenses' ? 'active' : ''}`}
                 onClick={() => onSelectTab('expenses')}
               >
@@ -197,9 +206,11 @@ export const Header: React.FC<HeaderProps> = ({
           {/* Explicit Lock / Logout Button when authenticated */}
           {activeSession && onLogout && (
             <button
+              type="button"
               className="header-action-pill text-rose"
               onClick={onLogout}
               title="Lock Vault & Log Out"
+              aria-label="Lock Vault and Log Out"
             >
               <LogOut size={13} strokeWidth={1.75} />
               <span className="btn-label-responsive">Lock</span>
@@ -207,9 +218,11 @@ export const Header: React.FC<HeaderProps> = ({
           )}
 
           <button
+            type="button"
             className="readiness-btn"
             onClick={onOpenReadiness}
             title="View Trip Readiness Checklist"
+            aria-label={`Trip readiness: ${readinessScore}% ready`}
           >
             <CheckCircle2 size={14} strokeWidth={2} className="text-emerald" />
             <span className="readiness-val tabular">{readinessScore}%</span>
@@ -218,9 +231,11 @@ export const Header: React.FC<HeaderProps> = ({
 
           {onOpenSettings && (
             <button
+              type="button"
               className="icon-btn"
               onClick={onOpenSettings}
               title="Edit Trip Settings & Preferences"
+              aria-label="Edit Trip Settings and Preferences"
             >
               <Settings size={15} strokeWidth={1.75} />
             </button>

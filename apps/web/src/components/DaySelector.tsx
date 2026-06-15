@@ -66,6 +66,15 @@ export const DaySelector = React.memo<DaySelectorProps>(function DaySelector({
     };
   }, [checkScroll, days.length]);
 
+  useEffect(() => {
+    if (scrollRef.current) {
+      const activeTab = scrollRef.current.querySelector('.day-tab-pill.active');
+      if (activeTab) {
+        activeTab.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+      }
+    }
+  }, [activeDayIndex, isPlacesActive]);
+
   const handleScroll = (direction: 'left' | 'right') => {
     const el = scrollRef.current;
     if (!el) return;
@@ -93,10 +102,15 @@ export const DaySelector = React.memo<DaySelectorProps>(function DaySelector({
       <div
         className={`day-selector-scroll ${canScrollLeft ? 'has-left-shadow' : ''} ${canScrollRight ? 'has-right-shadow' : ''}`}
         ref={scrollRef}
+        role="tablist"
+        aria-label="Trip days"
       >
         {/* Unassigned Places to Visit (Ideas Bucket) Tab */}
         {onSelectPlaces && (
           <button
+            type="button"
+            role="tab"
+            aria-selected={isPlacesActive}
             className={`day-tab-pill ${isPlacesActive ? 'active' : ''}`}
             onClick={onSelectPlaces}
             title="Unassigned Ideas / Places to Visit bucket"
@@ -127,6 +141,9 @@ export const DaySelector = React.memo<DaySelectorProps>(function DaySelector({
           return (
             <button
               key={day.id}
+              type="button"
+              role="tab"
+              aria-selected={isActive}
               className={`day-tab-pill ${isActive ? 'active' : ''}`}
               onClick={() => onSelectDay(idx)}
               title={holidayName ? `Public Holiday: ${holidayName}` : undefined}

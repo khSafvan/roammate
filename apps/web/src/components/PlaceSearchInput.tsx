@@ -177,10 +177,38 @@ export const PlaceSearchInput: React.FC<PlaceSearchInputProps> = ({
     return () => clearTimeout(timeout);
   }, [query, searchContext]);
 
+  const [selectedIndex, setSelectedIndex] = useState<number>(-1);
+
+  useEffect(() => {
+    setSelectedIndex(-1);
+  }, [results]);
+
   const handleSelect = (place: PlaceSearchResult) => {
     onSelectPlace(place);
     setQuery('');
     setIsOpen(false);
+    setSelectedIndex(-1);
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (!isOpen || results.length === 0) return;
+
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      setSelectedIndex((prev) => (prev < results.length - 1 ? prev + 1 : 0));
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      setSelectedIndex((prev) => (prev > 0 ? prev - 1 : results.length - 1));
+    } else if (e.key === 'Enter') {
+      if (selectedIndex >= 0 && selectedIndex < results.length) {
+        e.preventDefault();
+        handleSelect(results[selectedIndex]);
+      }
+    } else if (e.key === 'Escape') {
+      e.preventDefault();
+      setIsOpen(false);
+      setSelectedIndex(-1);
+    }
   };
 
   return (
@@ -197,6 +225,10 @@ export const PlaceSearchInput: React.FC<PlaceSearchInputProps> = ({
         />
         <input
           type="text"
+          role="combobox"
+          aria-expanded={isOpen && results.length > 0}
+          aria-autocomplete="list"
+          aria-controls="places-autocomplete-listbox"
           autoFocus={autoFocus}
           placeholder={placeholder}
           className="form-input"
@@ -213,6 +245,7 @@ export const PlaceSearchInput: React.FC<PlaceSearchInputProps> = ({
           onFocus={() => {
             if (results.length > 0) setIsOpen(true);
           }}
+          onKeyDown={handleKeyDown}
         />
         <div style={{ position: 'absolute', right: '10px', display: 'flex', alignItems: 'center' }}>
           {isLoading ? (
@@ -224,6 +257,7 @@ export const PlaceSearchInput: React.FC<PlaceSearchInputProps> = ({
                 setQuery('');
                 setResults([]);
                 setIsOpen(false);
+                setSelectedIndex(-1);
               }}
               style={{
                 background: 'none',
@@ -233,6 +267,7 @@ export const PlaceSearchInput: React.FC<PlaceSearchInputProps> = ({
                 color: 'var(--text-tertiary, #94a3b8)',
               }}
               title="Clear search"
+              aria-label="Clear search"
             >
               <X size={14} />
             </button>
@@ -243,6 +278,8 @@ export const PlaceSearchInput: React.FC<PlaceSearchInputProps> = ({
       {/* Autocomplete Dropdown */}
       {isOpen && results.length > 0 && (
         <div
+          id="places-autocomplete-listbox"
+          role="listbox"
           style={{
             position: 'absolute',
             top: 'calc(100% + 4px)',
@@ -261,6 +298,8 @@ export const PlaceSearchInput: React.FC<PlaceSearchInputProps> = ({
           {results.map((r, i) => (
             <div
               key={`${r.title}-${i}`}
+              role="option"
+              aria-selected={selectedIndex === i}
               onClick={() => handleSelect(r)}
               style={{
                 display: 'flex',
@@ -269,10 +308,10 @@ export const PlaceSearchInput: React.FC<PlaceSearchInputProps> = ({
                 padding: '8px 10px',
                 borderRadius: 'var(--radius-md, 8px)',
                 cursor: 'pointer',
+                backgroundColor: selectedIndex === i ? 'var(--bg-subtle, #f1f5f9)' : 'transparent',
                 transition: 'background-color 0.15s ease',
               }}
-              onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = 'var(--bg-hover, #f1f5f9)')}
-              onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'transparent')}
+              onMouseEnter={() => setSelectedIndex(i)}
             >
               <span style={{ fontSize: '16px', lineHeight: 1 }}>{CATEGORY_EMOJIS[r.category]}</span>
               <div style={{ flex: 1, minWidth: 0 }}>
