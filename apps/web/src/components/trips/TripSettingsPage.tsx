@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   ArrowLeft,
   Calendar,
@@ -63,6 +63,29 @@ export const TripSettingsPage: React.FC<TripSettingsPageProps> = ({
   const [isSaved, setIsSaved] = useState(false);
   const [isDeleteConfirming, setIsDeleteConfirming] = useState(false);
 
+  useEffect(() => {
+    setTitle(trip.title);
+    setDestination(trip.destination);
+    setStartDate(trip.startDate || '');
+    setEndDate(trip.endDate || '');
+    setStartTime(trip.startTime || '09:00');
+    setEndTime(trip.endTime || '21:00');
+    setBaseCurrency(trip.baseCurrency || 'USD');
+    setHomeCurrency(trip.homeCurrency || '');
+    setCountryCode(trip.countryCode || '');
+    setThemeColor(trip.days?.[0]?.themeColor || '#3B82F6');
+    setEmergencyContacts(trip.emergencyContacts || '');
+    setGeneralNotes(trip.generalNotes || '');
+  }, [trip.id]);
+
+  useEffect(() => {
+    let timer: ReturnType<typeof setTimeout>;
+    if (isSaved) {
+      timer = setTimeout(() => setIsSaved(false), 2000);
+    }
+    return () => clearTimeout(timer);
+  }, [isSaved]);
+
   const handleSave = (e?: React.FormEvent) => {
     if (e) e.preventDefault();
     const formattedDates =
@@ -90,7 +113,6 @@ export const TripSettingsPage: React.FC<TripSettingsPageProps> = ({
     });
 
     setIsSaved(true);
-    setTimeout(() => setIsSaved(false), 2000);
   };
 
   return (
@@ -242,6 +264,7 @@ export const TripSettingsPage: React.FC<TripSettingsPageProps> = ({
                     style={{ backgroundColor: c.hex }}
                     onClick={() => setThemeColor(c.hex)}
                     title={c.name}
+                    aria-label={`Theme color ${c.name}`}
                   >
                     {themeColor === c.hex && <Check size={13} className="text-white" />}
                   </button>
@@ -346,7 +369,7 @@ export const TripSettingsPage: React.FC<TripSettingsPageProps> = ({
                   onClick={onLogout}
                 >
                   <LogOut size={15} />
-                  <span>Lock Vault &amp; Log Out</span>
+                  <span>Lock Vault & Log Out</span>
                 </button>
               </div>
             )}

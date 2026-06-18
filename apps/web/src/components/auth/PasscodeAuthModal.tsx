@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { KeyRound, Lock, LogIn, AlertCircle, X } from 'lucide-react';
 import { loginAccountOnEdge } from '../../auth/syncService';
 import { VaultSession } from '../../auth/crypto';
+import { useModalA11y } from '../../hooks';
 
 interface PasscodeAuthModalProps {
   isOpen: boolean;
@@ -17,6 +18,15 @@ export const PasscodeAuthModal: React.FC<PasscodeAuthModalProps> = ({
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  useModalA11y(isOpen, onClose);
+
+  useEffect(() => {
+    if (isOpen) {
+      setPassword('');
+      setError(null);
+    }
+  }, [isOpen]);
 
   if (!isOpen) return null;
 
@@ -46,19 +56,25 @@ export const PasscodeAuthModal: React.FC<PasscodeAuthModalProps> = ({
 
   return (
     <div className="modal-backdrop z-modal-top" onClick={onClose}>
-      <div className="modal-card auth-modal-card" onClick={(e) => e.stopPropagation()}>
+      <div
+        className="modal-card auth-modal-card"
+        onClick={(e) => e.stopPropagation()}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="passcode-auth-title"
+      >
         <div className="modal-header">
           <div className="modal-header-left">
             <div className="auth-header-icon bg-blue-subtle">
               <Lock size={18} className="text-blue" />
             </div>
             <div>
-              <h3 className="modal-title">Personal Vault Access</h3>
+              <h3 id="passcode-auth-title" className="modal-title">Personal Vault Access</h3>
               <p className="modal-subtitle">Enter your PASSWORD to access your personal itineraries</p>
             </div>
           </div>
           {onClose && (
-            <button className="modal-close-btn" onClick={onClose}>
+            <button className="modal-close-btn" onClick={onClose} aria-label="Close">
               <X size={18} />
             </button>
           )}
@@ -73,10 +89,11 @@ export const PasscodeAuthModal: React.FC<PasscodeAuthModalProps> = ({
           )}
 
           <div className="form-group">
-            <label className="block text-xs font-semibold text-secondary mb-1.5">Password</label>
+            <label htmlFor="passcode-password" className="block text-xs font-semibold text-secondary mb-1.5">Password</label>
             <div className="relative flex items-center">
               <KeyRound size={16} className="absolute left-3 text-tertiary" />
               <input
+                id="passcode-password"
                 type="password"
                 className="w-full pl-9 pr-3 py-2 border border-subtle rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                 placeholder="Enter personal vault password"
