@@ -3,7 +3,7 @@
  * Provides 100% offline flight & itinerary access for travelers without connectivity.
  */
 
-const CACHE_NAME = 'roammate-cache-v1';
+const CACHE_NAME = 'roammate-cache-v2';
 const PRECACHE_ASSETS = [
   '/',
   '/index.html',
@@ -39,8 +39,16 @@ self.addEventListener('activate', (event) => {
 self.addEventListener('fetch', (event) => {
   const req = event.request;
 
-  // Ignore non-GET requests or edge API calls
-  if (req.method !== 'GET' || req.url.includes('/api/')) {
+  // Bypass service worker for edge API, auth, sync, web workers, and external cartography
+  if (
+    req.method !== 'GET' ||
+    req.url.includes('/api/') ||
+    req.url.includes('/auth/') ||
+    req.url.includes('/sync/') ||
+    req.destination === 'worker' ||
+    req.url.includes('tiles.openfreemap.org') ||
+    req.url.includes('project-osrm.org')
+  ) {
     return;
   }
 

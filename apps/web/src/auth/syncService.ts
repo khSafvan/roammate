@@ -5,10 +5,16 @@ import { INITIAL_TRIPS_CATALOG, mockTripData } from '../data/mockTrip';
 import { createApiClient } from '@mojolog/api-client';
 import { createSyncEngine, LocalStorageSyncStorage } from '@mojolog/sync';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || '';
+const RAW_API_URL = (import.meta.env.VITE_API_URL || '').trim();
+const DEFAULT_PROD_API_URL = 'https://mojolog-api.plantriproammate.workers.dev';
+
+// Automatically heal legacy or missing worker subdomain prefixes and fallback to live worker
+const API_BASE_URL = RAW_API_URL === 'https://plantriproammate.workers.dev'
+  ? DEFAULT_PROD_API_URL
+  : (RAW_API_URL || (import.meta.env.PROD ? DEFAULT_PROD_API_URL : ''));
 
 export const apiClient = createApiClient({
-  baseUrl: API_BASE_URL || 'http://localhost:8787',
+  baseUrl: API_BASE_URL || (import.meta.env.PROD ? DEFAULT_PROD_API_URL : 'http://localhost:8787'),
   getToken: () => {
     try {
       const sessionRaw = localStorage.getItem(STORAGE_KEYS.VAULT_SESSION);
