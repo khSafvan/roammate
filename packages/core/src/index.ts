@@ -3,6 +3,7 @@ export * from './countryIntelligence';
 export * from './expenseSettlement';
 export * from './gpx';
 export * from './icalExport';
+export * from './placeCategory';
 export * from './routeEngine';
 export * from './routing';
 export * from './scheduleConflicts';
