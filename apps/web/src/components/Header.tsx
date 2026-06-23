@@ -7,10 +7,10 @@ import {
   Key,
   Lock,
   LogOut,
-  Plane,
   Receipt,
   Settings,
   Share2,
+  Ticket,
 } from 'lucide-react';
 import { VaultSession } from '../auth/crypto';
 
@@ -136,8 +136,8 @@ export const Header: React.FC<HeaderProps> = ({
                 className={`header-tab-btn ${activeTab === 'flights' ? 'active' : ''}`}
                 onClick={() => onSelectTab('flights')}
               >
-                <Plane size={14} />
-                <span>Tickets &amp; Passes</span>
+                <Ticket size={14} />
+                <span>Bookings &amp; Tickets</span>
                 {flightsCount > 0 && (
                   <span className="nav-counter-pill">{flightsCount}</span>
                 )}

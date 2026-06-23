@@ -9,6 +9,7 @@ import {
   Plus,
   RotateCcw,
   Sparkles,
+  Ticket,
   Trash2,
   Zap,
 } from 'lucide-react';
@@ -29,12 +30,13 @@ import { ShareModal } from './components/ShareModal';
 import { StopDetailModal } from './components/StopDetailModal';
 import { TimelineCard } from './components/TimelineCard';
 import { TimelineFlightCard } from './components/TimelineFlightCard';
+import { TimelineActivityTicketCard } from './components/TimelineActivityTicketCard';
 import { TripManagerModal } from './components/TripManagerModal';
 import { TripsListPage } from './components/trips/TripsListPage';
 import { TripSettingsPage } from './components/trips/TripSettingsPage';
 import { WeatherBanner } from './components/WeatherBanner';
 import { BookingDocument, Expense, Flight, ItineraryStop, PackingCategory, PackingItem, StopCategory, Trip, TripDay } from './types/trip';
-import { detectTransitConflict, getEffectiveStayForDay } from '@mojolog/core';
+import { detectTransitConflict, getDayAnchors, getEffectiveStayForDay } from '@mojolog/core';
 import { getNextSuggestedStartTime, recalculateStopTimes } from './utils/timeSchedule';
 import { fetchHolidaysForRange } from './utils/holidayService';
 import { fetchWeeklyForecast, geocodeDestination, tripDayToIso } from './utils/weatherService';
@@ -245,15 +247,38 @@ export function App() {
     [activeDay.stops, transitLegs]
   );
 
-  const effectiveStay = useMemo(
-    () => getEffectiveStayForDay(trip?.days || [], activeDayIdx),
-    [trip?.days, activeDayIdx]
+  const dayAnchors = useMemo(
+    () =>
+      getDayAnchors(
+        activeDay.dateStr,
+        trip?.documents || [],
+        activeDayIdx,
+        trip?.days?.length || 1,
+        trip?.days || []
+      ),
+    [activeDay.dateStr, trip?.documents, activeDayIdx, trip?.days]
   );
 
-  // Filter flights scheduled on the active itinerary day
+  const effectiveStay = useMemo(
+    () => getEffectiveStayForDay(trip?.days || [], activeDayIdx, trip?.documents, trip?.startDate),
+    [trip?.days, activeDayIdx, trip?.documents, trip?.startDate]
+  );
+
+  // Filter flights scheduled on the active itinerary day (from both trip.flights and documents)
   const dayFlights = useMemo(() => {
-    if (!trip?.flights || trip.flights.length === 0) return [];
-    return trip.flights.filter((f) => {
+    const docFlights: Flight[] = (trip?.documents || [])
+      .filter((d) => d.category === 'flight' || (d.category === 'transit' && d.flightData))
+      .map((d) => d.flightData || {
+        id: d.id,
+        flightNumber: d.confirmationCode || 'TRANSIT',
+        carrier: d.title,
+        date: d.date || '',
+        departure: { airport: d.location || 'DEP', city: d.location || 'Departure', time: d.time || '12:00' },
+        arrival: { airport: 'ARR', city: 'Arrival', time: d.endTime || '15:00' },
+      });
+    const allFlights = [...(trip?.flights || []), ...docFlights];
+    if (allFlights.length === 0) return [];
+    return allFlights.filter((f) => {
       if (!f.date) return activeDayIdx === 0;
       const normalizedFlightDate = f.date.trim();
       const normalizedDayDate = activeDay.dateStr.replace(/^[A-Za-z]+,\s*/, '').trim();
@@ -264,7 +289,24 @@ export function App() {
         (activeDayIdx === 0 && (normalizedFlightDate === normalizedStartDate || !f.date))
       );
     });
-  }, [trip?.flights, trip?.startDate, activeDay.dateStr, activeDayIdx]);
+  }, [trip?.flights, trip?.documents, trip?.startDate, activeDay.dateStr, activeDayIdx]);
+
+  // Filter booked activity, theme park passes, and timed event tickets for active day
+  const dayActivityTickets = useMemo(() => {
+    if (!trip?.documents || trip.documents.length === 0) return [];
+    return trip.documents.filter((d) => {
+      if (d.category !== 'activity' && d.category !== 'doc') return false;
+      if (!d.date) return false;
+      const normalizedDocDate = d.date.trim();
+      const normalizedDayDate = activeDay.dateStr.replace(/^[A-Za-z]+,\s*/, '').trim();
+      const normalizedStartDate = (trip.startDate || '').trim();
+      return (
+        normalizedDocDate === activeDay.dateStr ||
+        normalizedDocDate === normalizedDayDate ||
+        (activeDayIdx === 0 && normalizedDocDate === normalizedStartDate)
+      );
+    });
+  }, [trip?.documents, activeDay.dateStr, trip?.startDate, activeDayIdx]);
 
   const activeDayHoliday = useMemo(() => {
     if (!trip?.startDate) return undefined;
@@ -1114,8 +1156,74 @@ export function App() {
                     themeColor={activeDay.themeColor}
                   />
 
-                  {/* Phase 9 Stay-Aware Itinerary Lodging Banner */}
-                  {effectiveStay && (
+                  {/* Wanderlog Daily Starting Point Anchor */}
+                  {dayAnchors.startAnchor ? (
+                    <div
+                      className="stay-base-banner day-anchor-banner start-anchor"
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        backgroundColor: dayAnchors.startAnchor.action === 'check_out' ? 'rgba(239, 68, 68, 0.08)' : 'rgba(59, 130, 246, 0.08)',
+                        border: `1px solid ${dayAnchors.startAnchor.action === 'check_out' ? 'rgba(239, 68, 68, 0.25)' : 'rgba(59, 130, 246, 0.25)'}`,
+                        borderRadius: 'var(--radius-card, 12px)',
+                        padding: '12px 16px',
+                        marginTop: '12px',
+                        marginBottom: '16px',
+                        gap: '12px',
+                      }}
+                    >
+                      <div className="flex items-center gap-3" style={{ flex: 1 }}>
+                        <div
+                          style={{
+                            width: '36px',
+                            height: '36px',
+                            borderRadius: '50%',
+                            backgroundColor: dayAnchors.startAnchor.action === 'check_out' ? '#EF4444' : '#3B82F6',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            color: '#fff',
+                            flexShrink: 0,
+                          }}
+                        >
+                          <Hotel size={18} />
+                        </div>
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <span style={{ fontSize: '14px', fontWeight: 600, color: 'var(--text-primary)' }}>
+                              {dayAnchors.startAnchor.title}
+                            </span>
+                            <span
+                              style={{
+                                fontSize: '11px',
+                                fontWeight: 700,
+                                padding: '2px 8px',
+                                borderRadius: '12px',
+                                backgroundColor: dayAnchors.startAnchor.action === 'check_out' ? 'rgba(239, 68, 68, 0.15)' : 'rgba(59, 130, 246, 0.15)',
+                                color: dayAnchors.startAnchor.action === 'check_out' ? '#DC2626' : '#2563EB',
+                                textTransform: 'uppercase',
+                                letterSpacing: '0.05em',
+                              }}
+                            >
+                              🟢 {dayAnchors.startAnchor.action === 'check_out' ? 'Check-out of Hotel' : 'Starting Point (Base)'}
+                            </span>
+                          </div>
+                          <p style={{ fontSize: '12px', color: 'var(--text-secondary)', margin: '2px 0 0 0' }}>
+                            {dayAnchors.startAnchor.time && <span>Time: {dayAnchors.startAnchor.time} · </span>}
+                            {dayAnchors.startAnchor.address || 'Starting Accommodation Base'}
+                          </p>
+                        </div>
+                      </div>
+                      <button
+                        className="timeline-action-pill"
+                        onClick={() => setActiveTab('flights')}
+                        style={{ fontSize: '12px', padding: '6px 12px', flexShrink: 0 }}
+                      >
+                        <span>Hotel Stay</span>
+                      </button>
+                    </div>
+                  ) : effectiveStay && (
                     <div
                       className="stay-base-banner"
                       style={{
@@ -1184,7 +1292,7 @@ export function App() {
                     </div>
                   )}
 
-                  {/* Itinerary Stream with Distance Connectors and Inbound Flights */}
+                  {/* Itinerary Stream with Distance Connectors, Inbound Flights, and Activity Tickets */}
                   <div className="itinerary-stream">
                     {/* Airplane / Flight Ticket Integration in Itinerary */}
                     {dayFlights.length > 0 && (
@@ -1192,6 +1300,14 @@ export function App() {
                         flights={dayFlights}
                         themeColor={activeDay.themeColor}
                         onViewFlightsTab={() => setActiveTab('flights')}
+                      />
+                    )}
+
+                    {/* Auto-Populated Event / Theme Park Passes in Itinerary */}
+                    {dayActivityTickets.length > 0 && (
+                      <TimelineActivityTicketCard
+                        tickets={dayActivityTickets}
+                        onViewBookingsTab={() => setActiveTab('flights')}
                       />
                     )}
 
@@ -1286,11 +1402,87 @@ export function App() {
                             <Plane size={14} className="text-emerald" />
                             <span>+ Flight</span>
                           </button>
+                          <button
+                            className="timeline-action-pill"
+                            onClick={() => setActiveTab('flights')}
+                          >
+                            <Ticket size={14} className="text-pink" />
+                            <span>+ Ticket</span>
+                          </button>
                         </div>
                       </div>
                     )}
 
-                    {/* + Add Place / Note / Hotel / Flight Multi-Action Bar */}
+                    {/* Wanderlog Daily Ending Point Anchor */}
+                    {dayAnchors.endAnchor && (
+                      <div
+                        className="stay-base-banner day-anchor-banner end-anchor"
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'space-between',
+                          backgroundColor: dayAnchors.endAnchor.action === 'check_in' ? 'rgba(16, 185, 129, 0.08)' : 'rgba(59, 130, 246, 0.08)',
+                          border: `1px solid ${dayAnchors.endAnchor.action === 'check_in' ? 'rgba(16, 185, 129, 0.25)' : 'rgba(59, 130, 246, 0.25)'}`,
+                          borderRadius: 'var(--radius-card, 12px)',
+                          padding: '12px 16px',
+                          marginTop: '16px',
+                          marginBottom: '16px',
+                          gap: '12px',
+                        }}
+                      >
+                        <div className="flex items-center gap-3" style={{ flex: 1 }}>
+                          <div
+                            style={{
+                              width: '36px',
+                              height: '36px',
+                              borderRadius: '50%',
+                              backgroundColor: dayAnchors.endAnchor.action === 'check_in' ? '#10B981' : '#3B82F6',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              color: '#fff',
+                              flexShrink: 0,
+                            }}
+                          >
+                            <Hotel size={18} />
+                          </div>
+                          <div>
+                            <div className="flex items-center gap-2">
+                              <span style={{ fontSize: '14px', fontWeight: 600, color: 'var(--text-primary)' }}>
+                                {dayAnchors.endAnchor.title}
+                              </span>
+                              <span
+                                style={{
+                                  fontSize: '11px',
+                                  fontWeight: 700,
+                                  padding: '2px 8px',
+                                  borderRadius: '12px',
+                                  backgroundColor: dayAnchors.endAnchor.action === 'check_in' ? 'rgba(16, 185, 129, 0.15)' : 'rgba(59, 130, 246, 0.15)',
+                                  color: dayAnchors.endAnchor.action === 'check_in' ? '#059669' : '#2563EB',
+                                  textTransform: 'uppercase',
+                                  letterSpacing: '0.05em',
+                                }}
+                              >
+                                🏁 {dayAnchors.endAnchor.action === 'check_in' ? 'Check-in to Hotel' : 'Ending Point (Return Base)'}
+                              </span>
+                            </div>
+                            <p style={{ fontSize: '12px', color: 'var(--text-secondary)', margin: '2px 0 0 0' }}>
+                              {dayAnchors.endAnchor.time && <span>Time: {dayAnchors.endAnchor.time} · </span>}
+                              {dayAnchors.endAnchor.address || 'Evening Hotel Return Base'}
+                            </p>
+                          </div>
+                        </div>
+                        <button
+                          className="timeline-action-pill"
+                          onClick={() => setActiveTab('flights')}
+                          style={{ fontSize: '12px', padding: '6px 12px', flexShrink: 0 }}
+                        >
+                          <span>Hotel Stay</span>
+                        </button>
+                      </div>
+                    )}
+
+                    {/* + Add Place / Note / Hotel / Flight / Ticket Multi-Action Bar */}
                     {activeDay.stops.length > 0 && (
                       <div className="timeline-actions-bar">
                         <button
@@ -1327,6 +1519,15 @@ export function App() {
                         >
                           <Plane size={14} className="text-emerald" />
                           <span>+ Flight</span>
+                        </button>
+
+                        <button
+                          className="timeline-action-pill"
+                          onClick={() => setActiveTab('flights')}
+                          title="Manage bookings, passes and theme park tickets"
+                        >
+                          <Ticket size={14} className="text-pink" />
+                          <span>+ Ticket</span>
                         </button>
                       </div>
                     )}
@@ -1460,6 +1661,7 @@ export function App() {
         dayNumber={activeDay.dayNumber}
         themeColor={activeDay.themeColor}
         destination={trip.destination}
+        dayDateStr={activeDay.dateStr}
         defaultStartTime={getNextSuggestedStartTime(activeDay.stops, trip.startTime || '09:00 AM')}
         fallbackCoordinates={
           activeDay.stops && activeDay.stops.length > 0
@@ -1468,6 +1670,7 @@ export function App() {
         }
         onClose={() => setIsAddStopModalOpen(false)}
         onAddStop={handleAddStop}
+        onAddDocument={handleAddDocument}
         defaultCategory={addStopCategory}
       />
 
