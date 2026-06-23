@@ -5,11 +5,9 @@ import {
   Hotel,
   ListFilter,
   Map as MapIcon,
-  Plane,
   Plus,
   RotateCcw,
   Sparkles,
-  Ticket,
   Trash2,
   Zap,
 } from 'lucide-react';
@@ -30,14 +28,23 @@ import { ShareModal } from './components/ShareModal';
 import { StopDetailModal } from './components/StopDetailModal';
 import { TimelineCard } from './components/TimelineCard';
 import { TimelineFlightCard } from './components/TimelineFlightCard';
-import { TimelineActivityTicketCard } from './components/TimelineActivityTicketCard';
 import { TripManagerModal } from './components/TripManagerModal';
 import { TripsListPage } from './components/trips/TripsListPage';
 import { TripSettingsPage } from './components/trips/TripSettingsPage';
 import { WeatherBanner } from './components/WeatherBanner';
-import { BookingDocument, Expense, Flight, ItineraryStop, PackingCategory, PackingItem, StopCategory, Trip, TripDay } from './types/trip';
-import { detectTransitConflict, getDayAnchors, getEffectiveStayForDay } from '@mojolog/core';
-import { getNextSuggestedStartTime, recalculateStopTimes } from './utils/timeSchedule';
+import { BookingDocument, Expense, Flight, ItineraryStop, PackingCategory, PackingItem, StopCategory, TransitLeg, Trip, TripDay } from './types/trip';
+import {
+  computeDistanceKm,
+  detectTransitConflict,
+  estimateDurationMins,
+  getDayAnchors,
+  getEffectiveStayForDay,
+} from '@mojolog/core';
+import {
+  getNextSuggestedStartTime,
+  parseTimeToMinutes,
+  recalculateStopTimes,
+} from './utils/timeSchedule';
 import { fetchHolidaysForRange } from './utils/holidayService';
 import { fetchWeeklyForecast, geocodeDestination, tripDayToIso } from './utils/weatherService';
 import { isPasswordConfigured } from './auth/syncService';
@@ -50,23 +57,6 @@ import {
 const InteractiveMap = lazy(() =>
   import('./components/InteractiveMap').then((module) => ({ default: module.InteractiveMap }))
 );
-
-function getTripTravelerNames(trip: Trip): string[] {
-  if (trip.travelers) return trip.travelers;
-
-  const splitNames = (value?: string) =>
-    (value || '').split(/\s*(?:,|&|\band\b)\s*/i).map((name) => name.trim()).filter(Boolean);
-  const names = [
-    ...(trip.flights || []).flatMap((flight) => splitNames(flight.passengerName)),
-    ...(trip.documents || []).flatMap((document) => splitNames(document.passengerOrGuestName)),
-    ...(trip.expenses || []).flatMap((expense) => [
-      ...splitNames(expense.paidBy),
-      ...(expense.splitWith || []).flatMap(splitNames),
-    ]),
-  ];
-
-  return Array.from(new Set(names.length > 0 ? names : ['Me']));
-}
 
 export function App() {
   const [currentView, setCurrentView] = useState<'trips_list' | 'trip_detail' | 'trip_settings'>(() => {
@@ -130,11 +120,6 @@ export function App() {
     handleLogout,
     exitReadOnly,
   } = useVault();
-
-  const tripTravelerNames = useMemo(
-    () => getTripTravelerNames(trip),
-    [trip.travelers, trip.flights, trip.documents, trip.expenses]
-  );
 
   // Check for incoming QR code scan or vault parameter
   useEffect(() => {
@@ -264,6 +249,87 @@ export function App() {
     [trip?.days, activeDayIdx, trip?.documents, trip?.startDate]
   );
 
+  // Distance & Travel Time from Starting Hotel Anchor to First Place Stop
+  const startAnchorLeg: TransitLeg | null = useMemo(() => {
+    if (!dayAnchors.startAnchor?.coordinates) return null;
+    const firstPlaceStop = activeDay.stops.find(
+      (s) => s.category !== 'note' && s.coordinates?.latitude && s.coordinates?.longitude
+    );
+    if (!firstPlaceStop || !firstPlaceStop.coordinates) return null;
+
+    const fromLat = dayAnchors.startAnchor.coordinates.latitude;
+    const fromLng = dayAnchors.startAnchor.coordinates.longitude;
+    const toLat = firstPlaceStop.coordinates.latitude;
+    const toLng = firstPlaceStop.coordinates.longitude;
+
+    const distanceKm = computeDistanceKm(fromLat, fromLng, toLat, toLng);
+    const key = `${dayAnchors.startAnchor.id}->${firstPlaceStop.id}`;
+    const mode = transitModes[key] || 'drive';
+    const durationMinutes = estimateDurationMins(distanceKm, mode);
+
+    return {
+      fromStopId: dayAnchors.startAnchor.id,
+      toStopId: firstPlaceStop.id,
+      mode,
+      distanceKm,
+      durationMinutes,
+      isOutlier: durationMinutes > 45 || distanceKm > 20,
+    };
+  }, [dayAnchors.startAnchor, activeDay.stops, transitModes]);
+
+  // Distance & Travel Time from Last Place Stop to Ending Hotel Anchor
+  const endAnchorLeg: TransitLeg | null = useMemo(() => {
+    if (!dayAnchors.endAnchor?.coordinates) return null;
+    const lastPlaceStop = [...activeDay.stops]
+      .reverse()
+      .find((s) => s.category !== 'note' && s.coordinates?.latitude && s.coordinates?.longitude);
+    if (!lastPlaceStop || !lastPlaceStop.coordinates) return null;
+
+    const fromLat = lastPlaceStop.coordinates.latitude;
+    const fromLng = lastPlaceStop.coordinates.longitude;
+    const toLat = dayAnchors.endAnchor.coordinates.latitude;
+    const toLng = dayAnchors.endAnchor.coordinates.longitude;
+
+    const distanceKm = computeDistanceKm(fromLat, fromLng, toLat, toLng);
+    const key = `${lastPlaceStop.id}->${dayAnchors.endAnchor.id}`;
+    const mode = transitModes[key] || 'drive';
+    const durationMinutes = estimateDurationMins(distanceKm, mode);
+
+    return {
+      fromStopId: lastPlaceStop.id,
+      toStopId: dayAnchors.endAnchor.id,
+      mode,
+      distanceKm,
+      durationMinutes,
+      isOutlier: durationMinutes > 45 || distanceKm > 20,
+    };
+  }, [dayAnchors.endAnchor, activeDay.stops, transitModes]);
+
+  // Distance & Travel Time between Start and End Hotel Anchors (empty day transition)
+  const directTransitionLeg: TransitLeg | null = useMemo(() => {
+    if (activeDay.stops.length > 0) return null;
+    if (!dayAnchors.startAnchor?.coordinates || !dayAnchors.endAnchor?.coordinates) return null;
+
+    const fromLat = dayAnchors.startAnchor.coordinates.latitude;
+    const fromLng = dayAnchors.startAnchor.coordinates.longitude;
+    const toLat = dayAnchors.endAnchor.coordinates.latitude;
+    const toLng = dayAnchors.endAnchor.coordinates.longitude;
+
+    const distanceKm = computeDistanceKm(fromLat, fromLng, toLat, toLng);
+    const key = `${dayAnchors.startAnchor.id}->${dayAnchors.endAnchor.id}`;
+    const mode = transitModes[key] || 'drive';
+    const durationMinutes = estimateDurationMins(distanceKm, mode);
+
+    return {
+      fromStopId: dayAnchors.startAnchor.id,
+      toStopId: dayAnchors.endAnchor.id,
+      mode,
+      distanceKm,
+      durationMinutes,
+      isOutlier: durationMinutes > 45 || distanceKm > 20,
+    };
+  }, [dayAnchors.startAnchor, dayAnchors.endAnchor, activeDay.stops.length, transitModes]);
+
   // Filter flights scheduled on the active itinerary day (from both trip.flights and documents)
   const dayFlights = useMemo(() => {
     const docFlights: Flight[] = (trip?.documents || [])
@@ -291,22 +357,7 @@ export function App() {
     });
   }, [trip?.flights, trip?.documents, trip?.startDate, activeDay.dateStr, activeDayIdx]);
 
-  // Filter booked activity, theme park passes, and timed event tickets for active day
-  const dayActivityTickets = useMemo(() => {
-    if (!trip?.documents || trip.documents.length === 0) return [];
-    return trip.documents.filter((d) => {
-      if (d.category !== 'activity' && d.category !== 'doc') return false;
-      if (!d.date) return false;
-      const normalizedDocDate = d.date.trim();
-      const normalizedDayDate = activeDay.dateStr.replace(/^[A-Za-z]+,\s*/, '').trim();
-      const normalizedStartDate = (trip.startDate || '').trim();
-      return (
-        normalizedDocDate === activeDay.dateStr ||
-        normalizedDocDate === normalizedDayDate ||
-        (activeDayIdx === 0 && normalizedDocDate === normalizedStartDate)
-      );
-    });
-  }, [trip?.documents, activeDay.dateStr, trip?.startDate, activeDayIdx]);
+
 
   const activeDayHoliday = useMemo(() => {
     if (!trip?.startDate) return undefined;
@@ -331,16 +382,112 @@ export function App() {
 
   // Document & Hotel/Activity Voucher Handlers
   const handleAddDocument = useCallback((doc: BookingDocument) => {
-    setTrip((prev) => ({
-      ...prev,
-      documents: [doc, ...(prev.documents || [])],
-    }));
+    setTrip((prev) => {
+      const newDocs = [doc, ...(prev.documents || [])];
+
+      // Auto-placement logic for events and activities:
+      // "and also event that dosent have place fixed dont add it in itinary or add it if there is place and time both on appropriate place and if no time add last on the day before hotel but can be movable"
+      if ((doc.category === 'activity' || doc.category === 'doc') && doc.date) {
+        const hasFixedPlace = Boolean(
+          (doc.coordinates && (doc.coordinates.latitude !== 0 || doc.coordinates.longitude !== 0)) ||
+          (doc.location && doc.location.trim().length > 0)
+        );
+
+        if (hasFixedPlace) {
+          const docDateTrimmed = doc.date.trim();
+          const dayIdx = prev.days.findIndex((d) => {
+            const normalizedDayDate = d.dateStr.replace(/^[A-Za-z]+,\s*/, '').trim();
+            return (
+              d.dateStr === docDateTrimmed ||
+              normalizedDayDate === docDateTrimmed ||
+              docDateTrimmed.includes(d.dateStr) ||
+              d.dateStr.includes(docDateTrimmed)
+            );
+          });
+
+          if (dayIdx !== -1) {
+            const targetDay = prev.days[dayIdx];
+            const existingStops = targetDay.stops || [];
+
+            const alreadyExists = existingStops.some(
+              (s) =>
+                s.documentId === doc.id ||
+                (doc.confirmationCode && s.bookingRef === doc.confirmationCode) ||
+                s.title.toLowerCase() === doc.title.toLowerCase()
+            );
+
+            if (!alreadyExists) {
+              const newStop: ItineraryStop = {
+                id: `stop_${doc.id}`,
+                documentId: doc.id,
+                title: doc.title,
+                subtitle: doc.subtitle || (doc.ticketCount ? `${doc.ticketCount} Tickets · Booked Event` : 'Booked Event'),
+                category: 'sight',
+                startTime: doc.time || (existingStops.length > 0 ? getNextSuggestedStartTime(existingStops, prev.startTime || '09:00 AM') : '10:00 AM'),
+                durationMinutes: 90,
+                coordinates: doc.coordinates || targetDay.stops?.[targetDay.stops.length - 1]?.coordinates || { latitude: 0, longitude: 0 },
+                address: doc.location || 'Location confirmed',
+                bookingRef: doc.confirmationCode,
+                notes: doc.notes,
+                orderIndex: existingStops.length + 1,
+              };
+
+              let updatedStops: ItineraryStop[];
+
+              if (doc.time) {
+                // Has place and time both: insert at appropriate place sorted by time
+                const docTimeMins = parseTimeToMinutes(doc.time);
+                const insertIdx = existingStops.findIndex((s) => {
+                  if (s.category === 'note') return false;
+                  return parseTimeToMinutes(s.startTime) > docTimeMins;
+                });
+                if (insertIdx === -1) {
+                  updatedStops = [...existingStops, newStop];
+                } else {
+                  updatedStops = [
+                    ...existingStops.slice(0, insertIdx),
+                    newStop,
+                    ...existingStops.slice(insertIdx),
+                  ];
+                }
+              } else {
+                // Has place but no time: add last on the day before hotel but can be movable
+                updatedStops = [...existingStops, newStop];
+              }
+
+              updatedStops = updatedStops.map((s, idx) => ({ ...s, orderIndex: idx + 1 }));
+
+              const updatedDays = [...prev.days];
+              updatedDays[dayIdx] = {
+                ...targetDay,
+                stops: updatedStops,
+              };
+
+              return {
+                ...prev,
+                documents: newDocs,
+                days: updatedDays,
+              };
+            }
+          }
+        }
+      }
+
+      return {
+        ...prev,
+        documents: newDocs,
+      };
+    });
   }, [setTrip]);
 
   const handleDeleteDocument = useCallback((id: string) => {
     setTrip((prev) => ({
       ...prev,
       documents: (prev.documents || []).filter((d) => d.id !== id),
+      days: prev.days.map((day) => ({
+        ...day,
+        stops: (day.stops || []).filter((s) => s.documentId !== id),
+      })),
     }));
   }, [setTrip]);
 
@@ -365,79 +512,6 @@ export function App() {
       ...prev,
       expenses: prev.expenses.filter((e) => e.id !== id),
     }));
-  }, [setTrip]);
-
-  const handleAddTraveler = useCallback((value: string) => {
-    const name = value.trim();
-    if (!name) return;
-
-    setTrip((prev) => {
-      const travelers = getTripTravelerNames(prev);
-      if (travelers.some((traveler) => traveler.toLowerCase() === name.toLowerCase())) return prev;
-
-      return {
-        ...prev,
-        travelers: [...travelers, name],
-        expenses: prev.expenses.map((expense) =>
-          expense.splitWith?.length ? expense : { ...expense, splitWith: travelers }
-        ),
-      };
-    });
-  }, [setTrip]);
-
-  const handleRenameTraveler = useCallback((oldName: string, value: string) => {
-    const newName = value.trim();
-    if (!newName) return;
-
-    setTrip((prev) => {
-      const travelers = getTripTravelerNames(prev);
-      if (
-        !travelers.includes(oldName) ||
-        travelers.some((traveler) => traveler !== oldName && traveler.toLowerCase() === newName.toLowerCase())
-      ) return prev;
-
-      return {
-        ...prev,
-        travelers: travelers.map((traveler) => traveler === oldName ? newName : traveler),
-        expenses: prev.expenses.map((expense) => {
-          const splitWith = expense.splitWith?.length ? expense.splitWith : travelers;
-          return {
-            ...expense,
-            paidBy: expense.paidBy === oldName ? newName : expense.paidBy,
-            splitWith: splitWith.map((traveler) => traveler === oldName ? newName : traveler),
-          };
-        }),
-        flights: prev.flights.map((flight) =>
-          flight.passengerName === oldName ? { ...flight, passengerName: newName } : flight
-        ),
-        documents: (prev.documents || []).map((document) =>
-          ({
-            ...document,
-            passengerOrGuestName: document.passengerOrGuestName === oldName
-              ? newName
-              : document.passengerOrGuestName,
-            flightData: document.flightData?.passengerName === oldName
-              ? { ...document.flightData, passengerName: newName }
-              : document.flightData,
-          })
-        ),
-      };
-    });
-  }, [setTrip]);
-
-  const handleRemoveTraveler = useCallback((name: string) => {
-    setTrip((prev) => {
-      const travelers = getTripTravelerNames(prev);
-      if (!travelers.includes(name)) return prev;
-
-      return {
-        ...prev,
-        travelers: travelers.filter((traveler) => traveler !== name),
-        expenses: prev.expenses.map((expense) =>
-          expense.splitWith?.length ? expense : { ...expense, splitWith: travelers }
-        ),
-      };
-    });
   }, [setTrip]);
 
   // Stop CRUD Handlers (Feature F4, Bug 4 & 5)
@@ -1292,22 +1366,30 @@ export function App() {
                     </div>
                   )}
 
-                  {/* Itinerary Stream with Distance Connectors, Inbound Flights, and Activity Tickets */}
+                  {/* Itinerary Stream with Distance Connectors, Inbound Flights */}
                   <div className="itinerary-stream">
+                    {/* Distance from Starting Hotel Anchor to First Location */}
+                    {startAnchorLeg && (
+                      <DistancePill
+                        leg={startAnchorLeg}
+                        onToggleMode={handleToggleMode}
+                      />
+                    )}
+
+                    {/* Direct Distance between Starting and Ending Hotels (0 stops transition) */}
+                    {directTransitionLeg && (
+                      <DistancePill
+                        leg={directTransitionLeg}
+                        onToggleMode={handleToggleMode}
+                      />
+                    )}
+
                     {/* Airplane / Flight Ticket Integration in Itinerary */}
                     {dayFlights.length > 0 && (
                       <TimelineFlightCard
                         flights={dayFlights}
                         themeColor={activeDay.themeColor}
                         onViewFlightsTab={() => setActiveTab('flights')}
-                      />
-                    )}
-
-                    {/* Auto-Populated Event / Theme Park Passes in Itinerary */}
-                    {dayActivityTickets.length > 0 && (
-                      <TimelineActivityTicketCard
-                        tickets={dayActivityTickets}
-                        onViewBookingsTab={() => setActiveTab('flights')}
                       />
                     )}
 
@@ -1388,29 +1470,16 @@ export function App() {
                             <FileText size={14} className="text-amber" />
                             <span>+ Note</span>
                           </button>
-                          <button
-                            className="timeline-action-pill"
-                            onClick={() => handleOpenAddStop('lodging')}
-                          >
-                            <Hotel size={14} className="text-blue" />
-                            <span>+ Hotel</span>
-                          </button>
-                          <button
-                            className="timeline-action-pill"
-                            onClick={() => handleOpenAddStop('flight')}
-                          >
-                            <Plane size={14} className="text-emerald" />
-                            <span>+ Flight</span>
-                          </button>
-                          <button
-                            className="timeline-action-pill"
-                            onClick={() => setActiveTab('flights')}
-                          >
-                            <Ticket size={14} className="text-pink" />
-                            <span>+ Ticket</span>
-                          </button>
                         </div>
                       </div>
+                    )}
+
+                    {/* Distance from Last Location to Ending Hotel Anchor */}
+                    {endAnchorLeg && (
+                      <DistancePill
+                        leg={endAnchorLeg}
+                        onToggleMode={handleToggleMode}
+                      />
                     )}
 
                     {/* Wanderlog Daily Ending Point Anchor */}
@@ -1482,7 +1551,7 @@ export function App() {
                       </div>
                     )}
 
-                    {/* + Add Place / Note / Hotel / Flight / Ticket Multi-Action Bar */}
+                    {/* + Add Place / Note Actions Bar */}
                     {activeDay.stops.length > 0 && (
                       <div className="timeline-actions-bar">
                         <button
@@ -1501,33 +1570,6 @@ export function App() {
                         >
                           <FileText size={14} className="text-amber" />
                           <span>+ Note</span>
-                        </button>
-
-                        <button
-                          className="timeline-action-pill"
-                          onClick={() => handleOpenAddStop('lodging')}
-                          title="Search and add hotel, accommodation, or lodging"
-                        >
-                          <Hotel size={14} className="text-blue" />
-                          <span>+ Hotel</span>
-                        </button>
-
-                        <button
-                          className="timeline-action-pill"
-                          onClick={() => handleOpenAddStop('flight')}
-                          title="Schedule a flight, airport transit, or arrival"
-                        >
-                          <Plane size={14} className="text-emerald" />
-                          <span>+ Flight</span>
-                        </button>
-
-                        <button
-                          className="timeline-action-pill"
-                          onClick={() => setActiveTab('flights')}
-                          title="Manage bookings, passes and theme park tickets"
-                        >
-                          <Ticket size={14} className="text-pink" />
-                          <span>+ Ticket</span>
                         </button>
                       </div>
                     )}
@@ -1581,12 +1623,8 @@ export function App() {
                 expenses={trip.expenses}
                 baseCurrency={trip.baseCurrency}
                 homeCurrency={trip.homeCurrency}
-                travelers={tripTravelerNames}
                 onAddExpense={handleAddExpense}
                 onDeleteExpense={handleDeleteExpense}
-                onAddTraveler={handleAddTraveler}
-                onRenameTraveler={handleRenameTraveler}
-                onRemoveTraveler={handleRemoveTraveler}
               />
             </main>
           )}
