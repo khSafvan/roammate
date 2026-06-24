@@ -10,6 +10,7 @@ import {
   Receipt,
   Settings,
   Share2,
+  Shirt,
   Ticket,
 } from 'lucide-react';
 import { VaultSession } from '../auth/crypto';
@@ -24,10 +25,11 @@ interface HeaderProps {
   activeSession: VaultSession | null;
   tripsCount?: number;
   currentView?: 'trips_list' | 'trip_detail' | 'trip_settings';
-  activeTab?: 'timeline' | 'flights' | 'expenses';
+  activeTab?: 'timeline' | 'flights' | 'expenses' | 'outfits';
   flightsCount?: number;
   expensesCount?: number;
-  onSelectTab?: (tab: 'timeline' | 'flights' | 'expenses') => void;
+  looksCount?: number;
+  onSelectTab?: (tab: 'timeline' | 'flights' | 'expenses' | 'outfits') => void;
   onNavigateView?: (view: 'trips_list' | 'trip_detail' | 'trip_settings') => void;
   onOpenTripManager?: () => void;
   onOpenReadiness: () => void;
@@ -51,6 +53,7 @@ export const Header: React.FC<HeaderProps> = ({
   activeTab = 'timeline',
   flightsCount = 0,
   expensesCount = 0,
+  looksCount = 0,
   onSelectTab,
   onNavigateView,
   onOpenTripManager,
@@ -154,6 +157,20 @@ export const Header: React.FC<HeaderProps> = ({
                 <span>Expenses</span>
                 {expensesCount > 0 && (
                   <span className="nav-counter-pill">{expensesCount}</span>
+                )}
+              </button>
+
+              <button
+                type="button"
+                role="tab"
+                aria-selected={activeTab === 'outfits'}
+                className={`header-tab-btn ${activeTab === 'outfits' ? 'active' : ''}`}
+                onClick={() => onSelectTab('outfits')}
+              >
+                <Shirt size={14} />
+                <span>Outfits &amp; Packing</span>
+                {looksCount > 0 && (
+                  <span className="nav-counter-pill">{looksCount}</span>
                 )}
               </button>
             </nav>
