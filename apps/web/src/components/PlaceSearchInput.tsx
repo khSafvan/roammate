@@ -19,10 +19,13 @@ export interface PlaceSearchResult {
 }
 
 export function inferCategoryFromOsm(item: any): StopCategory {
+  if (item.class === 'aeroway' || item.type === 'aerodrome' || item.address?.aeroway) {
+    return 'flight';
+  }
   const inference = inferPlaceCategory({
     name: item.name || item.display_name?.split(',')[0],
     title: item.display_name?.split(',')[0],
-    address: item.display_name,
+    address: typeof item.address === 'string' ? item.address : item.display_name,
     osmClass: item.class,
     osmType: item.type,
   });

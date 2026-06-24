@@ -19,6 +19,8 @@ export interface ItineraryStop {
   address: string;
   bookingRef?: string;
   hasTicket?: boolean;
+  documentId?: string;
+  ticketCount?: number;
   notes?: string;
   isAnchor?: boolean; // Morning/night anchor (e.g. hotel)
   openTime?: string; // e.g. "09:00 AM" (opening hours)
@@ -146,8 +148,8 @@ export interface Expense {
   category: ExpenseCategory;
   amount: number;
   currency: string;
-  paidBy: string;
-  splitWith?: string[]; // Array of participant names (defaults to all travelers if omitted or empty)
+  paidBy?: string;
+  splitWith?: string[];
   notes?: string;
   isSettlement?: boolean; // Marker for debt settlement reimbursement transactions
 }
@@ -206,7 +208,7 @@ export interface Trip {
   homeCurrency?: string;  // user's home currency for live conversion
   shareToken?: string;
   readinessScore: number;
-  travelers?: string[];
+  travelers?: string[];   // Preserved specifically for future outfit / wardrobe planning logic
   flights: Flight[];
   documents?: BookingDocument[];
   days: TripDay[];

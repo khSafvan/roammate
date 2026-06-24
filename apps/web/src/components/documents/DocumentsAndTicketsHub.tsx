@@ -17,7 +17,6 @@ import {
   Train,
   Trash2,
   User,
-  Users,
   X,
 } from 'lucide-react';
 import { BookingDocument, Flight, ReservationCategory } from '../../types/trip';
@@ -43,7 +42,6 @@ export const DocumentsAndTicketsHub: React.FC<DocumentsAndTicketsHubProps> = ({
 }) => {
   const [activePillar, setActivePillar] = useState<'all' | 'stays' | 'transport' | 'activities'>('all');
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedCompanion, setSelectedCompanion] = useState<string>('all');
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   // New Reservation Form State
@@ -90,18 +88,6 @@ export const DocumentsAndTicketsHub: React.FC<DocumentsAndTicketsHubProps> = ({
     }
   };
 
-  // Extract companions across flights & documents
-  const companionNames = useMemo(() => {
-    const set = new Set<string>();
-    flights.forEach((f) => {
-      if (f.passengerName) set.add(f.passengerName);
-    });
-    documents.forEach((d) => {
-      if (d.passengerOrGuestName) set.add(d.passengerOrGuestName);
-    });
-    return Array.from(set);
-  }, [flights, documents]);
-
   // Counts by category
   const counts = useMemo(() => {
     const hotels = documents.filter((d) => d.category === 'hotel').length;
@@ -125,11 +111,6 @@ export const DocumentsAndTicketsHub: React.FC<DocumentsAndTicketsHubProps> = ({
     } else if (activePillar === 'activities') {
       result = result.filter((d) => d.category === 'activity' || d.category === 'doc');
     }
-    if (selectedCompanion !== 'all') {
-      result = result.filter(
-        (d) => d.passengerOrGuestName && d.passengerOrGuestName.includes(selectedCompanion)
-      );
-    }
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase();
       result = result.filter(
@@ -141,15 +122,12 @@ export const DocumentsAndTicketsHub: React.FC<DocumentsAndTicketsHubProps> = ({
       );
     }
     return result;
-  }, [documents, activePillar, selectedCompanion, searchQuery]);
+  }, [documents, activePillar, searchQuery]);
 
   // Filtered flights
   const filteredFlights = useMemo(() => {
     if (activePillar === 'stays' || activePillar === 'activities') return [];
     let result = flights;
-    if (selectedCompanion !== 'all') {
-      result = result.filter((f) => f.passengerName === selectedCompanion);
-    }
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase();
       result = result.filter(
@@ -162,7 +140,7 @@ export const DocumentsAndTicketsHub: React.FC<DocumentsAndTicketsHubProps> = ({
       );
     }
     return result;
-  }, [flights, activePillar, selectedCompanion, searchQuery]);
+  }, [flights, activePillar, searchQuery]);
 
   const handleModalSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -320,31 +298,6 @@ export const DocumentsAndTicketsHub: React.FC<DocumentsAndTicketsHubProps> = ({
             </button>
           )}
         </div>
-
-        {companionNames.length > 0 && (
-          <div className="travelers-chip-group">
-            <span className="travelers-label">
-              <Users size={12} />
-              <span>Traveler:</span>
-            </span>
-            <button
-              className={`traveler-filter-chip ${selectedCompanion === 'all' ? 'active' : ''}`}
-              onClick={() => setSelectedCompanion('all')}
-            >
-              All
-            </button>
-            {companionNames.map((name) => (
-              <button
-                key={name}
-                className={`traveler-filter-chip ${selectedCompanion === name ? 'active' : ''}`}
-                onClick={() => setSelectedCompanion(name)}
-              >
-                <User size={10} />
-                <span>{name}</span>
-              </button>
-            ))}
-          </div>
-        )}
       </div>
 
       {/* Vault Grid */}
