@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   BedDouble,
   ChevronDown,
@@ -13,10 +13,14 @@ import {
   Lock,
   MapPin,
   Plane,
+  Shirt,
   UtensilsCrossed,
 } from 'lucide-react';
+import { DayWeather, Look } from '@mojolog/shared';
+import { ApiClient } from '@mojolog/api-client';
 import { ItineraryStop, StopCategory } from '../types/trip';
 import { MarkdownText } from './MarkdownText';
+import { LookCard } from './outfits/LookCard';
 
 interface TimelineCardProps {
   stop: ItineraryStop;
@@ -24,6 +28,12 @@ interface TimelineCardProps {
   isSelected?: boolean;
   index?: number;
   totalStops?: number;
+  look?: Look;
+  tripId?: string;
+  person1Name?: string;
+  person2Name?: string;
+  weather?: DayWeather;
+  apiClient?: ApiClient | null;
   onSelect: (stop: ItineraryStop) => void;
   onEdit?: (stop: ItineraryStop) => void;
   onMoveUp?: () => void;
@@ -33,6 +43,8 @@ interface TimelineCardProps {
   onDragLeave?: (e: React.DragEvent) => void;
   onDragEnd?: (e: React.DragEvent) => void;
   onDrop?: (e: React.DragEvent) => void;
+  onSaveLook?: (look: Look) => void;
+  onDeleteLook?: (lookId: string) => void;
   isDragging?: boolean;
   isDragOver?: boolean;
 }
@@ -59,6 +71,12 @@ export const TimelineCard = React.memo<TimelineCardProps>(function TimelineCard(
   isSelected,
   index,
   totalStops,
+  look,
+  tripId,
+  person1Name,
+  person2Name,
+  weather,
+  apiClient,
   onSelect,
   onEdit,
   onMoveUp,
@@ -68,9 +86,13 @@ export const TimelineCard = React.memo<TimelineCardProps>(function TimelineCard(
   onDragLeave,
   onDragEnd,
   onDrop,
+  onSaveLook,
+  onDeleteLook,
   isDragging,
   isDragOver,
 }) {
+  const [isLookbookOpen, setIsLookbookOpen] = useState(false);
+
   const reorderControls = totalStops && totalStops > 1 ? (
     <div className="card-reorder-actions" onClick={(e) => e.stopPropagation()}>
       <span className="card-drag-grip" title="Drag to reorder" aria-label="Drag handle">
@@ -226,6 +248,44 @@ export const TimelineCard = React.memo<TimelineCardProps>(function TimelineCard(
                 </span>
               )}
 
+              {/* Couple Outfit Lookbook Trigger */}
+              <button
+                type="button"
+                className={`stop-look-trigger-btn ${look ? 'has-look' : ''}`}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setIsLookbookOpen((prev) => !prev);
+                }}
+                title={look ? 'View & Edit Coordinated Look' : 'Attach Outfit Look'}
+                aria-expanded={isLookbookOpen}
+              >
+                {look &&
+                (look.person1Cutout ||
+                  look.person1Original ||
+                  look.person2Cutout ||
+                  look.person2Original) ? (
+                  <span className="stop-look-dual-thumb">
+                    {(look.person1Cutout || look.person1Original) && (
+                      <img
+                        src={look.person1Cutout || look.person1Original}
+                        alt=""
+                        className="mini-thumb"
+                      />
+                    )}
+                    {(look.person2Cutout || look.person2Original) && (
+                      <img
+                        src={look.person2Cutout || look.person2Original}
+                        alt=""
+                        className="mini-thumb"
+                      />
+                    )}
+                  </span>
+                ) : (
+                  <Shirt size={12} strokeWidth={2} />
+                )}
+                <span>{look ? 'Look' : '+ Outfit'}</span>
+              </button>
+
               {onEdit && (
                 <button
                   type="button"
@@ -264,6 +324,27 @@ export const TimelineCard = React.memo<TimelineCardProps>(function TimelineCard(
                 <span className="card-ref-badge">REF: {stop.bookingRef}</span>
               )}
             </div>
+
+            {/* Inline Lookbook Accordion */}
+            {isLookbookOpen && (
+              <div className="lookbook-accordion" onClick={(e) => e.stopPropagation()}>
+                <LookCard
+                  look={look}
+                  tripId={tripId || ''}
+                  eventId={stop.id}
+                  person1Name={person1Name}
+                  person2Name={person2Name}
+                  weather={weather}
+                  apiClient={apiClient}
+                  onSaveLook={(savedLook) => onSaveLook?.(savedLook)}
+                  onDeleteLook={(lookId) => {
+                    onDeleteLook?.(lookId);
+                    setIsLookbookOpen(false);
+                  }}
+                  onClose={() => setIsLookbookOpen(false)}
+                />
+              </div>
+            )}
           </div>
         </div>
       </div>
