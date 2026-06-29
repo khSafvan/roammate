@@ -7,6 +7,7 @@ import {
   Map as MapIcon,
   Plus,
   RotateCcw,
+  Shirt,
   Sparkles,
   Trash2,
   Zap,
@@ -32,6 +33,7 @@ import { TripManagerModal } from './components/TripManagerModal';
 import { TripsListPage } from './components/trips/TripsListPage';
 import { TripSettingsPage } from './components/trips/TripSettingsPage';
 import { WeatherBanner } from './components/WeatherBanner';
+import { OutfitModal } from './components/outfits/OutfitModal';
 import { PackingView } from './components/outfits/PackingView';
 import { apiClient } from './auth/syncService';
 import { BookingDocument, Expense, Flight, ItineraryStop, Look, PackingCategory, PackingItem, StopCategory, TransitLeg, Trip, TripDay } from './types/trip';
@@ -85,6 +87,21 @@ export function App() {
     setAddStopCategory(cat);
     setIsAddStopModalOpen(true);
   }, []);
+
+  const [isOutfitModalOpen, setIsOutfitModalOpen] = useState(false);
+  const [outfitModalDay, setOutfitModalDay] = useState(1);
+  const [outfitModalEventId, setOutfitModalEventId] = useState<string | undefined>(undefined);
+  const [outfitModalEditingLook, setOutfitModalEditingLook] = useState<Look | null>(null);
+
+  const handleOpenOutfitModal = useCallback(
+    (dayNum?: number, eventId?: string, look?: Look | null) => {
+      setOutfitModalDay(dayNum || activeDayIdx + 1);
+      setOutfitModalEventId(eventId);
+      setOutfitModalEditingLook(look || null);
+      setIsOutfitModalOpen(true);
+    },
+    [activeDayIdx]
+  );
   const [isDeleteDayConfirming, setIsDeleteDayConfirming] = useState(false);
   const [mobileView, setMobileView] = useState<'timeline' | 'map'>('timeline');
   const [holidaysByDate, setHolidaysByDate] = useState<Record<string, string>>({});
@@ -1461,6 +1478,13 @@ export function App() {
                           apiClient={apiClient}
                           onSaveLook={handleSaveLook}
                           onDeleteLook={handleDeleteLook}
+                          onOpenOutfitModal={() =>
+                            handleOpenOutfitModal(
+                              activeDay.dayNumber,
+                              stop.id,
+                              looksByEvent.get(stop.id)
+                            )
+                          }
                           onSelect={() => setSelectedStopId(stop.id)}
                           onEdit={(s) => setEditingStop(s)}
                           onMoveUp={() => handleReorderStops(index, index - 1)}
@@ -1529,6 +1553,14 @@ export function App() {
                           >
                             <FileText size={14} className="text-amber" />
                             <span>+ Note</span>
+                          </button>
+                          <button
+                            className="timeline-action-pill"
+                            onClick={() => handleOpenOutfitModal(activeDay.dayNumber)}
+                            title="Attach coordinated couple outfit look for this day"
+                          >
+                            <Shirt size={14} className="text-primary" />
+                            <span>+ Outfit</span>
                           </button>
                         </div>
                       </div>
@@ -1631,6 +1663,15 @@ export function App() {
                           <FileText size={14} className="text-amber" />
                           <span>+ Note</span>
                         </button>
+
+                        <button
+                          className="timeline-action-pill"
+                          onClick={() => handleOpenOutfitModal(activeDay.dayNumber)}
+                          title="Attach coordinated couple outfit look for this day"
+                        >
+                          <Shirt size={14} className="text-primary" />
+                          <span>+ Outfit</span>
+                        </button>
                       </div>
                     )}
                   </div>
@@ -1695,7 +1736,9 @@ export function App() {
               <PackingView
                 trip={trip}
                 looks={trip.looks || []}
+                apiClient={apiClient}
                 onUpdateLook={handleSaveLook}
+                onDeleteLook={handleDeleteLook}
                 onNavigateToDay={(dayNum) => {
                   setActiveDayIdx(dayNum - 1);
                   setActiveTab('timeline');
@@ -1806,6 +1849,20 @@ export function App() {
         onImportSuccess={handleImportSuccess}
         onClose={() => setIsShareModalOpen(false)}
       />
+
+      {isOutfitModalOpen && (
+        <OutfitModal
+          isOpen={isOutfitModalOpen}
+          onClose={() => setIsOutfitModalOpen(false)}
+          trip={trip}
+          initialLook={outfitModalEditingLook}
+          initialDayNumber={outfitModalDay}
+          initialEventId={outfitModalEventId}
+          apiClient={apiClient}
+          onSaveLook={handleSaveLook}
+          onDeleteLook={handleDeleteLook}
+        />
+      )}
     </div>
   );
 }
