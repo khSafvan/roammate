@@ -524,14 +524,17 @@ export const DocumentsAndTicketsHub: React.FC<DocumentsAndTicketsHubProps> = ({
                       color: '#059669',
                       backgroundColor: 'rgba(16, 185, 129, 0.08)',
                       border: '1px solid rgba(16, 185, 129, 0.2)',
-                      padding: '4px 10px',
-                      borderRadius: '12px',
+                      padding: '3px 8px',
+                      borderRadius: '6px',
                       fontWeight: 600,
-                      marginTop: '8px',
+                      marginTop: '6px',
+                      maxWidth: '100%',
                     }}
                   >
-                    <CheckCircle2 size={13} />
-                    <span>Auto-Populated as Daily Start &amp; End Anchors in Itinerary</span>
+                    <CheckCircle2 size={12} className="flex-shrink-0" />
+                    <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      Daily Hotel Stay Anchor
+                    </span>
                   </div>
                 )}
               </div>
@@ -573,9 +576,9 @@ export const DocumentsAndTicketsHub: React.FC<DocumentsAndTicketsHubProps> = ({
           <div
             className="modal-card"
             onClick={(e) => e.stopPropagation()}
-            style={{ maxWidth: '560px' }}
+            style={{ maxWidth: '560px', maxHeight: '90vh', display: 'flex', flexDirection: 'column', padding: 0, overflow: 'hidden' }}
           >
-            <div className="modal-header">
+            <div className="modal-header" style={{ padding: '20px 24px 16px', borderBottom: '1px solid var(--border-subtle)' }}>
               <div className="modal-header-left">
                 <div className="auth-header-icon">
                   <FileCheck size={18} className="text-blue" />
@@ -595,8 +598,9 @@ export const DocumentsAndTicketsHub: React.FC<DocumentsAndTicketsHubProps> = ({
               </button>
             </div>
 
-            <form onSubmit={handleModalSubmit} className="auth-content-col">
-              {/* Category Selector Tabs */}
+            <form onSubmit={handleModalSubmit} style={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0, overflow: 'hidden' }}>
+              <div style={{ padding: '20px 24px', overflowY: 'auto', flex: 1, display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                {/* Category Selector Tabs */}
               <div className="modal-type-tabs">
                 {(['flight', 'hotel', 'activity', 'transit', 'doc'] as ReservationCategory[]).map(
                   (cat) => (
@@ -952,8 +956,9 @@ export const DocumentsAndTicketsHub: React.FC<DocumentsAndTicketsHubProps> = ({
                   onChange={(e) => setNotes(e.target.value)}
                 />
               </div>
+            </div>
 
-              <div className="modal-actions-row mt-3">
+            <div className="modal-actions-row" style={{ padding: '16px 24px', borderTop: '1px solid var(--border-subtle)', background: 'var(--bg-card)', marginTop: 0 }}>
                 <button
                   type="button"
                   className="secondary-action-btn flex-1"

@@ -2,7 +2,6 @@ import React, { Suspense, lazy, useCallback, useEffect, useMemo, useState } from
 import {
   AlertTriangle,
   FileText,
-  Hotel,
   ListFilter,
   Map as MapIcon,
   Plus,
@@ -13,6 +12,7 @@ import {
   Zap,
 } from 'lucide-react';
 import { AddStopModal } from './components/AddStopModal';
+import { AnchorLocationCard } from './components/AnchorLocationCard';
 import { PasscodeAuthModal } from './components/auth';
 import { AuthModal } from './components/AuthModal';
 import { DaySelector } from './components/DaySelector';
@@ -653,6 +653,15 @@ export function App() {
         if (sourceIndex < 0 || sourceIndex >= currentDay.stops.length) return prev;
         if (destinationIndex < 0 || destinationIndex >= currentDay.stops.length) return prev;
 
+        // Fixed Anchor Invariant: anchors at boundary locations cannot be moved or displaced
+        const sourceStop = currentDay.stops[sourceIndex];
+        const destStop = currentDay.stops[destinationIndex];
+        if (sourceStop?.isAnchor) return prev;
+        if (destStop?.isAnchor) return prev;
+        if (destinationIndex === 0 && currentDay.stops[0]?.isAnchor) return prev;
+        const lastIdx = currentDay.stops.length - 1;
+        if (destinationIndex === lastIdx && currentDay.stops[lastIdx]?.isAnchor) return prev;
+
         const newStops = [...currentDay.stops];
         const [movedStop] = newStops.splice(sourceIndex, 1);
         newStops.splice(destinationIndex, 0, movedStop);
@@ -670,6 +679,11 @@ export function App() {
   );
 
   const handleDragStart = (e: React.DragEvent, index: number) => {
+    const currentDay = trip?.days?.[activeDayIdx];
+    if (currentDay?.stops?.[index]?.isAnchor) {
+      e.preventDefault();
+      return;
+    }
     setDraggedStopIdx(index);
     e.dataTransfer.setData('text/plain', String(index));
     e.dataTransfer.effectAllowed = 'move';
@@ -695,7 +709,13 @@ export function App() {
   const handleDrop = (e: React.DragEvent, targetIndex: number) => {
     e.preventDefault();
     const sourceIndex = parseInt(e.dataTransfer.getData('text/plain'), 10);
-    if (!isNaN(sourceIndex) && sourceIndex !== targetIndex) {
+    const currentDay = trip?.days?.[activeDayIdx];
+    if (
+      !isNaN(sourceIndex) &&
+      sourceIndex !== targetIndex &&
+      !currentDay?.stops?.[sourceIndex]?.isAnchor &&
+      !currentDay?.stops?.[targetIndex]?.isAnchor
+    ) {
       handleReorderStops(sourceIndex, targetIndex);
     }
     setDraggedStopIdx(null);
@@ -1076,6 +1096,8 @@ export function App() {
       {currentView === 'trip_settings' && (
         <TripSettingsPage
           trip={trip}
+          activeSession={vaultSession}
+          onOpenAuth={() => setIsAuthOpen(true)}
           onUpdateTrip={handleUpdateTrip}
           onDeleteTrip={(id) => {
             deleteTrip(id);
@@ -1301,139 +1323,25 @@ export function App() {
 
                   {/* Wanderlog Daily Starting Point Anchor */}
                   {dayAnchors.startAnchor ? (
-                    <div
-                      className="stay-base-banner day-anchor-banner start-anchor"
-                      style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'space-between',
-                        backgroundColor: dayAnchors.startAnchor.action === 'check_out' ? 'rgba(239, 68, 68, 0.08)' : 'rgba(59, 130, 246, 0.08)',
-                        border: `1px solid ${dayAnchors.startAnchor.action === 'check_out' ? 'rgba(239, 68, 68, 0.25)' : 'rgba(59, 130, 246, 0.25)'}`,
-                        borderRadius: 'var(--radius-card, 12px)',
-                        padding: '12px 16px',
-                        marginTop: '12px',
-                        marginBottom: '16px',
-                        gap: '12px',
+                    <AnchorLocationCard
+                      anchor={dayAnchors.startAnchor}
+                      type="start"
+                      onNavigateToStay={() => setActiveTab('flights')}
+                    />
+                  ) : effectiveStay ? (
+                    <AnchorLocationCard
+                      anchor={{
+                        id: effectiveStay.stay.id,
+                        title: effectiveStay.stay.title,
+                        address: effectiveStay.stay.address,
+                        time: undefined,
+                        action: effectiveStay.isInherited ? 'depart' : 'check_in',
+                        label: effectiveStay.stay.title,
                       }}
-                    >
-                      <div className="flex items-center gap-3" style={{ flex: 1 }}>
-                        <div
-                          style={{
-                            width: '36px',
-                            height: '36px',
-                            borderRadius: '50%',
-                            backgroundColor: dayAnchors.startAnchor.action === 'check_out' ? '#EF4444' : '#3B82F6',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            color: '#fff',
-                            flexShrink: 0,
-                          }}
-                        >
-                          <Hotel size={18} />
-                        </div>
-                        <div>
-                          <div className="flex items-center gap-2">
-                            <span style={{ fontSize: '14px', fontWeight: 600, color: 'var(--text-primary)' }}>
-                              {dayAnchors.startAnchor.title}
-                            </span>
-                            <span
-                              style={{
-                                fontSize: '11px',
-                                fontWeight: 700,
-                                padding: '2px 8px',
-                                borderRadius: '12px',
-                                backgroundColor: dayAnchors.startAnchor.action === 'check_out' ? 'rgba(239, 68, 68, 0.15)' : 'rgba(59, 130, 246, 0.15)',
-                                color: dayAnchors.startAnchor.action === 'check_out' ? '#DC2626' : '#2563EB',
-                                textTransform: 'uppercase',
-                                letterSpacing: '0.05em',
-                              }}
-                            >
-                              🟢 {dayAnchors.startAnchor.action === 'check_out' ? 'Check-out of Hotel' : 'Starting Point (Base)'}
-                            </span>
-                          </div>
-                          <p style={{ fontSize: '12px', color: 'var(--text-secondary)', margin: '2px 0 0 0' }}>
-                            {dayAnchors.startAnchor.time && <span>Time: {dayAnchors.startAnchor.time} · </span>}
-                            {dayAnchors.startAnchor.address || 'Starting Accommodation Base'}
-                          </p>
-                        </div>
-                      </div>
-                      <button
-                        className="timeline-action-pill"
-                        onClick={() => setActiveTab('flights')}
-                        style={{ fontSize: '12px', padding: '6px 12px', flexShrink: 0 }}
-                      >
-                        <span>Hotel Stay</span>
-                      </button>
-                    </div>
-                  ) : effectiveStay && (
-                    <div
-                      className="stay-base-banner"
-                      style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'space-between',
-                        backgroundColor: effectiveStay.isInherited ? 'rgba(59, 130, 246, 0.08)' : 'rgba(16, 185, 129, 0.08)',
-                        border: `1px solid ${effectiveStay.isInherited ? 'rgba(59, 130, 246, 0.25)' : 'rgba(16, 185, 129, 0.25)'}`,
-                        borderRadius: 'var(--radius-card)',
-                        padding: '12px 16px',
-                        marginTop: '12px',
-                        marginBottom: '16px',
-                        gap: '12px',
-                      }}
-                    >
-                      <div className="flex items-center gap-3" style={{ flex: 1 }}>
-                        <div
-                          style={{
-                            width: '36px',
-                            height: '36px',
-                            borderRadius: '50%',
-                            backgroundColor: effectiveStay.isInherited ? '#3B82F6' : '#10B981',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            color: '#fff',
-                            flexShrink: 0,
-                          }}
-                        >
-                          <Hotel size={18} />
-                        </div>
-                        <div>
-                          <div className="flex items-center gap-2">
-                            <span style={{ fontSize: '14px', fontWeight: 600, color: 'var(--text-primary)' }}>
-                              {effectiveStay.stay.title}
-                            </span>
-                            <span
-                              style={{
-                                fontSize: '11px',
-                                fontWeight: 600,
-                                padding: '2px 8px',
-                                borderRadius: '12px',
-                                backgroundColor: effectiveStay.isInherited ? 'rgba(59, 130, 246, 0.15)' : 'rgba(16, 185, 129, 0.15)',
-                                color: effectiveStay.isInherited ? '#2563EB' : '#059669',
-                                textTransform: 'uppercase',
-                                letterSpacing: '0.05em',
-                              }}
-                            >
-                              {effectiveStay.isInherited ? 'Active Stay (Base)' : 'Check-in Anchor'}
-                            </span>
-                          </div>
-                          {effectiveStay.stay.address && (
-                            <p style={{ fontSize: '12px', color: 'var(--text-secondary)', margin: '2px 0 0 0' }}>
-                              {effectiveStay.stay.address}
-                            </p>
-                          )}
-                        </div>
-                      </div>
-                      <button
-                        className="timeline-action-pill"
-                        onClick={() => handleOpenAddStop('lodging')}
-                        style={{ fontSize: '12px', padding: '6px 12px', flexShrink: 0 }}
-                      >
-                        <span>{effectiveStay.isInherited ? 'Change Hotel' : 'Edit Stay'}</span>
-                      </button>
-                    </div>
-                  )}
+                      type="start"
+                      onNavigateToStay={() => handleOpenAddStop('lodging')}
+                    />
+                  ) : null}
 
                   {/* Itinerary Stream with Distance Connectors, Inbound Flights */}
                   <div className="itinerary-stream">
@@ -1498,23 +1406,16 @@ export function App() {
                           onDrop={(e) => handleDrop(e, index)}
                         />
 
-                        {/* Distance & Transit duration connector or spacer for notes */}
-                        {index < activeDay.stops.length - 1 && (
+                        {/* Distance & Transit duration connector */}
+                        {index < activeDay.stops.length - 1 &&
                           index < transitLegs.length &&
                           stop.category !== 'note' &&
-                          activeDay.stops[index + 1]?.category !== 'note' ? (
+                          activeDay.stops[index + 1]?.category !== 'note' && (
                             <DistancePill
                               leg={transitLegs[index]}
                               onToggleMode={handleToggleMode}
                               conflict={activeDayScheduleConflicts[index]}
                             />
-                          ) : (
-                            <div className="distance-connector-track spine-spacer" aria-hidden="true">
-                              <div className="track-spine-node">
-                                <div className="track-spine-dash" />
-                              </div>
-                            </div>
-                          )
                         )}
                       </React.Fragment>
                     ))}
@@ -1576,71 +1477,11 @@ export function App() {
 
                     {/* Wanderlog Daily Ending Point Anchor */}
                     {dayAnchors.endAnchor && (
-                      <div
-                        className="stay-base-banner day-anchor-banner end-anchor"
-                        style={{
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'space-between',
-                          backgroundColor: dayAnchors.endAnchor.action === 'check_in' ? 'rgba(16, 185, 129, 0.08)' : 'rgba(59, 130, 246, 0.08)',
-                          border: `1px solid ${dayAnchors.endAnchor.action === 'check_in' ? 'rgba(16, 185, 129, 0.25)' : 'rgba(59, 130, 246, 0.25)'}`,
-                          borderRadius: 'var(--radius-card, 12px)',
-                          padding: '12px 16px',
-                          marginTop: '16px',
-                          marginBottom: '16px',
-                          gap: '12px',
-                        }}
-                      >
-                        <div className="flex items-center gap-3" style={{ flex: 1 }}>
-                          <div
-                            style={{
-                              width: '36px',
-                              height: '36px',
-                              borderRadius: '50%',
-                              backgroundColor: dayAnchors.endAnchor.action === 'check_in' ? '#10B981' : '#3B82F6',
-                              display: 'flex',
-                              alignItems: 'center',
-                              justifyContent: 'center',
-                              color: '#fff',
-                              flexShrink: 0,
-                            }}
-                          >
-                            <Hotel size={18} />
-                          </div>
-                          <div>
-                            <div className="flex items-center gap-2">
-                              <span style={{ fontSize: '14px', fontWeight: 600, color: 'var(--text-primary)' }}>
-                                {dayAnchors.endAnchor.title}
-                              </span>
-                              <span
-                                style={{
-                                  fontSize: '11px',
-                                  fontWeight: 700,
-                                  padding: '2px 8px',
-                                  borderRadius: '12px',
-                                  backgroundColor: dayAnchors.endAnchor.action === 'check_in' ? 'rgba(16, 185, 129, 0.15)' : 'rgba(59, 130, 246, 0.15)',
-                                  color: dayAnchors.endAnchor.action === 'check_in' ? '#059669' : '#2563EB',
-                                  textTransform: 'uppercase',
-                                  letterSpacing: '0.05em',
-                                }}
-                              >
-                                🏁 {dayAnchors.endAnchor.action === 'check_in' ? 'Check-in to Hotel' : 'Ending Point (Return Base)'}
-                              </span>
-                            </div>
-                            <p style={{ fontSize: '12px', color: 'var(--text-secondary)', margin: '2px 0 0 0' }}>
-                              {dayAnchors.endAnchor.time && <span>Time: {dayAnchors.endAnchor.time} · </span>}
-                              {dayAnchors.endAnchor.address || 'Evening Hotel Return Base'}
-                            </p>
-                          </div>
-                        </div>
-                        <button
-                          className="timeline-action-pill"
-                          onClick={() => setActiveTab('flights')}
-                          style={{ fontSize: '12px', padding: '6px 12px', flexShrink: 0 }}
-                        >
-                          <span>Hotel Stay</span>
-                        </button>
-                      </div>
+                      <AnchorLocationCard
+                        anchor={dayAnchors.endAnchor}
+                        type="end"
+                        onNavigateToStay={() => setActiveTab('flights')}
+                      />
                     )}
 
                     {/* + Add Place / Note Actions Bar */}

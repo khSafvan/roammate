@@ -226,7 +226,9 @@ export interface Trip {
 export interface Look {
   id: string;
   tripId: string;
-  eventId: string; // references ItineraryStop.id or day anchor
+  eventId: string; // references ItineraryStop.id or day anchor / day identifier
+  dayNumber?: number; // 1-indexed day of the trip
+  title?: string; // e.g. "Evening Dinner", "Beach Resort", "Casual Day Look"
   position: number;
   person1Original?: string;
   person1Cutout?: string;
