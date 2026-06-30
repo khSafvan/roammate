@@ -124,4 +124,32 @@ describe('Couple Outfit Planner Data Model & State', () => {
     expect(remainingLooks).toHaveLength(1);
     expect(remainingLooks[0].eventId).toBe('stop_bistro');
   });
+
+  it('supports general day-level looks with titles and dayNumber', () => {
+    const dayLook: Look = {
+      id: 'look_day1_general',
+      tripId: 'trip_101',
+      eventId: 'day_1',
+      dayNumber: 1,
+      title: 'Casual Parisian Stroll',
+      position: 2,
+      person1Original: 'https://r2.mojolog.com/outfits/p1_casual.webp',
+      person1Label: 'Beige Trench & Sneakers',
+      person1UseCutout: true,
+      person2Original: 'https://r2.mojolog.com/outfits/p2_casual.webp',
+      person2Label: 'Denim Jacket & Chinos',
+      person2UseCutout: true,
+      packed: false,
+      createdAt: 1700000020000,
+      updatedAt: 1700000020000,
+    };
+
+    const allLooks = [...sampleTrip.looks!, dayLook];
+    const day1Looks = allLooks.filter((l) => l.dayNumber === 1 || l.eventId === 'day_1' || l.eventId === 'stop_eiffel' || l.eventId === 'stop_bistro');
+
+    expect(day1Looks).toHaveLength(3);
+    expect(dayLook.title).toBe('Casual Parisian Stroll');
+    expect(dayLook.dayNumber).toBe(1);
+  });
 });
+

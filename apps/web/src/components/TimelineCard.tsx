@@ -45,6 +45,7 @@ interface TimelineCardProps {
   onDrop?: (e: React.DragEvent) => void;
   onSaveLook?: (look: Look) => void;
   onDeleteLook?: (lookId: string) => void;
+  onOpenOutfitModal?: () => void;
   isDragging?: boolean;
   isDragOver?: boolean;
 }
@@ -88,6 +89,7 @@ export const TimelineCard = React.memo<TimelineCardProps>(function TimelineCard(
   onDrop,
   onSaveLook,
   onDeleteLook,
+  onOpenOutfitModal,
   isDragging,
   isDragOver,
 }) {
@@ -254,7 +256,11 @@ export const TimelineCard = React.memo<TimelineCardProps>(function TimelineCard(
                 className={`stop-look-trigger-btn ${look ? 'has-look' : ''}`}
                 onClick={(e) => {
                   e.stopPropagation();
-                  setIsLookbookOpen((prev) => !prev);
+                  if (onOpenOutfitModal) {
+                    onOpenOutfitModal();
+                  } else {
+                    setIsLookbookOpen((prev) => !prev);
+                  }
                 }}
                 title={look ? 'View & Edit Coordinated Look' : 'Attach Outfit Look'}
                 aria-expanded={isLookbookOpen}
