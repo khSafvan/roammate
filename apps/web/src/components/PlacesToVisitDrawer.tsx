@@ -1,19 +1,17 @@
 import React, { useState } from 'react';
 import {
   ArrowLeft,
-  Calendar,
   Compass,
-  Edit2,
   Lightbulb,
-  MapPin,
   Plus,
   Sparkles,
-  Trash2,
   X,
 } from 'lucide-react';
 import { ItineraryStop, StopCategory, TripDay } from '../types/trip';
 import { PlaceSearchInput, PlaceSearchResult } from './PlaceSearchInput';
 import { useModalA11y } from '../hooks';
+import { DiscoveryResultCard } from './places/DiscoveryResultCard';
+import { PlaceIdeaCard } from './places/PlaceIdeaCard';
 
 interface PlacesToVisitDrawerProps {
   places: ItineraryStop[];
@@ -33,15 +31,6 @@ const DISCOVERY_PRESETS = [
   { label: '🌳 Scenic Parks', query: 'parks and viewpoints', category: 'sight' as StopCategory },
   { label: '🛍️ Shopping', query: 'markets and shopping', category: 'sight' as StopCategory },
 ];
-
-const CATEGORY_COLORS: Record<StopCategory, string> = {
-  sight: '#3B82F6',
-  dining: '#F97316',
-  lodging: '#8B5CF6',
-  transit: '#10B981',
-  flight: '#0EA5E9',
-  note: '#F59E0B',
-};
 
 const CATEGORY_LABELS: Record<StopCategory, string> = {
   sight: 'Sight & Attraction',
@@ -279,53 +268,14 @@ export const PlacesToVisitDrawer: React.FC<PlacesToVisitDrawerProps> = ({
           {!isDiscovering && discoveryResults.length > 0 && (
             <div style={{ marginTop: '12px', display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: '10px' }}>
               {discoveryResults.map((item, idx) => (
-                <div
+                <DiscoveryResultCard
                   key={idx}
-                  style={{
-                    padding: '10px 12px',
-                    borderRadius: 'var(--radius-md, 8px)',
-                    backgroundColor: 'var(--bg-subtle)',
-                    border: '1px solid var(--border-light)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                    gap: '8px',
+                  result={item}
+                  onAdd={(res) => {
+                    handleQuickAddFromSearch(res);
+                    setDiscoveryResults((prev) => prev.filter((_, i) => i !== idx));
                   }}
-                >
-                  <div style={{ minWidth: 0, flex: 1 }}>
-                    <div style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-primary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                      {item.title}
-                    </div>
-                    <div style={{ fontSize: '11px', color: 'var(--text-tertiary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                      {item.subtitle}
-                    </div>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      handleQuickAddFromSearch(item);
-                      setDiscoveryResults((prev) => prev.filter((_, i) => i !== idx));
-                    }}
-                    style={{
-                      padding: '4px 8px',
-                      borderRadius: 'var(--radius-pill, 9999px)',
-                      backgroundColor: 'var(--brand-blue, #3B82F6)',
-                      color: '#fff',
-                      border: 'none',
-                      fontSize: '11px',
-                      fontWeight: 600,
-                      cursor: 'pointer',
-                      flexShrink: 0,
-                      display: 'inline-flex',
-                      alignItems: 'center',
-                      gap: '4px',
-                    }}
-                    title="Add to Ideas"
-                  >
-                    <Plus size={12} />
-                    <span>Add</span>
-                  </button>
-                </div>
+                />
               ))}
             </div>
           )}
@@ -470,159 +420,14 @@ export const PlacesToVisitDrawer: React.FC<PlacesToVisitDrawerProps> = ({
       ) : (
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(310px, 1fr))', gap: '16px' }}>
           {filteredPlaces.map((place) => (
-            <div
+            <PlaceIdeaCard
               key={place.id}
-              style={{
-                backgroundColor: 'var(--bg-card, #ffffff)',
-                borderRadius: 'var(--radius-lg, 12px)',
-                border: '1px solid var(--border-light, #e2e8f0)',
-                padding: '16px',
-                display: 'flex',
-                flexDirection: 'column',
-                justifyContent: 'space-between',
-                gap: '12px',
-                boxShadow: 'var(--shadow-sm, 0 1px 3px rgba(0,0,0,0.04))',
-                transition: 'transform 0.15s ease, box-shadow 0.15s ease',
-              }}
-            >
-              <div>
-                {/* Header: Category Badge & Delete */}
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                  <span
-                    style={{
-                      fontSize: '11px',
-                      fontWeight: 600,
-                      textTransform: 'uppercase',
-                      padding: '3px 8px',
-                      borderRadius: '6px',
-                      backgroundColor: `${CATEGORY_COLORS[place.category] || '#64748B'}18`,
-                      color: CATEGORY_COLORS[place.category] || '#64748B',
-                    }}
-                  >
-                    {CATEGORY_LABELS[place.category] || place.category}
-                  </span>
-
-                  <div style={{ display: 'flex', gap: '6px' }}>
-                    <button
-                      onClick={() => setEditingPlace(place)}
-                      title="Edit Idea"
-                      style={{
-                        background: 'none',
-                        border: 'none',
-                        cursor: 'pointer',
-                        padding: '4px',
-                        color: 'var(--text-tertiary, #94a3b8)',
-                      }}
-                    >
-                      <Edit2 size={13} />
-                    </button>
-                    <button
-                      onClick={() => onDeletePlace(place.id)}
-                      title="Delete Idea"
-                      style={{
-                        background: 'none',
-                        border: 'none',
-                        cursor: 'pointer',
-                        padding: '4px',
-                        color: 'var(--text-tertiary, #94a3b8)',
-                      }}
-                    >
-                      <Trash2 size={13} />
-                    </button>
-                  </div>
-                </div>
-
-                {/* Title & Subtitle */}
-                <h4
-                  style={{
-                    fontSize: '15px',
-                    fontWeight: 600,
-                    color: 'var(--text-primary, #0f172a)',
-                    margin: '0 0 4px',
-                  }}
-                >
-                  {place.title}
-                </h4>
-                {place.subtitle && (
-                  <p style={{ fontSize: '12px', color: 'var(--text-secondary, #64748b)', margin: '0 0 6px' }}>
-                    {place.subtitle}
-                  </p>
-                )}
-
-                {/* Address */}
-                {place.address && (
-                  <div
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '4px',
-                      fontSize: '11px',
-                      color: 'var(--text-tertiary, #94a3b8)',
-                      marginBottom: '8px',
-                    }}
-                  >
-                    <MapPin size={11} style={{ flexShrink: 0 }} />
-                    <span style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                      {place.address}
-                    </span>
-                  </div>
-                )}
-
-                {/* Notes */}
-                {place.notes && (
-                  <div
-                    style={{
-                      fontSize: '12px',
-                      backgroundColor: 'var(--bg-subtle, #f8fafc)',
-                      padding: '8px 10px',
-                      borderRadius: '8px',
-                      color: 'var(--text-secondary, #475569)',
-                      borderLeft: '3px solid var(--brand-amber)',
-                    }}
-                  >
-                    {place.notes}
-                  </div>
-                )}
-              </div>
-
-              {/* Assign to Day Action */}
-              <div
-                style={{
-                  borderTop: '1px solid var(--border-light, #f1f5f9)',
-                  paddingTop: '12px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'space-between',
-                  gap: '8px',
-                }}
-              >
-                <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '12px', color: 'var(--text-secondary, #64748b)' }}>
-                  <Calendar size={13} />
-                  <span>Assign:</span>
-                </div>
-
-                <select
-                  className="form-input"
-                  style={{ padding: '4px 8px', fontSize: '12px', width: 'auto', cursor: 'pointer' }}
-                  defaultValue=""
-                  onChange={(e) => {
-                    const idx = parseInt(e.target.value, 10);
-                    if (!isNaN(idx)) {
-                      onAssignToDay(place.id, idx);
-                    }
-                  }}
-                >
-                  <option value="" disabled>
-                    Select Day...
-                  </option>
-                  {days.map((d, idx) => (
-                    <option key={d.id} value={idx}>
-                      Day {d.dayNumber} ({d.dateStr?.split(',')[1]?.trim() || d.dateStr || `Day ${idx + 1}`})
-                    </option>
-                  ))}
-                </select>
-              </div>
-            </div>
+              place={place}
+              days={days}
+              onEdit={(p) => setEditingPlace(p)}
+              onDelete={onDeletePlace}
+              onAssignToDay={onAssignToDay}
+            />
           ))}
         </div>
       )}
