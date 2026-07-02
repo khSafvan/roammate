@@ -86,7 +86,7 @@
   border-color: var(--day-theme-color, var(--brand-blue));
   background-color: var(--day-theme-bg, rgba(37, 99, 235, 0.08));
   color: var(--day-theme-color, var(--brand-blue));
-  box-shadow: 0 0 0 1px var(--day-theme-color, var(--brand-blue)), var(--shadow-sm);
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
 }
 
 .day-tab-pill:focus-visible {
@@ -490,7 +490,7 @@
 
 .timeline-card.is-selected {
   border-color: var(--brand-blue);
-  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.18), var(--shadow-card-hover);
+  box-shadow: 0 4px 14px rgba(37, 99, 235, 0.12);
   background-color: var(--bg-card);
 }
 
@@ -722,13 +722,17 @@
 }
 
 .timeline-card.is-note-card {
-  background-color: var(--bg-card);
-  box-shadow: inset 3px 0 0 var(--brand-amber), var(--shadow-card);
+  background-color: rgba(217, 119, 6, 0.04);
+  border: 1px solid rgba(217, 119, 6, 0.20);
+  border-left: 3px solid var(--brand-amber);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-sm);
 }
 
 .timeline-card.is-note-card.is-selected {
   border-color: var(--brand-blue);
-  box-shadow: inset 3px 0 0 var(--brand-amber), 0 0 0 2px rgba(37, 99, 235, 0.18), var(--shadow-card-hover);
+  border-left: 3px solid var(--brand-amber);
+  box-shadow: 0 4px 14px rgba(37, 99, 235, 0.12);
 }
 
 .category-node.node-note {
@@ -797,32 +801,31 @@
   text-underline-offset: 2px;
 }
 
-/* 4. Inter-Stop Distance Connector Pill (De-emphasized Transit State) */
+/* 4. Inter-Stop Distance Connector Pill (Centered Transit Bridge) */
 .distance-connector-track {
   display: flex;
   align-items: center;
-  gap: 14px;
-  margin: 3px 0;
+  justify-content: center;
+  margin: 6px 0;
   position: relative;
 }
 
-.distance-connector-track.spine-spacer {
-  height: 28px;
-  min-height: 28px;
+.distance-connector-track::before {
+  content: '';
+  position: absolute;
+  left: 20px;
+  right: 20px;
+  height: 1px;
+  background-color: var(--border-light);
+  z-index: 0;
 }
 
-.track-spine-node {
-  width: 36px;
-  display: flex;
-  flex-direction: column;
+.distance-connector-bridge {
+  position: relative;
+  z-index: 1;
+  display: inline-flex;
   align-items: center;
-  flex-shrink: 0;
-}
-
-.track-spine-dash {
-  width: 0;
-  height: 22px;
-  border-left: var(--border-dashed);
+  gap: 8px;
 }
 
 .distance-pill-btn {
@@ -830,11 +833,11 @@
   align-items: center;
   gap: 6px;
   background-color: var(--bg-card);
-  border: var(--border-dashed);
+  border: 1px solid var(--border-light);
   border-radius: var(--radius-pill);
-  padding: 3px 11px;
+  padding: 4px 12px;
   cursor: pointer;
-  box-shadow: var(--shadow-sm);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
   transition: all 0.15s ease;
   color: var(--text-secondary);
 }
@@ -843,6 +846,7 @@
   background-color: var(--bg-subtle);
   border-color: var(--border-strong);
   color: var(--text-primary);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
 }
 
 .distance-pill-btn.outlier {
@@ -891,6 +895,7 @@
   flex: 1;
   background-color: var(--bg-card);
   border: 1px solid var(--border-light);
+  border-top: 3px solid var(--cat-flight, #0284C7);
   border-radius: var(--radius-card);
   padding: 16px 20px;
   box-shadow: var(--shadow-card);

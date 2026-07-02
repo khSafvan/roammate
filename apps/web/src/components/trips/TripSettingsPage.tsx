@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from 'react';
 import {
-  ArrowLeft,
   Calendar,
   Check,
   Clock,
@@ -20,12 +19,16 @@ import {
 } from 'lucide-react';
 import { Trip } from '../../types/trip';
 import { exportItinerary } from '../../utils/exportImport';
+import { Header } from '../Header';
+import { VaultSession } from '../../auth/crypto';
 
 interface TripSettingsPageProps {
   trip: Trip;
   onUpdateTrip: (updated: Partial<Trip>) => void;
   onDeleteTrip: (tripId: string) => void;
   onBackToWorkspace: () => void;
+  activeSession?: VaultSession | null;
+  onOpenAuth?: () => void;
   onLogout?: () => void;
 }
 
@@ -45,6 +48,8 @@ export const TripSettingsPage: React.FC<TripSettingsPageProps> = ({
   onUpdateTrip,
   onDeleteTrip,
   onBackToWorkspace,
+  activeSession,
+  onOpenAuth,
   onLogout,
 }) => {
   const [title, setTitle] = useState(trip.title);
@@ -117,25 +122,17 @@ export const TripSettingsPage: React.FC<TripSettingsPageProps> = ({
 
   return (
     <div className="settings-page-root">
-      {/* Top Header & Breadcrumb */}
-      <header className="header-root">
-        <div className="header-container">
-          <div className="header-left">
-            <button
-              className="breadcrumb-back-btn"
-              onClick={onBackToWorkspace}
-              title="Return to Itinerary Workspace"
-            >
-              <ArrowLeft size={16} />
-              <span>Back to Itinerary</span>
-            </button>
-            <div className="header-meta">
-              <h1 className="trip-title">Trip Settings · {trip.title}</h1>
-              <span className="text-xs text-secondary">{trip.destination}</span>
-            </div>
-          </div>
-
-          <div className="header-actions">
+      {/* Global Unified Header */}
+      <Header
+        currentView="trip_settings"
+        title={trip.title}
+        destination={trip.destination}
+        activeSession={activeSession ?? null}
+        onOpenAuth={onOpenAuth ?? (() => {})}
+        onLogout={onLogout}
+        onBackToWorkspace={onBackToWorkspace}
+        extraActions={
+          <div className="flex items-center gap-2">
             <button
               type="button"
               className="secondary-action-btn"
@@ -143,9 +140,10 @@ export const TripSettingsPage: React.FC<TripSettingsPageProps> = ({
               title="Print formatted emergency travel packet"
             >
               <Printer size={14} />
-              <span>Print Travel Packet</span>
+              <span className="btn-label-responsive">Print Travel Packet</span>
             </button>
             <button
+              type="button"
               className={`primary-action-btn ${isSaved ? 'bg-emerald' : ''}`}
               onClick={() => handleSave()}
             >
@@ -153,8 +151,8 @@ export const TripSettingsPage: React.FC<TripSettingsPageProps> = ({
               <span>{isSaved ? 'Changes Saved!' : 'Save Settings'}</span>
             </button>
           </div>
-        </div>
-      </header>
+        }
+      />
 
       {/* Main Settings Grid */}
       <main className="settings-content-container">

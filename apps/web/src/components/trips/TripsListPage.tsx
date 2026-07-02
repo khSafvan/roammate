@@ -1,25 +1,15 @@
 import React, { useMemo, useState } from 'react';
 import {
-  Calendar,
-  CheckCircle2,
-  Clock,
   Compass,
-  Key,
-  Lock,
-  MapPin,
-  Plane,
   Plus,
-  Settings,
-  Share2,
   Sparkles,
-  Ticket,
-  Trash2,
-  LogOut,
 } from 'lucide-react';
 import { Trip } from '../../types/trip';
 import { VaultSession } from '../../auth/crypto';
 import { CreateTripParams } from '../../hooks/useVault';
 import { useModalA11y } from '../../hooks';
+import { Header } from '../Header';
+import { TripCard } from './TripCard';
 
 interface TripsListPageProps {
   trips: Trip[];
@@ -107,60 +97,14 @@ export const TripsListPage: React.FC<TripsListPageProps> = ({
   return (
     <div className="trips-dashboard-root">
       {/* Top Header */}
-      <header className="header-root">
-        <div className="header-container">
-          <div className="header-left">
-            <div className="header-brand">
-              <span className="brand-logo">✈️</span>
-              <span className="brand-name">MojoLog</span>
-            </div>
-            <div className="trips-hub-tag">
-              <Compass size={13} className="text-blue" />
-              <span>Travel Vault</span>
-            </div>
-          </div>
-
-          <div className="header-actions">
-            <button
-              className={`vault-auth-btn ${vaultSession ? 'authenticated' : ''}`}
-              onClick={onOpenAuth}
-              title={vaultSession ? 'Personal Vault Active' : 'Unlock Personal Vault'}
-            >
-              {vaultSession ? (
-                <>
-                  <Lock size={13} strokeWidth={1.75} className="text-emerald" />
-                  <span className="vault-btn-text">Personal Vault</span>
-                </>
-              ) : (
-                <>
-                  <Key size={13} strokeWidth={1.75} className="text-amber" />
-                  <span className="vault-btn-text">Unlock Vault</span>
-                </>
-              )}
-            </button>
-
-            {vaultSession && onLogout && (
-              <button
-                className="secondary-action-btn text-rose"
-                onClick={onLogout}
-                title="Lock Vault & Log Out"
-              >
-                <LogOut size={14} />
-                <span>Lock</span>
-              </button>
-            )}
-
-            <button
-              className="primary-action-btn"
-              onClick={() => setIsCreateModalOpen(true)}
-              title="Plan a new journey"
-            >
-              <Plus size={15} />
-              <span>Plan New Trip</span>
-            </button>
-          </div>
-        </div>
-      </header>
+      <Header
+        currentView="trips_list"
+        tripsCount={trips.length}
+        activeSession={vaultSession}
+        onOpenAuth={onOpenAuth}
+        onLogout={onLogout}
+        onOpenCreateTrip={() => setIsCreateModalOpen(true)}
+      />
 
       {/* Main Content Workspace */}
       <main className="trips-dashboard-container">
@@ -247,148 +191,20 @@ export const TripsListPage: React.FC<TripsListPageProps> = ({
               </button>
             </div>
           ) : (
-            filteredTrips.map((t) => {
-              const totalStops = (t.days || []).reduce((acc, d) => acc + (d.stops?.length || 0), 0);
-              const totalReservations = (t.flights?.length || 0) + (t.documents?.length || 0);
-              const isActive = t.id === activeTripId;
-
-              return (
-                <div
-                  key={t.id}
-                  className={`trip-card-root ${isActive ? 'is-active-trip' : ''}`}
-                >
-                  {/* Card Cover Strip */}
-                  <div
-                    className="trip-card-cover-bar"
-                    style={{ backgroundColor: t.days?.[0]?.themeColor || '#3B82F6' }}
-                  />
-
-                  <div className="trip-card-body">
-                    {/* Header */}
-                    <div className="trip-card-header">
-                      <div className="trip-card-header-main">
-                        <span className="trip-destination-pill">
-                          <MapPin size={11} />
-                          <span>{t.destination}</span>
-                        </span>
-                        <h2 className="trip-card-heading">{t.title}</h2>
-                      </div>
-
-                      <div className="trip-readiness-pill">
-                        <CheckCircle2 size={13} className="text-emerald" />
-                        <span className="tabular">{t.readinessScore}%</span>
-                      </div>
-                    </div>
-
-                    {/* Dates & Times */}
-                    <div className="trip-card-meta-row">
-                      <div className="trip-meta-item">
-                        <Calendar size={13} className="text-slate" />
-                        <span>{t.dates || 'Dates not set'}</span>
-                        {(t.days?.length || 0) > 0 && (
-                          <span className="days-count-pill">{t.days.length}d</span>
-                        )}
-                      </div>
-
-                      {t.startTime && t.endTime && (
-                        <div className="trip-meta-item">
-                          <Clock size={12} className="text-slate" />
-                          <span>
-                            {t.startTime} – {t.endTime}
-                          </span>
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Metrics Pills */}
-                    <div className="trip-card-metrics-strip">
-                      <span className="metric-tag">
-                        <strong>{totalStops}</strong> stops
-                      </span>
-                      <span className="metric-tag">
-                        <Plane size={11} />
-                        <strong>{t.flights?.length || 0}</strong> flights
-                      </span>
-                      {totalReservations > (t.flights?.length || 0) && (
-                        <span className="metric-tag">
-                          <Ticket size={11} />
-                          <strong>{totalReservations}</strong> vouchers
-                        </span>
-                      )}
-                      <span className="metric-tag currency font-mono">
-                        {t.baseCurrency || 'USD'}
-                      </span>
-                    </div>
-
-                    {/* Delete confirmation if active */}
-                    {deleteConfirmId === t.id && (
-                      <div className="trip-card-delete-prompt">
-                        <span>Delete this trip permanently?</span>
-                        <div className="flex items-center gap-2">
-                          <button
-                            className="cancel-delete-btn"
-                            onClick={() => setDeleteConfirmId(null)}
-                          >
-                            Cancel
-                          </button>
-                          <button
-                            className="confirm-delete-btn"
-                            onClick={() => {
-                              onDeleteTrip(t.id);
-                              setDeleteConfirmId(null);
-                            }}
-                          >
-                            Delete
-                          </button>
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Actions Row */}
-                    <div className="trip-card-actions-row">
-                      <button
-                        className="open-trip-primary-btn"
-                        onClick={() => onSelectTrip(t.id)}
-                        title="Open trip itinerary and spatial route map"
-                      >
-                        <span>Open Journey</span>
-                        <span className="arrow-glyph">→</span>
-                      </button>
-
-                      <div className="trip-card-secondary-btns">
-                        <button
-                          className="card-icon-action-btn"
-                          onClick={() => onOpenSettings(t.id)}
-                          title="Edit Trip Settings & Schedule"
-                        >
-                          <Settings size={15} />
-                        </button>
-
-                        <button
-                          className="card-icon-action-btn"
-                          onClick={() => onShareTrip(t)}
-                          title="Export or Backup Trip"
-                        >
-                          <Share2 size={15} />
-                        </button>
-
-                        {trips.length > 1 && (
-                          <button
-                            className="card-icon-action-btn text-rose-hover"
-                            onClick={() =>
-                              setDeleteConfirmId(deleteConfirmId === t.id ? null : t.id)
-                            }
-                            title="Delete Trip"
-                          >
-                            <Trash2 size={15} />
-                          </button>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              );
-            })
+            filteredTrips.map((t) => (
+              <TripCard
+                key={t.id}
+                trip={t}
+                isActive={t.id === activeTripId}
+                canDelete={trips.length > 1}
+                isDeleteConfirming={deleteConfirmId === t.id}
+                onSelectTrip={onSelectTrip}
+                onOpenSettings={onOpenSettings}
+                onShareTrip={onShareTrip}
+                onDeleteTrip={onDeleteTrip}
+                onToggleDeleteConfirm={(id) => setDeleteConfirmId(id)}
+              />
+            ))
           )}
         </div>
       </main>
