@@ -26,7 +26,6 @@ export const TimelineActivityTicketCard: React.FC<TimelineActivityTicketCardProp
             boxShadow: 'var(--shadow-card)',
             padding: '16px 18px',
             border: '1px solid var(--border-light, rgba(15, 23, 42, 0.08))',
-            borderTop: '3px solid var(--cat-dining, #EA580C)',
           }}
         >
           <div style={{ display: 'flex', alignItems: 'flex-start', gap: '12px' }}>
