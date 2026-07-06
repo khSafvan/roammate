@@ -52,6 +52,38 @@ body {
   }
 }
 
+/* Zero-motion rule: No movement, jumping, or scaling on hover, focus, or active */
+*:hover,
+*:focus,
+*:focus-within,
+*:active {
+  transform: none !important;
+}
+
+/* Universal custom scrollbar */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--border-medium, #cbd5e1) transparent;
+}
+
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--border-medium, #cbd5e1);
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--text-tertiary, #94a3b8);
+}
+
 /* Universal Button & Badge Primitives - Soft Utility */
 .icon-btn {
   width: 36px;
@@ -64,7 +96,6 @@ body {
   justify-content: center;
   cursor: pointer;
   color: var(--text-secondary);
-  transition: all 0.15s ease;
   box-shadow: var(--shadow-sm);
 }
 
@@ -74,12 +105,9 @@ body {
   border-color: var(--border-strong);
 }
 
-.icon-btn:active {
-  transform: scale(0.97);
-}
-
 /* Tabular numbers utility */
 .tabular {
   font-variant-numeric: tabular-nums;
   font-feature-settings: 'tnum' 1;
 }
+

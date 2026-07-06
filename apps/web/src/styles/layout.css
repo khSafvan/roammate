@@ -732,12 +732,10 @@
   font-weight: 600;
   cursor: pointer;
   box-shadow: 0 1px 3px rgba(37, 99, 235, 0.25);
-  transition: all 0.15s ease;
 }
 
 .optimize-pill-btn:hover {
   background-color: var(--brand-blue-hover);
-  transform: translateY(-0.5px);
 }
 
 .optimize-pill-btn.optimized {
@@ -757,11 +755,9 @@
   min-width: 0;
 }
 
-/* Timeline Multi-Action Bar */
+/* Timeline Action Bar - Focused on Add Place */
 .timeline-actions-bar {
-  display: grid;
-  grid-template-columns: 1.35fr 1fr 1fr 1fr;
-  gap: 10px;
+  display: flex;
   margin-top: 14px;
   margin-bottom: 8px;
 }
@@ -771,24 +767,22 @@
   align-items: center;
   justify-content: center;
   gap: 8px;
-  padding: 10px 16px;
+  width: 100%;
+  padding: 11px 20px;
   border-radius: var(--radius-lg);
   background-color: var(--brand-blue);
   color: #FFFFFF;
   border: 1px solid var(--brand-blue);
-  font-size: 13px;
+  font-size: 13.5px;
   font-weight: 600;
   cursor: pointer;
   box-shadow: 0 1px 3px rgba(37, 99, 235, 0.2);
-  transition: all 0.15s ease;
   white-space: nowrap;
 }
 
 .timeline-action-primary:hover {
   background-color: var(--brand-blue-hover);
   border-color: var(--brand-blue-hover);
-  transform: translateY(-0.5px);
-  box-shadow: 0 3px 8px rgba(37, 99, 235, 0.28);
 }
 
 .timeline-action-pill {
@@ -805,7 +799,6 @@
   font-weight: 500;
   cursor: pointer;
   box-shadow: var(--shadow-sm);
-  transition: all 0.15s ease;
   white-space: nowrap;
 }
 
@@ -813,5 +806,5 @@
   background-color: var(--bg-subtle);
   border-color: var(--border-strong);
   color: var(--text-primary);
-  transform: translateY(-0.5px);
 }
+

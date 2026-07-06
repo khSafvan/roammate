@@ -83,7 +83,7 @@
 }
 
 .gpx-action-btn:active {
-  transform: scale(0.98);
+  opacity: 0.9;
 }
 
 .optimize-route-btn {
@@ -99,12 +99,10 @@
   font-weight: 600;
   cursor: pointer;
   box-shadow: 0 1px 3px rgba(37, 99, 235, 0.25);
-  transition: all 0.15s ease;
 }
 
 .optimize-route-btn:hover {
   background-color: var(--brand-blue-hover);
-  transform: translateY(-0.5px);
 }
 
 .optimize-route-btn.optimized {
@@ -166,13 +164,11 @@
 
 .terralink-marker-shell:hover .terralink-pin-wrapper,
 .terraway-marker-shell:hover .terraway-pin-wrapper {
-  transform: scale(1.15);
   z-index: 50;
 }
 
 .terralink-marker-shell.active .terralink-pin-wrapper,
 .terraway-marker-shell.active .terraway-pin-wrapper {
-  transform: scale(1.22);
   z-index: 60;
 }
 
@@ -293,7 +289,7 @@
 .terraway-marker-shell:hover .terraway-pin-callout,
 .terraway-marker-shell.active .terraway-pin-callout {
   opacity: 1;
-  transform: translateX(-50%) translateY(-3px);
+  transform: translateX(-50%);
 }
 
 .callout-badge {
