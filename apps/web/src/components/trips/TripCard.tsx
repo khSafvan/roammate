@@ -40,20 +40,31 @@ export const TripCard: React.FC<TripCardProps> = ({
 
   return (
     <div className={`trip-card-root ${isActive ? 'is-active-trip' : ''}`}>
-      {/* Card Cover Strip */}
-      <div
-        className="trip-card-cover-bar"
-        style={{ backgroundColor: trip.days?.[0]?.themeColor || '#3B82F6' }}
-      />
-
       <div className="trip-card-body">
         {/* Header */}
         <div className="trip-card-header">
           <div className="trip-card-header-main">
-            <span className="trip-destination-pill">
-              <MapPin size={11} />
-              <span>{trip.destination}</span>
-            </span>
+            <div className="flex items-center gap-2">
+              <span className="trip-destination-pill">
+                <MapPin size={11} />
+                <span>{trip.destination}</span>
+              </span>
+              {isActive && (
+                <span
+                  style={{
+                    fontSize: '11px',
+                    fontWeight: 600,
+                    padding: '1px 7px',
+                    borderRadius: '9999px',
+                    backgroundColor: 'rgba(37, 99, 235, 0.08)',
+                    color: 'var(--brand-blue, #2563EB)',
+                    border: '1px solid rgba(37, 99, 235, 0.22)',
+                  }}
+                >
+                  Active
+                </span>
+              )}
+            </div>
             <h2 className="trip-card-heading">{trip.title}</h2>
           </div>
 

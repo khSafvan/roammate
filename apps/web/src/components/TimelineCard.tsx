@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
   BedDouble,
   ChevronDown,
@@ -6,22 +6,24 @@ import {
   Clock,
   Compass,
   Edit2,
+  Eye,
   FileCheck2,
   FileText,
   GripVertical,
   Landmark,
   Lock,
   MapPin,
+  MoreVertical,
   Pin,
   Plane,
   Shirt,
+  Star,
+  Trash2,
   UtensilsCrossed,
 } from 'lucide-react';
-import { DayWeather, Look } from '@mojolog/shared';
-import { ApiClient } from '@mojolog/api-client';
+import { Look } from '@mojolog/shared';
 import { ItineraryStop, StopCategory } from '../types/trip';
 import { MarkdownText } from './MarkdownText';
-import { LookCard } from './outfits/LookCard';
 
 interface TimelineCardProps {
   stop: ItineraryStop;
@@ -30,13 +32,9 @@ interface TimelineCardProps {
   index?: number;
   totalStops?: number;
   look?: Look;
-  tripId?: string;
-  person1Name?: string;
-  person2Name?: string;
-  weather?: DayWeather;
-  apiClient?: ApiClient | null;
   onSelect: (stop: ItineraryStop) => void;
   onEdit?: (stop: ItineraryStop) => void;
+  onDeleteStop?: (stopId: string) => void;
   onMoveUp?: () => void;
   onMoveDown?: () => void;
   onDragStart?: (e: React.DragEvent) => void;
@@ -44,9 +42,6 @@ interface TimelineCardProps {
   onDragLeave?: (e: React.DragEvent) => void;
   onDragEnd?: (e: React.DragEvent) => void;
   onDrop?: (e: React.DragEvent) => void;
-  onSaveLook?: (look: Look) => void;
-  onDeleteLook?: (lookId: string) => void;
-  onOpenOutfitModal?: () => void;
   isDragging?: boolean;
   isDragOver?: boolean;
 }
@@ -74,13 +69,9 @@ export const TimelineCard = React.memo<TimelineCardProps>(function TimelineCard(
   index,
   totalStops,
   look,
-  tripId,
-  person1Name,
-  person2Name,
-  weather,
-  apiClient,
   onSelect,
   onEdit,
+  onDeleteStop,
   onMoveUp,
   onMoveDown,
   onDragStart,
@@ -88,13 +79,22 @@ export const TimelineCard = React.memo<TimelineCardProps>(function TimelineCard(
   onDragLeave,
   onDragEnd,
   onDrop,
-  onSaveLook,
-  onDeleteLook,
-  onOpenOutfitModal,
   isDragging,
   isDragOver,
 }) {
-  const [isLookbookOpen, setIsLookbookOpen] = useState(false);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    if (!isMenuOpen) return;
+    const handleClickOutside = (e: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+        setIsMenuOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [isMenuOpen]);
 
   const isFixedAnchor = Boolean(stop.isAnchor);
 
@@ -264,76 +264,119 @@ export const TimelineCard = React.memo<TimelineCardProps>(function TimelineCard(
                 </span>
               )}
 
-              {/* Couple Outfit Lookbook Trigger */}
-              <button
-                type="button"
-                className={`stop-look-trigger-btn ${look ? 'has-look' : ''}`}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  if (onOpenOutfitModal) {
-                    onOpenOutfitModal();
-                  } else {
-                    setIsLookbookOpen((prev) => !prev);
-                  }
-                }}
-                title={look ? 'View & Edit Coordinated Look' : 'Attach Outfit Look'}
-                aria-expanded={isLookbookOpen}
-              >
-                {look &&
-                (look.person1Cutout ||
-                  look.person1Original ||
-                  look.person2Cutout ||
-                  look.person2Original) ? (
-                  <span className="stop-look-dual-thumb">
-                    {(look.person1Cutout || look.person1Original) && (
-                      <img
-                        src={look.person1Cutout || look.person1Original}
-                        alt=""
-                        className="mini-thumb"
-                      />
-                    )}
-                    {(look.person2Cutout || look.person2Original) && (
-                      <img
-                        src={look.person2Cutout || look.person2Original}
-                        alt=""
-                        className="mini-thumb"
-                      />
+              {/* Indicator Chips (Note, Looks, Tickets) */}
+              <div className="card-indicator-chips">
+                {stop.notes && (
+                  <span className="card-chip chip-note" title="Note attached">
+                    <FileText size={10} />
+                    <span>Note</span>
+                  </span>
+                )}
+
+                {look && (
+                  <span className="card-chip chip-look" title="Coordinated look planned">
+                    <Shirt size={10} />
+                    <span>Outfits</span>
+                    {(look.person1Cutout || look.person2Cutout || look.person1Original || look.person2Original) && (
+                      <span className="chip-avatar-pair">
+                        {(look.person1Cutout || look.person1Original) && (
+                          <img
+                            src={look.person1Cutout || look.person1Original}
+                            alt=""
+                            className="chip-mini-avatar"
+                          />
+                        )}
+                        {(look.person2Cutout || look.person2Original) && (
+                          <img
+                            src={look.person2Cutout || look.person2Original}
+                            alt=""
+                            className="chip-mini-avatar"
+                          />
+                        )}
+                      </span>
                     )}
                   </span>
-                ) : (
-                  <Shirt size={12} strokeWidth={2} />
                 )}
-                <span>{look ? 'Look' : '+ Outfit'}</span>
-              </button>
 
-              {onEdit && (
+                {stop.hasTicket && (
+                  <span className="card-chip chip-ticket" title="Ticket ready">
+                    <FileCheck2 size={10} />
+                    <span>Ticket</span>
+                  </span>
+                )}
+
+                {typeof stop.rating === 'number' && (
+                  <span className="place-rating-badge" title="Google Places Rating">
+                    <Star size={11} className="fill-amber text-amber" />
+                    <span>{stop.rating.toFixed(1)}</span>
+                  </span>
+                )}
+              </div>
+
+              {/* Card Options Ellipsis Dropdown */}
+              <div ref={menuRef} className="card-more-menu-wrapper" onClick={(e) => e.stopPropagation()}>
                 <button
                   type="button"
-                  className="card-edit-action-btn"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onEdit(stop);
-                  }}
-                  title="Edit stop details"
-                  aria-label={`Edit ${stop.title}`}
+                  className="card-more-menu-btn"
+                  onClick={() => setIsMenuOpen((prev) => !prev)}
+                  title="More actions"
+                  aria-label="More actions"
+                  aria-expanded={isMenuOpen}
                 >
-                  <Edit2 size={12} strokeWidth={2} />
+                  <MoreVertical size={13} />
                 </button>
-              )}
+
+                {isMenuOpen && (
+                  <div className="card-dropdown-menu">
+                    <button
+                      type="button"
+                      className="card-dropdown-item"
+                      onClick={() => {
+                        setIsMenuOpen(false);
+                        onSelect(stop);
+                      }}
+                    >
+                      <Eye size={12} />
+                      <span>View Details &amp; Outfits</span>
+                    </button>
+
+                    {onEdit && (
+                      <button
+                        type="button"
+                        className="card-dropdown-item"
+                        onClick={() => {
+                          setIsMenuOpen(false);
+                          onEdit(stop);
+                        }}
+                      >
+                        <Edit2 size={12} />
+                        <span>Edit Place</span>
+                      </button>
+                    )}
+
+                    {onDeleteStop && (
+                      <button
+                        type="button"
+                        className="card-dropdown-item danger-item"
+                        onClick={() => {
+                          setIsMenuOpen(false);
+                          onDeleteStop(stop.id);
+                        }}
+                      >
+                        <Trash2 size={12} />
+                        <span>Delete Place</span>
+                      </button>
+                    )}
+                  </div>
+                )}
+              </div>
             </div>
 
-          {/* Primary Label / Title & Subtitle */}
+            {/* Primary Label / Title & Subtitle */}
             <h3 className="card-title">{stop.title}</h3>
             {stop.subtitle && <p className="card-subtitle">{stop.subtitle}</p>}
 
-          {/* Rich Markdown Notes for this Location */}
-            {stop.notes && (
-              <div className="card-notes-preview">
-                <MarkdownText text={stop.notes} />
-              </div>
-            )}
-
-          {/* Secondary Footer Metadata */}
+            {/* Secondary Footer Metadata & Details Cue */}
             <div className="card-footer-line">
               <div className="card-address">
                 <MapPin size={12} strokeWidth={1.75} />
@@ -343,28 +386,11 @@ export const TimelineCard = React.memo<TimelineCardProps>(function TimelineCard(
               {stop.bookingRef && (
                 <span className="card-ref-badge">REF: {stop.bookingRef}</span>
               )}
-            </div>
 
-            {/* Inline Lookbook Accordion */}
-            {isLookbookOpen && (
-              <div className="lookbook-accordion" onClick={(e) => e.stopPropagation()}>
-                <LookCard
-                  look={look}
-                  tripId={tripId || ''}
-                  eventId={stop.id}
-                  person1Name={person1Name}
-                  person2Name={person2Name}
-                  weather={weather}
-                  apiClient={apiClient}
-                  onSaveLook={(savedLook) => onSaveLook?.(savedLook)}
-                  onDeleteLook={(lookId) => {
-                    onDeleteLook?.(lookId);
-                    setIsLookbookOpen(false);
-                  }}
-                  onClose={() => setIsLookbookOpen(false)}
-                />
-              </div>
-            )}
+              <span className="card-view-detail-hint">
+                View Details &rarr;
+              </span>
+            </div>
           </div>
         </div>
       </div>
