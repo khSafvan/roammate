@@ -27,6 +27,14 @@ export interface ItineraryStop {
   closeTime?: string; // e.g. "05:00 PM" (closing hours)
   isFixedTime?: boolean; // Locked reservation or timed ticket slot
   mealType?: 'breakfast' | 'lunch' | 'dinner' | 'snack';
+  // Google Places Metadata
+  rating?: number;
+  userRatingsTotal?: number;
+  priceLevel?: number; // 1-4 ($ to $$$$)
+  website?: string;
+  phoneNumber?: string;
+  photos?: string[];
+  imageUrl?: string;
 }
 
 export interface TransitLeg {
