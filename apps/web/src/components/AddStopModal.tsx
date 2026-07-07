@@ -176,6 +176,9 @@ export const AddStopModal: React.FC<AddStopModalProps> = ({
       phoneNumber: selectedPlaceMeta?.phoneNumber,
       photos: selectedPlaceMeta?.photos,
       imageUrl: selectedPlaceMeta?.imageUrl,
+      openTime: selectedPlaceMeta?.openTime,
+      closeTime: selectedPlaceMeta?.closeTime,
+      tags: selectedPlaceMeta?.tags,
     });
 
     onClose();
