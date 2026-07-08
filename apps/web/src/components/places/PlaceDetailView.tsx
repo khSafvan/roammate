@@ -1,24 +1,30 @@
 import React, { useState } from 'react';
 import {
   ArrowLeft,
-  Calendar,
+  Bold,
   Check,
   Clock,
+  Code,
   Copy,
   Edit2,
   Edit3,
   ExternalLink,
   FileText,
   Globe,
+  Italic,
+  Link2,
+  List,
+  ListOrdered,
   Lock,
   Navigation,
   Phone,
   Plus,
   Shirt,
   Star,
+  Tag,
   Trash2,
 } from 'lucide-react';
-import { DayWeather, ItineraryStop, Look, StopCategory, TripDay } from '@mojolog/shared';
+import { DayWeather, ItineraryStop, Look, StopCategory } from '@mojolog/shared';
 import { ApiClient } from '@mojolog/api-client';
 import { MarkdownText } from '../MarkdownText';
 import { LookCard } from '../outfits/LookCard';
@@ -27,19 +33,16 @@ export interface PlaceDetailViewProps {
   stop: ItineraryStop;
   dayNumber: number;
   themeColor: string;
-  days?: TripDay[];
-  currentDayId?: string;
   weather?: DayWeather;
   look?: Look;
   tripId: string;
   person1Name?: string;
   person2Name?: string;
   apiClient?: ApiClient | null;
+  existingLooks?: Look[];
   onBack: () => void;
   onUpdateStop: (stopId: string, updated: Partial<ItineraryStop>) => void;
   onDeleteStop: (stopId: string) => void;
-  onMoveStopToDay?: (stopId: string, targetDayId: string) => void;
-  onMoveStopToIdeas?: (stop: ItineraryStop) => void;
   onSaveLook: (look: Look) => void;
   onDeleteLook: (lookId: string) => void;
 }
@@ -57,19 +60,16 @@ export const PlaceDetailView: React.FC<PlaceDetailViewProps> = ({
   stop,
   dayNumber,
   themeColor,
-  days = [],
-  currentDayId,
   weather,
   look,
   tripId,
   person1Name = 'John (Husband)',
   person2Name = 'Jane (Wife)',
   apiClient,
+  existingLooks = [],
   onBack,
   onUpdateStop,
   onDeleteStop,
-  onMoveStopToDay,
-  onMoveStopToIdeas,
   onSaveLook,
   onDeleteLook,
 }) => {
@@ -256,11 +256,23 @@ export const PlaceDetailView: React.FC<PlaceDetailViewProps> = ({
 
               {stop.openTime && stop.closeTime && (
                 <div className="place-hours-badge">
-                  <Clock size={12} />
+                  <span className="place-status-dot-open" />
                   <span>Open {stop.openTime} – {stop.closeTime}</span>
                 </div>
               )}
             </div>
+
+            {/* Tags & Categories Row */}
+            {stop.tags && stop.tags.length > 0 && (
+              <div className="place-tags-row">
+                {stop.tags.map((tag, i) => (
+                  <span key={i} className="place-tag-pill">
+                    <Tag size={10} />
+                    <span>{tag}</span>
+                  </span>
+                ))}
+              </div>
+            )}
 
             {/* Quick Actions Row */}
             <div className="place-detail-quick-actions">
@@ -510,23 +522,23 @@ export const PlaceDetailView: React.FC<PlaceDetailViewProps> = ({
           {isEditingNote ? (
             <div className="note-editor-wrapper">
               <div className="markdown-toolbar">
-                <button type="button" onClick={() => insertMarkdown('bold')} title="Bold">
-                  <strong>B</strong>
+                <button type="button" className="toolbar-btn" onClick={() => insertMarkdown('bold')} title="Bold">
+                  <Bold size={13} />
                 </button>
-                <button type="button" onClick={() => insertMarkdown('italic')} title="Italic">
-                  <em>I</em>
+                <button type="button" className="toolbar-btn" onClick={() => insertMarkdown('italic')} title="Italic">
+                  <Italic size={13} />
                 </button>
-                <button type="button" onClick={() => insertMarkdown('bullet')} title="Bullet list">
-                  • List
+                <button type="button" className="toolbar-btn" onClick={() => insertMarkdown('bullet')} title="Bullet list">
+                  <List size={13} />
                 </button>
-                <button type="button" onClick={() => insertMarkdown('ordered')} title="Numbered list">
-                  1. List
+                <button type="button" className="toolbar-btn" onClick={() => insertMarkdown('ordered')} title="Numbered list">
+                  <ListOrdered size={13} />
                 </button>
-                <button type="button" onClick={() => insertMarkdown('code')} title="Code snippet">
-                  `Code`
+                <button type="button" className="toolbar-btn" onClick={() => insertMarkdown('code')} title="Code snippet">
+                  <Code size={13} />
                 </button>
-                <button type="button" onClick={() => insertMarkdown('link')} title="Insert link">
-                  Link
+                <button type="button" className="toolbar-btn" onClick={() => insertMarkdown('link')} title="Insert link">
+                  <Link2 size={13} />
                 </button>
               </div>
 
@@ -589,54 +601,12 @@ export const PlaceDetailView: React.FC<PlaceDetailViewProps> = ({
               person2Name={person2Name}
               weather={weather}
               apiClient={apiClient}
+              existingLooks={existingLooks}
               onSaveLook={onSaveLook}
               onDeleteLook={onDeleteLook}
             />
           </div>
         </div>
-
-        {/* REASSIGN OR MOVE TO ANOTHER DAY / IDEAS */}
-        {days.length > 1 && onMoveStopToDay && currentDayId && (
-          <div className="place-detail-section-card">
-            <div className="section-card-header">
-              <Calendar size={16} className="text-secondary" />
-              <span className="section-card-title">Move Place to Another Day</span>
-            </div>
-            <div className="move-day-pills">
-              {days.map((day) => {
-                const isCurrent = day.id === currentDayId;
-                return (
-                  <button
-                    key={day.id}
-                    type="button"
-                    disabled={isCurrent}
-                    className={`move-day-btn ${isCurrent ? 'active' : ''}`}
-                    onClick={() => onMoveStopToDay(stop.id, day.id)}
-                    title={isCurrent ? 'Currently in this day' : `Move to Day ${day.dayNumber}`}
-                  >
-                    <span>Day {day.dayNumber}</span>
-                    <span className="day-date">{day.dateStr}</span>
-                  </button>
-                );
-              })}
-
-              {onMoveStopToIdeas && (
-                <button
-                  type="button"
-                  className="move-day-btn"
-                  onClick={() => {
-                    onMoveStopToIdeas(stop);
-                    onBack();
-                  }}
-                  title="Move to Ideas bucket (unscheduled places)"
-                >
-                  <span>💡 Ideas Bucket</span>
-                  <span className="day-date">Unschedule</span>
-                </button>
-              )}
-            </div>
-          </div>
-        )}
 
         {/* DANGER ZONE: DELETE STOP */}
         <div className="place-detail-danger-card">
