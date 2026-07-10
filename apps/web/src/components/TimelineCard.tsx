@@ -37,13 +37,13 @@ interface TimelineCardProps {
   onEdit?: (stop: ItineraryStop) => void;
   onDeleteStop?: (stopId: string) => void;
   onContextMenu?: (e: React.MouseEvent, stop: ItineraryStop) => void;
-  onMoveUp?: () => void;
-  onMoveDown?: () => void;
-  onDragStart?: (e: React.DragEvent) => void;
-  onDragOver?: (e: React.DragEvent) => void;
+  onMoveUp?: (index: number) => void;
+  onMoveDown?: (index: number) => void;
+  onDragStart?: (e: React.DragEvent, index: number) => void;
+  onDragOver?: (e: React.DragEvent, index: number) => void;
   onDragLeave?: (e: React.DragEvent) => void;
   onDragEnd?: (e: React.DragEvent) => void;
-  onDrop?: (e: React.DragEvent) => void;
+  onDrop?: (e: React.DragEvent, index: number) => void;
   isDragging?: boolean;
   isDragOver?: boolean;
 }
@@ -110,7 +110,7 @@ export const TimelineCard = React.memo<TimelineCardProps>(function TimelineCard(
         <button
           type="button"
           className="reorder-arrow-btn"
-          onClick={onMoveUp}
+          onClick={(e) => { e.stopPropagation(); onMoveUp?.(index); }}
           title="Move stop earlier"
           aria-label="Move stop earlier"
         >
@@ -121,7 +121,7 @@ export const TimelineCard = React.memo<TimelineCardProps>(function TimelineCard(
         <button
           type="button"
           className="reorder-arrow-btn"
-          onClick={onMoveDown}
+          onClick={(e) => { e.stopPropagation(); onMoveDown?.(index); }}
           title="Move stop later"
           aria-label="Move stop later"
         >
@@ -136,11 +136,11 @@ export const TimelineCard = React.memo<TimelineCardProps>(function TimelineCard(
       <div
         className={`timeline-item-wrapper timeline-note-wrapper ${isDragging ? 'is-dragging' : ''} ${isDragOver ? 'is-drag-over' : ''}`}
         draggable={!isFixedAnchor && Boolean(totalStops && totalStops > 1)}
-        onDragStart={onDragStart}
-        onDragOver={onDragOver}
+        onDragStart={(e) => onDragStart?.(e, index!)}
+        onDragOver={(e) => onDragOver?.(e, index!)}
         onDragLeave={onDragLeave}
         onDragEnd={onDragEnd}
-        onDrop={onDrop}
+        onDrop={(e) => onDrop?.(e, index!)}
       >
         <div
           className={`timeline-card is-note-card ${isSelected ? 'is-selected' : ''}`}
@@ -203,11 +203,11 @@ export const TimelineCard = React.memo<TimelineCardProps>(function TimelineCard(
     <div
       className={`timeline-item-wrapper ${isDragging ? 'is-dragging' : ''} ${isDragOver ? 'is-drag-over' : ''}`}
       draggable={!isFixedAnchor && Boolean(totalStops && totalStops > 1)}
-      onDragStart={onDragStart}
-      onDragOver={onDragOver}
+      onDragStart={(e) => onDragStart?.(e, index!)}
+      onDragOver={(e) => onDragOver?.(e, index!)}
       onDragLeave={onDragLeave}
       onDragEnd={onDragEnd}
-      onDrop={onDrop}
+      onDrop={(e) => onDrop?.(e, index!)}
     >
       {/* Main Modular Card Container */}
       <div
