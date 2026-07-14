@@ -111,3 +111,16 @@ body {
   font-feature-settings: 'tnum' 1;
 }
 
+
+/* Global custom scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--border-medium, #cbd5e1);
+  border-radius: 4px;
+}

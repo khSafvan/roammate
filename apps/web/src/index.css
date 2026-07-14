@@ -11,3 +11,9 @@
 @import './styles/outfits.css';
 @import './styles/print.css';
 @import './styles/utilities.css';
+
+/* Ponytail Efficiency: Zero-animation project-wide override */
+* {
+  transition: none !important;
+  animation: none !important;
+}

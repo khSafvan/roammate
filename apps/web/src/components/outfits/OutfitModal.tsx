@@ -18,7 +18,6 @@ import { Look, Trip } from '@mojolog/shared';
 import { ApiClient } from '@mojolog/api-client';
 import { useModalA11y } from '../../hooks';
 import { downscaleAndStripExif, validateImageFile } from '../../utils/imagePipeline';
-import { removeBackground } from '../../utils/backgroundRemoval';
 import { uploadOutfitImage } from '../../utils/storageUpload';
 import { ImagePreviewModal } from './ImagePreviewModal';
 
@@ -164,9 +163,7 @@ export const OutfitModal: React.FC<OutfitModalProps> = ({
       setProgress(0.35);
       let cutoutBlob: Blob | null = null;
       try {
-        cutoutBlob = await removeBackground(compressedBlob, (ratio) => {
-          setProgress(0.35 + ratio * 0.45);
-        });
+        console.warn('Background removal skipped (ponytail).');
       } catch (bgErr) {
         console.warn('Background removal failed, falling back to original:', bgErr);
         setError('Background removal failed — using original photo.');
@@ -221,7 +218,7 @@ export const OutfitModal: React.FC<OutfitModalProps> = ({
     try {
       const res = await fetch(origUrl);
       const blob = await res.blob();
-      const cutoutBlob = await removeBackground(blob, (r) => setProgress(0.2 + r * 0.6));
+      const cutoutBlob: Blob = blob; // Ponytail: skipped background removal
 
       setStatus('Uploading new cutout...');
       setProgress(0.85);
