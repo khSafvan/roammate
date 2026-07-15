@@ -1,27 +1,8 @@
-import React, { useMemo, useState } from 'react';
-import {
-  Calendar,
-  CheckCircle2,
-  Clock,
-  FileCheck,
-  FileText,
-  Globe,
-  Hotel,
-  MapPin,
-  Plane,
-  Plus,
-  QrCode,
-  Search,
-  Tag,
-  Ticket,
-  Train,
-  Trash2,
-  User,
-  X,
-} from 'lucide-react';
-import { BookingDocument, Flight, ReservationCategory } from '../../types/trip';
-import { PlaceSearchInput, PlaceSearchResult } from '../PlaceSearchInput';
-import { lookupAirport } from '@mojolog/core';
+import React, { useState, useMemo } from 'react';
+import { Plane, Hotel, Ticket, Train, Trash2, FileText, Plus, Search } from 'lucide-react';
+import { BookingDocument, Flight } from '../../types/trip';
+import { FlightModal } from './FlightModal';
+import { HotelModal } from './HotelModal';
 
 interface DocumentsAndTicketsHubProps {
   flights: Flight[];
@@ -40,93 +21,36 @@ export const DocumentsAndTicketsHub: React.FC<DocumentsAndTicketsHubProps> = ({
   onAddDocument,
   onDeleteDocument,
 }) => {
-  const [activePillar, setActivePillar] = useState<'all' | 'stays' | 'transport' | 'activities'>('all');
+  const [activePillar, setActivePillar] = useState<'flights' | 'hotels' | 'all'>('flights');
   const [searchQuery, setSearchQuery] = useState('');
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  
+  const [isFlightModalOpen, setIsFlightModalOpen] = useState(false);
+  const [isHotelModalOpen, setIsHotelModalOpen] = useState(false);
+  const [editingFlight, setEditingFlight] = useState<Flight | undefined>(undefined);
+  const [editingHotel, setEditingHotel] = useState<BookingDocument | undefined>(undefined);
 
-  // New Reservation Form State
-  const [formCategory, setFormCategory] = useState<ReservationCategory>('hotel');
-  const [title, setTitle] = useState('');
-  const [confirmationCode, setConfirmationCode] = useState('');
-  const [date, setDate] = useState('');
-  const [time, setTime] = useState('');
-  const [endDate, setEndDate] = useState('');
-  const [endTime, setEndTime] = useState('');
-  const [location, setLocation] = useState('');
-  const [passengerOrGuestName, setPassengerOrGuestName] = useState('');
-  const [cabinOrRoomType, setCabinOrRoomType] = useState('');
-  const [seatOrRoomNumber, setSeatOrRoomNumber] = useState('');
-  const [notes, setNotes] = useState('');
-
-  // Flight specific form states
-  const [flightNumber, setFlightNumber] = useState('');
-  const [carrier, setCarrier] = useState('');
-  const [depAirport, setDepAirport] = useState('');
-  const [arrAirport, setArrAirport] = useState('');
-  const [depTerminal, setDepTerminal] = useState('');
-  const [arrTerminal, setArrTerminal] = useState('');
-  const [originCountry, setOriginCountry] = useState('');
-  const [originCity, setOriginCity] = useState('');
-  const [arrCity, setArrCity] = useState('');
-
-  const handleDepAirportChange = (val: string) => {
-    setDepAirport(val);
-    const info = lookupAirport(val);
-    if (info) {
-      if (!originCity) setOriginCity(info.city);
-      if (!originCountry) setOriginCountry(info.country);
-      if (!depTerminal && info.defaultTerminal) setDepTerminal(info.defaultTerminal);
-    }
-  };
-
-  const handleArrAirportChange = (val: string) => {
-    setArrAirport(val);
-    const info = lookupAirport(val);
-    if (info) {
-      if (!arrCity) setArrCity(info.city);
-      if (!arrTerminal && info.defaultTerminal) setArrTerminal(info.defaultTerminal);
-    }
-  };
-
-  // Counts by category
-  const counts = useMemo(() => {
-    const hotels = documents.filter((d) => d.category === 'hotel').length;
-    const transits = documents.filter((d) => d.category === 'transit' || d.category === 'flight').length;
-    const activities = documents.filter((d) => d.category === 'activity' || d.category === 'doc').length;
-    return {
-      all: flights.length + documents.length,
-      hotel: hotels,
-      transport: flights.length + transits,
-      activity: activities,
-    };
-  }, [flights, documents]);
-
-  // Filtered documents
   const filteredDocs = useMemo(() => {
     let result = documents;
-    if (activePillar === 'stays') {
+    if (activePillar === 'hotels') {
       result = result.filter((d) => d.category === 'hotel');
-    } else if (activePillar === 'transport') {
-      result = result.filter((d) => d.category === 'transit' || d.category === 'flight');
-    } else if (activePillar === 'activities') {
-      result = result.filter((d) => d.category === 'activity' || d.category === 'doc');
+    } else if (activePillar === 'flights') {
+      result = [];
     }
+
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase();
       result = result.filter(
         (d) =>
           d.title.toLowerCase().includes(q) ||
-          d.confirmationCode?.toLowerCase().includes(q) ||
-          d.location?.toLowerCase().includes(q) ||
-          d.notes?.toLowerCase().includes(q)
+          d.subtitle?.toLowerCase()?.includes(q) ||
+          d.location?.toLowerCase()?.includes(q)
       );
     }
     return result;
   }, [documents, activePillar, searchQuery]);
 
-  // Filtered flights
   const filteredFlights = useMemo(() => {
-    if (activePillar === 'stays' || activePillar === 'activities') return [];
+    if (activePillar === 'hotels') return [];
     let result = flights;
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase();
@@ -142,839 +66,185 @@ export const DocumentsAndTicketsHub: React.FC<DocumentsAndTicketsHubProps> = ({
     return result;
   }, [flights, activePillar, searchQuery]);
 
-  const handleModalSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-
-    if (formCategory === 'flight') {
-      if (!flightNumber || !depAirport || !arrAirport) return;
-      const depInfo = lookupAirport(depAirport);
-      const arrInfo = lookupAirport(arrAirport);
-      const newFlight: Flight = {
-        id: `fl_${Date.now()}`,
-        flightNumber: flightNumber.toUpperCase().trim(),
-        carrier: carrier.trim() || 'Airline',
-        date: date || new Date().toISOString().split('T')[0],
-        passengerName: passengerOrGuestName.trim() || undefined,
-        originCountry: originCountry.trim() || depInfo?.country || undefined,
-        originCity: originCity.trim() || depInfo?.city || undefined,
-        cabinClass: (cabinOrRoomType as any) || 'Economy',
-        bookingRef: confirmationCode.trim() || undefined,
-        seat: seatOrRoomNumber.trim() || undefined,
-        notes: notes.trim() || undefined,
-        departure: {
-          airport: depAirport.toUpperCase().trim(),
-          city: originCity.trim() || depInfo?.city || depAirport.toUpperCase().trim(),
-          country: originCountry.trim() || depInfo?.country,
-          time: time || '12:00',
-          terminal: depTerminal.trim() || depInfo?.defaultTerminal || undefined,
-        },
-        arrival: {
-          airport: arrAirport.toUpperCase().trim(),
-          city: arrCity.trim() || arrInfo?.city || arrAirport.toUpperCase().trim(),
-          country: arrInfo?.country,
-          time: endTime || '15:00',
-          terminal: arrTerminal.trim() || arrInfo?.defaultTerminal || undefined,
-          nextDay: !!(endDate && endDate !== date),
-        },
-      };
-      onAddFlight(newFlight);
-    } else {
-      if (!title.trim()) return;
-      const newDoc: BookingDocument = {
-        id: `doc_${Date.now()}`,
-        category: formCategory,
-        title: title.trim(),
-        confirmationCode: confirmationCode.trim() || undefined,
-        date: date || undefined,
-        time: time || undefined,
-        endDate: endDate || undefined,
-        endTime: endTime || undefined,
-        location: location.trim() || undefined,
-        passengerOrGuestName: passengerOrGuestName.trim() || undefined,
-        cabinOrRoomType: cabinOrRoomType.trim() || undefined,
-        seatOrRoomNumber: seatOrRoomNumber.trim() || undefined,
-        notes: notes.trim() || undefined,
-      };
-      onAddDocument(newDoc);
-    }
-
-    setIsModalOpen(false);
-    // Reset inputs
-    setTitle('');
-    setConfirmationCode('');
-    setDate('');
-    setTime('');
-    setEndDate('');
-    setEndTime('');
-    setLocation('');
-    setPassengerOrGuestName('');
-    setCabinOrRoomType('');
-    setSeatOrRoomNumber('');
-    setNotes('');
-    setFlightNumber('');
-    setCarrier('');
-    setDepAirport('');
-    setArrAirport('');
-  };
-
   return (
     <div className="bookings-hub-container">
-      {/* Top Header */}
       <div className="section-toolbar">
         <div>
           <h2 className="section-heading">Reservations &amp; Documents Vault</h2>
-          <p className="section-subheading">
-            Flights, hotel vouchers, activity passes, transit cards &amp; travel receipts
-          </p>
+          <p className="section-subheading">Flights, hotel vouchers, and travel passes</p>
         </div>
 
-        <button className="primary-action-btn" onClick={() => setIsModalOpen(true)}>
+        <button className="primary-action-btn" onClick={() => {
+          if (activePillar === 'flights' || activePillar === 'all') {
+            setEditingFlight(undefined);
+            setIsFlightModalOpen(true);
+          } else {
+            setEditingHotel(undefined);
+            setIsHotelModalOpen(true);
+          }
+        }}>
           <Plus size={16} />
-          <span>Add Reservation / Document</span>
+          <span>{activePillar === 'flights' ? 'Add Flight' : 'Add Hotel'}</span>
         </button>
       </div>
 
-      {/* Category Pills Filter - Wanderlog 3 Pillars */}
       <div className="category-filter-strip">
         <button
           className={`category-filter-btn ${activePillar === 'all' ? 'active' : ''}`}
           onClick={() => setActivePillar('all')}
         >
           <span>All Bookings</span>
-          <span className="count-tag">{counts.all}</span>
+          <span className="count-tag">{flights.length + documents.length}</span>
         </button>
 
         <button
-          className={`category-filter-btn ${activePillar === 'stays' ? 'active' : ''}`}
-          onClick={() => {
-            setActivePillar('stays');
-            setFormCategory('hotel');
-          }}
+          className={`category-filter-btn ${activePillar === 'hotels' ? 'active' : ''}`}
+          onClick={() => setActivePillar('hotels')}
         >
-          <Hotel size={14} />
-          <span>Hotels &amp; Places to Stay</span>
-          <span className="count-tag">{counts.hotel}</span>
+          <span>Hotels</span>
+          <span className="count-tag">{documents.filter(d => d.category === 'hotel').length}</span>
         </button>
 
         <button
-          className={`category-filter-btn ${activePillar === 'transport' ? 'active' : ''}`}
-          onClick={() => {
-            setActivePillar('transport');
-            setFormCategory('flight');
-          }}
+          className={`category-filter-btn ${activePillar === 'flights' ? 'active' : ''}`}
+          onClick={() => setActivePillar('flights')}
         >
-          <Plane size={14} />
-          <span>Flights &amp; Transport</span>
-          <span className="count-tag">{counts.transport}</span>
-        </button>
-
-        <button
-          className={`category-filter-btn ${activePillar === 'activities' ? 'active' : ''}`}
-          onClick={() => {
-            setActivePillar('activities');
-            setFormCategory('activity');
-          }}
-        >
-          <Ticket size={14} />
-          <span>Activities &amp; Theme Park Passes</span>
-          <span className="count-tag">{counts.activity}</span>
+          <span>Flights</span>
+          <span className="count-tag">{flights.length}</span>
         </button>
       </div>
 
-      {/* Search and Companion Filter Bar */}
-      <div className="search-and-travelers-bar">
-        <div className="search-input-box">
-          <Search size={15} className="text-tertiary" />
-          <input
-            type="text"
-            placeholder="Search by hotel, flight number, confirmation code, location..."
-            className="search-field"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-          />
-          {searchQuery && (
-            <button className="clear-search-btn" onClick={() => setSearchQuery('')}>
-              <X size={13} />
-            </button>
-          )}
-        </div>
+      <div className="hub-search-bar">
+        <Search size={16} className="text-secondary" />
+        <input
+          type="text"
+          placeholder="Search reservations by name, ref, or location..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+        />
       </div>
 
-      {/* Vault Grid */}
-      <div className="bookings-grid">
-        {/* Render Flight Passes */}
-        {filteredFlights.map((fl) => {
-          return (
-            <div key={fl.id} className="boarding-pass-card">
-              <div className="pass-header">
-                <div className="pass-carrier-row">
-                  <Plane size={16} className="text-blue" />
-                  <span className="pass-carrier">{fl.carrier}</span>
-                  <span className="pass-flight-num">{fl.flightNumber}</span>
-                  {fl.bookingRef && (
-                    <span className="stub-ref" title="Booking Reference (PNR)">{fl.bookingRef}</span>
-                  )}
-                </div>
-                <div className="pass-header-actions">
-                  <button
-                    className="pass-delete-btn"
-                    onClick={() => onDeleteFlight(fl.id)}
-                    title="Delete Flight"
-                  >
-                    <Trash2 size={13} />
-                  </button>
-                </div>
+      <div className="hub-content-area">
+        {filteredFlights.length === 0 && filteredDocs.length === 0 && (
+          <div className="empty-state-box">
+            <Ticket size={32} className="text-secondary mb-2" strokeWidth={1.5} />
+            <h3 className="empty-state-text">No bookings found</h3>
+            <p className="empty-hint">Add your flights and hotels to keep them organized.</p>
+          </div>
+        )}
+
+        {filteredFlights.map((fl) => (
+          <div key={fl.id} className="boarding-pass-card">
+            <div className="pass-header">
+              <div className="pass-carrier-row">
+                <Plane size={16} className="text-blue" />
+                <span className="pass-carrier">{fl.carrier}</span>
+                <span className="pass-flight-num">{fl.flightNumber}</span>
+                {fl.bookingRef && <span className="stub-ref">{fl.bookingRef}</span>}
               </div>
-
-              {/* Multi-Origin Companion Ribbon */}
-              {(fl.passengerName || fl.originCountry || fl.cabinClass) && (
-                <div className="passenger-ticket-ribbon">
-                  {fl.passengerName && (
-                    <span className="passenger-badge">
-                      <User size={12} className="text-blue" />
-                      <strong>{fl.passengerName}</strong>
-                    </span>
-                  )}
-                  {(fl.originCountry || fl.originCity) && (
-                    <span className="origin-badge">
-                      <Globe size={11} className="text-slate" />
-                      <span>
-                        From {fl.originCity ? `${fl.originCity}, ` : ''}
-                        {fl.originCountry || fl.departure.city}
-                      </span>
-                    </span>
-                  )}
-                  {fl.cabinClass && (
-                    <span className="cabin-badge">
-                      <Tag size={11} />
-                      <span>{fl.cabinClass}</span>
-                    </span>
-                  )}
-                </div>
-              )}
-
-              <div className="pass-route-row">
-                <div className="airport-block">
-                  <div className="airport-code-row">
-                    <span className="airport-code">{fl.departure.airport}</span>
-                    <span className="airport-time">{fl.departure.time}</span>
-                  </div>
-                  <div className="airport-city-name">{fl.departure.city || 'Departure'}</div>
-                  {fl.departure.terminal && (
-                    <div className="airport-terminal-pill">
-                      <span>{fl.departure.terminal}</span>
-                      {fl.departure.gate && <span className="terminal-gate">· Gate {fl.departure.gate}</span>}
-                    </div>
-                  )}
-                </div>
-
-                <div className="route-graphic">
-                  <div className="route-line-decor" />
-                  <div className="plane-icon-wrap">
-                    <Plane size={15} className="plane-graphic-icon" />
-                  </div>
-                  <div className="route-line-decor" />
-                </div>
-
-                <div className="airport-block text-right">
-                  <div className="airport-code-row" style={{ justifyContent: 'flex-end' }}>
-                    <span className="airport-time">
-                      {fl.arrival.time}
-                      {fl.arrival.nextDay && <sup className="next-day-sup">+1d</sup>}
-                    </span>
-                    <span className="airport-code">{fl.arrival.airport}</span>
-                  </div>
-                  <div className="airport-city-name">{fl.arrival.city || 'Arrival'}</div>
-                  {fl.arrival.terminal && (
-                    <div className="airport-terminal-pill">
-                      <span>{fl.arrival.terminal}</span>
-                      {fl.arrival.gate && <span className="terminal-gate">· Gate {fl.arrival.gate}</span>}
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              <div className="pass-footer">
-                <div className="pass-stub-item">
-                  <Calendar size={12} />
-                  <span>{fl.date}</span>
-                </div>
-                {fl.seat && (
-                  <div className="pass-stub-item">
-                    <Ticket size={12} />
-                    <span>Seat: {fl.seat}</span>
-                  </div>
-                )}
-                {fl.bookingRef && (
-                  <div className="pass-stub-item">
-                    <span className="stub-ref">Ref: {fl.bookingRef}</span>
-                  </div>
-                )}
-              </div>
-
-              {fl.notes && <div className="pass-notes-strip">{fl.notes}</div>}
-            </div>
-          );
-        })}
-
-        {/* Render Hotel Vouchers & Activity Passes & Travel Docs */}
-        {filteredDocs.map((doc) => {
-          const isHotel = doc.category === 'hotel';
-          const isActivity = doc.category === 'activity';
-          const isTransit = doc.category === 'transit';
-
-          const CategoryIcon = isHotel
-            ? Hotel
-            : isActivity
-            ? Ticket
-            : isTransit
-            ? Train
-            : FileText;
-
-          const categoryColorClass = isHotel
-            ? 'color-hotel'
-            : isActivity
-            ? 'color-activity'
-            : isTransit
-            ? 'color-transit'
-            : 'color-doc';
-
-          return (
-            <div key={doc.id} className={`booking-voucher-card ${categoryColorClass}`}>
-              <div className="voucher-card-top">
-                <div className="voucher-type-row">
-                  <CategoryIcon size={16} />
-                  <span className="voucher-type-name">
-                    {isHotel && 'Hotel Reservation'}
-                    {isActivity && 'Activity / Sight Booking'}
-                    {isTransit && 'Transit Pass'}
-                    {doc.category === 'doc' && 'Travel Document'}
-                  </span>
-                </div>
-
+              <div className="pass-header-actions">
                 <button
                   className="pass-delete-btn"
-                  onClick={() => onDeleteDocument(doc.id)}
-                  title="Delete Document"
+                  onClick={() => { setEditingFlight(fl); setIsFlightModalOpen(true); }}
+                  title="Edit Flight"
+                  style={{ marginRight: '8px' }}
+                >
+                  <FileText size={13} />
+                </button>
+                <button
+                  className="pass-delete-btn"
+                  onClick={() => onDeleteFlight(fl.id)}
+                  title="Delete Flight"
                 >
                   <Trash2 size={13} />
                 </button>
               </div>
-
-              <div className="voucher-main-body">
-                <h3 className="voucher-title">{doc.title}</h3>
-                {doc.subtitle && <p className="voucher-subtitle">{doc.subtitle}</p>}
-
-                {doc.location && (
-                  <div className="voucher-info-item mt-1">
-                    <MapPin size={12} className="text-slate flex-shrink-0" />
-                    <span>{doc.location}</span>
-                  </div>
-                )}
-
-                <div className="voucher-dates-row">
-                  {doc.date && (
-                    <div className="voucher-info-item">
-                      <Calendar size={12} className="text-slate flex-shrink-0" />
-                      <span>
-                        {isHotel ? 'Check-in: ' : ''}
-                        {doc.date} {doc.time ? `(${doc.time})` : ''}
-                      </span>
-                    </div>
-                  )}
-
-                  {doc.endDate && (
-                    <div className="voucher-info-item">
-                      <Clock size={12} className="text-slate flex-shrink-0" />
-                      <span>
-                        Check-out: {doc.endDate} {doc.endTime ? `(${doc.endTime})` : ''}
-                      </span>
-                    </div>
-                  )}
+            </div>
+            <div className="pass-body">
+              <div className="pass-route-row">
+                <div className="route-node">
+                  <span className="airport-code">{fl.departure?.airport || '???'}</span>
+                  <span className="route-time">{fl.departure?.time || '00:00'}</span>
                 </div>
-
-                {/* Guest / Traveler badge */}
-                {(doc.passengerOrGuestName || doc.cabinOrRoomType || doc.seatOrRoomNumber) && (
-                  <div className="voucher-guest-strip">
-                    {doc.passengerOrGuestName && (
-                      <span className="guest-badge">
-                        <User size={11} />
-                        <span>{doc.passengerOrGuestName}</span>
-                      </span>
-                    )}
-                    {doc.cabinOrRoomType && (
-                      <span className="guest-sub-badge">{doc.cabinOrRoomType}</span>
-                    )}
-                    {doc.seatOrRoomNumber && (
-                      <span className="guest-sub-badge font-mono">
-                        {doc.seatOrRoomNumber}
-                      </span>
-                    )}
-                  </div>
-                )}
-
-                {/* Wanderlog Auto-Populated Hotel Stay Indicator */}
-                {isHotel && (
-                  <div
-                    style={{
-                      display: 'inline-flex',
-                      alignItems: 'center',
-                      gap: '6px',
-                      fontSize: '11px',
-                      color: '#059669',
-                      backgroundColor: 'rgba(16, 185, 129, 0.08)',
-                      border: '1px solid rgba(16, 185, 129, 0.2)',
-                      padding: '3px 8px',
-                      borderRadius: '6px',
-                      fontWeight: 600,
-                      marginTop: '6px',
-                      maxWidth: '100%',
-                    }}
-                  >
-                    <CheckCircle2 size={12} className="flex-shrink-0" />
-                    <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                      Daily Hotel Stay Anchor
-                    </span>
-                  </div>
-                )}
+                <div className="route-divider" />
+                <div className="route-node text-right">
+                  <span className="airport-code">{fl.arrival?.airport || '???'}</span>
+                  <span className="route-time">{fl.arrival?.time || '00:00'}</span>
+                </div>
               </div>
+              {fl.passengerName && (
+                <div className="pass-footer" style={{ marginTop: '12px', fontSize: '12px', color: 'var(--text-secondary)' }}>
+                  Passenger: {fl.passengerName}
+                </div>
+              )}
+            </div>
+          </div>
+        ))}
 
-              <div className="voucher-footer">
-                {doc.qrCodeData && (
-                  <div className="voucher-qr-tag" title="Digital QR Pass Ready">
-                    <QrCode size={13} className="text-emerald" />
-                    <span>Digital Pass Ready</span>
-                  </div>
-                )}
-                {doc.confirmationCode && (
-                  <div className="voucher-code-pill font-mono">
-                    <span>Ref:</span>
-                    <strong>{doc.confirmationCode}</strong>
-                  </div>
-                )}  
+        {filteredDocs.map((doc) => {
+          const isHotel = doc.category === 'hotel';
+          const isActivity = doc.category === 'activity';
+          const isTransit = doc.category === 'transit';
+          const CategoryIcon = isHotel ? Hotel : isActivity ? Ticket : isTransit ? Train : FileText;
+
+          return (
+            <div key={doc.id} className={`traveler-voucher-card ${isHotel ? 'hotel-voucher' : ''}`}>
+              <div className="voucher-sidebar">
+                <CategoryIcon size={20} className={isHotel ? 'text-emerald' : 'text-slate'} />
               </div>
-
-              {doc.notes && <div className="voucher-notes-strip">{doc.notes}</div>}
+              <div className="voucher-main-body">
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                  <div>
+                    <h3 className="voucher-title">{doc.title}</h3>
+                    {doc.subtitle && <p className="voucher-subtitle">{doc.subtitle}</p>}
+                  </div>
+                  <div className="doc-card-actions" style={{ display: 'flex' }}>
+                    {isHotel && (
+                      <button
+                        className="pass-delete-btn"
+                        onClick={() => { setEditingHotel(doc); setIsHotelModalOpen(true); }}
+                        title="Edit Hotel"
+                        style={{ marginRight: '8px' }}
+                      >
+                        <FileText size={13} />
+                      </button>
+                    )}
+                    <button
+                      className="pass-delete-btn"
+                      onClick={() => onDeleteDocument(doc.id)}
+                      title="Delete"
+                    >
+                      <Trash2 size={13} />
+                    </button>
+                  </div>
+                </div>
+                {doc.passengerOrGuestName && (
+                  <p className="voucher-subtitle">Guest: {doc.passengerOrGuestName}</p>
+                )}
+                <div className="voucher-details-grid">
+                  {doc.date && <div><span className="v-label">Date</span><span className="v-value">{doc.date}</span></div>}
+                  {doc.confirmationCode && <div><span className="v-label">Booking Ref</span><span className="v-value">{doc.confirmationCode}</span></div>}
+                </div>
+              </div>
             </div>
           );
         })}
-
-        {filteredFlights.length === 0 && filteredDocs.length === 0 && (
-          <div className="empty-state-box full-span">
-            <Ticket size={36} className="text-slate" />
-            <p className="empty-state-text">No reservations or passes in this category.</p>
-            <button className="secondary-action-btn" onClick={() => setIsModalOpen(true)}>
-              Add reservation voucher
-            </button>
-          </div>
-        )}
       </div>
 
-      {/* Add Reservation / Document Modal */}
-      {isModalOpen && (
-        <div className="modal-backdrop" onClick={() => setIsModalOpen(false)}>
-          <div
-            className="modal-card"
-            onClick={(e) => e.stopPropagation()}
-            style={{ maxWidth: '560px', maxHeight: '90vh', display: 'flex', flexDirection: 'column', padding: 0, overflow: 'hidden' }}
-          >
-            <div className="modal-header" style={{ padding: '20px 24px 16px', borderBottom: '1px solid var(--border-subtle)' }}>
-              <div className="modal-header-left">
-                <div className="auth-header-icon">
-                  <FileCheck size={18} className="text-blue" />
-                </div>
-                <div>
-                  <h3 className="modal-title">Add Booking or Document</h3>
-                  <p className="modal-subtitle">
-                    Organize flights, hotels, activities, and travel passes
-                  </p>
-                </div>
-              </div>
-              <button
-                className="modal-close-btn"
-                onClick={() => setIsModalOpen(false)}
-              >
-                ✕
-              </button>
-            </div>
-
-            <form onSubmit={handleModalSubmit} style={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0, overflow: 'hidden' }}>
-              <div style={{ padding: '20px 24px', overflowY: 'auto', flex: 1, display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                {/* Category Selector Tabs */}
-              <div className="modal-type-tabs">
-                {(['flight', 'hotel', 'activity', 'transit', 'doc'] as ReservationCategory[]).map(
-                  (cat) => (
-                    <button
-                      key={cat}
-                      type="button"
-                      className={`modal-type-tab ${formCategory === cat ? 'active' : ''}`}
-                      onClick={() => setFormCategory(cat)}
-                    >
-                      {cat === 'flight' && '✈️ Flight'}
-                      {cat === 'hotel' && '🏨 Hotel'}
-                      {cat === 'activity' && '🎟️ Activity'}
-                      {cat === 'transit' && '🚆 Transit'}
-                      {cat === 'doc' && '📄 Document'}
-                    </button>
-                  )
-                )}
-              </div>
-
-              {/* FLIGHT SPECIFIC INPUTS */}
-              {formCategory === 'flight' ? (
-                <>
-                  <div className="form-row-2">
-                    <div>
-                      <label className="form-label">Passenger Name</label>
-                      <input
-                        type="text"
-                        placeholder="e.g. Alex, Elena (London)"
-                        className="form-input"
-                        value={passengerOrGuestName}
-                        onChange={(e) => setPassengerOrGuestName(e.target.value)}
-                      />
-                    </div>
-                    <div>
-                      <label className="form-label">Cabin Class</label>
-                      <select
-                        className="form-input"
-                        value={cabinOrRoomType}
-                        onChange={(e) => setCabinOrRoomType(e.target.value)}
-                      >
-                        <option value="Economy">Economy</option>
-                        <option value="Premium Economy">Premium Economy</option>
-                        <option value="Business">Business</option>
-                        <option value="First">First Class</option>
-                      </select>
-                    </div>
-                  </div>
-
-                  <div className="form-row-2">
-                    <div>
-                      <label className="form-label">Flight Number *</label>
-                      <input
-                        type="text"
-                        required
-                        placeholder="e.g. JL005, BA007"
-                        className="form-input"
-                        value={flightNumber}
-                        onChange={(e) => setFlightNumber(e.target.value)}
-                      />
-                    </div>
-                    <div>
-                      <label className="form-label">Carrier</label>
-                      <input
-                        type="text"
-                        placeholder="e.g. Japan Airlines"
-                        className="form-input"
-                        value={carrier}
-                        onChange={(e) => setCarrier(e.target.value)}
-                      />
-                    </div>
-                  </div>
-
-                  <div className="form-row-2">
-                    <div>
-                      <label className="form-label">Departure Airport (IATA) *</label>
-                      <input
-                        type="text"
-                        required
-                        maxLength={4}
-                        placeholder="e.g. JFK, LHR, DXB"
-                        className="form-input text-uppercase"
-                        value={depAirport}
-                        onChange={(e) => handleDepAirportChange(e.target.value)}
-                      />
-                    </div>
-                    <div>
-                      <label className="form-label">Arrival Airport (IATA) *</label>
-                      <input
-                        type="text"
-                        required
-                        maxLength={4}
-                        placeholder="e.g. HND, CDG, KUL"
-                        className="form-input text-uppercase"
-                        value={arrAirport}
-                        onChange={(e) => handleArrAirportChange(e.target.value)}
-                      />
-                    </div>
-                  </div>
-
-                  <div className="form-row-2">
-                    <div>
-                      <label className="form-label">Departure Terminal</label>
-                      <input
-                        type="text"
-                        placeholder="e.g. Terminal 4"
-                        className="form-input"
-                        value={depTerminal}
-                        onChange={(e) => setDepTerminal(e.target.value)}
-                      />
-                    </div>
-                    <div>
-                      <label className="form-label">Arrival Terminal</label>
-                      <input
-                        type="text"
-                        placeholder="e.g. Terminal 3"
-                        className="form-input"
-                        value={arrTerminal}
-                        onChange={(e) => setArrTerminal(e.target.value)}
-                      />
-                    </div>
-                  </div>
-
-                  <div className="form-row-2">
-                    <div>
-                      <label className="form-label">Origin City</label>
-                      <input
-                        type="text"
-                        placeholder="e.g. New York, London"
-                        className="form-input"
-                        value={originCity}
-                        onChange={(e) => setOriginCity(e.target.value)}
-                      />
-                    </div>
-                    <div>
-                      <label className="form-label">Origin Country</label>
-                      <input
-                        type="text"
-                        placeholder="e.g. United States, UK"
-                        className="form-input"
-                        value={originCountry}
-                        onChange={(e) => setOriginCountry(e.target.value)}
-                      />
-                    </div>
-                  </div>
-
-                  <div className="form-row-2">
-                    <div>
-                      <label className="form-label">Departure Date &amp; Time</label>
-                      <div className="flex gap-2">
-                        <input
-                          type="date"
-                          className="form-input flex-1"
-                          value={date}
-                          onChange={(e) => setDate(e.target.value)}
-                        />
-                        <input
-                          type="text"
-                          placeholder="13:15"
-                          className="form-input w-24"
-                          value={time}
-                          onChange={(e) => setTime(e.target.value)}
-                        />
-                      </div>
-                    </div>
-                    <div>
-                      <label className="form-label">Arrival Time &amp; Seat</label>
-                      <div className="flex gap-2">
-                        <input
-                          type="text"
-                          placeholder="16:30"
-                          className="form-input flex-1"
-                          value={endTime}
-                          onChange={(e) => setEndTime(e.target.value)}
-                        />
-                        <input
-                          type="text"
-                          placeholder="Seat 24A"
-                          className="form-input w-28"
-                          value={seatOrRoomNumber}
-                          onChange={(e) => setSeatOrRoomNumber(e.target.value)}
-                        />
-                      </div>
-                    </div>
-                  </div>
-                </>
-              ) : (
-                /* HOTEL / ACTIVITY / TRANSIT / DOC INPUTS */
-                <>
-                  {(formCategory === 'hotel' || formCategory === 'activity') && (
-                    <div>
-                      <label className="form-label" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                        <span>
-                          {formCategory === 'hotel'
-                            ? 'Search Hotel (Google Places & OSM)'
-                            : 'Search Activity / Sight (Google Places & OSM)'}
-                        </span>
-                      </label>
-                      <PlaceSearchInput
-                        placeholder={
-                          formCategory === 'hotel'
-                            ? 'Search hotel e.g. Hilton Tokyo, Park Hyatt, Hotel Gracery...'
-                            : 'Search sight or venue e.g. Shibuya Sky, Louvre...'
-                        }
-                        onSelectPlace={(place: PlaceSearchResult) => {
-                          setTitle(place.title);
-                          if (place.address) setLocation(place.address);
-                        }}
-                      />
-                    </div>
-                  )}
-
-                  <div>
-                    <label className="form-label">
-                      {formCategory === 'hotel' && 'Hotel / Accommodation Name *'}
-                      {formCategory === 'activity' && 'Activity / Sight Title *'}
-                      {formCategory === 'transit' && 'Transit Pass Title *'}
-                      {formCategory === 'doc' && 'Document / Pass Title *'}
-                    </label>
-                    <input
-                      type="text"
-                      required
-                      placeholder={
-                        formCategory === 'hotel'
-                          ? 'e.g. Hotel Gracery Shinjuku'
-                          : formCategory === 'activity'
-                          ? 'e.g. Shibuya Sky Observatory Deck'
-                          : formCategory === 'transit'
-                          ? 'e.g. JR East All-Access Pass'
-                          : 'e.g. Japan Visit Web QR Declaration'
-                      }
-                      className="form-input"
-                      value={title}
-                      onChange={(e) => setTitle(e.target.value)}
-                    />
-                  </div>
-
-                  <div className="form-row-2">
-                    <div>
-                      <label className="form-label">
-                        Confirmation Code / Booking Ref
-                      </label>
-                      <input
-                        type="text"
-                        placeholder="e.g. GRAC-88192"
-                        className="form-input"
-                        value={confirmationCode}
-                        onChange={(e) => setConfirmationCode(e.target.value)}
-                      />
-                    </div>
-                    <div>
-                      <label className="form-label">Guest / Traveler Name</label>
-                      <input
-                        type="text"
-                        placeholder="e.g. Alex, Group Pass"
-                        className="form-input"
-                        value={passengerOrGuestName}
-                        onChange={(e) => setPassengerOrGuestName(e.target.value)}
-                      />
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="form-label">Address or Location</label>
-                    <input
-                      type="text"
-                      placeholder="e.g. 1-19-1 Kabukicho, Shinjuku City"
-                      className="form-input"
-                      value={location}
-                      onChange={(e) => setLocation(e.target.value)}
-                    />
-                  </div>
-
-                  <div className="form-row-2">
-                    <div>
-                      <label className="form-label">
-                        {formCategory === 'hotel' ? 'Check-in Date & Time' : 'Date & Time'}
-                      </label>
-                      <div className="flex gap-2">
-                        <input
-                          type="date"
-                          className="form-input flex-1"
-                          value={date}
-                          onChange={(e) => setDate(e.target.value)}
-                        />
-                        <input
-                          type="text"
-                          placeholder="15:00"
-                          className="form-input w-24"
-                          value={time}
-                          onChange={(e) => setTime(e.target.value)}
-                        />
-                      </div>
-                    </div>
-
-                    {formCategory === 'hotel' && (
-                      <div>
-                        <label className="form-label">Check-out Date &amp; Time</label>
-                        <div className="flex gap-2">
-                          <input
-                            type="date"
-                            className="form-input flex-1"
-                            value={endDate}
-                            onChange={(e) => setEndDate(e.target.value)}
-                          />
-                          <input
-                            type="text"
-                            placeholder="11:00"
-                            className="form-input w-24"
-                            value={endTime}
-                            onChange={(e) => setEndTime(e.target.value)}
-                          />
-                        </div>
-                      </div>
-                    )}
-                  </div>
-
-                  <div className="form-row-2">
-                    <div>
-                      <label className="form-label">
-                        {formCategory === 'hotel' ? 'Room Category' : 'Pass / Ticket Type'}
-                      </label>
-                      <input
-                        type="text"
-                        placeholder="e.g. Deluxe Double, Fast Pass"
-                        className="form-input"
-                        value={cabinOrRoomType}
-                        onChange={(e) => setCabinOrRoomType(e.target.value)}
-                      />
-                    </div>
-                    <div>
-                      <label className="form-label">
-                        {formCategory === 'hotel' ? 'Room Number' : 'Seat / Slot Number'}
-                      </label>
-                      <input
-                        type="text"
-                        placeholder="e.g. Room 2408"
-                        className="form-input"
-                        value={seatOrRoomNumber}
-                        onChange={(e) => setSeatOrRoomNumber(e.target.value)}
-                      />
-                    </div>
-                  </div>
-                </>
-              )}
-
-              <div>
-                <label className="form-label">Important Notes / Instructions</label>
-                <input
-                  type="text"
-                  placeholder="e.g. Show voucher barcode at 8th floor desk"
-                  className="form-input"
-                  value={notes}
-                  onChange={(e) => setNotes(e.target.value)}
-                />
-              </div>
-            </div>
-
-            <div className="modal-actions-row" style={{ padding: '16px 24px', borderTop: '1px solid var(--border-subtle)', background: 'var(--bg-card)', marginTop: 0 }}>
-                <button
-                  type="button"
-                  className="secondary-action-btn flex-1"
-                  onClick={() => setIsModalOpen(false)}
-                >
-                  Cancel
-                </button>
-                <button type="submit" className="primary-modal-btn flex-1">
-                  <CheckCircle2 size={15} />
-                  <span>Save to Vault</span>
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
+      <FlightModal
+        isOpen={isFlightModalOpen}
+        onClose={() => setIsFlightModalOpen(false)}
+        onSave={(f) => { onAddFlight(f); setIsFlightModalOpen(false); }}
+        initialFlight={editingFlight}
+        travelers={['Safvan', 'Riyana']}
+      />
+      <HotelModal
+        isOpen={isHotelModalOpen}
+        onClose={() => setIsHotelModalOpen(false)}
+        onSave={(h) => { onAddDocument(h); setIsHotelModalOpen(false); }}
+        initialHotel={editingHotel}
+        travelers={['Safvan', 'Riyana']}
+      />
     </div>
   );
 };

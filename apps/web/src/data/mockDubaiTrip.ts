@@ -19,7 +19,7 @@ export const mockDubaiTripData: Trip = {
   baseCurrency: 'AED',
   homeCurrency: 'USD',
   readinessScore: 85,
-  travelers: ['John (Husband)', 'Jane (Wife)'],
+  travelers: ['Safvan', 'Riyana'],
   documents: [
     {
       id: 'doc_dxb_1',
