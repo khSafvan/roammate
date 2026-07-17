@@ -185,46 +185,96 @@ export const DocumentsAndTicketsHub: React.FC<DocumentsAndTicketsHubProps> = ({
           const isHotel = doc.category === 'hotel';
           const isActivity = doc.category === 'activity';
           const isTransit = doc.category === 'transit';
-          const CategoryIcon = isHotel ? Hotel : isActivity ? Ticket : isTransit ? Train : FileText;
+          
+          const CategoryIcon = isHotel
+            ? Hotel
+            : isActivity
+            ? Ticket
+            : isTransit
+            ? Train
+            : FileText;
+
+          const categoryColorClass = isHotel
+            ? 'color-hotel'
+            : isActivity
+            ? 'color-activity'
+            : isTransit
+            ? 'color-transit'
+            : 'color-doc';
 
           return (
-            <div key={doc.id} className={`traveler-voucher-card ${isHotel ? 'hotel-voucher' : ''}`}>
-              <div className="voucher-sidebar">
-                <CategoryIcon size={20} className={isHotel ? 'text-emerald' : 'text-slate'} />
-              </div>
-              <div className="voucher-main-body">
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                  <div>
-                    <h3 className="voucher-title">{doc.title}</h3>
-                    {doc.subtitle && <p className="voucher-subtitle">{doc.subtitle}</p>}
-                  </div>
-                  <div className="doc-card-actions" style={{ display: 'flex' }}>
-                    {isHotel && (
-                      <button
-                        className="pass-delete-btn"
-                        onClick={() => { setEditingHotel(doc); setIsHotelModalOpen(true); }}
-                        title="Edit Hotel"
-                        style={{ marginRight: '8px' }}
-                      >
-                        <FileText size={13} />
-                      </button>
-                    )}
+            <div key={doc.id} className={`booking-voucher-card ${categoryColorClass}`}>
+              <div className="voucher-card-top">
+                <div className="voucher-type-row">
+                  <CategoryIcon size={16} />
+                  <span className="voucher-type-name">
+                    {isHotel && 'Hotel Reservation'}
+                    {isActivity && 'Activity / Sight Booking'}
+                    {isTransit && 'Transit Pass'}
+                    {doc.category === 'doc' && 'Travel Document'}
+                  </span>
+                </div>
+
+                <div style={{ display: 'flex' }}>
+                  {isHotel && (
                     <button
                       className="pass-delete-btn"
-                      onClick={() => onDeleteDocument(doc.id)}
-                      title="Delete"
+                      onClick={() => { setEditingHotel(doc); setIsHotelModalOpen(true); }}
+                      title="Edit Hotel"
+                      style={{ marginRight: '8px' }}
                     >
-                      <Trash2 size={13} />
+                      <FileText size={13} />
                     </button>
+                  )}
+                  <button
+                    className="pass-delete-btn"
+                    onClick={() => onDeleteDocument(doc.id)}
+                    title="Delete Document"
+                  >
+                    <Trash2 size={13} />
+                  </button>
+                </div>
+              </div>
+
+              <div className="voucher-main-body">
+                <h3 className="voucher-title">{doc.title}</h3>
+                {doc.subtitle && <p className="voucher-subtitle">{doc.subtitle}</p>}
+
+                {doc.location && (
+                  <div className="voucher-info-item mt-1">
+                    <span>{doc.location}</span>
                   </div>
-                </div>
-                {doc.passengerOrGuestName && (
-                  <p className="voucher-subtitle">Guest: {doc.passengerOrGuestName}</p>
                 )}
-                <div className="voucher-details-grid">
-                  {doc.date && <div><span className="v-label">Date</span><span className="v-value">{doc.date}</span></div>}
-                  {doc.confirmationCode && <div><span className="v-label">Booking Ref</span><span className="v-value">{doc.confirmationCode}</span></div>}
+
+                <div className="voucher-dates-row" style={{ marginTop: '12px', display: 'flex', gap: '16px' }}>
+                  {doc.date && (
+                    <div className="voucher-info-item text-slate text-sm">
+                      <span>
+                        {isHotel ? 'Check-in: ' : ''}
+                        {doc.date} {doc.time ? `(${doc.time})` : ''}
+                      </span>
+                    </div>
+                  )}
+
+                  {doc.endDate && (
+                    <div className="voucher-info-item text-slate text-sm">
+                      <span>
+                        Check-out: {doc.endDate} {doc.endTime ? `(${doc.endTime})` : ''}
+                      </span>
+                    </div>
+                  )}
                 </div>
+
+                {(doc.passengerOrGuestName || doc.confirmationCode) && (
+                  <div className="voucher-guest-strip" style={{ marginTop: '16px', padding: '12px', background: 'var(--bg-canvas)', borderRadius: '6px' }}>
+                    {doc.passengerOrGuestName && (
+                      <div className="text-sm">Guest: <strong>{doc.passengerOrGuestName}</strong></div>
+                    )}
+                    {doc.confirmationCode && (
+                      <div className="text-sm mt-1">Ref: <strong>{doc.confirmationCode}</strong></div>
+                    )}
+                  </div>
+                )}
               </div>
             </div>
           );

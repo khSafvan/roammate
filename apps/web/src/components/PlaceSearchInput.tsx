@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
+import { useDebounce } from '../hooks/useDebounce';
 import { Loader2, MapPin, Search, X } from 'lucide-react';
 import { Coordinates, StopCategory } from '../types/trip';
 import { fuzzySortResults } from '../utils/fuzzySearch';
@@ -82,7 +83,6 @@ export const PlaceSearchInput: React.FC<PlaceSearchInputProps> = ({
   const [isOpen, setIsOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  // Close dropdown on outside click
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
       if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
@@ -93,23 +93,22 @@ export const PlaceSearchInput: React.FC<PlaceSearchInputProps> = ({
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  // Debounced search query with context awareness and fuzzy matching
+  const debouncedQuery = useDebounce(query, 200);
+
   useEffect(() => {
-    const trimmed = query.trim();
+    const trimmed = debouncedQuery.trim();
     if (trimmed.length < 2) {
       setResults([]);
       setIsLoading(false);
       return;
     }
     
-    // 1. Check if we have it in our fast local cache or mock
     const cacheKey = `${trimmed}|${searchContext || ''}`;
     if (searchCache.has(cacheKey)) {
       setResults(searchCache.get(cacheKey)!);
       return;
     }
     
-    // Quick mock search for Dubai
     const qLower = trimmed.toLowerCase();
     const localMatches = POPULAR_DUBAI_PLACES.filter(p => p.title.toLowerCase().includes(qLower));
     if (localMatches.length > 0) {
@@ -118,7 +117,8 @@ export const PlaceSearchInput: React.FC<PlaceSearchInputProps> = ({
     }
 
     setIsLoading(true);
-    const timeout = setTimeout(async () => {
+    
+    const fetchNominatim = async () => {
       try {
         const cleanContext = searchContext ? searchContext.split(',')[0].trim() : '';
         const hasContextInQuery = cleanContext && trimmed.toLowerCase().includes(cleanContext.toLowerCase());
@@ -182,10 +182,10 @@ export const PlaceSearchInput: React.FC<PlaceSearchInputProps> = ({
       } finally {
         setIsLoading(false);
       }
-    }, 200);
-
-    return () => clearTimeout(timeout);
-  }, [query, searchContext]);
+    };
+    
+    fetchNominatim();
+  }, [debouncedQuery, searchContext]);
 
   const [selectedIndex, setSelectedIndex] = useState<number>(-1);
 
