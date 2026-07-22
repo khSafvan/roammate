@@ -37,11 +37,9 @@ const TripSettingsPage = lazy(() => import('./components/trips/TripSettingsPage'
 import { WeatherBanner } from './components/WeatherBanner';
 const PackingView = lazy(() => import('./components/outfits/PackingView').then(m => ({ default: m.PackingView })));
 import { apiClient } from './auth/syncService';
-import { BookingDocument, Expense, Flight, ItineraryStop, Look, PackingCategory, PackingItem, StopCategory, TransitLeg, Trip, TripDay } from './types/trip';
+import { BookingDocument, Expense, Flight, ItineraryStop, Look, PackingCategory, PackingItem, StopCategory, Trip, TripDay } from './types/trip';
 import {
-  computeDistanceKm,
   detectTransitConflict,
-  estimateDurationMins,
   getDayAnchors,
   getEffectiveStayForDay,
 } from '@mojolog/core';
@@ -270,7 +268,13 @@ export function App() {
       stops: [],
     };
 
-  const { transitLegs, transitModes, handleToggleMode } = useTransitLegs(activeDay?.stops || []);
+  // Only place locations to visit inside the day's itinerary stream
+  const placeStops = useMemo(
+    () => activeDay.stops.filter((s) => s.category !== 'note'),
+    [activeDay.stops]
+  );
+
+  const { transitLegs, transitModes, handleToggleMode } = useTransitLegs(placeStops);
   const {
     isDayOptimized,
     canUndo,
@@ -282,9 +286,9 @@ export function App() {
   } = useTripOptimization(activeDay, activeDayIdx, setTrip);
 
   const activeDayScheduleConflicts = useMemo(
-    () => activeDay.stops.map((stop, index) => {
-      const nextStop = activeDay.stops[index + 1];
-      if (!nextStop || stop.category === 'note' || nextStop.category === 'note') return null;
+    () => placeStops.map((stop, index) => {
+      const nextStop = placeStops[index + 1];
+      if (!nextStop) return null;
 
       return detectTransitConflict(
         stop,
@@ -292,7 +296,7 @@ export function App() {
         transitLegs[index]?.durationMinutes || 0
       );
     }),
-    [activeDay.stops, transitLegs]
+    [placeStops, transitLegs]
   );
 
   const dayAnchors = useMemo(
@@ -312,17 +316,7 @@ export function App() {
     [trip?.days, activeDayIdx, trip?.documents, trip?.startDate]
   );
 
-  // Only place locations to visit inside the day's itinerary stream
-  const placeStops = useMemo(
-    () => activeDay.stops.filter((s) => s.category !== 'note' && !s.isAnchor),
-    [activeDay.stops]
-  );
   
-  const topbarAnchors = useMemo(
-    () => activeDay.stops.filter(s => s.isAnchor),
-    [activeDay.stops]
-  );
-
   // Active detail place selected for LHS deep view
   const activeDetailStop = useMemo(() => {
     if (!activeDetailStopId || !trip) return null;
@@ -354,88 +348,7 @@ export function App() {
     return '';
   }, [activeDay.notes, activeDay.stops]);
 
-  // Distance & Travel Time from Starting Hotel Anchor to First Place Stop
-  const startAnchorLeg: TransitLeg | null = useMemo(() => {
-    const startCoord = dayAnchors.startAnchor?.coordinates || effectiveStay?.stay?.coordinates;
-    const startId = dayAnchors.startAnchor?.id || effectiveStay?.stay?.id;
-    if (!startCoord || !startId) return null;
-    const firstPlaceStop = placeStops.find(
-      (s) => s.coordinates?.latitude && s.coordinates?.longitude
-    );
-    if (!firstPlaceStop || !firstPlaceStop.coordinates) return null;
 
-    const fromLat = startCoord.latitude;
-    const fromLng = startCoord.longitude;
-    const toLat = firstPlaceStop.coordinates.latitude;
-    const toLng = firstPlaceStop.coordinates.longitude;
-
-    const distanceKm = computeDistanceKm(fromLat, fromLng, toLat, toLng);
-    const key = `${startId}->${firstPlaceStop.id}`;
-    const mode = transitModes[key] || 'drive';
-    const durationMinutes = estimateDurationMins(distanceKm, mode);
-
-    return {
-      fromStopId: startId,
-      toStopId: firstPlaceStop.id,
-      mode,
-      distanceKm,
-      durationMinutes,
-      isOutlier: durationMinutes > 45 || distanceKm > 20,
-    };
-  }, [dayAnchors.startAnchor, effectiveStay, placeStops, transitModes]);
-
-  // Distance & Travel Time from Last Place Stop to Ending Hotel Anchor
-  const endAnchorLeg: TransitLeg | null = useMemo(() => {
-    if (!dayAnchors.endAnchor?.coordinates) return null;
-    const lastPlaceStop = [...placeStops]
-      .reverse()
-      .find((s) => s.coordinates?.latitude && s.coordinates?.longitude);
-    if (!lastPlaceStop || !lastPlaceStop.coordinates) return null;
-
-    const fromLat = lastPlaceStop.coordinates.latitude;
-    const fromLng = lastPlaceStop.coordinates.longitude;
-    const toLat = dayAnchors.endAnchor.coordinates.latitude;
-    const toLng = dayAnchors.endAnchor.coordinates.longitude;
-
-    const distanceKm = computeDistanceKm(fromLat, fromLng, toLat, toLng);
-    const key = `${lastPlaceStop.id}->${dayAnchors.endAnchor.id}`;
-    const mode = transitModes[key] || 'drive';
-    const durationMinutes = estimateDurationMins(distanceKm, mode);
-
-    return {
-      fromStopId: lastPlaceStop.id,
-      toStopId: dayAnchors.endAnchor.id,
-      mode,
-      distanceKm,
-      durationMinutes,
-      isOutlier: durationMinutes > 45 || distanceKm > 20,
-    };
-  }, [dayAnchors.endAnchor, placeStops, transitModes]);
-
-  // Distance & Travel Time between Start and End Hotel Anchors (empty day transition)
-  const directTransitionLeg: TransitLeg | null = useMemo(() => {
-    if (placeStops.length > 0) return null;
-    if (!dayAnchors.startAnchor?.coordinates || !dayAnchors.endAnchor?.coordinates) return null;
-
-    const fromLat = dayAnchors.startAnchor.coordinates.latitude;
-    const fromLng = dayAnchors.startAnchor.coordinates.longitude;
-    const toLat = dayAnchors.endAnchor.coordinates.latitude;
-    const toLng = dayAnchors.endAnchor.coordinates.longitude;
-
-    const distanceKm = computeDistanceKm(fromLat, fromLng, toLat, toLng);
-    const key = `${dayAnchors.startAnchor.id}->${dayAnchors.endAnchor.id}`;
-    const mode = transitModes[key] || 'drive';
-    const durationMinutes = estimateDurationMins(distanceKm, mode);
-
-    return {
-      fromStopId: dayAnchors.startAnchor.id,
-      toStopId: dayAnchors.endAnchor.id,
-      mode,
-      distanceKm,
-      durationMinutes,
-      isOutlier: durationMinutes > 45 || distanceKm > 20,
-    };
-  }, [dayAnchors.startAnchor, dayAnchors.endAnchor, placeStops.length, transitModes]);
 
   // Filter flights scheduled on the active itinerary day (from both trip.flights and documents)
   const dayFlights = useMemo(() => {
@@ -1494,40 +1407,6 @@ export function App() {
 
                   {/* Itinerary Stream with Distance Connectors (Places Only) */}
                   <div className="itinerary-stream">
-                    {/* Distance from Starting Hotel Anchor to First Location */}
-                    {startAnchorLeg && (
-                      <DistancePill
-                        leg={startAnchorLeg}
-                        onToggleMode={handleToggleMode}
-                      />
-                    )}
-
-                    {/* Direct Distance between Starting and Ending Hotels (0 stops transition) */}
-                    {directTransitionLeg && (
-                      <DistancePill
-                        leg={directTransitionLeg}
-                        onToggleMode={handleToggleMode}
-                      />
-                    )}
-
-                  {topbarAnchors.map((anchorStop) => (
-                    <TimelineCard
-                      key={anchorStop.id}
-                      stop={anchorStop}
-                      index={0}
-                      totalStops={1}
-                      themeColor={activeDay.themeColor}
-                      isSelected={anchorStop.id === selectedStopId}
-                      look={looksByEvent.get(anchorStop.id)}
-                      onSelect={handleSelectStopMemoized}
-                      onEdit={handleEditStopMemoized}
-                      onDeleteStop={handleDeleteStop}
-                      onContextMenu={handleContextMenu}
-                      isDragging={false}
-                      isDragOver={false}
-                    />
-                  ))}
-                  
                   {placeStops.map((stop, index) => (
                       <React.Fragment key={stop.id}>
                         <TimelineCard
@@ -1595,14 +1474,6 @@ export function App() {
                           </button>
                         </div>
                       </div>
-                    )}
-
-                    {/* Distance from Last Location to Ending Hotel Anchor */}
-                    {endAnchorLeg && (
-                      <DistancePill
-                        leg={endAnchorLeg}
-                        onToggleMode={handleToggleMode}
-                      />
                     )}
 
                     {/* + Add Place Action Bar */}
