@@ -11,7 +11,6 @@ import {
   Zap,
 } from 'lucide-react';
 import { AddStopModal } from './components/AddStopModal';
-import { DayBaseAnchors } from './components/DayBaseAnchors';
 import { DayNotesCard } from './components/DayNotesCard';
 import { PasscodeAuthModal } from './components/auth';
 import { AuthModal } from './components/AuthModal';
@@ -268,11 +267,83 @@ export function App() {
       stops: [],
     };
 
-  // Only place locations to visit inside the day's itinerary stream
-  const placeStops = useMemo(
-    () => activeDay.stops.filter((s) => s.category !== 'note'),
-    [activeDay.stops]
+  const dayAnchors = useMemo(
+    () =>
+      getDayAnchors(
+        activeDay.dateStr,
+        trip?.documents || [],
+        activeDayIdx,
+        trip?.days?.length || 1,
+        trip?.days || []
+      ),
+    [activeDay.dateStr, trip?.documents, activeDayIdx, trip?.days]
   );
+
+  const effectiveStay = useMemo(
+    () => getEffectiveStayForDay(trip?.days || [], activeDayIdx, trip?.documents, trip?.startDate),
+    [trip?.days, activeDayIdx, trip?.documents, trip?.startDate]
+  );
+
+  // Only place locations to visit inside the day's itinerary stream
+  const placeStops = useMemo(() => {
+    const stops = activeDay.stops.filter((s) => s.category !== 'note');
+    
+    // Check if user already manually added an anchor at the start/end
+    const hasStartAnchor = stops.length > 0 && stops[0].isAnchor;
+    const hasEndAnchor = stops.length > 0 && stops[stops.length - 1].isAnchor;
+
+    const result = [...stops];
+
+    // Inject implicit start anchor from hotel bookings if missing
+    if (!hasStartAnchor) {
+      const effectiveStart = dayAnchors.startAnchor
+        ? dayAnchors.startAnchor
+        : effectiveStay
+        ? {
+            id: effectiveStay.stay.id,
+            title: effectiveStay.stay.title,
+            address: effectiveStay.stay.address || '',
+            time: undefined,
+            action: effectiveStay.isInherited ? 'depart' : 'check_in',
+            label: effectiveStay.stay.title,
+            coordinates: effectiveStay.stay.coordinates,
+          }
+        : null;
+
+      if (effectiveStart && effectiveStart.coordinates) {
+        result.unshift({
+          id: `implicit_start_${effectiveStart.id}`,
+          orderIndex: -1,
+          title: effectiveStart.title,
+          subtitle: effectiveStart.action === 'check_out' ? 'Check-out · Starting Base' : 'Fixed Starting Base',
+          category: 'lodging',
+          startTime: effectiveStart.time || '',
+          durationMinutes: 0,
+          coordinates: effectiveStart.coordinates,
+          address: effectiveStart.address || '',
+          isAnchor: true,
+        });
+      }
+    }
+
+    // Inject implicit end anchor from hotel bookings if missing
+    if (!hasEndAnchor && dayAnchors.endAnchor && dayAnchors.endAnchor.coordinates) {
+      result.push({
+        id: `implicit_end_${dayAnchors.endAnchor.id}`,
+        orderIndex: 9999,
+        title: dayAnchors.endAnchor.title,
+        subtitle: dayAnchors.endAnchor.action === 'check_in' ? 'Check-in · Return Base' : 'Fixed Return Base',
+        category: 'lodging',
+        startTime: dayAnchors.endAnchor.time || '',
+        durationMinutes: 0,
+        coordinates: dayAnchors.endAnchor.coordinates,
+        address: dayAnchors.endAnchor.address || '',
+        isAnchor: true,
+      });
+    }
+
+    return result;
+  }, [activeDay.stops, dayAnchors, effectiveStay]);
 
   const { transitLegs, transitModes, handleToggleMode } = useTransitLegs(placeStops);
   const {
@@ -297,23 +368,6 @@ export function App() {
       );
     }),
     [placeStops, transitLegs]
-  );
-
-  const dayAnchors = useMemo(
-    () =>
-      getDayAnchors(
-        activeDay.dateStr,
-        trip?.documents || [],
-        activeDayIdx,
-        trip?.days?.length || 1,
-        trip?.days || []
-      ),
-    [activeDay.dateStr, trip?.documents, activeDayIdx, trip?.days]
-  );
-
-  const effectiveStay = useMemo(
-    () => getEffectiveStayForDay(trip?.days || [], activeDayIdx, trip?.documents, trip?.startDate),
-    [trip?.days, activeDayIdx, trip?.documents, trip?.startDate]
   );
 
   
@@ -1378,15 +1432,6 @@ export function App() {
                   <WeatherBanner
                     weather={activeDay.weather}
                     themeColor={activeDay.themeColor}
-                  />
-
-                  {/* Fixed Daily Base Anchors (Non-draggable Starting & Ending Points) */}
-                  <DayBaseAnchors
-                    startAnchor={dayAnchors.startAnchor}
-                    endAnchor={dayAnchors.endAnchor}
-                    effectiveStay={effectiveStay}
-                    onNavigateToStay={() => setActiveTab('bookings')}
-                    onOpenAddLodging={() => handleOpenAddStop('lodging')}
                   />
 
                   {/* Scheduled Flights for Today (Placed at top of day before itinerary) */}

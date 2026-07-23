@@ -310,7 +310,6 @@ export const mockDubaiTripData: Trip = {
           durationMinutes: 120,
           coordinates: { latitude: 24.4128, longitude: 54.4750 },
           address: 'Al Rawdah, Abu Dhabi',
-          isAnchor: true,
         },
         {
           id: 'dxb_s10',
