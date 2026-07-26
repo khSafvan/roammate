@@ -3,6 +3,7 @@ import {
   CalendarDays,
   CheckSquare,
   CloudSun,
+  Copy,
   Edit2,
   Luggage,
   Plus,
@@ -12,9 +13,11 @@ import {
   Trash2,
   User,
 } from 'lucide-react';
-import { Look, Trip } from '@mojolog/shared';
+import { Look, LookOccasion, Trip } from '@mojolog/shared';
 import { ApiClient } from '@mojolog/api-client';
 import { OutfitModal } from './OutfitModal';
+import { WardrobeClosetView } from './WardrobeClosetView';
+import { SelectFromWardrobeModal } from './SelectFromWardrobeModal';
 
 interface PackingViewProps {
   trip: Trip;
@@ -25,6 +28,16 @@ interface PackingViewProps {
   onNavigateToDay?: (dayNumber: number) => void;
 }
 
+const OCCASION_BADGES: Record<LookOccasion, { label: string; emoji: string; bg: string; color: string }> = {
+  casual: { label: 'Casual', emoji: '☀️', bg: '#fef3c7', color: '#92400e' },
+  dining: { label: 'Dining', emoji: '🍷', bg: '#fce7f3', color: '#9d174d' },
+  beach: { label: 'Beach & Pool', emoji: '🏖️', bg: '#e0f2fe', color: '#075985' },
+  cultural: { label: 'Cultural', emoji: '🕌', bg: '#ecfdf5', color: '#065f46' },
+  active: { label: 'Active', emoji: '👟', bg: '#f3e8ff', color: '#6b21a8' },
+  formal: { label: 'Formal', emoji: '✨', bg: '#fef9c3', color: '#854d0e' },
+  other: { label: 'Other', emoji: '🏷️', bg: '#f1f5f9', color: '#475569' },
+};
+
 export const PackingView: React.FC<PackingViewProps> = ({
   trip,
   looks,
@@ -33,18 +46,25 @@ export const PackingView: React.FC<PackingViewProps> = ({
   onDeleteLook,
   onNavigateToDay,
 }) => {
-  // Top view mode: 'itinerary' (Day-by-Day) vs 'packing' (Luggage Checklist)
-  const [viewMode, setViewMode] = useState<'itinerary' | 'packing'>('itinerary');
+  // Top view mode: 'itinerary' (Day-by-Day), 'wardrobe' (Closet Capsule), 'packing' (Luggage Checklist)
+  const [viewMode, setViewMode] = useState<'itinerary' | 'wardrobe' | 'packing'>('itinerary');
   const [filterMode, setFilterMode] = useState<'all' | 'unpacked' | 'packed'>('all');
 
-  // Modal state
+  // Modal state for create/edit
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingLook, setEditingLook] = useState<Look | null>(null);
-  const [modalInitialDay, setModalInitialDay] = useState<number>(1);
+  const [modalInitialDay, setModalInitialDay] = useState<number | undefined>(1);
   const [modalInitialEventId, setModalInitialEventId] = useState<string | undefined>(undefined);
 
-  const person1Name = trip.travelers?.[0] || 'Person 1';
-  const person2Name = trip.travelers?.[1] || 'Person 2';
+  // State for "Select from Wardrobe" target
+  const [wardrobeSelectTarget, setWardrobeSelectTarget] = useState<{
+    dayNumber: number;
+    eventId?: string;
+    eventTitle?: string;
+  } | null>(null);
+
+  const person1Name = trip.travelers?.[0] || 'John';
+  const person2Name = trip.travelers?.[1] || 'Jane';
 
   // Map of eventId -> stop title & day number
   const stopLookup = useMemo(() => {
@@ -57,7 +77,7 @@ export const PackingView: React.FC<PackingViewProps> = ({
     return map;
   }, [trip.days]);
 
-  // Group looks by day number (1-indexed)
+  // Group looks by day number (1-indexed). Only includes looks assigned to a valid day.
   const looksByDay = useMemo(() => {
     const map = new Map<number, Look[]>();
     trip.days.forEach((d) => map.set(d.dayNumber, []));
@@ -66,19 +86,20 @@ export const PackingView: React.FC<PackingViewProps> = ({
       // Determine day number from look.dayNumber or by looking up eventId
       let dayNum = look.dayNumber;
       if (!dayNum) {
-        if (look.eventId.startsWith('day_')) {
+        if (look.eventId && look.eventId.startsWith('day_')) {
           const parsed = parseInt(look.eventId.replace('day_', ''), 10);
           if (!isNaN(parsed)) dayNum = parsed;
-        } else {
+        } else if (look.eventId && look.eventId !== 'unassigned') {
           const stop = stopLookup.get(look.eventId);
           if (stop) dayNum = stop.dayNumber;
         }
       }
-      dayNum = dayNum || 1;
 
-      const current = map.get(dayNum) || [];
-      current.push(look);
-      map.set(dayNum, current);
+      if (dayNum && map.has(dayNum)) {
+        const current = map.get(dayNum) || [];
+        current.push(look);
+        map.set(dayNum, current);
+      }
     });
 
     return map;
@@ -112,18 +133,53 @@ export const PackingView: React.FC<PackingViewProps> = ({
     });
   };
 
-  const handleOpenAddLookForDay = (dayNum: number, eventId?: string) => {
+  const handleOpenAddLookForDay = (dayNum?: number, eventId?: string) => {
     setEditingLook(null);
     setModalInitialDay(dayNum);
-    setModalInitialEventId(eventId || `day_${dayNum}`);
+    setModalInitialEventId(eventId || (dayNum ? `day_${dayNum}` : 'unassigned'));
     setIsModalOpen(true);
   };
 
   const handleOpenEditLook = (look: Look) => {
     setEditingLook(look);
-    setModalInitialDay(look.dayNumber || 1);
+    setModalInitialDay(look.dayNumber);
     setModalInitialEventId(look.eventId);
     setIsModalOpen(true);
+  };
+
+  const handleSelectFromWardrobe = (
+    selectedLook: Look,
+    mode: 'assign' | 'duplicate',
+    target: { dayNumber: number; eventId?: string; eventTitle?: string }
+  ) => {
+    if (mode === 'assign') {
+      onUpdateLook({
+        ...selectedLook,
+        dayNumber: target.dayNumber,
+        eventId: target.eventId || `day_${target.dayNumber}`,
+        updatedAt: Date.now(),
+      });
+    } else {
+      const duplicated: Look = {
+        ...selectedLook,
+        id: `look_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
+        dayNumber: target.dayNumber,
+        eventId: target.eventId || `day_${target.dayNumber}`,
+        packed: false,
+        createdAt: Date.now(),
+        updatedAt: Date.now(),
+      };
+      onUpdateLook(duplicated);
+    }
+  };
+
+  const handleMoveToWardrobe = (look: Look) => {
+    onUpdateLook({
+      ...look,
+      dayNumber: undefined,
+      eventId: 'unassigned',
+      updatedAt: Date.now(),
+    });
   };
 
   return (
@@ -137,7 +193,7 @@ export const PackingView: React.FC<PackingViewProps> = ({
           </div>
 
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
-            {/* View Mode Toggle: Itinerary Looks vs. Luggage Packing */}
+            {/* 3-Tab View Mode Toggle: Itinerary Looks vs. Wardrobe Closet vs. Luggage Packing */}
             <div
               style={{
                 display: 'inline-flex',
@@ -145,25 +201,50 @@ export const PackingView: React.FC<PackingViewProps> = ({
                 padding: '3px',
                 borderRadius: '8px',
                 border: '1px solid var(--color-border-subtle, #e2e8f0)',
+                gap: '2px',
               }}
             >
               <button
                 type="button"
                 className={`slot-action-btn ${viewMode === 'itinerary' ? 'active-toggle' : ''}`}
                 onClick={() => setViewMode('itinerary')}
-                style={{ border: 'none', background: viewMode === 'itinerary' ? '#ffffff' : 'transparent' }}
+                style={{
+                  border: 'none',
+                  background: viewMode === 'itinerary' ? '#ffffff' : 'transparent',
+                  fontWeight: viewMode === 'itinerary' ? 700 : 500,
+                  boxShadow: viewMode === 'itinerary' ? '0 1px 3px rgba(0,0,0,0.06)' : 'none',
+                }}
               >
                 <CalendarDays size={13} />
-                <span>Itinerary Looks ({totalLooks})</span>
+                <span>📅 Itinerary Looks</span>
+              </button>
+              <button
+                type="button"
+                className={`slot-action-btn ${viewMode === 'wardrobe' ? 'active-toggle' : ''}`}
+                onClick={() => setViewMode('wardrobe')}
+                style={{
+                  border: 'none',
+                  background: viewMode === 'wardrobe' ? '#ffffff' : 'transparent',
+                  fontWeight: viewMode === 'wardrobe' ? 700 : 500,
+                  boxShadow: viewMode === 'wardrobe' ? '0 1px 3px rgba(0,0,0,0.06)' : 'none',
+                }}
+              >
+                <Shirt size={13} />
+                <span>🧥 Wardrobe Closet ({looks.length})</span>
               </button>
               <button
                 type="button"
                 className={`slot-action-btn ${viewMode === 'packing' ? 'active-toggle' : ''}`}
                 onClick={() => setViewMode('packing')}
-                style={{ border: 'none', background: viewMode === 'packing' ? '#ffffff' : 'transparent' }}
+                style={{
+                  border: 'none',
+                  background: viewMode === 'packing' ? '#ffffff' : 'transparent',
+                  fontWeight: viewMode === 'packing' ? 700 : 500,
+                  boxShadow: viewMode === 'packing' ? '0 1px 3px rgba(0,0,0,0.06)' : 'none',
+                }}
               >
                 <Luggage size={13} />
-                <span>Luggage Packing</span>
+                <span>🧳 Luggage Packing</span>
               </button>
             </div>
 
@@ -171,11 +252,17 @@ export const PackingView: React.FC<PackingViewProps> = ({
             <button
               type="button"
               className="primary-action-btn"
-              onClick={() => handleOpenAddLookForDay(1)}
+              onClick={() => {
+                if (viewMode === 'wardrobe') {
+                  handleOpenAddLookForDay(undefined, 'unassigned');
+                } else {
+                  handleOpenAddLookForDay(1);
+                }
+              }}
               style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', padding: '6px 14px' }}
             >
               <Plus size={15} />
-              <span>Add Outfit Look</span>
+              <span>{viewMode === 'wardrobe' ? 'Add to Wardrobe' : 'Add Outfit Look'}</span>
             </button>
           </div>
         </div>
@@ -281,7 +368,7 @@ export const PackingView: React.FC<PackingViewProps> = ({
                     </div>
                   </div>
 
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
                     {weather && (
                       <div className="lookbook-weather-chip" title={weather.clothingTip}>
                         <CloudSun size={12} />
@@ -290,6 +377,25 @@ export const PackingView: React.FC<PackingViewProps> = ({
                           <span className="weather-tip-text">&bull; {weather.clothingTip}</span>
                         )}
                       </div>
+                    )}
+
+                    {looks.length > 0 && (
+                      <button
+                        type="button"
+                        className="slot-action-btn"
+                        onClick={() =>
+                          setWardrobeSelectTarget({
+                            dayNumber: day.dayNumber,
+                            eventId: `day_${day.dayNumber}`,
+                            eventTitle: `Day ${day.dayNumber}: ${day.title || 'Schedule'}`,
+                          })
+                        }
+                        title={`Select an existing outfit from wardrobe for Day ${day.dayNumber}`}
+                        style={{ display: 'inline-flex', alignItems: 'center', gap: '5px' }}
+                      >
+                        <Sparkles size={12} className="text-primary" />
+                        <span>Pick from Wardrobe</span>
+                      </button>
                     )}
 
                     <button
@@ -308,16 +414,45 @@ export const PackingView: React.FC<PackingViewProps> = ({
                 {dayLooks.length === 0 ? (
                   <div
                     className="slot-empty-dropzone"
-                    onClick={() => handleOpenAddLookForDay(day.dayNumber)}
-                    style={{ height: '110px', padding: '12px' }}
+                    style={{ height: 'auto', minHeight: '120px', padding: '20px 16px', cursor: 'default' }}
                   >
-                    <div className="dropzone-icon" style={{ width: '28px', height: '28px' }}>
-                      <Shirt size={14} />
+                    <div className="dropzone-icon" style={{ width: '32px', height: '32px', marginBottom: '4px' }}>
+                      <Shirt size={16} />
                     </div>
-                    <span className="dropzone-text" style={{ fontSize: '12px' }}>
+                    <span className="dropzone-text" style={{ fontSize: '13px', fontWeight: 600 }}>
                       No outfits assigned to Day {day.dayNumber} yet
                     </span>
-                    <span className="dropzone-subtext">Click to attach a daytime or evening look</span>
+                    <span className="dropzone-subtext" style={{ marginBottom: '12px' }}>
+                      Design a brand new look or wear a saved outfit from your digital wardrobe
+                    </span>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap', justifyContent: 'center' }}>
+                      <button
+                        type="button"
+                        className="primary-action-btn"
+                        onClick={() => handleOpenAddLookForDay(day.dayNumber)}
+                        style={{ fontSize: '12px', padding: '6px 14px' }}
+                      >
+                        <Plus size={13} />
+                        <span>Create New Look</span>
+                      </button>
+                      {looks.length > 0 && (
+                        <button
+                          type="button"
+                          className="slot-action-btn"
+                          onClick={() =>
+                            setWardrobeSelectTarget({
+                              dayNumber: day.dayNumber,
+                              eventId: `day_${day.dayNumber}`,
+                              eventTitle: `Day ${day.dayNumber}: ${day.title || 'Schedule'}`,
+                            })
+                          }
+                          style={{ fontSize: '12px', padding: '6px 14px', background: '#ffffff' }}
+                        >
+                          <Sparkles size={13} className="text-primary" />
+                          <span>Select from Wardrobe ({looks.length})</span>
+                        </button>
+                      )}
+                    </div>
                   </div>
                 ) : (
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '16px' }}>
@@ -325,6 +460,7 @@ export const PackingView: React.FC<PackingViewProps> = ({
                       const stop = stopLookup.get(l.eventId);
                       const p1Thumb = l.person1UseCutout ? l.person1Cutout || l.person1Original : l.person1Original;
                       const p2Thumb = l.person2UseCutout ? l.person2Cutout || l.person2Original : l.person2Original;
+                      const occasionMeta = l.occasion ? OCCASION_BADGES[l.occasion] : null;
 
                       return (
                         <div
@@ -334,9 +470,29 @@ export const PackingView: React.FC<PackingViewProps> = ({
                         >
                           <div className="lookbook-header" style={{ marginBottom: '10px', paddingBottom: '8px' }}>
                             <div>
-                              <span className="lookbook-title" style={{ fontSize: '13px' }}>
-                                {l.title || 'Coordinated Look'}
-                              </span>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
+                                <span className="lookbook-title" style={{ fontSize: '13px' }}>
+                                  {l.title || 'Coordinated Look'}
+                                </span>
+                                {occasionMeta && (
+                                  <span
+                                    style={{
+                                      fontSize: '11px',
+                                      fontWeight: 600,
+                                      padding: '1px 7px',
+                                      borderRadius: '9999px',
+                                      background: occasionMeta.bg,
+                                      color: occasionMeta.color,
+                                      display: 'inline-flex',
+                                      alignItems: 'center',
+                                      gap: '3px',
+                                    }}
+                                  >
+                                    <span>{occasionMeta.emoji}</span>
+                                    <span>{occasionMeta.label}</span>
+                                  </span>
+                                )}
+                              </div>
                               {stop && (
                                 <p style={{ fontSize: '11px', color: 'var(--color-text-secondary, #64748b)', margin: '2px 0 0' }}>
                                   📍 {stop.title} {stop.time ? `(${stop.time})` : ''}
@@ -344,14 +500,44 @@ export const PackingView: React.FC<PackingViewProps> = ({
                               )}
                             </div>
 
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '5px', flexWrap: 'wrap' }}>
+                              <button
+                                type="button"
+                                className="slot-action-btn"
+                                onClick={() => {
+                                  const duplicated: Look = {
+                                    ...l,
+                                    id: `look_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
+                                    title: `${l.title || 'Look'} (Wear Again)`,
+                                    packed: false,
+                                    createdAt: Date.now(),
+                                    updatedAt: Date.now(),
+                                  };
+                                  onUpdateLook(duplicated);
+                                }}
+                                title="Duplicate look to wear again"
+                              >
+                                <Copy size={11} />
+                                <span>Duplicate</span>
+                              </button>
+
+                              <button
+                                type="button"
+                                className="slot-action-btn"
+                                onClick={() => handleMoveToWardrobe(l)}
+                                title="Unassign from this day and keep in wardrobe closet"
+                              >
+                                <Shirt size={11} />
+                                <span>To Closet</span>
+                              </button>
+
                               <button
                                 type="button"
                                 className="slot-action-btn"
                                 onClick={() => handleOpenEditLook(l)}
                                 title="Edit outfit look"
                               >
-                                <Edit2 size={12} />
+                                <Edit2 size={11} />
                                 <span>Edit</span>
                               </button>
 
@@ -362,7 +548,7 @@ export const PackingView: React.FC<PackingViewProps> = ({
                                   onClick={() => onDeleteLook(l.id)}
                                   title="Delete look"
                                 >
-                                  <Trash2 size={12} />
+                                  <Trash2 size={11} />
                                 </button>
                               )}
                             </div>
@@ -445,6 +631,20 @@ export const PackingView: React.FC<PackingViewProps> = ({
             );
           })}
         </div>
+      )}
+
+      {/* 3. VIEW MODE B: Digital Wardrobe Closet Capsule */}
+      {viewMode === 'wardrobe' && (
+        <WardrobeClosetView
+          trip={trip}
+          looks={looks}
+          person1Name={person1Name}
+          person2Name={person2Name}
+          onOpenAddLook={() => handleOpenAddLookForDay(undefined, 'unassigned')}
+          onOpenEditLook={handleOpenEditLook}
+          onUpdateLook={onUpdateLook}
+          onDeleteLook={(lookId) => onDeleteLook?.(lookId)}
+        />
       )}
 
       {/* 3. VIEW MODE B: Luggage Packing Checklists */}
@@ -652,6 +852,24 @@ export const PackingView: React.FC<PackingViewProps> = ({
           onDeleteLook={(lookId) => {
             onDeleteLook?.(lookId);
             setIsModalOpen(false);
+          }}
+        />
+      )}
+
+      {/* Select From Wardrobe Picker Modal */}
+      {wardrobeSelectTarget && (
+        <SelectFromWardrobeModal
+          isOpen={Boolean(wardrobeSelectTarget)}
+          onClose={() => setWardrobeSelectTarget(null)}
+          targetDayNumber={wardrobeSelectTarget.dayNumber}
+          targetEventId={wardrobeSelectTarget.eventId}
+          targetEventTitle={wardrobeSelectTarget.eventTitle}
+          availableLooks={looks}
+          person1Name={person1Name}
+          person2Name={person2Name}
+          onSelectLook={(selectedLook, mode) => {
+            handleSelectFromWardrobe(selectedLook, mode, wardrobeSelectTarget);
+            setWardrobeSelectTarget(null);
           }}
         />
       )}
