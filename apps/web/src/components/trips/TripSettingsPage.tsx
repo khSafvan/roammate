@@ -16,6 +16,8 @@ import {
   Save,
   ShieldCheck,
   Trash2,
+  Users,
+  Plus,
 } from 'lucide-react';
 import { Trip } from '../../types/trip';
 import { exportItinerary } from '../../utils/exportImport';
@@ -64,6 +66,10 @@ export const TripSettingsPage: React.FC<TripSettingsPageProps> = ({
   const [themeColor, setThemeColor] = useState(trip.days?.[0]?.themeColor || '#3B82F6');
   const [emergencyContacts, setEmergencyContacts] = useState(trip.emergencyContacts || '');
   const [generalNotes, setGeneralNotes] = useState(trip.generalNotes || '');
+  const [travelers, setTravelers] = useState<string[]>(
+    trip.travelers && trip.travelers.length > 0 ? trip.travelers : ['John', 'Jane']
+  );
+  const [newTravelerName, setNewTravelerName] = useState('');
 
   const [isSaved, setIsSaved] = useState(false);
   const [isDeleteConfirming, setIsDeleteConfirming] = useState(false);
@@ -81,6 +87,7 @@ export const TripSettingsPage: React.FC<TripSettingsPageProps> = ({
     setThemeColor(trip.days?.[0]?.themeColor || '#3B82F6');
     setEmergencyContacts(trip.emergencyContacts || '');
     setGeneralNotes(trip.generalNotes || '');
+    setTravelers(trip.travelers && trip.travelers.length > 0 ? trip.travelers : ['John', 'Jane']);
   }, [trip.id]);
 
   useEffect(() => {
@@ -114,6 +121,7 @@ export const TripSettingsPage: React.FC<TripSettingsPageProps> = ({
       countryCode: countryCode.trim().toUpperCase() || undefined,
       emergencyContacts: emergencyContacts.trim() || undefined,
       generalNotes: generalNotes.trim() || undefined,
+      travelers: travelers.map((t) => t.trim()).filter((t) => t.length > 0),
       days: updatedDays,
     });
 
@@ -268,6 +276,86 @@ export const TripSettingsPage: React.FC<TripSettingsPageProps> = ({
                   </button>
                 ))}
               </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Section: Travelers & Companions */}
+        <div className="settings-card">
+          <div className="settings-card-header">
+            <div className="settings-icon-node">
+              <Users size={17} className="text-blue" />
+            </div>
+            <div>
+              <h2 className="settings-section-title">Travelers &amp; Companions</h2>
+              <p className="settings-section-subtitle">
+                Manage traveler names used across flight tickets, hotel vouchers, and outfits
+              </p>
+            </div>
+          </div>
+
+          <div className="settings-fields-stack">
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              {travelers.map((name, idx) => (
+                <div key={idx} style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                  <input
+                    type="text"
+                    className="form-input"
+                    value={name}
+                    placeholder={`Traveler ${idx + 1}`}
+                    onChange={(e) => {
+                      const updated = [...travelers];
+                      updated[idx] = e.target.value;
+                      setTravelers(updated);
+                    }}
+                  />
+                  {travelers.length > 1 && (
+                    <button
+                      type="button"
+                      className="pass-delete-btn"
+                      onClick={() => {
+                        setTravelers(travelers.filter((_, i) => i !== idx));
+                      }}
+                      title="Remove traveler"
+                    >
+                      <Trash2 size={14} />
+                    </button>
+                  )}
+                </div>
+              ))}
+            </div>
+
+            <div style={{ display: 'flex', gap: '8px', marginTop: '6px' }}>
+              <input
+                type="text"
+                className="form-input"
+                placeholder="Add companion name (e.g. John, Jane)..."
+                value={newTravelerName}
+                onChange={(e) => setNewTravelerName(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault();
+                    if (newTravelerName.trim()) {
+                      setTravelers([...travelers, newTravelerName.trim()]);
+                      setNewTravelerName('');
+                    }
+                  }
+                }}
+              />
+              <button
+                type="button"
+                className="secondary-action-btn"
+                style={{ whiteSpace: 'nowrap' }}
+                onClick={() => {
+                  if (newTravelerName.trim()) {
+                    setTravelers([...travelers, newTravelerName.trim()]);
+                    setNewTravelerName('');
+                  }
+                }}
+              >
+                <Plus size={14} />
+                <span>Add</span>
+              </button>
             </div>
           </div>
         </div>
