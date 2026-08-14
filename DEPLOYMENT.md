@@ -92,7 +92,7 @@ This guide covers setting up and hosting Roammate completely from scratch:
 
 1. **Build the static SPA**:
    ```bash
-   PASSWORD="your_personal_password" VITE_API_URL="https://mojolog-api.<your-account>.workers.dev" npm run build --workspace=@mojolog/web
+   PASSWORD="your_personal_password" VITE_API_URL="https://mojolog-api.<your-account>.workers.dev" npm run build --workspace=@roammate/web
    ```
    *(Note: `PASSWORD` must be provided so the application detects your personal vault is secured and ready to use).*
 
@@ -109,7 +109,7 @@ This guide covers setting up and hosting Roammate completely from scratch:
 2. Select your repository.
 3. Configure build settings:
    - **Framework preset**: `None` / `Vite`
-   - **Build command**: `npm run build --workspace=@mojolog/web`
+   - **Build command**: `npm run build --workspace=@roammate/web`
    - **Build output directory**: `apps/web/dist`
    - **Root directory**: `/` (repository root)
 4. Add environment variables under **Production**:

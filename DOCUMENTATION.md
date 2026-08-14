@@ -20,10 +20,10 @@ Developer reference for architecture, packages, API endpoints, synchronization, 
 ### Dependency Boundaries
 
 - `packages/core`: Pure TypeScript. Zero I/O, zero network, zero DOM/window, zero database drivers.
-- `packages/api-client`: Pure fetch wrapper using `@mojolog/shared` types.
-- `packages/sync`: Storage-agnostic outbox and push/pull sync engine. Depends only on `@mojolog/api-client` and `@mojolog/shared`.
+- `packages/api-client`: Pure fetch wrapper using `@roammate/shared` types.
+- `packages/sync`: Storage-agnostic outbox and push/pull sync engine. Depends only on `@roammate/api-client` and `@roammate/shared`.
 - `apps/api`: Only module that communicates directly with Turso libSQL or signs/verifies JWT tokens.
-- `apps/web`: Pure static frontend. Contains zero database drivers and zero credential checks. Calls API exclusively through `@mojolog/api-client` and `@mojolog/sync`.
+- `apps/web`: Pure static frontend. Contains zero database drivers and zero credential checks. Calls API exclusively through `@roammate/api-client` and `@roammate/sync`.
 
 ---
 
@@ -127,8 +127,8 @@ npm test
 
 Individual test suites:
 ```bash
-npm run test --workspace=@mojolog/core        # 48 pure calculation & route tests
-npm run test --workspace=@mojolog/sync        # 6 outbox, offline & conflict tests
-npm run test --workspace=@mojolog/api-client  # 4 typed client tests
-npm run test --workspace=@mojolog/web         # 122 frontend tests
+npm run test --workspace=@roammate/core        # 48 pure calculation & route tests
+npm run test --workspace=@roammate/sync        # 6 outbox, offline & conflict tests
+npm run test --workspace=@roammate/api-client  # 4 typed client tests
+npm run test --workspace=@roammate/web         # 122 frontend tests
 ```

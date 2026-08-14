@@ -5,9 +5,9 @@
 ## ✅ Completed Milestones
 
 ### Architecture & Monorepo Split
-- [x] Extract all calculation and optimization logic into `@mojolog/core` (pure, zero I/O).
-- [x] Create standalone typed `@mojolog/api-client` for web client and external clients.
-- [x] Implement storage-agnostic `@mojolog/sync` engine with offline outbox and last-write-wins conflict resolution.
+- [x] Extract all calculation and optimization logic into `@roammate/core` (pure, zero I/O).
+- [x] Create standalone typed `@roammate/api-client` for web client and external clients.
+- [x] Implement storage-agnostic `@roammate/sync` engine with offline outbox and last-write-wins conflict resolution.
 - [x] Convert `apps/web` into a static SPA with zero database drivers and zero local credential verification.
 - [x] Implement Single-User PASSCODE authentication (`PASSCODE` / `AUTH_PASSCODE` Worker secret), `/sync/pull`, `/sync/push`, and origin-restricted CORS on `apps/api`.
 - [x] Configure independent CI/CD pipelines (`deploy-web.yml`, `deploy-api.yml`) and deploy scripts (`npm run deploy:web`, `npm run deploy:api`).
