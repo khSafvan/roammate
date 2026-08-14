@@ -42,7 +42,7 @@ jobs:
 
       - name: Build Web App
         if: steps.check-secrets.outputs.skip != 'true'
-        run: npm run build --workspace=@mojolog/web
+        run: npm run build --workspace=@roammate/web
         env:
           VITE_API_URL: ${{ secrets.VITE_API_URL || 'https://mojolog-api.plantriproammate.workers.dev' }}
           PASSWORD: ${{ secrets.PASSWORD }}

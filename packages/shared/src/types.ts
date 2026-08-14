@@ -232,21 +232,24 @@ export interface Trip {
   updatedAt?: number;
 }
 
+export type LookOccasion = 'casual' | 'dining' | 'beach' | 'cultural' | 'active' | 'formal' | 'other';
+
 export interface Look {
   id: string;
   tripId: string;
-  eventId: string; // references ItineraryStop.id or day anchor / day identifier
-  dayNumber?: number; // 1-indexed day of the trip
+  eventId: string; // references ItineraryStop.id, 'day_N', or 'unassigned'
+  dayNumber?: number; // 1-indexed day of the trip (undefined if unassigned in wardrobe)
   title?: string; // e.g. "Evening Dinner", "Beach Resort", "Casual Day Look"
-  position: number;
+  position?: number;
+  occasion?: LookOccasion;
   person1Original?: string;
   person1Cutout?: string;
   person1Label?: string;
-  person1UseCutout: boolean; // default true
+  person1UseCutout?: boolean; // default false/true
   person2Original?: string;
   person2Cutout?: string;
   person2Label?: string;
-  person2UseCutout: boolean; // default true
+  person2UseCutout?: boolean; // default false/true
   notes?: string;
   packed?: boolean;
   createdAt: number;
