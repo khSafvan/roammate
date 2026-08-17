@@ -2,7 +2,7 @@ import { Hono } from 'hono';
 import { cors } from 'hono/cors';
 import { sign, verify } from 'hono/jwt';
 import { Client, createClient } from '@libsql/client/web';
-import { Look, OutboxEntry, SyncRecord } from '@mojolog/shared';
+import { Look, OutboxEntry, SyncRecord } from '@roammate/shared';
 
 type Bindings = {
   TURSO_DATABASE_URL?: string;
