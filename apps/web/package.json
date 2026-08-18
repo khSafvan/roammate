@@ -1,5 +1,5 @@
 {
-  "name": "@mojolog/web",
+  "name": "@roammate/web",
   "private": true,
   "version": "0.1.0",
   "type": "module",
@@ -10,10 +10,10 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "@mojolog/api-client": "*",
-    "@mojolog/core": "*",
-    "@mojolog/shared": "*",
-    "@mojolog/sync": "*",
+    "@roammate/api-client": "*",
+    "@roammate/core": "*",
+    "@roammate/shared": "*",
+    "@roammate/sync": "*",
     "lucide-react": "^0.453.0",
     "maplibre-gl": "^6.10.0",
     "react": "^18.3.1",

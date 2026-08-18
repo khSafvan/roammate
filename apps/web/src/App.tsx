@@ -41,7 +41,7 @@ import {
   detectTransitConflict,
   getDayAnchors,
   getEffectiveStayForDay,
-} from '@mojolog/core';
+} from '@roammate/core';
 import {
   getNextSuggestedStartTime,
   parseTimeToMinutes,

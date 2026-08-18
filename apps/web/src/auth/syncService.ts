@@ -1,8 +1,8 @@
 import { Trip, TripDay } from '../types/trip';
 import { deleteLocalAccount, pruneInactiveLocalData, saveVaultSession } from './crypto';
 import { STORAGE_KEYS } from '../config/constants';
-import { createApiClient } from '@mojolog/api-client';
-import { createSyncEngine, LocalStorageSyncStorage } from '@mojolog/sync';
+import { createApiClient } from '@roammate/api-client';
+import { createSyncEngine, LocalStorageSyncStorage } from '@roammate/sync';
 
 const RAW_API_URL = (import.meta.env.VITE_API_URL || '').trim();
 const DEFAULT_PROD_API_URL = 'https://mojolog-api.plantriproammate.workers.dev';
