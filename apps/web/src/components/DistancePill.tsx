@@ -1,7 +1,7 @@
 import React from 'react';
 import { AlertCircle, AlertTriangle, Car, Footprints, TrainFront } from 'lucide-react';
 import { TransitLeg, TransitMode } from '../types/trip';
-import { ScheduleConflict } from '@mojolog/core';
+import { ScheduleConflict } from '@roammate/core';
 
 interface DistancePillProps {
   leg: TransitLeg;

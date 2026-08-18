@@ -17,10 +17,10 @@ import {
   Zap,
 } from 'lucide-react';
 import { ItineraryStop, TransitMode, TripDay } from '../types/trip';
-import { computeDistanceKm } from '@mojolog/core';
-import { downloadGpx, formatGpxCoordinate, generateDayGpx } from '@mojolog/core';
+import { computeDistanceKm } from '@roammate/core';
+import { downloadGpx, formatGpxCoordinate, generateDayGpx } from '@roammate/core';
 import { MAP_CONFIG, TRANSIT_CONFIG, UI_CONFIG } from '../config/constants';
-import { computeDayRouteData } from '@mojolog/core';
+import { computeDayRouteData } from '@roammate/core';
 
 interface InteractiveMapProps {
   day: TripDay;
