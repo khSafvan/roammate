@@ -77,7 +77,7 @@ export const ReadinessModal: React.FC<ReadinessModalProps> = ({
           <div>
             <h2 id="readiness-modal-title" className="modal-title">Trip Readiness & Packing</h2>
             <p className="modal-subtitle">
-              MojoLog travel hub: flight prerequisites and categorized packing lists
+              Roammate travel hub: flight prerequisites and categorized packing lists
             </p>
           </div>
           <button className="modal-close-btn" onClick={onClose} aria-label="Close">

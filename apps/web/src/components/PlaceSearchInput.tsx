@@ -4,7 +4,7 @@ import { Loader2, MapPin, Search, X } from 'lucide-react';
 import { Coordinates, StopCategory } from '../types/trip';
 import { fuzzySortResults } from '../utils/fuzzySearch';
 
-import { inferPlaceCategory } from '@mojolog/core';
+import { inferPlaceCategory } from '@roammate/core';
 
 export interface PlaceSearchResult {
   title: string;
