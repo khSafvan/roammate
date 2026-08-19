@@ -13,8 +13,8 @@ import {
   User,
   X,
 } from 'lucide-react';
-import { DayWeather, Look } from '@mojolog/shared';
-import { ApiClient } from '@mojolog/api-client';
+import { DayWeather, Look } from '@roammate/shared';
+import { ApiClient } from '@roammate/api-client';
 import { downscaleAndStripExif, validateImageFile } from '../../utils/imagePipeline';
 import { uploadOutfitImage } from '../../utils/storageUpload';
 import { WardrobeItem, WardrobePickerModal } from './WardrobePickerModal';

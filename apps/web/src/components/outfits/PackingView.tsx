@@ -13,8 +13,8 @@ import {
   Trash2,
   User,
 } from 'lucide-react';
-import { Look, LookOccasion, Trip } from '@mojolog/shared';
-import { ApiClient } from '@mojolog/api-client';
+import { Look, LookOccasion, Trip } from '@roammate/shared';
+import { ApiClient } from '@roammate/api-client';
 import { OutfitModal } from './OutfitModal';
 import { WardrobeClosetView } from './WardrobeClosetView';
 import { SelectFromWardrobeModal } from './SelectFromWardrobeModal';
