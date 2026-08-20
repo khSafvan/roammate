@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { X, Sparkles, Copy, Check, Search } from 'lucide-react';
-import { Look, LookOccasion } from '@mojolog/shared';
+import { Look, LookOccasion } from '@roammate/shared';
 import { useModalA11y } from '../../hooks';
 
 export interface SelectFromWardrobeModalProps {

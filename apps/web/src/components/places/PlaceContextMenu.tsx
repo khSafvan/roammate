@@ -10,7 +10,7 @@ import {
   Shirt,
   Trash2,
 } from 'lucide-react';
-import { ItineraryStop, TripDay } from '@mojolog/shared';
+import { ItineraryStop, TripDay } from '@roammate/shared';
 
 export interface PlaceContextMenuProps {
   x: number;
