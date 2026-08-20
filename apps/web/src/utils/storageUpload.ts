@@ -4,9 +4,9 @@
  * - Seamlessly falls back to local IndexedDB Blob Store when operating offline or in zero-cloud vault mode
  */
 
-import { ApiClient } from '@mojolog/api-client';
+import { ApiClient } from '@roammate/api-client';
 
-const IDB_NAME = 'mojolog_outfit_vault';
+const IDB_NAME = 'roammate_outfit_vault';
 const IDB_STORE = 'outfit_blobs';
 
 function openBlobDb(): Promise<IDBDatabase> {
