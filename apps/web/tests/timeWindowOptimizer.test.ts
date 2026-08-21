@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { optimizeTimeWindowRoute, MEAL_WINDOWS } from '../src/utils/timeWindowOptimizer';
+import { optimizeTimeWindowRoute, MEAL_WINDOWS } from '@roammate/core';
 import { parseTimeToMinutes } from '../src/hooks/useTripOptimization';
 import { ItineraryStop } from '../src/types/trip';
 
