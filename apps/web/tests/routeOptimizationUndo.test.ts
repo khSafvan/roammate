@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { ItineraryStop } from '../src/types/trip';
 import { formatMinutesToTime, parseTimeToMinutes } from '../src/hooks/useTripOptimization';
-import { optimizeRouteTsp } from '../src/utils/routeEngine';
+import { optimizeRouteTsp } from '@roammate/core';
 
 describe('Route Optimization Preview, Confirmation Prompt & Undo', () => {
   const originalStops: ItineraryStop[] = [
