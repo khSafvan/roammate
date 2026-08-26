@@ -5,7 +5,7 @@ import {
   SyncPullResponse,
   SyncPushResponse,
   Trip,
-} from '@mojolog/shared';
+} from '@roammate/shared';
 
 export interface ApiClientConfig {
   baseUrl: string;
