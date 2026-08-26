@@ -3,7 +3,7 @@
  * Integrates OpenStreetMap/OSRM routing with Great-Circle Geodesic flight passage generation
  * and nautical passage curve generation.
  */
-import { Coordinates, ItineraryStop, TransitMode } from '@mojolog/shared';
+import { Coordinates, ItineraryStop, TransitMode } from '@roammate/shared';
 import { computeDistanceKm, estimateDurationMins } from './routeEngine';
 import { idbGet, idbSet } from './idbCache';
 

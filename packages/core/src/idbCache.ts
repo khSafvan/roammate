@@ -1,4 +1,4 @@
-const DB_NAME = 'MojologCoreCacheDB';
+const DB_NAME = 'RoammateCoreCacheDB';
 const STORE_NAME = 'route_geometry_cache';
 const DB_VERSION = 1;
 

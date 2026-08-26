@@ -1,4 +1,4 @@
-import { BookingDocument, Coordinates, Expense, ItineraryStop, TransitLeg, TransitMode, TRANSIT_CONFIG } from '@mojolog/shared';
+import { BookingDocument, Coordinates, Expense, ItineraryStop, TransitLeg, TransitMode, TRANSIT_CONFIG } from '@roammate/shared';
 
 export interface OptimizationResult {
   optimized_ids: string[];

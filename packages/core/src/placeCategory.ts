@@ -1,4 +1,4 @@
-import { StopCategory } from '@mojolog/shared';
+import { StopCategory } from '@roammate/shared';
 
 export interface PlaceClassificationInput {
   name?: string;
