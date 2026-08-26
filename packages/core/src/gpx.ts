@@ -1,4 +1,4 @@
-import { TripDay } from '@mojolog/shared';
+import { TripDay } from '@roammate/shared';
 
 /**
  * Formats decimal coordinates to readable lat/lon notation
