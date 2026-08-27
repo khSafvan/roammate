@@ -1,5 +1,5 @@
 {
-  "name": "@mojolog/sync",
+  "name": "@roammate/sync",
   "version": "0.1.0",
   "private": true,
   "type": "module",
@@ -12,8 +12,8 @@
     }
   },
   "dependencies": {
-    "@mojolog/api-client": "*",
-    "@mojolog/shared": "*"
+    "@roammate/api-client": "*",
+    "@roammate/shared": "*"
   },
   "devDependencies": {
     "typescript": "^5.6.2",

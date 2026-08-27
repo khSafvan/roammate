@@ -1,5 +1,5 @@
-import { ApiClient } from '@mojolog/api-client';
-import { OutboxEntry, SyncOperation, SyncRecord } from '@mojolog/shared';
+import { ApiClient } from '@roammate/api-client';
+import { OutboxEntry, SyncOperation, SyncRecord } from '@roammate/shared';
 
 export interface SyncStorage {
   getItem(key: string): Promise<string | null> | string | null;
@@ -58,7 +58,7 @@ export class SyncEngine {
     this.storage = config.storage || (typeof localStorage !== 'undefined' ? new LocalStorageSyncStorage() : new MemorySyncStorage());
     this.apiClient = config.apiClient;
     this.onRecordApplied = config.onRecordApplied;
-    this.prefix = config.storagePrefix || 'mojolog_sync';
+    this.prefix = config.storagePrefix || 'roammate_sync';
   }
 
   private outboxKey(): string {
