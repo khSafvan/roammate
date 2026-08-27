@@ -3,7 +3,7 @@ import {
   getCountryIntelligence,
   formatEmergencySnippet,
   formatTravelUtilitySnippet,
-} from '@mojolog/core';
+} from '@roammate/core';
 
 describe('countryIntelligence — getCountryIntelligence lookup', () => {
   it('resolves country by explicit ISO-2 code', () => {

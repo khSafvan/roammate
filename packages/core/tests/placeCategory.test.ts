@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { getDayAnchors, inferPlaceCategory, isThemeParkOrAttraction } from '../src';
-import { BookingDocument } from '@mojolog/shared';
+import { BookingDocument } from '@roammate/shared';
 
 describe('placeCategory', () => {
   it('correctly classifies theme parks and waterparks', () => {
