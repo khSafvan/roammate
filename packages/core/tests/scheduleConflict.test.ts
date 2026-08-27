@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { ItineraryStop } from '@mojolog/shared';
-import { detectTransitConflict } from '@mojolog/core';
+import { ItineraryStop } from '@roammate/shared';
+import { detectTransitConflict } from '@roammate/core';
 
 const makeStop = (id: string, startTime: string, durationMinutes: number): ItineraryStop => ({
   id,

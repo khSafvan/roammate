@@ -7,7 +7,7 @@ import {
   getEffectiveStayForDay,
   getWeatherComfortLabel,
   optimizeRouteTsp,
-} from '@mojolog/core';
+} from '@roammate/core';
 
 describe('TypeScript Route and Trip Engine', () => {
   describe('computeDistanceKm (Haversine)', () => {
