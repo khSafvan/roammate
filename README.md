@@ -6,19 +6,19 @@
 
 ## 📸 Client-Facing UI Showcase
 
-### 1. Dual-Pane Itinerary Workspace & TerraWay Vector Map
-The central command center splits your daily schedule on the left with a responsive vector map on the right. Time-sequenced stops show estimated durations, drag-and-drop reordering, transit buffers (`36m · 10.8 km drive`), attached travel notes, and temperature dress code tags.
+### 1. Smart Autofill & Database Integrations
+The itinerary builder natively integrates with Google Places, OSM, and Aviation Data. Instead of typing manual details, you simply search, and Roammate instantly resolves and populates coordinates, opening hours, ratings, and terminal gates directly into your vault.
 
-![Dual-Pane Itinerary Workspace](./docs/design-reference/03-timeline-itinerary/timeline-full-view.png)
+| Place Search Autofill | Flight Data Resolution |
+| :---: | :---: |
+| ![Place Search Autofill](./docs/design-reference/12-new-feature-place-search.png) | ![Flight Data Resolution](./docs/design-reference/10-new-feature-flight-booking.png) |
 
 ---
 
-### 2. Physical Analog Travel Vault (16:9 Boarding Passes & 4:3 Hotel Key Cards)
-Digital travel documents elevated through physical analog metaphors. Air tickets render as authentic **16:9 boarding passes** with perforated tear-off stubs and passenger tags (**John** & **Jane**), while accommodations present as **4:3 luxury room key cards** with gold EMV microchip graphics and magnetic stripes.
+### 2. Dual-Pane Itinerary Workspace & TerraWay Vector Map
+The central command center splits your daily schedule on the left with a responsive vector map on the right. Time-sequenced stops show estimated durations, drag-and-drop reordering, transit buffers (`36m · 10.8 km drive`), attached travel notes, and temperature dress code tags.
 
-| 16:9 Airline Boarding Pass | 4:3 Hotel Room Key Card |
-| :---: | :---: |
-| ![16:9 Airline Boarding Pass](./docs/design-reference/04-bookings-and-tickets/flight-ticket-16-9-john.png) | ![4:3 Hotel Key Card](./docs/design-reference/04-bookings-and-tickets/hotel-key-card-4-3.png) |
+![Dual-Pane Itinerary Workspace](./docs/design-reference/03-timeline-itinerary/timeline-full-view.png)
 
 ---
 
