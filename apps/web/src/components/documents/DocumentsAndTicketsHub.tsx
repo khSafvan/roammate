@@ -1,8 +1,9 @@
-import React, { useState, useMemo } from 'react';
-import { Plane, Ticket, Train, Trash2, FileText, Plus, Search } from 'lucide-react';
+import React, { useState, useMemo, useRef, useEffect } from 'react';
+import { Plane, Ticket, Train, Trash2, FileText, Plus, Search, Hotel, ChevronDown } from 'lucide-react';
 import { BookingDocument, Flight } from '../../types/trip';
 import { FlightModal } from './FlightModal';
 import { HotelModal } from './HotelModal';
+import { ActivityPassModal } from './ActivityPassModal';
 import "./DocumentsAndTicketsHub.css";
 
 interface DocumentsAndTicketsHubProps {
@@ -25,21 +26,35 @@ export const DocumentsAndTicketsHub: React.FC<DocumentsAndTicketsHubProps> = ({
   onDeleteDocument,
 }) => {
   const effectiveTravelers = travelers && travelers.length > 0 ? travelers : ['John', 'Jane'];
-  const [activePillar, setActivePillar] = useState<'flights' | 'hotels' | 'all'>('flights');
+  const [activePillar, setActivePillar] = useState<'all' | 'flights' | 'hotels' | 'activities' | 'transit'>('all');
   const [searchQuery, setSearchQuery] = useState('');
   
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
   const [isFlightModalOpen, setIsFlightModalOpen] = useState(false);
   const [isHotelModalOpen, setIsHotelModalOpen] = useState(false);
+  const [isActivityModalOpen, setIsActivityModalOpen] = useState(false);
+  
   const [editingFlight, setEditingFlight] = useState<Flight | undefined>(undefined);
-  const [editingHotel, setEditingHotel] = useState<BookingDocument | undefined>(undefined);
+  const [editingDoc, setEditingDoc] = useState<BookingDocument | undefined>(undefined);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setIsDropdownOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   const filteredDocs = useMemo(() => {
     let result = documents;
-    if (activePillar === 'hotels') {
-      result = result.filter((d) => d.category === 'hotel');
-    } else if (activePillar === 'flights') {
-      result = [];
-    }
+    if (activePillar === 'hotels') result = result.filter(d => d.category === 'hotel');
+    else if (activePillar === 'activities') result = result.filter(d => d.category === 'activity' || d.category === 'doc');
+    else if (activePillar === 'transit') result = result.filter(d => d.category === 'transit');
+    else if (activePillar === 'flights') result = [];
 
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase();
@@ -54,7 +69,7 @@ export const DocumentsAndTicketsHub: React.FC<DocumentsAndTicketsHubProps> = ({
   }, [documents, activePillar, searchQuery]);
 
   const filteredFlights = useMemo(() => {
-    if (activePillar === 'hotels') return [];
+    if (activePillar !== 'all' && activePillar !== 'flights') return [];
     let result = flights;
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase();
@@ -78,43 +93,55 @@ export const DocumentsAndTicketsHub: React.FC<DocumentsAndTicketsHubProps> = ({
           <p className="section-subheading">Flights, hotel vouchers, and travel passes</p>
         </div>
 
-        <button className="primary-action-btn" onClick={() => {
-          if (activePillar === 'flights' || activePillar === 'all') {
-            setEditingFlight(undefined);
-            setIsFlightModalOpen(true);
-          } else {
-            setEditingHotel(undefined);
-            setIsHotelModalOpen(true);
-          }
-        }}>
-          <Plus size={16} />
-          <span>{activePillar === 'flights' ? 'Add Flight' : 'Add Hotel'}</span>
-        </button>
+        <div style={{ position: 'relative' }} ref={dropdownRef}>
+          <button className="primary-action-btn" onClick={() => setIsDropdownOpen(!isDropdownOpen)}>
+            <Plus size={16} />
+            <span>Add Booking</span>
+            <ChevronDown size={14} style={{ marginLeft: '4px' }} />
+          </button>
+          
+          {isDropdownOpen && (
+            <div className="hub-add-dropdown">
+              <button className="hub-add-dropdown-item" onClick={() => { setIsDropdownOpen(false); setEditingFlight(undefined); setIsFlightModalOpen(true); }}>
+                <Plane size={16} className="text-blue" /> Add Flight
+              </button>
+              <button className="hub-add-dropdown-item" onClick={() => { setIsDropdownOpen(false); setEditingDoc(undefined); setIsHotelModalOpen(true); }}>
+                <Hotel size={16} className="text-emerald" /> Add Hotel
+              </button>
+              <button className="hub-add-dropdown-item" onClick={() => { setIsDropdownOpen(false); setEditingDoc({ category: 'activity' } as any); setIsActivityModalOpen(true); }}>
+                <Ticket size={16} className="text-purple" /> Add Activity / Venue
+              </button>
+              <button className="hub-add-dropdown-item" onClick={() => { setIsDropdownOpen(false); setEditingDoc({ category: 'transit' } as any); setIsActivityModalOpen(true); }}>
+                <Train size={16} className="text-green" /> Add Transit
+              </button>
+              <button className="hub-add-dropdown-item" onClick={() => { setIsDropdownOpen(false); setEditingDoc({ category: 'doc' } as any); setIsActivityModalOpen(true); }}>
+                <FileText size={16} className="text-slate" /> Add Generic Booking
+              </button>
+            </div>
+          )}
+        </div>
       </div>
 
       <div className="category-filter-strip">
-        <button
-          className={`category-filter-btn ${activePillar === 'all' ? 'active' : ''}`}
-          onClick={() => setActivePillar('all')}
-        >
+        <button className={`category-filter-btn ${activePillar === 'all' ? 'active' : ''}`} onClick={() => setActivePillar('all')}>
           <span>All Bookings</span>
           <span className="count-tag">{flights.length + documents.length}</span>
         </button>
-
-        <button
-          className={`category-filter-btn ${activePillar === 'hotels' ? 'active' : ''}`}
-          onClick={() => setActivePillar('hotels')}
-        >
+        <button className={`category-filter-btn ${activePillar === 'flights' ? 'active' : ''}`} onClick={() => setActivePillar('flights')}>
+          <span>Flights</span>
+          <span className="count-tag">{flights.length}</span>
+        </button>
+        <button className={`category-filter-btn ${activePillar === 'hotels' ? 'active' : ''}`} onClick={() => setActivePillar('hotels')}>
           <span>Hotels</span>
           <span className="count-tag">{documents.filter(d => d.category === 'hotel').length}</span>
         </button>
-
-        <button
-          className={`category-filter-btn ${activePillar === 'flights' ? 'active' : ''}`}
-          onClick={() => setActivePillar('flights')}
-        >
-          <span>Flights</span>
-          <span className="count-tag">{flights.length}</span>
+        <button className={`category-filter-btn ${activePillar === 'activities' ? 'active' : ''}`} onClick={() => setActivePillar('activities')}>
+          <span>Activities</span>
+          <span className="count-tag">{documents.filter(d => d.category === 'activity' || d.category === 'doc').length}</span>
+        </button>
+        <button className={`category-filter-btn ${activePillar === 'transit' ? 'active' : ''}`} onClick={() => setActivePillar('transit')}>
+          <span>Transit</span>
+          <span className="count-tag">{documents.filter(d => d.category === 'transit').length}</span>
         </button>
       </div>
 
@@ -136,7 +163,7 @@ export const DocumentsAndTicketsHub: React.FC<DocumentsAndTicketsHubProps> = ({
           <div className="empty-state-box">
             <Ticket size={32} className="text-secondary mb-2" strokeWidth={1.5} />
             <h3 className="empty-state-text">No bookings found</h3>
-            <p className="empty-hint">Add your flights and hotels to keep them organized.</p>
+            <p className="empty-hint">Add your flights, hotels, and activities to keep them organized.</p>
           </div>
         )}
 
@@ -196,7 +223,7 @@ export const DocumentsAndTicketsHub: React.FC<DocumentsAndTicketsHubProps> = ({
                 
                 <div style={{ textAlign: 'center', marginTop: 'auto', width: '100%' }}>
                   <div style={{ fontSize: '10px', color: 'var(--text-tertiary)', textTransform: 'uppercase', fontWeight: 600 }}>CLASS</div>
-                  <div style={{ fontSize: '12px', fontWeight: 700, marginTop: '2px' }}>ECONOMY</div>
+                  <div style={{ fontSize: '12px', fontWeight: 700, marginTop: '2px' }}>{fl.cabinClass || 'ECONOMY'}</div>
                 </div>
               </div>
             </div>
@@ -213,7 +240,7 @@ export const DocumentsAndTicketsHub: React.FC<DocumentsAndTicketsHubProps> = ({
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                     <h3 style={{ fontSize: '16px', fontWeight: 600, margin: 0, paddingRight: '20px' }}>{doc.title}</h3>
                     <div style={{ display: 'flex', gap: '8px', zIndex: 1 }}>
-                      <button className="pass-delete-btn" style={{ color: 'rgba(255,255,255,0.7)' }} onClick={() => { setEditingHotel(doc); setIsHotelModalOpen(true); }}><FileText size={13} /></button>
+                      <button className="pass-delete-btn" style={{ color: 'rgba(255,255,255,0.7)' }} onClick={() => { setEditingDoc(doc); setIsHotelModalOpen(true); }}><FileText size={13} /></button>
                       <button className="pass-delete-btn" style={{ color: 'rgba(255,255,255,0.7)' }} onClick={() => onDeleteDocument(doc.id)}><Trash2 size={13} /></button>
                     </div>
                   </div>
@@ -255,6 +282,7 @@ export const DocumentsAndTicketsHub: React.FC<DocumentsAndTicketsHubProps> = ({
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                       <h3 style={{ fontSize: '15px', fontWeight: 600, margin: 0 }}>{doc.title}</h3>
                       <div style={{ display: 'flex', gap: '8px' }}>
+                        <button className="pass-delete-btn" onClick={() => { setEditingDoc(doc); setIsActivityModalOpen(true); }}><FileText size={13} /></button>
                         <button className="pass-delete-btn" onClick={() => onDeleteDocument(doc.id)}><Trash2 size={13} /></button>
                       </div>
                     </div>
@@ -284,8 +312,14 @@ export const DocumentsAndTicketsHub: React.FC<DocumentsAndTicketsHubProps> = ({
         isOpen={isHotelModalOpen}
         onClose={() => setIsHotelModalOpen(false)}
         onSave={(h) => { onAddDocument(h); setIsHotelModalOpen(false); }}
-        initialHotel={editingHotel}
+        initialHotel={editingDoc?.category === 'hotel' ? editingDoc : undefined}
         travelers={effectiveTravelers}
+      />
+      <ActivityPassModal
+        isOpen={isActivityModalOpen}
+        onClose={() => setIsActivityModalOpen(false)}
+        onSave={(d) => { onAddDocument(d); setIsActivityModalOpen(false); }}
+        initialDoc={editingDoc?.category !== 'hotel' ? editingDoc : undefined}
       />
     </div>
   );
