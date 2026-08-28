@@ -3,6 +3,7 @@ import { cors } from 'hono/cors';
 import { sign, verify } from 'hono/jwt';
 import { Client, createClient } from '@libsql/client/web';
 import { Look, OutboxEntry, SyncRecord } from '@roammate/shared';
+import { parseOpeningHours, resolveFlightNumber } from '@roammate/core';
 
 type Bindings = {
   TURSO_DATABASE_URL?: string;
@@ -814,6 +815,8 @@ app.get('/api/places/search', async (c) => {
   if (!q) return c.json([]);
 
   const now = Date.now();
+  const googleApiKey = c.env.GOOGLE_PLACES_API_KEY;
+  const tripAdvisorKey = c.env.TRIPADVISOR_API_KEY;
 
   try {
     let turso: Client | null = null;
@@ -825,92 +828,128 @@ app.get('/api/places/search', async (c) => {
       await ensureTables(turso);
     }
 
-    const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(
-      q
-    )}&addressdetails=1&extratags=1&limit=5`;
-    
-    const res = await fetch(url, {
-      headers: {
-        'Accept-Language': 'en',
-        'User-Agent': 'roammate/1.0',
-      },
-    });
+    let results = [];
 
-    if (!res.ok) return c.json([]);
-    const data: any[] = await res.json();
-
-    const results = await Promise.all(data.map(async (item: any) => {
-      const extratags = item.extratags || {};
-      const openTimeRaw = extratags.opening_hours;
-      const website = extratags.website || extratags['contact:website'];
-      const phone = extratags.phone || extratags['contact:phone'];
+    // --- 1. Google Places API (Primary for Places & Hotels) ---
+    if (googleApiKey) {
+      const googleUrl = 'https://places.googleapis.com/v1/places:searchText';
+      const googleRes = await fetch(googleUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Goog-Api-Key': googleApiKey,
+          'X-Goog-FieldMask': 'places.id,places.displayName,places.formattedAddress,places.location,places.rating,places.regularOpeningHours,places.websiteUri,places.nationalPhoneNumber,places.primaryType'
+        },
+        body: JSON.stringify({ textQuery: q })
+      });
       
-      let openTime = undefined;
-      let closeTime = undefined;
-      if (openTimeRaw && typeof openTimeRaw === 'string') {
-        const timeMatch = openTimeRaw.match(/(\d{2}:\d{2})\s*-\s*(\d{2}:\d{2})/);
-        if (timeMatch) {
-          openTime = timeMatch[1];
-          closeTime = timeMatch[2];
+      if (googleRes.ok) {
+        const googleData: any = await googleRes.json();
+        if (googleData.places && googleData.places.length > 0) {
+          results = googleData.places.map((place: any) => {
+            let openTime, closeTime;
+            if (place.regularOpeningHours?.periods?.length > 0) {
+              const period = place.regularOpeningHours.periods[0];
+              if (period.open && period.close) {
+                 openTime = `${period.open.hour.toString().padStart(2, '0')}:${period.open.minute.toString().padStart(2, '0')}`;
+                 closeTime = `${period.close.hour.toString().padStart(2, '0')}:${period.close.minute.toString().padStart(2, '0')}`;
+              }
+            }
+            
+            return {
+              placeId: place.id,
+              title: place.displayName?.text || q,
+              address: place.formattedAddress,
+              coordinates: { latitude: place.location?.latitude, longitude: place.location?.longitude },
+              osmClass: 'google',
+              osmType: place.primaryType,
+              openTime,
+              closeTime,
+              website: place.websiteUri,
+              phoneNumber: place.nationalPhoneNumber,
+              rating: place.rating
+            };
+          });
         }
       }
+    } 
+    // --- 2. TripAdvisor API (Optional primary for attractions) ---
+    else if (tripAdvisorKey) {
+       // Placeholder for TripAdvisor location search if Google key isn't provided but TripAdvisor is
+       const taUrl = `https://api.content.tripadvisor.com/api/v1/location/search?searchQuery=${encodeURIComponent(q)}&key=${tripAdvisorKey}`;
+       const taRes = await fetch(taUrl, { headers: { 'Accept': 'application/json' } });
+       if (taRes.ok) {
+         const taData: any = await taRes.json();
+         if (taData.data && taData.data.length > 0) {
+           results = taData.data.slice(0, 5).map((item: any) => ({
+              placeId: `ta_${item.location_id}`,
+              title: item.name,
+              address: item.address_obj?.address_string,
+              coordinates: { latitude: 0, longitude: 0 }, // Would require a second API call to get details
+              osmClass: 'tripadvisor',
+              rating: 4.0 // Mock rating until detail call is made
+           }));
+         }
+       }
+    }
+    
+    // --- 3. Nominatim Fallback (If no keys or no results) ---
+    if (results.length === 0) {
+      const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(q)}&addressdetails=1&extratags=1&limit=5`;
+      const res = await fetch(url, { headers: { 'Accept-Language': 'en', 'User-Agent': 'roammate/1.0' } });
 
-      const placeId = `osm_${item.osm_type}_${item.osm_id}`;
-      const title = item.name || item.display_name?.split(',')[0] || q;
-      const address = item.display_name;
-      const lat = parseFloat(item.lat);
-      const lon = parseFloat(item.lon);
-      const rating = (Math.random() * 1.5 + 3.5).toFixed(1);
+      if (res.ok) {
+        const data: any[] = await res.json();
+        results = await Promise.all(data.map(async (item: any) => {
+          const extratags = item.extratags || {};
+          const openTimeRaw = extratags.opening_hours;
+          
+          let openTime, closeTime;
+          if (openTimeRaw && typeof openTimeRaw === 'string') {
+            const parsedHours = parseOpeningHours(openTimeRaw);
+            openTime = parsedHours.openTime;
+            closeTime = parsedHours.closeTime;
+          }
 
-      const placeData = {
-        placeId,
-        title,
-        address,
-        coordinates: { latitude: lat, longitude: lon },
-        osmClass: item.class,
-        osmType: item.type,
-        openTime,
-        closeTime,
-        website,
-        phoneNumber: phone,
-        rating: parseFloat(rating),
-      };
+          return {
+            placeId: `osm_${item.osm_type}_${item.osm_id}`,
+            title: item.name || item.display_name?.split(',')[0] || q,
+            address: item.display_name,
+            coordinates: { latitude: parseFloat(item.lat), longitude: parseFloat(item.lon) },
+            osmClass: item.class,
+            osmType: item.type,
+            openTime,
+            closeTime,
+            website: extratags.website || extratags['contact:website'],
+            phoneNumber: extratags.phone || extratags['contact:phone'],
+            rating: parseFloat((Math.random() * 1.5 + 3.5).toFixed(1)),
+          };
+        }));
+      }
+    }
 
-      if (turso) {
+    // Cache in Turso
+    if (turso && results.length > 0) {
+      for (const placeData of results) {
         try {
           await turso.execute({
             sql: `INSERT INTO places (id, name, lat, lon, address, type, rating, open_time, close_time, website, phone, data, updated_at) 
                   VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                   ON CONFLICT(id) DO UPDATE SET 
-                    name = excluded.name, 
-                    address = excluded.address,
-                    rating = excluded.rating,
-                    open_time = excluded.open_time,
-                    close_time = excluded.close_time,
-                    updated_at = excluded.updated_at`,
+                    name = excluded.name, address = excluded.address, rating = excluded.rating,
+                    open_time = excluded.open_time, close_time = excluded.close_time, updated_at = excluded.updated_at`,
             args: [
-              placeId,
-              title,
-              lat,
-              lon,
-              address || '',
-              item.class || '',
-              parseFloat(rating),
-              openTime || null,
-              closeTime || null,
-              website || null,
-              phone || null,
-              JSON.stringify(placeData),
-              now
+              placeData.placeId, placeData.title, placeData.coordinates.latitude || 0, placeData.coordinates.longitude || 0,
+              placeData.address || '', placeData.osmClass || '', placeData.rating || 0,
+              placeData.openTime || null, placeData.closeTime || null, placeData.website || null, placeData.phoneNumber || null,
+              JSON.stringify(placeData), now
             ],
           });
         } catch (dbErr) {
-          console.warn('Failed to cache place in database', dbErr);
+          console.warn('Failed to cache place', dbErr);
         }
       }
-
-      return placeData;
-    }));
+    }
 
     return c.json(results);
   } catch (err) {
@@ -924,41 +963,12 @@ app.get('/api/flights/lookup', async (c) => {
   const q = c.req.query('q'); // e.g., "EK1"
   if (!q) return c.json(null);
 
-  // For demonstration, we simulate flight lookup resolving flight code to details.
-  // In a real app, this would query AviationStack or FlightAware.
-  const upperQ = q.toUpperCase();
-  
-  // Simulated database
-  if (upperQ.startsWith('EK')) {
-    return c.json({
-      flightNumber: upperQ,
-      carrier: 'Emirates',
-      departure: {
-        airport: 'DXB',
-        city: 'Dubai',
-        time: '10:00',
-        terminal: '3',
-      },
-      arrival: {
-        airport: 'LHR',
-        city: 'London',
-        time: '14:30',
-        terminal: '2',
-      },
-      airplaneType: 'Airbus A380-800',
-      durationMinutes: 450,
-    });
+  const resolved = resolveFlightNumber(q);
+  if (resolved) {
+    return c.json(resolved);
   }
 
-  // Fallback generic mock
-  return c.json({
-    flightNumber: upperQ,
-    carrier: 'Generic Airlines',
-    departure: { airport: 'JFK', city: 'New York', time: '08:00', terminal: '1' },
-    arrival: { airport: 'LAX', city: 'Los Angeles', time: '11:00', terminal: 'B' },
-    airplaneType: 'Boeing 737',
-    durationMinutes: 360,
-  });
+  return c.json(null);
 });
 
 
