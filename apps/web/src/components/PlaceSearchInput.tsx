@@ -27,6 +27,7 @@ export interface PlaceSearchResult {
   openTime?: string;
   closeTime?: string;
   tags?: string[];
+  placeId?: string;
 }
 
 export function inferCategoryFromOsm(item: any): StopCategory {
