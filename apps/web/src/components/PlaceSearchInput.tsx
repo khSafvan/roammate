@@ -118,7 +118,7 @@ export const PlaceSearchInput: React.FC<PlaceSearchInputProps> = ({
 
     setIsLoading(true);
     
-    const fetchNominatim = async () => {
+    const fetchPlacesAPI = async () => {
       try {
         const cleanContext = searchContext ? searchContext.split(',')[0].trim() : '';
         const hasContextInQuery = cleanContext && trimmed.toLowerCase().includes(cleanContext.toLowerCase());
@@ -129,15 +129,8 @@ export const PlaceSearchInput: React.FC<PlaceSearchInputProps> = ({
         }
 
         const fetchResultsForQuery = async (q: string): Promise<any[]> => {
-          const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(
-            q
-          )}&addressdetails=1&extratags=1&limit=5`;
-          const res = await fetch(url, {
-            headers: {
-              'Accept-Language': 'en',
-              'User-Agent': 'roammate/1.0',
-            },
-          });
+          const url = `${import.meta.env.VITE_API_URL || 'http://localhost:8787'}/api/places/search?q=${encodeURIComponent(q)}`;
+          const res = await fetch(url);
           if (!res.ok) return [];
           const data = await res.json();
           return Array.isArray(data) ? data : [];
@@ -151,21 +144,27 @@ export const PlaceSearchInput: React.FC<PlaceSearchInputProps> = ({
 
         if (data.length > 0) {
           const mapped: PlaceSearchResult[] = data.map((item: any) => {
-            const rawName = item.name || item.display_name.split(',')[0] || trimmed;
-            const fullAddress = item.display_name || '';
+            const rawName = item.title || trimmed;
+            const fullAddress = item.address || '';
             const inference = inferPlaceCategory({
               name: rawName,
               title: rawName,
               address: fullAddress,
-              osmClass: item.class,
-              osmType: item.type,
+              osmClass: item.osmClass,
+              osmType: item.osmType,
             });
             return {
               title: rawName,
               subtitle: inference.label || inference.category,
               address: fullAddress,
-              coordinates: { latitude: parseFloat(item.lat), longitude: parseFloat(item.lon) },
+              coordinates: item.coordinates,
               category: inference.category,
+              openTime: item.openTime,
+              closeTime: item.closeTime,
+              website: item.website,
+              phoneNumber: item.phoneNumber,
+              rating: parseFloat(item.rating),
+              placeId: item.placeId,
             };
           });
 
@@ -177,14 +176,14 @@ export const PlaceSearchInput: React.FC<PlaceSearchInputProps> = ({
           setResults([]);
         }
       } catch (err) {
-        console.warn('Nominatim geocode query error:', err);
+        console.warn('Places API query error:', err);
         setResults([]);
       } finally {
         setIsLoading(false);
       }
     };
     
-    fetchNominatim();
+    fetchPlacesAPI();
   }, [debouncedQuery, searchContext]);
 
   const [selectedIndex, setSelectedIndex] = useState<number>(-1);
