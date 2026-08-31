@@ -1692,7 +1692,7 @@ export function App() {
         dayNumber={activeDay.dayNumber}
         themeColor={activeDay.themeColor}
         destination={trip.destination}
-        dayDateStr={activeDay.dateStr}
+
         defaultStartTime={getNextSuggestedStartTime(activeDay.stops, trip.startTime || '09:00 AM')}
         fallbackCoordinates={
           activeDay.stops && activeDay.stops.length > 0

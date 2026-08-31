@@ -7,3 +7,5 @@ export * from './routing';
 export * from './scheduleConflicts';
 export * from './time';
 export * from './timeWindowOptimizer';
+export * from './aviation';
+export * from './openingHours';
