@@ -12,10 +12,12 @@ interface ActivityPassModalProps {
 
 export const ActivityPassModal: React.FC<ActivityPassModalProps> = ({ isOpen, onClose, onSave, initialDoc }) => {
   const [docData, setDocData] = useState<Partial<BookingDocument>>({});
+  const [showAdvanced, setShowAdvanced] = useState(false);
 
   useEffect(() => {
     if (isOpen) {
       setDocData(initialDoc || {});
+      setShowAdvanced(false);
     }
   }, [isOpen, initialDoc]);
 
@@ -34,6 +36,7 @@ export const ActivityPassModal: React.FC<ActivityPassModalProps> = ({ isOpen, on
       placeId: place.placeId,
       time: place.openTime || prev.time,
     }));
+    setShowAdvanced(false);
   };
 
   const handleSave = (e: React.FormEvent<HTMLFormElement>) => {
@@ -74,7 +77,7 @@ export const ActivityPassModal: React.FC<ActivityPassModalProps> = ({ isOpen, on
               <h3 className="modal-title">{initialDoc ? 'Edit Booking' : 'Add Activity / Generic Booking'}</h3>
             </div>
           </div>
-          <button className="modal-close-btn" onClick={onClose}><X size={20} /></button>
+          <button className="modal-close-btn" onClick={onClose} style={{ minWidth: '44px', minHeight: '44px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><X size={20} /></button>
         </div>
         <form onSubmit={handleSave} className="modal-body form-grid" style={{ overflow: 'visible' }}>
           <div className="form-group full-span" style={{ zIndex: 50 }}>
@@ -85,50 +88,75 @@ export const ActivityPassModal: React.FC<ActivityPassModalProps> = ({ isOpen, on
             />
           </div>
           
-          <div className="form-group full-span">
-            <label>Title</label>
-            <input type="text" className="form-input" value={docData.title || ''} onChange={e => updateField('title', e.target.value)} required />
-          </div>
-          
-          <div className="form-group full-span">
-            <label>Description / Subtitle</label>
-            <input type="text" className="form-input" value={docData.subtitle || ''} onChange={e => updateField('subtitle', e.target.value)} />
-          </div>
+          {docData.title && !showAdvanced ? (
+            <div className="full-span" style={{ padding: '16px', backgroundColor: 'var(--bg-subtle)', borderRadius: '12px', border: '1px solid rgba(0,0,0,0.04)', boxShadow: '0 1px 3px rgba(0,0,0,0.05)', marginTop: '8px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                  <span style={{ fontSize: '24px' }}>🎟️</span>
+                  <div>
+                    <h4 style={{ fontSize: '15px', fontWeight: 600, margin: 0, color: 'var(--text-primary)' }}>{docData.title}</h4>
+                    <p style={{ fontSize: '13px', color: 'var(--text-secondary)', margin: '2px 0 0 0' }}>
+                      {docData.location || docData.subtitle}
+                    </p>
+                  </div>
+                </div>
+                <button 
+                  type="button" 
+                  onClick={() => setShowAdvanced(true)}
+                  style={{ background: 'none', border: 'none', color: 'var(--brand-blue)', fontSize: '13px', fontWeight: 600, cursor: 'pointer', padding: '8px', minHeight: '44px' }}
+                >
+                  Edit Details
+                </button>
+              </div>
+            </div>
+          ) : (
+            <>
+              <div className="form-group full-span">
+                <label>Title</label>
+                <input type="text" className="form-input" value={docData.title || ''} onChange={e => updateField('title', e.target.value)} required />
+              </div>
+              
+              <div className="form-group full-span">
+                <label>Description / Subtitle</label>
+                <input type="text" className="form-input" value={docData.subtitle || ''} onChange={e => updateField('subtitle', e.target.value)} />
+              </div>
 
-          <div className="form-group">
-            <label>Date</label>
-            <input type="date" className="form-input" value={docData.date || ''} onChange={e => updateField('date', e.target.value)} required />
-          </div>
-          <div className="form-group">
-            <label>Time</label>
-            <input type="time" className="form-input" value={docData.time || ''} onChange={e => updateField('time', e.target.value)} />
-          </div>
+              <div className="form-group">
+                <label>Date</label>
+                <input type="date" className="form-input" value={docData.date || ''} onChange={e => updateField('date', e.target.value)} required />
+              </div>
+              <div className="form-group">
+                <label>Time</label>
+                <input type="time" className="form-input" value={docData.time || ''} onChange={e => updateField('time', e.target.value)} />
+              </div>
 
-          <div className="form-group full-span">
-            <label>Location / Address</label>
-            <input type="text" className="form-input" value={docData.location || ''} onChange={e => updateField('location', e.target.value)} />
-          </div>
-          
-          <div className="form-group">
-            <label>Category</label>
-            <select className="form-input" value={docData.category || 'activity'} onChange={e => updateField('category', e.target.value)}>
-              <option value="activity">Activity / Tour</option>
-              <option value="doc">Generic Ticket / Pass</option>
-              <option value="transit">Transit Ticket</option>
-            </select>
-          </div>
-          <div className="form-group">
-            <label>Confirmation Code</label>
-            <input type="text" className="form-input" value={docData.confirmationCode || ''} onChange={e => updateField('confirmationCode', e.target.value)} />
-          </div>
+              <div className="form-group full-span">
+                <label>Location / Address</label>
+                <input type="text" className="form-input" value={docData.location || ''} onChange={e => updateField('location', e.target.value)} />
+              </div>
+              
+              <div className="form-group">
+                <label>Category</label>
+                <select className="form-input" value={docData.category || 'activity'} onChange={e => updateField('category', e.target.value)}>
+                  <option value="activity">Activity / Tour</option>
+                  <option value="doc">Generic Ticket / Pass</option>
+                  <option value="transit">Transit Ticket</option>
+                </select>
+              </div>
+              <div className="form-group">
+                <label>Confirmation Code</label>
+                <input type="text" className="form-input" value={docData.confirmationCode || ''} onChange={e => updateField('confirmationCode', e.target.value)} />
+              </div>
 
-          <div className="form-group full-span">
-            <label>Notes</label>
-            <textarea className="form-input" value={docData.notes || ''} onChange={e => updateField('notes', e.target.value)} rows={2} />
-          </div>
+              <div className="form-group full-span">
+                <label>Notes</label>
+                <textarea className="form-input" value={docData.notes || ''} onChange={e => updateField('notes', e.target.value)} rows={2} />
+              </div>
+            </>
+          )}
           
           <div className="form-group full-span" style={{ marginTop: '16px' }}>
-            <button type="submit" className="primary-action-btn" style={{ width: '100%' }}>Save Booking</button>
+            <button type="submit" className="primary-action-btn" style={{ width: '100%', minHeight: '44px' }}>Save Booking</button>
           </div>
         </form>
       </div>

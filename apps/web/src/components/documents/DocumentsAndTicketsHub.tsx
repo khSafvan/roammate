@@ -210,19 +210,19 @@ export const DocumentsAndTicketsHub: React.FC<DocumentsAndTicketsHubProps> = ({
               
               <div className="ticket-stub-section">
                 <div style={{ textAlign: 'center', width: '100%' }}>
-                  <div style={{ fontSize: '10px', color: 'var(--text-tertiary)', textTransform: 'uppercase', fontWeight: 600 }}>FLIGHT</div>
-                  <div className="pass-flight-num" style={{ marginTop: '4px', fontSize: '14px', background: 'transparent', border: 'none', padding: 0 }}>{fl.flightNumber}</div>
+                  <div className="meta-label">FLIGHT</div>
+                  <div className="pass-flight-num" style={{ marginTop: '4px' }}>{fl.flightNumber}</div>
                 </div>
                 
                 {fl.bookingRef && (
                   <div style={{ textAlign: 'center', marginTop: '16px', width: '100%' }}>
-                    <div style={{ fontSize: '10px', color: 'var(--text-tertiary)', textTransform: 'uppercase', fontWeight: 600 }}>PNR</div>
-                    <div className="stub-ref" style={{ fontSize: '13px', marginTop: '2px' }}>{fl.bookingRef}</div>
+                    <div className="meta-label">PNR</div>
+                    <div className="stub-ref" style={{ fontSize: '13px', marginTop: '2px', fontWeight: 600 }}>{fl.bookingRef}</div>
                   </div>
                 )}
                 
                 <div style={{ textAlign: 'center', marginTop: 'auto', width: '100%' }}>
-                  <div style={{ fontSize: '10px', color: 'var(--text-tertiary)', textTransform: 'uppercase', fontWeight: 600 }}>CLASS</div>
+                  <div className="meta-label">CLASS</div>
                   <div style={{ fontSize: '12px', fontWeight: 700, marginTop: '2px' }}>{fl.cabinClass || 'ECONOMY'}</div>
                 </div>
               </div>
