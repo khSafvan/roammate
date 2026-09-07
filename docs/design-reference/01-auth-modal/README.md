@@ -8,7 +8,7 @@ This directory contains visual captures and specifications for the zero-knowledg
 
 Secures all personal travel itineraries, flight tickets, hotel vouchers, and financial logs. All data remains encrypted on the client side using AES-GCM until unlocked by the traveler.
 
-![Passcode Auth Modal](./passcode-auth-modal.png)
+
 
 ### Key Features:
 - **Branding & Iconography**: Minimalist brand mark with encrypted vault subtitle.
