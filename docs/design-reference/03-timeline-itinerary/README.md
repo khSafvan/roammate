@@ -8,7 +8,7 @@ This directory contains visual captures and specifications for the dual-pane tim
 
 Split workspace presenting the chronological schedule on the left and the TerraWay vector map on the right.
 
-![Timeline Workspace Full View](./timeline-full-view.png)
+
 
 ---
 
@@ -16,7 +16,7 @@ Split workspace presenting the chronological schedule on the left and the TerraW
 
 Sticky header navigation strip allowing seamless switching between trip days.
 
-![Day Selector Strip](./day-selector-strip.png)
+
 
 ### Key Features:
 - **Places to Visit Drawer**: Dedicated unassigned ideas bucket with item counter.
@@ -28,7 +28,7 @@ Sticky header navigation strip allowing seamless switching between trip days.
 
 Cards for itinerary stops with dynamic transit calculations between locations.
 
-![Timeline Cards & Transit](./timeline-cards-detail.png)
+
 
 ### Key Features:
 - **Stop Type Category Pills**: Color-coded category tags (`transit`, `lodging`, `dining`, `sight`).

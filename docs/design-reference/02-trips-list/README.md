@@ -8,7 +8,7 @@ This directory contains visual captures and specifications for the trips overvie
 
 The primary landing screen displaying all active, upcoming, and archived journeys in the user's vault.
 
-![Trips Catalog Overview](./trips-list-overview.png)
+
 
 ### Key Features:
 - **Hero Metrics**: Aggregate counters for Total Journeys, Itinerary Days, and Flight Tickets.
@@ -21,7 +21,7 @@ The primary landing screen displaying all active, upcoming, and archived journey
 
 High-density summary card for an individual travel itinerary.
 
-![Journey Overview Card](./trip-card-detail.png)
+
 
 ### Key Features:
 - **Destination & Status Tag**: Visual badge showing country/city and current status (`Active`, `Upcoming`).
