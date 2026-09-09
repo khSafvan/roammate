@@ -10,7 +10,7 @@ Tactile boarding passes styled after authentic commercial airline tickets.
 
 | Passenger 1: John | Passenger 2: Jane |
 | :---: | :---: |
-| ![Flight Boarding Pass (John)](./flight-ticket-16-9-john.png) | ![Flight Boarding Pass (Jane)](./flight-ticket-16-9-jane.png) |
+|  |
 
 ### Key Features:
 - **Classic 16:9 Aspect Ratio**: Optimized for desktop lookbooks and mobile viewports.
@@ -24,7 +24,7 @@ Tactile boarding passes styled after authentic commercial airline tickets.
 
 Tactile hotel vouchers designed as luxury room key cards.
 
-![4:3 Hotel Key Card](./hotel-key-card-4-3.png)
+
 
 ### Key Features:
 - **Aspect Ratio 4:3**: Realistic credit-card / key-card proportions.
@@ -37,7 +37,7 @@ Tactile hotel vouchers designed as luxury room key cards.
 
 Compact vouchers for activities, tours, desert excursions, and ferry tickets.
 
-![Horizontal Activity Booking Card](./horizontal-booking-card.png)
+
 
 ---
 
@@ -45,4 +45,4 @@ Compact vouchers for activities, tours, desert excursions, and ferry tickets.
 
 Unified hub for all travel documents with category filter pills and live search.
 
-![Bookings Vault Overview](./all-bookings-viewport.png)
+
