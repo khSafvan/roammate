@@ -8,7 +8,7 @@ This directory contains visual captures and specifications for the financial das
 
 High-level summary displaying total spend, budget consumption, and live offline currency rates.
 
-![Expense Tracker Overview](./expense-tracker-overview.png)
+
 
 ### Key Features:
 - **Dual Currency Strip**: Real-time conversion between trip base currency (e.g. `AED`) and home currency (e.g. `USD`).
@@ -20,7 +20,7 @@ High-level summary displaying total spend, budget consumption, and live offline 
 
 Visual breakdown across 7 primary travel categories.
 
-![Category Budget Breakdown](./expense-breakdown-analytics.png)
+
 
 ### Key Categories:
 1. ✈️ Flights
@@ -37,4 +37,4 @@ Visual breakdown across 7 primary travel categories.
 
 | Transactions Ledger | Log Expense Modal |
 | :---: | :---: |
-| ![Recent Transactions Ledger](./recent-transactions-list.png) | ![Log Expense Modal](./log-expense-modal.png) |
+|  |
