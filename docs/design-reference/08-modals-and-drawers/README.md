@@ -8,7 +8,7 @@ This directory contains visual captures and specifications for creation modals, 
 
 Unassigned backlog drawer for attractions, dining spots, and recommendations.
 
-![Places to Visit Drawer](./drawer-places-to-visit.png)
+
 
 ---
 
@@ -16,7 +16,7 @@ Unassigned backlog drawer for attractions, dining spots, and recommendations.
 
 | Add Stop Modal (`modal-add-place-stop.png`) | Stop Detail Modal (`modal-stop-detail.png`) |
 | :---: | :---: |
-| ![Add Stop Modal](./modal-add-place-stop.png) | ![Stop Detail Modal](./modal-stop-detail.png) |
+|  |
 
 ---
 
@@ -24,7 +24,7 @@ Unassigned backlog drawer for attractions, dining spots, and recommendations.
 
 | 1-Click TSP Route Optimizer (`modal-route-optimizer.png`) | Travel Readiness Audit (`modal-trip-readiness.png`) |
 | :---: | :---: |
-| ![Route Optimizer Modal](./modal-route-optimizer.png) | ![Trip Readiness Audit Modal](./modal-trip-readiness.png) |
+|  |
 
 ---
 
@@ -36,4 +36,4 @@ Export formats for offline, mobile, and calendar synchronization:
 - **Printable Travel Packet**: Emergency physical print sheet.
 - **Portable JSON**: Vault backup and transfer.
 
-![Share & Export Modal](./modal-share-export.png)
+
