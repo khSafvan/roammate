@@ -1,5 +1,6 @@
 import React from 'react';
-import { Calendar, CheckCircle2, Cpu, MapPin, Share2 } from 'lucide-react';
+import { Calendar, CheckCircle2, Cpu, Key, Lock, MapPin, Share2 } from 'lucide-react';
+import { formatAccountId, VaultSession } from '../auth/crypto';
 
 interface HeaderProps {
   title: string;
@@ -7,7 +8,9 @@ interface HeaderProps {
   dates: string;
   readinessScore: number;
   isWasmActive: boolean;
+  activeSession: VaultSession | null;
   onOpenReadiness: () => void;
+  onOpenAuth: () => void;
   onShare: () => void;
 }
 
@@ -17,7 +20,9 @@ export const Header: React.FC<HeaderProps> = ({
   dates,
   readinessScore,
   isWasmActive,
+  activeSession,
   onOpenReadiness,
+  onOpenAuth,
   onShare,
 }) => {
   return (
@@ -51,8 +56,27 @@ export const Header: React.FC<HeaderProps> = ({
           </div>
         </div>
 
-        {/* Right: Readiness Score & Action Buttons */}
+        {/* Right: Vault Auth, Readiness Score & Action Buttons */}
         <div className="header-actions">
+          {/* Cryptographic 12-Word Vault Button */}
+          <button
+            className={`vault-auth-btn ${activeSession ? 'authenticated' : ''}`}
+            onClick={onOpenAuth}
+            title={activeSession ? 'Vault Authenticated via 12-Word Key' : 'Unlock or Create 12-Word Zero-Knowledge Vault'}
+          >
+            {activeSession ? (
+              <>
+                <Lock size={14} className="text-emerald" />
+                <span className="vault-btn-text">{formatAccountId(activeSession.userId)}</span>
+              </>
+            ) : (
+              <>
+                <Key size={14} className="text-amber" />
+                <span className="vault-btn-text">Connect Vault</span>
+              </>
+            )}
+          </button>
+
           <button
             className="readiness-btn"
             onClick={onOpenReadiness}
