@@ -61,12 +61,12 @@ export const PrintTravelPacket: React.FC<PrintTravelPacketProps> = ({ trip }) =>
                     {f.cabinClass && <div>({f.cabinClass})</div>}
                   </td>
                   <td>
-                    <strong>{f.departure.time}</strong> - {f.departure.city} ({f.departure.airport})
-                    {f.departure.terminal && <div>Term: {f.departure.terminal} Gate: {f.departure.gate || 'TBA'}</div>}
+                    <strong>{f.departure?.time || 'TBA'}</strong> - {f.departure?.city || 'Unknown'} ({f.departure?.airport || '???'})
+                    {f.departure?.terminal && <div>Term: {f.departure.terminal} Gate: {f.departure.gate || 'TBA'}</div>}
                   </td>
                   <td>
-                    <strong>{f.arrival.time}</strong> - {f.arrival.city} ({f.arrival.airport})
-                    {f.arrival.terminal && <div>Term: {f.arrival.terminal} Gate: {f.arrival.gate || 'TBA'}</div>}
+                    <strong>{f.arrival?.time || 'TBA'}</strong> - {f.arrival?.city || 'Unknown'} ({f.arrival?.airport || '???'})
+                    {f.arrival?.terminal && <div>Term: {f.arrival.terminal} Gate: {f.arrival.gate || 'TBA'}</div>}
                   </td>
                   <td className="font-mono">{f.bookingRef || '—'}</td>
                   <td>

@@ -588,9 +588,15 @@ export const InteractiveMap: React.FC<InteractiveMapProps> = ({
   useEffect(() => {
     const map = mapRef.current;
     if (!map) return;
+    
     if (map.isStyleLoaded()) {
       updateRouteLayer(map);
       fitToStops(false);
+    } else {
+      map.once('load', () => {
+        updateRouteLayer(map);
+        fitToStops(true);
+      });
     }
   }, [geographicStops, day.themeColor, transitModes, updateRouteLayer, fitToStops]);
 
