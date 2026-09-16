@@ -239,9 +239,11 @@ export async function computeDayRouteData(
   stops: ItineraryStop[],
   transitModes: Record<string, TransitMode> = {}
 ): Promise<DayRouteData> {
-  if (stops.length < 2) {
+  const geographicStops = stops.filter(s => s.category !== 'note' && s.coordinates);
+
+  if (geographicStops.length < 2) {
     return {
-      fullCoordinates: stops.map((s) => [s.coordinates.longitude, s.coordinates.latitude]),
+      fullCoordinates: geographicStops.map((s) => [s.coordinates.longitude, s.coordinates.latitude]),
       legs: [],
       geojson: { type: 'FeatureCollection', features: [] },
       totalDistanceKm: 0,
@@ -253,9 +255,9 @@ export async function computeDayRouteData(
   const features: GeoJSON.Feature<GeoJSON.LineString>[] = [];
   let calculatedTotalDist = 0;
 
-  for (let i = 0; i < stops.length - 1; i++) {
-    const from = stops[i];
-    const to = stops[i + 1];
+  for (let i = 0; i < geographicStops.length - 1; i++) {
+    const from = geographicStops[i];
+    const to = geographicStops[i + 1];
     const key = `${from.id}->${to.id}`;
     const selectedMode = transitModes[key] || 'drive';
     const effectiveMode = detectLegMode(from, to, selectedMode);

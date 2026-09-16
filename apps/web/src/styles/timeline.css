@@ -1972,7 +1972,7 @@
 /* Custom Right-Click Context Menu */
 .place-context-menu {
   position: fixed;
-  z-index: 9999;
+  z-index: 1050;
   min-width: 210px;
   background-color: var(--bg-card, #ffffff);
   border: 1px solid var(--border-medium, #cbd5e1);
@@ -2109,3 +2109,5 @@
 
 
 
+.companion-flight-row { min-width: 0; }
+.flight-carrier-tag, .companion-origin-pill, .dep-airport, .arr-airport, .meta-info-pill { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; display: inline-block; }
