@@ -1,19 +1,31 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import confetti from 'canvas-confetti';
-import { ListFilter, Map as MapIcon, Sparkles, Zap } from 'lucide-react';
+import {
+  CalendarDays,
+  ListFilter,
+  Map as MapIcon,
+  Plane,
+  Receipt,
+  Share2,
+  Sparkles,
+  Zap,
+} from 'lucide-react';
 import { AuthModal } from './components/AuthModal';
 import { DaySelector } from './components/DaySelector';
 import { DistancePill } from './components/DistancePill';
+import { ExpenseTracker } from './components/ExpenseTracker';
+import { FlightTracker } from './components/FlightTracker';
 import { Header } from './components/Header';
 import { InteractiveMap } from './components/InteractiveMap';
 import { ReadinessModal } from './components/ReadinessModal';
+import { ShareModal } from './components/ShareModal';
 import { StopDetailModal } from './components/StopDetailModal';
 import { TimelineCard } from './components/TimelineCard';
 import { WeatherBanner } from './components/WeatherBanner';
 import { clearVaultSession, getVaultSession, VaultSession } from './auth/crypto';
 import { saveItineraryToEdge } from './auth/syncService';
 import { mockTripData } from './data/mockTrip';
-import { ItineraryStop, TransitLeg, TransitMode, TripDay } from './types/trip';
+import { Expense, Flight, ItineraryStop, TransitLeg, TransitMode, Trip, TripDay } from './types/trip';
 import {
   computeDistanceKm,
   estimateDurationMins,
@@ -23,30 +35,39 @@ import {
 } from './wasm/engine';
 
 export function App() {
-  const [trip, setTrip] = useState(mockTripData);
+  const [trip, setTrip] = useState<Trip>(mockTripData);
+  const [activeTab, setActiveTab] = useState<'timeline' | 'flights' | 'expenses'>('timeline');
   const [activeDayIdx, setActiveDayIdx] = useState<number>(1); // Day 2 by default
   const [selectedStop, setSelectedStop] = useState<ItineraryStop | null>(null);
   const [isReadinessOpen, setIsReadinessOpen] = useState(false);
   const [isAuthOpen, setIsAuthOpen] = useState(false);
+  const [isShareModalOpen, setIsShareModalOpen] = useState(false);
   const [vaultSession, setVaultSession] = useState<VaultSession | null>(getVaultSession());
   const [isWasmActive, setIsWasmActive] = useState(false);
   const [transitModes, setTransitModes] = useState<Record<string, TransitMode>>({});
   const [optimizedDays, setOptimizedDays] = useState<Record<string, boolean>>({});
   const [mobileView, setMobileView] = useState<'timeline' | 'map'>('timeline');
+  const [isReadOnly, setIsReadOnly] = useState(false);
 
   // Initialize Rust WebAssembly module on mount
   useEffect(() => {
     initRustCore().then((ready) => {
       setIsWasmActive(ready && isRustReady());
     });
+
+    // Check if viewing via shared read-only link (?share=...)
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('share')) {
+      setIsReadOnly(true);
+    }
   }, []);
 
   // Auto-sync itinerary to edge/local vault whenever trip or session updates
   useEffect(() => {
-    if (vaultSession) {
+    if (vaultSession && !isReadOnly) {
       saveItineraryToEdge(vaultSession.userId, trip);
     }
-  }, [trip, vaultSession]);
+  }, [trip, vaultSession, isReadOnly]);
 
   const activeDay: TripDay = trip.days[activeDayIdx] || trip.days[0];
 
@@ -133,7 +154,7 @@ export function App() {
         [activeDay.id]: true,
       }));
 
-      // Fire confetti for successful optimization
+      // Fire celebration confetti
       if (result.minutes_saved > 0) {
         confetti({
           particleCount: 80,
@@ -143,6 +164,42 @@ export function App() {
       }
     }
   }, [activeDay, activeDayIdx]);
+
+  // Flight Handlers
+  const handleAddFlight = useCallback((flight: Flight) => {
+    setTrip((prev) => ({
+      ...prev,
+      flights: [flight, ...prev.flights],
+    }));
+  }, []);
+
+  const handleDeleteFlight = useCallback((id: string) => {
+    setTrip((prev) => ({
+      ...prev,
+      flights: prev.flights.filter((f) => f.id !== id),
+    }));
+  }, []);
+
+  // Expense Handlers
+  const handleAddExpense = useCallback((expense: Expense) => {
+    setTrip((prev) => ({
+      ...prev,
+      expenses: [expense, ...prev.expenses],
+    }));
+  }, []);
+
+  const handleDeleteExpense = useCallback((id: string) => {
+    setTrip((prev) => ({
+      ...prev,
+      expenses: prev.expenses.filter((e) => e.id !== id),
+    }));
+  }, []);
+
+  // Import Handler
+  const handleImportSuccess = useCallback((importedTrip: Trip) => {
+    setTrip(importedTrip);
+    confetti({ particleCount: 100, spread: 80 });
+  }, []);
 
   // Toggle readiness item
   const handleToggleReadinessItem = useCallback((id: string) => {
@@ -165,23 +222,26 @@ export function App() {
     });
   }, []);
 
-  const handleShare = () => {
-    if (navigator.share) {
-      navigator.share({
-        title: trip.title,
-        text: `Check out our live trip itinerary for ${trip.destination} on MojoLog!`,
-        url: window.location.href,
-      }).catch(() => {});
-    } else {
-      navigator.clipboard.writeText(window.location.href);
-      alert('Trip link copied to clipboard!');
-    }
-  };
-
   const isDayOptimized = !!optimizedDays[activeDay.id];
 
   return (
     <div className="app-shell">
+      {/* Read-Only Notice Banner */}
+      {isReadOnly && (
+        <div className="read-only-banner">
+          <span>👀 Viewing shared itinerary in read-only mode</span>
+          <button
+            className="read-only-exit-btn"
+            onClick={() => {
+              window.history.replaceState({}, '', window.location.pathname);
+              setIsReadOnly(false);
+            }}
+          >
+            Exit Preview
+          </button>
+        </div>
+      )}
+
       {/* 1. Global Navigation Bar */}
       <Header
         title={trip.title}
@@ -192,101 +252,171 @@ export function App() {
         activeSession={vaultSession}
         onOpenReadiness={() => setIsReadinessOpen(true)}
         onOpenAuth={() => setIsAuthOpen(true)}
-        onShare={handleShare}
+        onShare={() => setIsShareModalOpen(true)}
       />
 
-      {/* 2. Horizontal Day Selector Tabs */}
-      <DaySelector
-        days={trip.days}
-        activeDayIndex={activeDayIdx}
-        onSelectDay={setActiveDayIdx}
-      />
+      {/* 2. Top Navigation Tabs */}
+      <nav className="main-nav-bar">
+        <div className="nav-tabs-group">
+          <button
+            className={`nav-tab-btn ${activeTab === 'timeline' ? 'active' : ''}`}
+            onClick={() => setActiveTab('timeline')}
+          >
+            <CalendarDays size={15} />
+            <span>Itinerary & Map</span>
+          </button>
 
-      {/* 3. Mobile View Switcher (Visible only on < 1024px screens) */}
-      <div className="mobile-view-tabs">
-        <button
-          className={`mobile-tab-btn ${mobileView === 'timeline' ? 'active' : ''}`}
-          onClick={() => setMobileView('timeline')}
-        >
-          <ListFilter size={16} />
-          <span>Timeline & Weather</span>
-        </button>
-        <button
-          className={`mobile-tab-btn ${mobileView === 'map' ? 'active' : ''}`}
-          onClick={() => setMobileView('map')}
-        >
-          <MapIcon size={16} />
-          <span>Route Map</span>
-        </button>
-      </div>
+          <button
+            className={`nav-tab-btn ${activeTab === 'flights' ? 'active' : ''}`}
+            onClick={() => setActiveTab('flights')}
+          >
+            <Plane size={15} />
+            <span>Flights</span>
+            <span className="nav-counter-pill">{trip.flights.length}</span>
+          </button>
 
-      {/* 4. Dual-Pane Responsive Workspace */}
-      <main className="main-workspace">
-        {/* LEFT PANE: Day Itinerary & Weather */}
-        <section
-          className={`timeline-pane ${mobileView === 'map' ? 'mobile-hidden' : ''}`}
-        >
-          {/* Day Section Header */}
-          <div className="day-summary-banner">
-            <div>
-              <h2 className="day-heading">{activeDay.title}</h2>
-              <p className="day-subheading">
-                {activeDay.stops.length} destinations scheduled · {activeDay.dateStr}
-              </p>
-            </div>
+          <button
+            className={`nav-tab-btn ${activeTab === 'expenses' ? 'active' : ''}`}
+            onClick={() => setActiveTab('expenses')}
+          >
+            <Receipt size={15} />
+            <span>Expenses</span>
+            <span className="nav-counter-pill">{trip.expenses.length}</span>
+          </button>
+        </div>
 
+        <div className="nav-right-actions">
+          <button
+            className="share-export-nav-btn"
+            onClick={() => setIsShareModalOpen(true)}
+            title="Export JSON or generate read-only link"
+          >
+            <Share2 size={14} />
+            <span>Export & Share</span>
+          </button>
+        </div>
+      </nav>
+
+      {/* 3. TAB CONTENT */}
+      {activeTab === 'timeline' && (
+        <>
+          {/* Horizontal Day Selector Tabs */}
+          <DaySelector
+            days={trip.days}
+            activeDayIndex={activeDayIdx}
+            onSelectDay={setActiveDayIdx}
+          />
+
+          {/* Mobile View Switcher (Visible on < 1024px screens) */}
+          <div className="mobile-view-tabs">
             <button
-              className={`optimize-pill-btn ${isDayOptimized ? 'optimized' : ''}`}
-              onClick={handleOptimizeDay}
-              title="Run 2-opt Traveling Salesperson route optimizer via Rust WebAssembly"
+              className={`mobile-tab-btn ${mobileView === 'timeline' ? 'active' : ''}`}
+              onClick={() => setMobileView('timeline')}
             >
-              {isDayOptimized ? <Zap size={14} /> : <Sparkles size={14} />}
-              <span>{isDayOptimized ? 'Optimized' : 'Optimize Route (WASM)'}</span>
+              <ListFilter size={16} />
+              <span>Timeline & Weather</span>
+            </button>
+            <button
+              className={`mobile-tab-btn ${mobileView === 'map' ? 'active' : ''}`}
+              onClick={() => setMobileView('map')}
+            >
+              <MapIcon size={16} />
+              <span>Route Map</span>
             </button>
           </div>
 
-          {/* Weather Prediction Card (TripMojo Contextual Intelligence) */}
-          <WeatherBanner
-            weather={activeDay.weather}
-            themeColor={activeDay.themeColor}
+          {/* Dual-Pane Responsive Workspace */}
+          <main className="main-workspace">
+            {/* LEFT PANE: Day Itinerary & Weather */}
+            <section
+              className={`timeline-pane ${mobileView === 'map' ? 'mobile-hidden' : ''}`}
+            >
+              {/* Day Section Header */}
+              <div className="day-summary-banner">
+                <div>
+                  <h2 className="day-heading">{activeDay.title}</h2>
+                  <p className="day-subheading">
+                    {activeDay.stops.length} destinations scheduled · {activeDay.dateStr}
+                  </p>
+                </div>
+
+                <button
+                  className={`optimize-pill-btn ${isDayOptimized ? 'optimized' : ''}`}
+                  onClick={handleOptimizeDay}
+                  title="Run 2-opt Traveling Salesperson route optimizer via Rust WebAssembly"
+                >
+                  {isDayOptimized ? <Zap size={14} /> : <Sparkles size={14} />}
+                  <span>{isDayOptimized ? 'Optimized' : 'Optimize Route (WASM)'}</span>
+                </button>
+              </div>
+
+              {/* Weather Prediction Card (TripMojo Contextual Intelligence) */}
+              <WeatherBanner
+                weather={activeDay.weather}
+                themeColor={activeDay.themeColor}
+              />
+
+              {/* Itinerary Stream with Distance Connectors */}
+              <div className="itinerary-stream">
+                {activeDay.stops.map((stop, index) => (
+                  <React.Fragment key={stop.id}>
+                    <TimelineCard
+                      stop={stop}
+                      themeColor={activeDay.themeColor}
+                      onSelect={setSelectedStop}
+                    />
+
+                    {/* Distance & Transit duration connector */}
+                    {index < transitLegs.length && (
+                      <DistancePill
+                        leg={transitLegs[index]}
+                        onToggleMode={handleToggleMode}
+                      />
+                    )}
+                  </React.Fragment>
+                ))}
+              </div>
+            </section>
+
+            {/* RIGHT PANE: Interactive Route Map (Wanderlog Spatial Engine) */}
+            <section
+              className={`map-pane ${mobileView === 'timeline' ? 'mobile-hidden' : ''}`}
+            >
+              <InteractiveMap
+                day={activeDay}
+                onSelectStop={setSelectedStop}
+                onOptimizeDay={handleOptimizeDay}
+                isOptimized={isDayOptimized}
+              />
+            </section>
+          </main>
+        </>
+      )}
+
+      {/* TAB 2: FLIGHT BOARDING PASSES */}
+      {activeTab === 'flights' && (
+        <main className="subview-workspace">
+          <FlightTracker
+            flights={trip.flights}
+            onAddFlight={handleAddFlight}
+            onDeleteFlight={handleDeleteFlight}
           />
+        </main>
+      )}
 
-          {/* Itinerary Stream with Distance Connectors */}
-          <div className="itinerary-stream">
-            {activeDay.stops.map((stop, index) => (
-              <React.Fragment key={stop.id}>
-                <TimelineCard
-                  stop={stop}
-                  themeColor={activeDay.themeColor}
-                  onSelect={setSelectedStop}
-                />
-
-                {/* Distance & Transit duration connector */}
-                {index < transitLegs.length && (
-                  <DistancePill
-                    leg={transitLegs[index]}
-                    onToggleMode={handleToggleMode}
-                  />
-                )}
-              </React.Fragment>
-            ))}
-          </div>
-        </section>
-
-        {/* RIGHT PANE: Interactive Route Map (Wanderlog Spatial Engine) */}
-        <section
-          className={`map-pane ${mobileView === 'timeline' ? 'mobile-hidden' : ''}`}
-        >
-          <InteractiveMap
-            day={activeDay}
-            onSelectStop={setSelectedStop}
-            onOptimizeDay={handleOptimizeDay}
-            isOptimized={isDayOptimized}
+      {/* TAB 3: EXPENSE TRACKER */}
+      {activeTab === 'expenses' && (
+        <main className="subview-workspace">
+          <ExpenseTracker
+            expenses={trip.expenses}
+            baseCurrency={trip.baseCurrency}
+            onAddExpense={handleAddExpense}
+            onDeleteExpense={handleDeleteExpense}
           />
-        </section>
-      </main>
+        </main>
+      )}
 
-      {/* 5. Modals & Drawers */}
+      {/* 4. Modals & Drawers */}
       <ReadinessModal
         isOpen={isReadinessOpen}
         score={trip.readinessScore}
@@ -312,6 +442,13 @@ export function App() {
           setVaultSession(null);
         }}
         onClose={() => setIsAuthOpen(false)}
+      />
+
+      <ShareModal
+        isOpen={isShareModalOpen}
+        trip={trip}
+        onImportSuccess={handleImportSuccess}
+        onClose={() => setIsShareModalOpen(false)}
       />
     </div>
   );

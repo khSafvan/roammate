@@ -71,12 +71,67 @@ export interface ReadinessItem {
   critical: boolean;
 }
 
+// 1. Unified Flight Model
+export interface Flight {
+  id: string;
+  flightNumber: string;
+  carrier: string;
+  date: string;
+  departure: {
+    airport: string;
+    city: string;
+    time: string;
+    terminal?: string;
+    gate?: string;
+  };
+  arrival: {
+    airport: string;
+    city: string;
+    time: string;
+    terminal?: string;
+    gate?: string;
+    nextDay?: boolean;
+  };
+  bookingRef?: string;
+  seat?: string;
+  notes?: string;
+}
+
+// 2. Unified Expense Model
+export const EXPENSE_CATEGORIES = [
+  'Flights',
+  'Lodging',
+  'Food & Drinks',
+  'Transport',
+  'Activities',
+  'Shopping',
+  'Miscellaneous',
+] as const;
+
+export type ExpenseCategory = typeof EXPENSE_CATEGORIES[number];
+
+export interface Expense {
+  id: string;
+  date: string;
+  category: ExpenseCategory;
+  amount: number;
+  currency: string;
+  paidBy: string;
+  notes?: string;
+}
+
+// 3. Unified Itinerary Document (Single flexible JSON document)
 export interface Trip {
   id: string;
+  tripId?: string; // Unified identifier alias
   title: string;
   dates: string;
   destination: string;
+  baseCurrency: string;
+  shareToken?: string;
   readinessScore: number;
+  flights: Flight[];
   days: TripDay[];
+  expenses: Expense[];
   readinessChecklist: ReadinessItem[];
 }

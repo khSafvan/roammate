@@ -1567,3 +1567,659 @@ body {
 .vault-logout-btn:hover {
   background-color: #FEE2E2;
 }
+
+/* Main Navigation Tabs Bar */
+.main-nav-bar {
+  background-color: var(--bg-card);
+  border-bottom: 1px solid var(--border-light);
+  padding: 8px 20px;
+}
+
+.nav-tabs-group {
+  max-width: 1440px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.nav-tab-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 8px 16px;
+  border-radius: var(--radius-full);
+  border: 1px solid transparent;
+  background: none;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.nav-tab-btn:hover {
+  background-color: var(--bg-subtle);
+  color: var(--text-primary);
+}
+
+.nav-tab-btn.active {
+  background-color: #EFF6FF;
+  border-color: #BFDBFE;
+  color: var(--brand-blue);
+}
+
+.nav-counter-pill {
+  font-size: 10px;
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-light);
+  padding: 1px 6px;
+  border-radius: var(--radius-full);
+  color: var(--text-primary);
+  font-weight: 800;
+}
+
+.nav-right-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.share-export-nav-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 14px;
+  border-radius: var(--radius-full);
+  border: 1px solid var(--border-light);
+  background-color: var(--bg-subtle);
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-primary);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.share-export-nav-btn:hover {
+  background-color: #E2E8F0;
+  border-color: var(--border-strong);
+}
+
+/* Subview Workspace for Flights and Expenses */
+.subview-workspace {
+  max-width: 1080px;
+  margin: 0 auto;
+  width: 100%;
+  padding: 24px 20px 48px;
+}
+
+.section-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+
+.section-heading {
+  font-size: 20px;
+  font-weight: 800;
+  color: var(--text-primary);
+  letter-spacing: -0.3px;
+}
+
+.section-subheading {
+  font-size: 13px;
+  color: var(--text-secondary);
+  margin-top: 2px;
+}
+
+.primary-action-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background-color: var(--brand-blue);
+  color: #FFFFFF;
+  border: none;
+  border-radius: var(--radius-full);
+  padding: 8px 16px;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 2px 6px rgba(37, 99, 235, 0.25);
+  transition: all 0.15s ease;
+}
+
+.primary-action-btn:hover {
+  background-color: #1D4ED8;
+  transform: translateY(-1px);
+}
+
+.secondary-action-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  background-color: var(--bg-subtle);
+  border: 1px solid var(--border-light);
+  color: var(--text-primary);
+  border-radius: var(--radius-md);
+  padding: 10px 14px;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.secondary-action-btn:hover {
+  background-color: #E2E8F0;
+}
+
+/* Flights Boarding Pass Styles */
+.flights-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(420px, 1fr));
+  gap: 18px;
+}
+
+.boarding-pass-card {
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-xl);
+  padding: 18px 20px;
+  box-shadow: var(--shadow-card);
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  position: relative;
+  overflow: hidden;
+}
+
+.boarding-pass-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 4px;
+  height: 100%;
+  background-color: var(--brand-blue);
+}
+
+.pass-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.pass-carrier-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.pass-carrier {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-secondary);
+}
+
+.pass-flight-num {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 14px;
+  font-weight: 800;
+  color: var(--text-primary);
+}
+
+.pass-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.live-radar-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background-color: #EFF6FF;
+  border: 1px solid #BFDBFE;
+  color: #1D4ED8;
+  padding: 4px 8px;
+  border-radius: var(--radius-full);
+  font-size: 11px;
+  font-weight: 700;
+  text-decoration: none;
+  transition: all 0.15s ease;
+}
+
+.live-radar-tag:hover {
+  background-color: #DBEAFE;
+}
+
+.radar-pulse {
+  color: #EF4444;
+  animation: pulse 1.5s infinite;
+}
+
+.pass-delete-btn {
+  background: none;
+  border: none;
+  color: var(--text-tertiary);
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 4px;
+}
+
+.pass-delete-btn:hover {
+  color: #EF4444;
+}
+
+.pass-route-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 8px 0;
+}
+
+.airport-block {
+  display: flex;
+  flex-direction: column;
+}
+
+.airport-code {
+  font-size: 26px;
+  font-weight: 800;
+  letter-spacing: -0.5px;
+  color: var(--text-primary);
+  font-family: 'JetBrains Mono', monospace;
+}
+
+.airport-time {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--brand-blue);
+  font-family: 'JetBrains Mono', monospace;
+}
+
+.next-day-sup {
+  font-size: 10px;
+  color: #DC2626;
+  font-weight: 800;
+  margin-left: 2px;
+}
+
+.airport-meta {
+  font-size: 11px;
+  color: var(--text-tertiary);
+  margin-top: 2px;
+}
+
+.route-graphic {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.route-line-decor {
+  flex: 1;
+  height: 1px;
+  border-top: 1.5px dashed var(--border-strong);
+}
+
+.plane-graphic-icon {
+  color: var(--brand-blue);
+  transform: rotate(45deg);
+}
+
+.pass-footer {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding-top: 12px;
+  border-top: 1px dashed var(--border-light);
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+.pass-stub-item {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.stub-ref {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  font-weight: 700;
+  background-color: var(--bg-subtle);
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+.pass-notes-strip {
+  font-size: 11px;
+  color: var(--text-secondary);
+  background-color: var(--bg-subtle);
+  padding: 6px 10px;
+  border-radius: var(--radius-sm);
+}
+
+/* Expense Tracker Styles */
+.budget-summary-card {
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-xl);
+  padding: 20px 24px;
+  box-shadow: var(--shadow-card);
+  margin-bottom: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.budget-top-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.budget-label {
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--text-secondary);
+}
+
+.budget-total-val {
+  font-size: 32px;
+  font-weight: 800;
+  color: var(--text-primary);
+  letter-spacing: -1px;
+  line-height: 1.1;
+  margin-top: 4px;
+}
+
+.budget-currency {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text-tertiary);
+  margin-left: 6px;
+}
+
+.budget-expense-count {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background-color: var(--bg-subtle);
+  padding: 6px 12px;
+  border-radius: var(--radius-md);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.category-progress-bar {
+  height: 10px;
+  border-radius: var(--radius-full);
+  overflow: hidden;
+  background-color: var(--bg-subtle);
+  display: flex;
+}
+
+.bar-segment {
+  height: 100%;
+  transition: width 0.3s ease;
+}
+
+.category-legend-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+  gap: 12px;
+  padding-top: 4px;
+}
+
+.legend-cell {
+  background-color: var(--bg-subtle);
+  border-radius: var(--radius-md);
+  padding: 8px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.legend-cell-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.legend-color-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+
+.legend-name {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.legend-amounts {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+}
+
+.legend-val {
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--text-primary);
+  font-family: 'JetBrains Mono', monospace;
+}
+
+.legend-pct {
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--text-tertiary);
+}
+
+.expense-list-card {
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-xl);
+  padding: 20px 24px;
+  box-shadow: var(--shadow-card);
+}
+
+.card-inner-heading {
+  font-size: 16px;
+  font-weight: 800;
+  color: var(--text-primary);
+  margin-bottom: 14px;
+}
+
+.expense-items-table {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.expense-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  background-color: var(--bg-subtle);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-md);
+  transition: all 0.15s ease;
+}
+
+.expense-row:hover {
+  background-color: #E2E8F0;
+}
+
+.expense-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.expense-cat-badge {
+  padding: 4px 8px;
+  border-radius: var(--radius-sm);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.3px;
+}
+
+.expense-notes {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.expense-submeta {
+  font-size: 11px;
+  color: var(--text-tertiary);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 1px;
+}
+
+.expense-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.expense-amount {
+  font-size: 15px;
+  font-weight: 800;
+  color: var(--text-primary);
+  font-family: 'JetBrains Mono', monospace;
+}
+
+.expense-del-btn {
+  background: none;
+  border: none;
+  color: var(--text-tertiary);
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 4px;
+}
+
+.expense-del-btn:hover {
+  color: #EF4444;
+}
+
+.category-chips-select {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.cat-chip-btn {
+  padding: 6px 12px;
+  border: 1px solid var(--border-light);
+  background-color: var(--bg-subtle);
+  border-radius: var(--radius-full);
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+/* Sharing & Export Styles */
+.share-option-card {
+  background-color: var(--bg-subtle);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-lg);
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.share-option-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.share-option-title {
+  font-size: 14px;
+  font-weight: 800;
+  color: var(--text-primary);
+}
+
+.share-option-desc {
+  font-size: 12px;
+  color: var(--text-secondary);
+  line-height: 1.4;
+}
+
+.share-link-box {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.share-link-input {
+  flex: 1;
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-md);
+  padding: 8px 12px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  color: var(--text-primary);
+  outline: none;
+}
+
+.read-only-banner {
+  background-color: #FEF3C7;
+  border-bottom: 1px solid #FCD34D;
+  color: #92400E;
+  padding: 8px 20px;
+  font-size: 12px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.read-only-exit-btn {
+  background-color: #FFFFFF;
+  border: 1px solid #FCD34D;
+  color: #92400E;
+  padding: 3px 8px;
+  border-radius: var(--radius-sm);
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+/* Responsive adjustments */
+@media (max-width: 640px) {
+  .flights-grid {
+    grid-template-columns: 1fr;
+  }
+  .pass-route-row {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .route-graphic {
+    width: 100%;
+    margin: 8px 0;
+  }
+}
+

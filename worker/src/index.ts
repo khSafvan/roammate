@@ -149,4 +149,31 @@ app.get('/api/itineraries/:userId', async (c) => {
   return c.json({ itineraries });
 });
 
+// 5. Method B: One-Click Public Read-Only Share Route
+app.get('/api/share/:token', async (c) => {
+  const token = c.req.param('token');
+
+  if (!c.env.TURSO_DATABASE_URL || !c.env.TURSO_AUTH_TOKEN) {
+    return c.json({ error: 'Database unconfigured' }, 503);
+  }
+
+  const turso = createClient({
+    url: c.env.TURSO_DATABASE_URL,
+    authToken: c.env.TURSO_AUTH_TOKEN,
+  });
+
+  // Query by tripId or by shareToken in the unified JSON document
+  const result = await turso.execute({
+    sql: `SELECT data FROM itineraries WHERE id = ? OR json_extract(data, '$.shareToken') = ? LIMIT 1`,
+    args: [token, token],
+  });
+
+  if (result.rows.length === 0) {
+    return c.json({ error: 'Shared itinerary not found' }, 404);
+  }
+
+  const tripData = JSON.parse(result.rows[0].data as string);
+  return c.json({ trip: tripData, readOnly: true });
+});
+
 export default app;
