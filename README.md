@@ -131,3 +131,11 @@ Starts Wrangler local edge development server for `@mojolog/api`.
 npm run build:wasm
 ```
 Compiles `packages/rust-core` with `wasm-pack` directly into `apps/web/src/pkg/`.
+
+---
+
+## 📖 Deployment & Production Setup
+
+For full step-by-step instructions on provisioning a free Turso database, configuring Cloudflare Workers, managing environment variables, and deploying to Cloudflare Pages or Vercel, read the complete guide:
+
+👉 **[DEPLOYMENT.md](DEPLOYMENT.md)**
