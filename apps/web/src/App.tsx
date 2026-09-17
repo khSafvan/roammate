@@ -24,6 +24,7 @@ import { StopDetailModal } from './components/StopDetailModal';
 import { TimelineCard } from './components/TimelineCard';
 import { WeatherBanner } from './components/WeatherBanner';
 import { clearVaultSession } from './auth/crypto';
+import { loadLocalTrip } from './auth/syncService';
 import { mockTripData } from './data/mockTrip';
 import { Expense, Flight, ItineraryStop, Trip, TripDay } from './types/trip';
 import {
@@ -34,7 +35,7 @@ import {
 } from './hooks';
 
 export function App() {
-  const [trip, setTrip] = useState<Trip>(mockTripData);
+  const [trip, setTrip] = useState<Trip>(() => loadLocalTrip() || mockTripData);
   const [activeTab, setActiveTab] = useState<'timeline' | 'flights' | 'expenses'>('timeline');
   const [activeDayIdx, setActiveDayIdx] = useState<number>(1); // Day 2 by default
   const [selectedStop, setSelectedStop] = useState<ItineraryStop | null>(null);
@@ -48,8 +49,8 @@ export function App() {
     useVault(trip, setTrip);
   const isWasmActive = useRustCore();
 
-  const activeDay: TripDay = trip.days[activeDayIdx] || trip.days[0];
-  const { transitLegs, handleToggleMode } = useTransitLegs(activeDay.stops);
+  const activeDay: TripDay = trip?.days?.[activeDayIdx] || trip?.days?.[0] || mockTripData.days[0];
+  const { transitLegs, handleToggleMode } = useTransitLegs(activeDay?.stops || []);
   const { isDayOptimized, handleOptimizeDay } = useTripOptimization(
     activeDay,
     activeDayIdx,

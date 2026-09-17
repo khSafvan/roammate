@@ -92,8 +92,13 @@ export async function deleteAccountOnEdge(userId: string, phrase?: string): Prom
  * Saves itinerary to Turso database via Cloudflare Worker
  */
 export async function saveItineraryToEdge(userId: string, trip: Trip): Promise<SyncResult> {
+  const tripWithAccess: Trip & { lastAccessedAt: number } = {
+    ...trip,
+    lastAccessedAt: Date.now(),
+  };
+
   // Always persist to local storage for instant offline access
-  localStorage.setItem(`${STORAGE_KEYS.TRIP_PREFIX}${trip.id}`, JSON.stringify(trip));
+  localStorage.setItem(`${STORAGE_KEYS.TRIP_PREFIX}${trip.id}`, JSON.stringify(tripWithAccess));
 
   if (!API_BASE_URL) {
     return { success: true, message: 'Saved to local encrypted vault' };
@@ -107,7 +112,7 @@ export async function saveItineraryToEdge(userId: string, trip: Trip): Promise<S
         userId,
         id: trip.id,
         title: trip.title,
-        data: trip,
+        data: tripWithAccess,
       }),
     });
     if (res.ok) {
@@ -117,4 +122,95 @@ export async function saveItineraryToEdge(userId: string, trip: Trip): Promise<S
   } catch {
     return { success: true, message: 'Offline: cached locally in vault' };
   }
+}
+
+/**
+ * Loads a cached itinerary from localStorage
+ */
+export function loadLocalTrip(tripId?: string): Trip | null {
+  try {
+    const isValidTrip = (t: any): t is Trip =>
+      t && typeof t === 'object' && typeof t.title === 'string' && Array.isArray(t.days);
+
+    if (tripId) {
+      const item = localStorage.getItem(`${STORAGE_KEYS.TRIP_PREFIX}${tripId}`);
+      if (item) {
+        const parsed = JSON.parse(item);
+        if (isValidTrip(parsed)) return parsed;
+      }
+    }
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (key && key.startsWith(STORAGE_KEYS.TRIP_PREFIX)) {
+        const item = localStorage.getItem(key);
+        if (item) {
+          const parsed = JSON.parse(item);
+          if (isValidTrip(parsed)) return parsed;
+        }
+      }
+    }
+  } catch (err) {
+    console.warn('Failed to load local trip:', err);
+  }
+  return null;
+}
+
+/**
+ * Fetches itineraries for a user from Edge database, falling back to local vault
+ */
+export async function fetchItinerariesFromEdge(userId: string): Promise<Trip[]> {
+  if (!API_BASE_URL) {
+    const local = loadLocalTrip();
+    return local ? [local] : [];
+  }
+
+  try {
+    const res = await fetch(`${API_BASE_URL}/api/itineraries/${userId}`);
+    if (res.ok) {
+      const data = (await res.json()) as { itineraries: Array<{ data: Trip }> };
+      if (data.itineraries && data.itineraries.length > 0) {
+        return data.itineraries.map((it) => it.data);
+      }
+    }
+  } catch (e) {
+    console.warn('Edge itineraries fetch error, falling back to local vault:', e);
+  }
+
+  const local = loadLocalTrip();
+  return local ? [local] : [];
+}
+
+/**
+ * Fetches a shared trip by shareToken from Edge API or local storage
+ */
+export async function fetchSharedTrip(token: string): Promise<Trip | null> {
+  if (API_BASE_URL) {
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/share/${encodeURIComponent(token)}`);
+      if (res.ok) {
+        const data = (await res.json()) as { trip: Trip };
+        return data.trip;
+      }
+    } catch (e) {
+      console.warn('Edge shared trip fetch error, checking local vault:', e);
+    }
+  }
+
+  // Local fallback: search by shareToken or id in localStorage
+  try {
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (key && key.startsWith(STORAGE_KEYS.TRIP_PREFIX)) {
+        const item = localStorage.getItem(key);
+        if (item) {
+          const parsed: Trip = JSON.parse(item);
+          if (parsed.shareToken === token || parsed.id === token) {
+            return parsed;
+          }
+        }
+      }
+    }
+  } catch {}
+
+  return null;
 }

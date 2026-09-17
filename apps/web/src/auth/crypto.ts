@@ -90,6 +90,20 @@ export function getVaultSession(): VaultSession | null {
     // Touch and update lastAccessedAt to keep account alive
     session.lastAccessedAt = now;
     localStorage.setItem(SESSION_KEY, JSON.stringify(session));
+
+    // Also touch cached user record if present
+    const userKey = `${STORAGE_KEYS.USER_PREFIX}${session.userId}`;
+    const userRaw = localStorage.getItem(userKey);
+    if (userRaw) {
+      try {
+        const userData = JSON.parse(userRaw);
+        userData.lastAccessedAt = now;
+        localStorage.setItem(userKey, JSON.stringify(userData));
+      } catch {
+        // Ignore JSON parse errors on user record
+      }
+    }
+
     return session;
   } catch {
     return null;
@@ -114,25 +128,46 @@ export function pruneInactiveLocalData(): number {
       }
     }
 
-    // 2. Check cached users
+    // 2. Snapshot all keys first to prevent in-place index mutation skipping keys
+    const allKeys: string[] = [];
     for (let i = 0; i < localStorage.length; i++) {
       const key = localStorage.key(i);
-      if (!key) continue;
+      if (key) allKeys.push(key);
+    }
 
+    // 3. Check cached users and cached trips
+    const keysToRemove: string[] = [];
+    for (const key of allKeys) {
       if (key.startsWith(STORAGE_KEYS.USER_PREFIX)) {
         const item = localStorage.getItem(key);
         if (item) {
           try {
             const data = JSON.parse(item);
             if (now - (data.lastAccessedAt || data.createdAt || 0) > INACTIVITY_PRUNE_MS) {
-              localStorage.removeItem(key);
-              prunedCount++;
+              keysToRemove.push(key);
             }
           } catch {
-            localStorage.removeItem(key);
+            keysToRemove.push(key);
+          }
+        }
+      } else if (key.startsWith(STORAGE_KEYS.TRIP_PREFIX)) {
+        const item = localStorage.getItem(key);
+        if (item) {
+          try {
+            const trip = JSON.parse(item);
+            if (trip.lastAccessedAt && now - trip.lastAccessedAt > INACTIVITY_PRUNE_MS) {
+              keysToRemove.push(key);
+            }
+          } catch {
+            keysToRemove.push(key);
           }
         }
       }
+    }
+
+    for (const k of keysToRemove) {
+      localStorage.removeItem(k);
+      prunedCount++;
     }
   } catch (err) {
     console.warn('Local prune error:', err);
