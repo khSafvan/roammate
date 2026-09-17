@@ -26,12 +26,12 @@ const CATEGORY_COLORS: Record<ExpenseCategory, string> = {
   Miscellaneous: '#64748B',
 };
 
-export const ExpenseTracker: React.FC<ExpenseTrackerProps> = ({
+export const ExpenseTracker = React.memo<ExpenseTrackerProps>(function ExpenseTracker({
   expenses,
   baseCurrency,
   onAddExpense,
   onDeleteExpense,
-}) => {
+}) {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [amount, setAmount] = useState('');
   const [category, setCategory] = useState<ExpenseCategory>('Food & Drinks');
@@ -293,4 +293,4 @@ export const ExpenseTracker: React.FC<ExpenseTrackerProps> = ({
       )}
     </div>
   );
-};
+});

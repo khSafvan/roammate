@@ -31,10 +31,13 @@ export const InteractiveMap: React.FC<InteractiveMapProps> = ({
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<MapLibreMap | null>(null);
   const markersRef = useRef<Marker[]>([]);
+  const markerElsRef = useRef<Map<string, { el: HTMLDivElement; pulseEl: HTMLDivElement }>>(new Map());
 
   const [selectedStopId, setSelectedStopId] = useState<string | null>(
     day.stops[0]?.id || null
   );
+  const selectedStopIdRef = useRef(selectedStopId);
+  selectedStopIdRef.current = selectedStopId;
 
   // Sync selected stop when active day changes
   useEffect(() => {
@@ -170,14 +173,16 @@ export const InteractiveMap: React.FC<InteractiveMapProps> = ({
     // Clear previous markers
     markersRef.current.forEach((m) => m.remove());
     markersRef.current = [];
+    markerElsRef.current.clear();
 
     const totalStops = day.stops.length;
+    const currentSelectedId = selectedStopIdRef.current;
 
     // Create GPX waypoint markers: S (Start), F (Finish), 02, 03... (Intermediate)
     day.stops.forEach((stop, index) => {
       const isStart = index === 0;
       const isFinish = index === totalStops - 1 && totalStops > 1;
-      const isCurrentSelected = stop.id === selectedStopId;
+      const isCurrentSelected = stop.id === currentSelectedId;
 
       const el = document.createElement('div');
       el.className = `terraink-gpx-pin ${isCurrentSelected ? 'active' : ''} ${
@@ -194,10 +199,16 @@ export const InteractiveMap: React.FC<InteractiveMapProps> = ({
       const labelText = isStart ? 'S' : isFinish ? 'F' : String(index + 1).padStart(2, '0');
       el.title = `${stop.title} [${formatGpxCoordinate(stop.coordinates.latitude, stop.coordinates.longitude)}]`;
 
-      el.innerHTML = `
-        <span class="gpx-pin-label">${labelText}</span>
-        ${isCurrentSelected ? '<div class="terraink-pin-pulse" style="border-color: ' + (day.themeColor || '#2563EB') + '"></div>' : ''}
-      `;
+      const labelSpan = document.createElement('span');
+      labelSpan.className = 'gpx-pin-label';
+      labelSpan.textContent = labelText;
+      el.appendChild(labelSpan);
+
+      const pulseEl = document.createElement('div');
+      pulseEl.className = 'terraink-pin-pulse';
+      pulseEl.style.borderColor = day.themeColor || '#2563EB';
+      pulseEl.style.display = isCurrentSelected ? 'block' : 'none';
+      el.appendChild(pulseEl);
 
       el.addEventListener('click', (e) => {
         e.stopPropagation();
@@ -217,8 +228,23 @@ export const InteractiveMap: React.FC<InteractiveMapProps> = ({
         .addTo(map);
 
       markersRef.current.push(marker);
+      markerElsRef.current.set(stop.id, { el, pulseEl });
     });
-  }, [day.stops, day.themeColor, selectedStopId, onSelectStop]);
+  }, [day.stops, day.themeColor, onSelectStop]);
+
+  // Fast in-place DOM update when selectedStopId changes (avoids destroying/recreating MapLibre markers)
+  useEffect(() => {
+    markerElsRef.current.forEach(({ el, pulseEl }, id) => {
+      const isSelected = id === selectedStopId;
+      if (isSelected) {
+        el.classList.add('active');
+        pulseEl.style.display = 'block';
+      } else {
+        el.classList.remove('active');
+        pulseEl.style.display = 'none';
+      }
+    });
+  }, [selectedStopId]);
 
   // 1. Initialize MapLibre 2D Planar Map Instance (Zero 3D overhead)
   useEffect(() => {

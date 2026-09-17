@@ -18,11 +18,11 @@ interface FlightTrackerProps {
   onDeleteFlight: (id: string) => void;
 }
 
-export const FlightTracker: React.FC<FlightTrackerProps> = ({
+export const FlightTracker = React.memo<FlightTrackerProps>(function FlightTracker({
   flights,
   onAddFlight,
   onDeleteFlight,
-}) => {
+}) {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [flightNumber, setFlightNumber] = useState('');
   const [carrier, setCarrier] = useState('');
@@ -338,4 +338,4 @@ export const FlightTracker: React.FC<FlightTrackerProps> = ({
       )}
     </div>
   );
-};
+});

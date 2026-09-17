@@ -97,42 +97,85 @@ pub fn wasm_optimize_route_tsp(stops_json: &str, mode: &str) -> String {
         return serde_json::to_string(&res).unwrap_or_default();
     }
 
-    let (orig_duration, _) = calculate_total_route_duration(&stops, mode);
-    let mut current = stops.clone();
-    let n = current.len();
+    let n = stops.len();
 
+    // Precompute duration and distance matrices to eliminate repeated Haversine trigonometry
+    let mut dur_matrix = vec![0u32; n * n];
+    let mut dist_matrix = vec![0.0f64; n * n];
+
+    for i in 0..n {
+        for j in (i + 1)..n {
+            let dist = wasm_haversine_distance_km(
+                stops[i].latitude,
+                stops[i].longitude,
+                stops[j].latitude,
+                stops[j].longitude,
+            );
+            let dur = wasm_estimate_duration_minutes(dist, mode);
+            dist_matrix[i * n + j] = dist;
+            dist_matrix[j * n + i] = dist;
+            dur_matrix[i * n + j] = dur;
+            dur_matrix[j * n + i] = dur;
+        }
+    }
+
+    let mut route: Vec<usize> = (0..n).collect();
+    let mut orig_duration = 0u32;
+    for idx in 0..n - 1 {
+        orig_duration += dur_matrix[route[idx] * n + route[idx + 1]];
+    }
+
+    let mut current_duration = orig_duration;
     let mut improved = true;
     let mut passes = 0;
     let max_passes = 100;
 
+    // O(1) delta evaluation per candidate swap: eliminates heap allocations and full route recalculations
     while improved && passes < max_passes {
         improved = false;
         passes += 1;
 
         for i in 1..n - 1 {
             for j in i + 1..n {
-                let mut candidate = current.clone();
-                candidate[i..=j].reverse();
+                let u = route[i - 1];
+                let v = route[i];
+                let w = route[j];
 
-                let (cand_dur, _) = calculate_total_route_duration(&candidate, mode);
-                let (curr_dur, _) = calculate_total_route_duration(&current, mode);
+                let (old_cost, new_cost) = if j < n - 1 {
+                    let x = route[j + 1];
+                    (
+                        dur_matrix[u * n + v] + dur_matrix[w * n + x],
+                        dur_matrix[u * n + w] + dur_matrix[v * n + x],
+                    )
+                } else {
+                    (
+                        dur_matrix[u * n + v],
+                        dur_matrix[u * n + w],
+                    )
+                };
 
-                if cand_dur < curr_dur {
-                    current = candidate;
+                if new_cost < old_cost {
+                    current_duration = current_duration - old_cost + new_cost;
+                    route[i..=j].reverse();
                     improved = true;
                 }
             }
         }
     }
 
-    let (opt_duration, opt_dist) = calculate_total_route_duration(&current, mode);
+    let mut opt_dist = 0.0;
+    for idx in 0..n - 1 {
+        opt_dist += dist_matrix[route[idx] * n + route[idx + 1]];
+    }
+    let opt_dist = (opt_dist * 10.0).round() / 10.0;
+    let opt_duration = current_duration;
     let saved = if orig_duration > opt_duration {
         orig_duration - opt_duration
     } else {
         0
     };
 
-    let ids: Vec<String> = current.iter().map(|s| s.id.clone()).collect();
+    let ids: Vec<String> = route.iter().map(|&idx| stops[idx].id.clone()).collect();
     let res = OptimizationOutput {
         optimized_ids: ids,
         original_duration_mins: orig_duration,
@@ -322,7 +365,7 @@ pub fn wasm_generate_day_gpx(day_json: &str, trip_title: &str) -> String {
     )
 }
 
-#[derive(Deserialize)]
+#[derive(Serialize, Deserialize)]
 struct ExpenseItemInput {
     pub category: String,
     pub amount: f64,
@@ -392,3 +435,48 @@ pub fn wasm_compute_expense_breakdown(expenses_json: &str) -> String {
 
     serde_json::to_string(&output).unwrap_or_else(|_| "{}".to_string())
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_haversine_distance() {
+        let d = wasm_haversine_distance_km(35.6895, 139.6917, 35.6895, 139.6917);
+        assert_eq!(d, 0.0);
+
+        let d_kyoto = wasm_haversine_distance_km(35.6895, 139.6917, 35.0116, 135.7681);
+        assert!(d_kyoto > 360.0 && d_kyoto < 390.0);
+    }
+
+    #[test]
+    fn test_tsp_optimization_preserves_anchor() {
+        let stops = vec![
+            StopInput { id: "s0".into(), latitude: 35.6800, longitude: 139.7000 },
+            StopInput { id: "s1".into(), latitude: 35.8000, longitude: 139.8000 },
+            StopInput { id: "s2".into(), latitude: 35.6900, longitude: 139.7100 },
+            StopInput { id: "s3".into(), latitude: 35.8500, longitude: 139.8500 },
+        ];
+        let json = serde_json::to_string(&stops).unwrap();
+        let res_str = wasm_optimize_route_tsp(&json, "drive");
+        let res: OptimizationOutput = serde_json::from_str(&res_str).unwrap();
+
+        assert_eq!(res.optimized_ids.len(), 4);
+        assert_eq!(res.optimized_ids[0], "s0"); // Preserves start anchor
+        assert!(res.optimized_duration_mins <= res.original_duration_mins);
+    }
+
+    #[test]
+    fn test_expense_breakdown() {
+        let expenses = vec![
+            ExpenseItemInput { amount: 100.0, category: "Food".into() },
+            ExpenseItemInput { amount: 200.0, category: "Hotel".into() },
+            ExpenseItemInput { amount: 50.0, category: "Food".into() },
+        ];
+        let json = serde_json::to_string(&expenses).unwrap();
+        let res_str = wasm_compute_expense_breakdown(&json);
+        assert!(res_str.contains("\"total_spent\":350.0"));
+        assert!(res_str.contains("\"highest_category\":\"Hotel\""));
+    }
+}
+
