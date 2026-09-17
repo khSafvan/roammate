@@ -232,7 +232,7 @@ export const InteractiveMap: React.FC<InteractiveMapProps> = ({
 
       const map = new MapLibreMap({
         container: mapContainerRef.current,
-        style: MAP_CONFIG.TILE_STYLE_URL,
+        style: import.meta.env.VITE_MAP_STYLE_URL || MAP_CONFIG.TILE_STYLE_URL,
         center: initialCenter,
         zoom: MAP_CONFIG.DEFAULT_ZOOM,
         // Pure 2D Planar Configuration - All 3D tilt & rotation disabled

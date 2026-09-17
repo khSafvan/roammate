@@ -1,0 +1,8 @@
+# ==============================================================================
+# Cloudflare Worker Local Secrets Sample (.dev.vars.sample)
+# Copy to .dev.vars for local testing with `wrangler dev`
+# Never commit actual credentials to Git!
+# ==============================================================================
+
+TURSO_DATABASE_URL=libsql://mojolog-db-sample.turso.io
+TURSO_AUTH_TOKEN=your_turso_auth_token_here
