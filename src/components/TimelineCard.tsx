@@ -31,11 +31,11 @@ const getCategoryIcon = (category: StopCategory) => {
   }
 };
 
-export const TimelineCard: React.FC<TimelineCardProps> = ({
+export const TimelineCard = React.memo<TimelineCardProps>(function TimelineCard({
   stop,
   themeColor,
   onSelect,
-}) => {
+}) {
   return (
     <div className="timeline-card" onClick={() => onSelect(stop)}>
       <div className="card-inner">
@@ -81,4 +81,4 @@ export const TimelineCard: React.FC<TimelineCardProps> = ({
       </div>
     </div>
   );
-};
+});

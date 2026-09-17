@@ -23,11 +23,11 @@ const getWeatherIcon = (condition: WeatherCondition, size = 14) => {
   }
 };
 
-export const DaySelector: React.FC<DaySelectorProps> = ({
+export const DaySelector = React.memo<DaySelectorProps>(function DaySelector({
   days,
   activeDayIndex,
   onSelectDay,
-}) => {
+}) {
   return (
     <div className="day-selector-container">
       <div className="day-selector-scroll">
@@ -61,4 +61,4 @@ export const DaySelector: React.FC<DaySelectorProps> = ({
       </div>
     </div>
   );
-};
+});

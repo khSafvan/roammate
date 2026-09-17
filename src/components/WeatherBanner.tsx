@@ -33,7 +33,10 @@ const getWeatherIcon = (condition: WeatherCondition, size = 20) => {
   }
 };
 
-export const WeatherBanner: React.FC<WeatherBannerProps> = ({ weather, themeColor }) => {
+export const WeatherBanner = React.memo<WeatherBannerProps>(function WeatherBanner({
+  weather,
+  themeColor,
+}) {
   const comfortLabel = getWeatherComfortLabel(
     weather.tempC,
     weather.humidity,
@@ -125,4 +128,4 @@ export const WeatherBanner: React.FC<WeatherBannerProps> = ({ weather, themeColo
       )}
     </div>
   );
-};
+});
