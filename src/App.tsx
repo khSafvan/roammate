@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import confetti from 'canvas-confetti';
 import {
   CalendarDays,
+  Key,
   ListFilter,
   Map as MapIcon,
   Plane,
@@ -13,7 +14,6 @@ import {
 import { AuthModal } from './components/AuthModal';
 import { DaySelector } from './components/DaySelector';
 import { DistancePill } from './components/DistancePill';
-import { ErrorView } from './components/ErrorView';
 import { ExpenseTracker } from './components/ExpenseTracker';
 import { FlightTracker } from './components/FlightTracker';
 import { Header } from './components/Header';
@@ -24,7 +24,7 @@ import { StopDetailModal } from './components/StopDetailModal';
 import { TimelineCard } from './components/TimelineCard';
 import { WeatherBanner } from './components/WeatherBanner';
 import { clearVaultSession, getVaultSession, VaultSession } from './auth/crypto';
-import { saveItineraryToEdge } from './auth/syncService';
+import { initAccountLifecycle, saveItineraryToEdge } from './auth/syncService';
 import { mockTripData } from './data/mockTrip';
 import { Expense, Flight, ItineraryStop, TransitLeg, TransitMode, Trip, TripDay } from './types/trip';
 import {
@@ -36,7 +36,6 @@ import {
 } from './wasm/engine';
 
 export function App() {
-  const [currentPath, setCurrentPath] = useState<string>(window.location.pathname);
   const [trip, setTrip] = useState<Trip>(mockTripData);
   const [activeTab, setActiveTab] = useState<'timeline' | 'flights' | 'expenses'>('timeline');
   const [activeDayIdx, setActiveDayIdx] = useState<number>(1); // Day 2 by default
@@ -51,24 +50,26 @@ export function App() {
   const [mobileView, setMobileView] = useState<'timeline' | 'map'>('timeline');
   const [isReadOnly, setIsReadOnly] = useState(false);
 
-  // Initialize Rust WebAssembly module on mount & listen to navigation
+  // Initialize lifecycle & Rust WebAssembly module on mount
   useEffect(() => {
+    // 1. Sanitize route: If browser opened at /error, clean URL to / so user never lands in error state
+    if (window.location.pathname === '/error') {
+      window.history.replaceState({}, '', '/');
+    }
+
+    // 2. Initialize 3-month account inactivity auto-pruning
+    initAccountLifecycle();
+
+    // 3. Initialize Rust WebAssembly module
     initRustCore().then((ready) => {
       setIsWasmActive(ready && isRustReady());
     });
 
-    const onPopState = () => {
-      setCurrentPath(window.location.pathname);
-    };
-    window.addEventListener('popstate', onPopState);
-
-    // Check if viewing via shared read-only link (?share=...)
+    // 4. Check if viewing via shared read-only link (?share=...)
     const params = new URLSearchParams(window.location.search);
     if (params.get('share')) {
       setIsReadOnly(true);
     }
-
-    return () => window.removeEventListener('popstate', onPopState);
   }, []);
 
   // Auto-sync itinerary to edge/local vault whenever trip or session updates
@@ -78,17 +79,11 @@ export function App() {
     }
   }, [trip, vaultSession, isReadOnly]);
 
-  // If path is /error, render diagnostic system status view
-  if (currentPath === '/error') {
-    return (
-      <ErrorView
-        onGoHome={() => {
-          window.history.pushState({}, '', '/');
-          setCurrentPath('/');
-        }}
-      />
-    );
-  }
+  const handleDeleteAccount = useCallback(() => {
+    setVaultSession(null);
+    setTrip(mockTripData);
+    confetti({ particleCount: 30, spread: 40 });
+  }, []);
 
   const activeDay: TripDay = trip.days[activeDayIdx] || trip.days[0];
 
@@ -276,6 +271,31 @@ export function App() {
         onShare={() => setIsShareModalOpen(true)}
       />
 
+      {/* Zero-Knowledge Vault Welcome Banner for New Users */}
+      {!vaultSession && !isReadOnly && (
+        <div className="vault-welcome-banner">
+          <div className="welcome-banner-left">
+            <span className="welcome-banner-icon">🔐</span>
+            <div>
+              <strong className="welcome-banner-title">Zero-Knowledge Vault:</strong>
+              <span className="welcome-banner-desc">
+                {' '}Generate a new 12-word account or restore with your existing key. Inactive accounts auto-expire after 3 months.
+              </span>
+            </div>
+          </div>
+          <div className="welcome-banner-actions">
+            <button className="welcome-create-btn" onClick={() => setIsAuthOpen(true)}>
+              <Sparkles size={13} />
+              <span>Create Account</span>
+            </button>
+            <button className="welcome-restore-btn" onClick={() => setIsAuthOpen(true)}>
+              <Key size={13} />
+              <span>Use Old Key</span>
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* 2. Top Navigation Tabs */}
       <nav className="main-nav-bar">
         <div className="nav-tabs-group">
@@ -462,6 +482,7 @@ export function App() {
           clearVaultSession();
           setVaultSession(null);
         }}
+        onDeleteAccount={handleDeleteAccount}
         onClose={() => setIsAuthOpen(false)}
       />
 

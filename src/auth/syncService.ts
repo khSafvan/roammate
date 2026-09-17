@@ -1,4 +1,5 @@
 import { Trip } from '../types/trip';
+import { deleteLocalAccount, pruneInactiveLocalData } from './crypto';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || '';
 
@@ -8,12 +9,23 @@ export interface SyncResult {
 }
 
 /**
+ * Initializes client-side auto-pruning on application boot
+ * Wipes any account or local trip data not accessed in 3 months (90 days)
+ */
+export function initAccountLifecycle(): void {
+  const pruned = pruneInactiveLocalData();
+  if (pruned > 0) {
+    console.log(`🧹 Auto-pruned ${pruned} account(s)/trip(s) inactive for > 3 months.`);
+  }
+}
+
+/**
  * Registers a new account via Cloudflare Worker / Turso
  */
 export async function registerAccountOnEdge(mnemonic: string, userId: string): Promise<boolean> {
   if (!API_BASE_URL) {
     // Local mock fallback
-    localStorage.setItem(`mojolog_user_${userId}`, JSON.stringify({ userId, createdAt: Date.now() }));
+    localStorage.setItem(`mojolog_user_${userId}`, JSON.stringify({ userId, createdAt: Date.now(), lastAccessedAt: Date.now() }));
     return true;
   }
 
@@ -31,7 +43,7 @@ export async function registerAccountOnEdge(mnemonic: string, userId: string): P
 }
 
 /**
- * Verifies account existence on Cloudflare Worker / Turso
+ * Verifies account existence on Cloudflare Worker / Turso and updates last_accessed_at
  */
 export async function loginAccountOnEdge(phrase: string): Promise<boolean> {
   if (!API_BASE_URL) {
@@ -48,6 +60,29 @@ export async function loginAccountOnEdge(phrase: string): Promise<boolean> {
     return res.ok;
   } catch (e) {
     console.warn('Edge sync unavailable, using local vault session:', e);
+    return true;
+  }
+}
+
+/**
+ * Permanently deletes user account and all itineraries from both Local Storage and Edge Database
+ */
+export async function deleteAccountOnEdge(userId: string, phrase?: string): Promise<boolean> {
+  deleteLocalAccount(userId);
+
+  if (!API_BASE_URL) {
+    return true;
+  }
+
+  try {
+    const res = await fetch(`${API_BASE_URL}/api/auth/account`, {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ userId, phrase }),
+    });
+    return res.ok;
+  } catch (e) {
+    console.warn('Edge account deletion error (local cache was purged):', e);
     return true;
   }
 }

@@ -1,6 +1,6 @@
 import { Hono } from 'hono';
 import { cors } from 'hono/cors';
-import { createClient } from '@libsql/client/web';
+import { Client, createClient } from '@libsql/client/web';
 import { generateMnemonic, validateMnemonic } from '@scure/bip39';
 import { wordlist } from '@scure/bip39/wordlists/english';
 
@@ -14,6 +14,9 @@ const app = new Hono<{ Bindings: Bindings }>();
 // Enable CORS for frontend web app
 app.use('*', cors());
 
+// 3-Month Inactivity Retention Policy (90 days in ms)
+const THREE_MONTHS_MS = 90 * 24 * 60 * 60 * 1000;
+
 // Helper: One-way hash the mnemonic phrase using native Web Crypto SHA-256
 async function hashPhrase(phrase: string): Promise<string> {
   const normalized = phrase.trim().toLowerCase().replace(/\s+/g, ' ');
@@ -24,7 +27,36 @@ async function hashPhrase(phrase: string): Promise<string> {
   return hashArray.map((b) => b.toString(16).padStart(2, '0')).join('');
 }
 
-// 1. Generate a new 12-word recovery phrase & create account in Turso
+// Helper: Auto-delete accounts & itineraries not accessed in 3 months
+async function pruneExpiredAccounts(turso: Client): Promise<{ deletedUsers: number; deletedItineraries: number }> {
+  try {
+    const cutoff = Date.now() - THREE_MONTHS_MS;
+    
+    // 1. Delete itineraries of inactive users or itineraries older than 90 days
+    const itinRes = await turso.execute({
+      sql: `DELETE FROM itineraries 
+            WHERE user_id IN (SELECT id FROM users WHERE last_accessed_at < ?)
+               OR last_accessed_at < ?`,
+      args: [cutoff, cutoff],
+    });
+
+    // 2. Delete users inactive for 3 months
+    const userRes = await turso.execute({
+      sql: 'DELETE FROM users WHERE last_accessed_at < ?',
+      args: [cutoff],
+    });
+
+    return {
+      deletedUsers: userRes.rowsAffected || 0,
+      deletedItineraries: itinRes.rowsAffected || 0,
+    };
+  } catch (err) {
+    console.warn('Prune error (non-fatal):', err);
+    return { deletedUsers: 0, deletedItineraries: 0 };
+  }
+}
+
+// 1. Generate new account or register client-generated 12-word mnemonic
 app.post('/api/auth/register', async (c) => {
   let body: { mnemonic?: string; userId?: string } = {};
   try {
@@ -33,13 +65,12 @@ app.post('/api/auth/register', async (c) => {
     // Body is optional
   }
 
-  // Use client-generated mnemonic if provided, or generate securely on edge
   const mnemonic = body.mnemonic || generateMnemonic(wordlist, 128);
   const userId = body.userId || (await hashPhrase(mnemonic));
+  const now = Date.now();
 
   if (!c.env.TURSO_DATABASE_URL || !c.env.TURSO_AUTH_TOKEN) {
-    // Development fallback if Turso env vars are not yet bound
-    return c.json({ mnemonic, userId, status: 'local_mode' });
+    return c.json({ mnemonic, userId, status: 'local_mode', lastAccessedAt: now });
   }
 
   const turso = createClient({
@@ -47,16 +78,20 @@ app.post('/api/auth/register', async (c) => {
     authToken: c.env.TURSO_AUTH_TOKEN,
   });
 
+  // Prune any accounts inactive for > 3 months on new registrations
+  await pruneExpiredAccounts(turso);
+
   await turso.execute({
-    sql: 'INSERT OR IGNORE INTO users (id, created_at) VALUES (?, ?)',
-    args: [userId, Date.now()],
+    sql: `INSERT INTO users (id, created_at, last_accessed_at) 
+          VALUES (?, ?, ?)
+          ON CONFLICT(id) DO UPDATE SET last_accessed_at = excluded.last_accessed_at`,
+    args: [userId, now, now],
   });
 
-  // Never store the raw mnemonic in the database! Return it once for user backup.
-  return c.json({ mnemonic, userId, success: true });
+  return c.json({ mnemonic, userId, success: true, lastAccessedAt: now });
 });
 
-// 2. Login by verifying the 12-word phrase & matching SHA-256 hash in Turso
+// 2. Login with existing key (restore account) & touch last_accessed_at
 app.post('/api/auth/login', async (c) => {
   const { phrase } = await c.req.json<{ phrase: string }>();
 
@@ -65,9 +100,10 @@ app.post('/api/auth/login', async (c) => {
   }
 
   const userId = await hashPhrase(phrase);
+  const now = Date.now();
 
   if (!c.env.TURSO_DATABASE_URL || !c.env.TURSO_AUTH_TOKEN) {
-    return c.json({ success: true, userId, status: 'local_mode' });
+    return c.json({ success: true, userId, status: 'local_mode', lastAccessedAt: now });
   }
 
   const turso = createClient({
@@ -75,29 +111,80 @@ app.post('/api/auth/login', async (c) => {
     authToken: c.env.TURSO_AUTH_TOKEN,
   });
 
+  // Prune expired accounts
+  await pruneExpiredAccounts(turso);
+
   const user = await turso.execute({
-    sql: 'SELECT id FROM users WHERE id = ?',
+    sql: 'SELECT id, last_accessed_at FROM users WHERE id = ?',
     args: [userId],
   });
 
   if (user.rows.length === 0) {
-    // If first time logging in with this valid key, auto-provision user row
+    // Re-provision fresh account row
     await turso.execute({
-      sql: 'INSERT INTO users (id, created_at) VALUES (?, ?)',
-      args: [userId, Date.now()],
+      sql: 'INSERT INTO users (id, created_at, last_accessed_at) VALUES (?, ?, ?)',
+      args: [userId, now, now],
+    });
+  } else {
+    // Touch last accessed timestamp
+    await turso.execute({
+      sql: 'UPDATE users SET last_accessed_at = ? WHERE id = ?',
+      args: [now, userId],
     });
   }
 
-  return c.json({ success: true, userId });
+  return c.json({ success: true, userId, lastAccessedAt: now });
 });
 
-// 3. Save or sync an itinerary in Turso
+// 3. Delete current account and all associated trip data
+app.delete('/api/auth/account', async (c) => {
+  const { userId, phrase } = await c.req.json<{ userId: string; phrase?: string }>();
+
+  if (!userId) {
+    return c.json({ error: 'Missing userId' }, 400);
+  }
+
+  // If recovery phrase is supplied, verify ownership before deletion
+  if (phrase) {
+    const derivedId = await hashPhrase(phrase);
+    if (derivedId !== userId) {
+      return c.json({ error: 'Phrase does not match account User ID' }, 403);
+    }
+  }
+
+  if (!c.env.TURSO_DATABASE_URL || !c.env.TURSO_AUTH_TOKEN) {
+    return c.json({ success: true, status: 'local_mode_deleted' });
+  }
+
+  const turso = createClient({
+    url: c.env.TURSO_DATABASE_URL,
+    authToken: c.env.TURSO_AUTH_TOKEN,
+  });
+
+  // Delete all itineraries for this user
+  await turso.execute({
+    sql: 'DELETE FROM itineraries WHERE user_id = ?',
+    args: [userId],
+  });
+
+  // Delete user account row
+  await turso.execute({
+    sql: 'DELETE FROM users WHERE id = ?',
+    args: [userId],
+  });
+
+  return c.json({ success: true, message: 'Account and all data permanently deleted' });
+});
+
+// 4. Save or sync an itinerary in Turso (touches last_accessed_at)
 app.post('/api/itinerary', async (c) => {
   const { userId, id, title, data } = await c.req.json();
 
   if (!userId || !id || !data) {
     return c.json({ error: 'Missing required itinerary fields' }, 400);
   }
+
+  const now = Date.now();
 
   if (!c.env.TURSO_DATABASE_URL || !c.env.TURSO_AUTH_TOKEN) {
     return c.json({ success: true, status: 'local_mode' });
@@ -108,20 +195,30 @@ app.post('/api/itinerary', async (c) => {
     authToken: c.env.TURSO_AUTH_TOKEN,
   });
 
+  // Keep retention policy active
+  await pruneExpiredAccounts(turso);
+
+  // Touch user activity
   await turso.execute({
-    sql: `INSERT INTO itineraries (id, user_id, title, data, updated_at) 
-          VALUES (?, ?, ?, ?, ?)
+    sql: 'UPDATE users SET last_accessed_at = ? WHERE id = ?',
+    args: [now, userId],
+  });
+
+  await turso.execute({
+    sql: `INSERT INTO itineraries (id, user_id, title, data, updated_at, last_accessed_at) 
+          VALUES (?, ?, ?, ?, ?, ?)
           ON CONFLICT(id) DO UPDATE SET 
             title = excluded.title, 
             data = excluded.data, 
-            updated_at = excluded.updated_at`,
-    args: [id, userId, title || 'My Trip', JSON.stringify(data), Date.now()],
+            updated_at = excluded.updated_at,
+            last_accessed_at = excluded.last_accessed_at`,
+    args: [id, userId, title || 'My Trip', JSON.stringify(data), now, now],
   });
 
   return c.json({ success: true });
 });
 
-// 4. Fetch itineraries for an authenticated user
+// 5. Fetch itineraries for an authenticated user
 app.get('/api/itineraries/:userId', async (c) => {
   const userId = c.req.param('userId');
 
@@ -132,6 +229,12 @@ app.get('/api/itineraries/:userId', async (c) => {
   const turso = createClient({
     url: c.env.TURSO_DATABASE_URL,
     authToken: c.env.TURSO_AUTH_TOKEN,
+  });
+
+  // Touch user activity
+  await turso.execute({
+    sql: 'UPDATE users SET last_accessed_at = ? WHERE id = ?',
+    args: [Date.now(), userId],
   });
 
   const result = await turso.execute({
@@ -149,7 +252,7 @@ app.get('/api/itineraries/:userId', async (c) => {
   return c.json({ itineraries });
 });
 
-// 5. Method B: One-Click Public Read-Only Share Route
+// 6. Public Read-Only Share Route
 app.get('/api/share/:token', async (c) => {
   const token = c.req.param('token');
 
@@ -162,7 +265,6 @@ app.get('/api/share/:token', async (c) => {
     authToken: c.env.TURSO_AUTH_TOKEN,
   });
 
-  // Query by tripId or by shareToken in the unified JSON document
   const result = await turso.execute({
     sql: `SELECT data FROM itineraries WHERE id = ? OR json_extract(data, '$.shareToken') = ? LIMIT 1`,
     args: [token, token],
@@ -174,6 +276,21 @@ app.get('/api/share/:token', async (c) => {
 
   const tripData = JSON.parse(result.rows[0].data as string);
   return c.json({ trip: tripData, readOnly: true });
+});
+
+// 7. Maintenance Endpoint: Run 3-Month Retention Cleanup
+app.post('/api/maintenance/prune', async (c) => {
+  if (!c.env.TURSO_DATABASE_URL || !c.env.TURSO_AUTH_TOKEN) {
+    return c.json({ status: 'local_mode', pruned: 0 });
+  }
+
+  const turso = createClient({
+    url: c.env.TURSO_DATABASE_URL,
+    authToken: c.env.TURSO_AUTH_TOKEN,
+  });
+
+  const stats = await pruneExpiredAccounts(turso);
+  return c.json({ success: true, stats });
 });
 
 export default app;
