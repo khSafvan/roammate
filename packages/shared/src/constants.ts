@@ -1,8 +1,8 @@
 /**
- * MojoLog Central Configuration & Constants
+ * MojoLog Shared Configuration & Constants
  */
 
-// LocalStorage Persistence Keys
+// LocalStorage & Cache Persistence Keys
 export const STORAGE_KEYS = {
   VAULT_SESSION: 'mojolog_vault_session',
   USER_PREFIX: 'mojolog_user_',

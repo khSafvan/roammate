@@ -36,6 +36,7 @@ describe('GPX Utilities', () => {
           address: 'Narita, Chiba',
           category: 'flight',
           startTime: '14:30',
+          durationMinutes: 120,
           coordinates: { latitude: 35.771987, longitude: 140.392852 },
         },
         {
@@ -46,6 +47,7 @@ describe('GPX Utilities', () => {
           address: 'Shinjuku, Tokyo',
           category: 'lodging',
           startTime: '17:00',
+          durationMinutes: 60,
           coordinates: { latitude: 35.6953, longitude: 139.7005 },
         },
         {
@@ -56,6 +58,7 @@ describe('GPX Utilities', () => {
           address: 'Nishishinjuku, Tokyo',
           category: 'dining',
           startTime: '19:00',
+          durationMinutes: 90,
           coordinates: { latitude: 35.6932, longitude: 139.6998 },
         },
       ],

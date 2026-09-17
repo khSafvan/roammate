@@ -135,3 +135,17 @@ export interface Trip {
   expenses: Expense[];
   readinessChecklist: ReadinessItem[];
 }
+
+// 4. Cryptographic Vault Session & Edge Sync Result
+export interface VaultSession {
+  userId: string;
+  phraseSnippet: string;
+  createdAt: number;
+  lastAccessedAt: number;
+}
+
+export interface SyncResult {
+  success: boolean;
+  message?: string;
+  lastSyncedAt?: number;
+}

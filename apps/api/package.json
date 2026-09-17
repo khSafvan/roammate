@@ -1,13 +1,15 @@
 {
-  "name": "mojolog-worker",
+  "name": "@mojolog/api",
   "version": "1.0.0",
   "private": true,
+  "type": "module",
   "scripts": {
     "dev": "wrangler dev",
     "deploy": "wrangler deploy"
   },
   "dependencies": {
     "@libsql/client": "^0.14.0",
+    "@mojolog/shared": "*",
     "@scure/bip39": "^1.5.4",
     "hono": "^4.6.3"
   },

@@ -49,106 +49,85 @@ All core mathematical, geospatial, and combinatorial optimization routines are w
   * **Automated 3-Month Retention Policy**: Inactive local data and edge records older than 90 days are automatically pruned.
 * **Trip Readiness Hub**:
   * Circular progress gauge tracking passports, visas, bookings, and eSIM prerequisites.
+* **Offline-First PWA Support**:
+  * Complete Progressive Web App (PWA) manifest and Service Worker caching app shell, styles, and Rust WASM binary for 100% offline flight & itinerary access.
 
 ---
 
-## 🛠️ Modular Project Structure
+## 🛠️ Monorepo Workspace Architecture
 
 ```
 mojolog/
-├── rust-core/              # Native Rust engine compiled to WASM
-│   ├── Cargo.toml
-│   └── src/lib.rs          # TSP 2-opt optimizer, Haversine formula, comfort index
-├── worker/                 # Cloudflare Worker + Turso (libSQL) edge backend
-│   ├── src/index.ts        # Hono edge API (BIP-39 auth, itinerary upsert, read-only share)
-│   ├── schema.sql          # Turso database migration
-│   └── wrangler.toml       # Edge deployment configuration
-├── tests/                  # Automated unit test suite (Vitest)
-│   ├── crypto.test.ts      # BIP-39 mnemonic, SHA-256 hashing, 90-day pruning
-│   ├── gpx.test.ts         # Topografix GPX 1.1 XML generation & coordinates
-│   └── wasm_fallback.test.ts # Haversine formula, multi-modal transit, TSP fallbacks
-├── src/
-│   ├── pkg/                # Generated WebAssembly binary & TypeScript glue
-│   ├── wasm/
-│   │   └── engine.ts       # Bridge loading WASM with automatic JS fallback
-│   ├── auth/
-│   │   ├── crypto.ts       # BIP-39 mnemonic generation & Web Crypto SHA-256
-│   │   └── syncService.ts  # Edge sync service with local vault fallback
-│   ├── config/
-│   │   └── constants.ts    # Centralized storage keys, retention policy, & map/transit config
-│   ├── hooks/
-│   │   ├── index.ts        # Barrel export for custom hooks
-│   │   ├── useVault.ts     # Session state, 90-day pruning lifecycle, & read-only preview
-│   │   ├── useTransitLegs.ts # Inter-stop distances, durations, & mode toggling
-│   │   ├── useTripOptimization.ts # 1-click TSP WASM route optimization
-│   │   └── useRustCore.ts  # Rust WebAssembly initialization & status
-│   ├── types/
-│   │   └── trip.ts         # Unified Trip, Flight, Expense, DayWeather, Stop models
-│   ├── data/
-│   │   └── mockTrip.ts     # Tokyo 4-day trip with flights, expenses, & forecasts
-│   ├── utils/
-│   │   ├── gpx.ts          # GPX 1.1 XML serializer & browser download trigger
-│   │   └── exportImport.ts # Method A (JSON export/import) & Method B (share token)
-│   ├── components/
-│   │   ├── auth/           # Decomposed vault authentication subcomponents
-│   │   │   ├── ActiveSessionView.tsx   # Active account card, ID, & danger zone
-│   │   │   ├── CreateAccountView.tsx   # 12-word mnemonic chips & backup confirmation
-│   │   │   ├── RestoreAccountView.tsx  # 12-word recovery textarea & checksum validation
-│   │   │   └── DeleteAccountDialog.tsx # Permanent deletion confirmation with safety keyword
-│   │   ├── Header.tsx           # App bar with Vault status & Readiness Ring
-│   │   ├── DaySelector.tsx      # Memoized day tabs with weather icons and temperature
-│   │   ├── WeatherBanner.tsx    # Memoized daily weather prediction & hourly forecast
-│   │   ├── TimelineCard.tsx     # Memoized tactile stop card with category & ticket tags
-│   │   ├── DistancePill.tsx     # Memoized inter-stop transit & distance connector
-│   │   ├── InteractiveMap.tsx   # Terraink 2D planar vector route map with GPX track
-│   │   ├── FlightTracker.tsx    # Boarding pass cards & FlightRadar24 live links
-│   │   ├── ExpenseTracker.tsx   # Category-wise budget breakdown & spending log
-│   │   ├── ShareModal.tsx       # JSON file export/import & read-only link share
-│   │   ├── AuthModal.tsx        # Cryptographic seed vault modal orchestrator
-│   │   ├── ReadinessModal.tsx   # Trip readiness checklist drawer
-│   │   └── StopDetailModal.tsx  # Stop details with 1-tap navigation
-│   ├── styles/             # Domain-specific modular CSS architecture
-│   │   ├── variables.css    # Design tokens, color palettes, spacing, shadows
-│   │   ├── base.css         # Typography resets, keyframes, universal primitives
-│   │   ├── layout.css       # Header, nav bars, banners, dual-pane layout
-│   │   ├── timeline.css     # Day selector, weather card, stop cards, distance pills
-│   │   ├── map.css          # Terraink MapLibre container, GPX pins, floating dock
-│   │   ├── subviews.css     # Flight boarding passes & expense tracker ledger
-│   │   ├── modals.css       # Auth modal, share modal, readiness drawer
-│   │   └── responsive.css   # Consolidated media queries (desktop, tablet, mobile)
-│   ├── App.tsx             # Master application orchestrator
-│   ├── main.tsx            # React root mount & error boundary
-│   └── index.css           # 10-line CSS module aggregator
-├── index.html
-├── package.json
-├── tsconfig.json
-└── vite.config.ts
+├── apps/
+│   ├── web/                    # React 18 + Vite + WASM Frontend SPA (@mojolog/web)
+│   │   ├── public/             # Web App Manifest (manifest.webmanifest) & Service Worker (sw.js)
+│   │   ├── src/
+│   │   │   ├── auth/           # BIP-39 mnemonic generation & Web Crypto SHA-256
+│   │   │   ├── components/     # Memoized React UI components & Auth subviews
+│   │   │   ├── hooks/          # Custom hooks (useVault, useTransitLegs, useTripOptimization)
+│   │   │   ├── pkg/            # Compiled WebAssembly binary & JS bindings
+│   │   │   ├── styles/         # 8-layer modular CSS architecture
+│   │   │   ├── utils/          # GPX 1.1 Topografix exporter & JSON import/export
+│   │   │   └── wasm/           # Rust WASM loader & JS fallbacks
+│   │   ├── tests/              # 25 automated Vitest unit tests
+│   │   ├── index.html          # PWA meta tags & root container
+│   │   ├── vite.config.ts      # Vite bundler & @mojolog/shared path alias
+│   │   └── package.json        # Frontend workspace dependencies
+│   │
+│   └── api/                    # Cloudflare Worker + Hono Edge API (@mojolog/api)
+│       ├── src/index.ts        # Edge auth, sync, and 3-month auto-pruning
+│       ├── schema.sql          # Turso (libSQL) database migration
+│       ├── wrangler.toml       # Edge deployment configuration
+│       └── package.json        # Worker workspace dependencies
+│
+├── packages/
+│   ├── shared/                 # Single Source of Truth (@mojolog/shared)
+│   │   ├── src/
+│   │   │   ├── types.ts        # Unified Trip, Stop, Flight, Expense, VaultSession models
+│   │   │   ├── constants.ts    # Storage keys, 90-day retention policy, transit speeds
+│   │   │   └── index.ts        # Shared module exports
+│   │   └── package.json
+│   │
+│   └── rust-core/              # Computational Core (compiled to WebAssembly)
+│       ├── src/lib.rs          # TSP 2-opt optimizer, Haversine formula, comfort index
+│       └── Cargo.toml          # Rust crate configuration
+│
+├── package.json                # Root npm workspaces coordinator
+└── .gitignore
 ```
 
 ---
 
-## 🚀 Running the Web App
+## 🚀 Workspace Commands
 
-### 1. Start Development Server
+All commands can be run directly from the repository root:
+
+### 1. Start Frontend Development Server
 ```bash
-cd ~/Workshop/mojolog
 npm run dev
 ```
-Open `http://localhost:3000` in your browser.
+Starts Vite dev server at `http://localhost:3000`.
 
-### 2. Run Automated Unit Tests
+### 2. Run Automated Unit Test Suite
 ```bash
 npm test
 ```
-Executes 25 comprehensive unit tests across GPX serialization, BIP-39 crypto retention, and Rust WASM JS fallbacks using Vitest.
+Executes 25 comprehensive Vitest tests across GPX Topografix serialization, BIP-39 crypto retention, and WASM JS fallbacks.
 
-### 3. Recompile Rust WebAssembly (Optional)
+### 3. Build Production Bundle
+```bash
+npm run build
+```
+Typechecks and compiles the production frontend bundle into `apps/web/dist/`.
+
+### 4. Start Edge API Worker (Optional)
+```bash
+npm run dev:api
+```
+Starts Wrangler local edge development server for `@mojolog/api`.
+
+### 5. Recompile Rust WebAssembly (Optional)
 ```bash
 npm run build:wasm
 ```
-
-### 4. Production Build & Preview
-```bash
-npm run build
-npm run preview
-```
+Compiles `packages/rust-core` with `wasm-pack` directly into `apps/web/src/pkg/`.

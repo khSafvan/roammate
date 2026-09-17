@@ -3,28 +3,16 @@
   "private": true,
   "version": "0.1.0",
   "type": "module",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
   "scripts": {
-    "dev": "vite",
-    "build": "tsc && vite build",
-    "preview": "vite preview",
-    "test": "vitest run",
-    "build:wasm": "cd rust-core && wasm-pack build --target web --out-dir ../src/pkg"
-  },
-  "dependencies": {
-    "@scure/bip39": "^2.4.0",
-    "canvas-confetti": "^1.9.4",
-    "lucide-react": "^0.453.0",
-    "maplibre-gl": "^6.10.0",
-    "react": "^18.3.1",
-    "react-dom": "^18.3.1"
-  },
-  "devDependencies": {
-    "@types/canvas-confetti": "^1.9.0",
-    "@types/react": "^18.3.11",
-    "@types/react-dom": "^18.3.0",
-    "@vitejs/plugin-react": "^4.3.2",
-    "typescript": "^5.6.2",
-    "vite": "^5.4.8",
-    "vitest": "^2.1.9"
+    "dev": "npm run dev --workspace=@mojolog/web",
+    "build": "npm run build --workspace=@mojolog/web",
+    "preview": "npm run preview --workspace=@mojolog/web",
+    "test": "npm run test --workspace=@mojolog/web",
+    "dev:api": "npm run dev --workspace=@mojolog/api",
+    "build:wasm": "cd packages/rust-core && wasm-pack build --target web --out-dir ../../apps/web/src/pkg"
   }
 }

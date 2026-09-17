@@ -3,6 +3,7 @@ import { cors } from 'hono/cors';
 import { Client, createClient } from '@libsql/client/web';
 import { generateMnemonic, validateMnemonic } from '@scure/bip39';
 import { wordlist } from '@scure/bip39/wordlists/english';
+import { RETENTION_POLICY } from '@mojolog/shared';
 
 type Bindings = {
   TURSO_DATABASE_URL: string;
@@ -15,7 +16,7 @@ const app = new Hono<{ Bindings: Bindings }>();
 app.use('*', cors());
 
 // 3-Month Inactivity Retention Policy (90 days in ms)
-const THREE_MONTHS_MS = 90 * 24 * 60 * 60 * 1000;
+const THREE_MONTHS_MS = RETENTION_POLICY.INACTIVITY_PRUNE_MS;
 
 // Helper: One-way hash the mnemonic phrase using native Web Crypto SHA-256
 async function hashPhrase(phrase: string): Promise<string> {
