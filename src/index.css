@@ -859,79 +859,34 @@ body {
   border-radius: var(--radius-full);
 }
 
-.terraink-controls-strip {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-  margin-bottom: 10px;
-  flex-wrap: wrap;
-}
-
-.style-selector-group {
-  display: flex;
-  align-items: center;
-  gap: 5px;
-}
-
-.style-pill-btn {
-  padding: 3px 9px;
-  border-radius: var(--radius-full);
-  font-size: 11px;
-  font-weight: 700;
-  border: 1px solid var(--border-light);
-  background-color: var(--bg-subtle);
-  color: var(--text-secondary);
-  cursor: pointer;
-  transition: all 0.15s ease;
-}
-
-.style-pill-btn:hover {
-  background-color: #E2E8F0;
-  color: var(--text-primary);
-}
-
-.style-pill-btn.active {
-  background-color: var(--brand-blue);
-  border-color: var(--brand-blue);
-  color: #FFFFFF;
-  box-shadow: 0 1px 4px rgba(37, 99, 235, 0.25);
-}
-
-.view-mode-group {
-  display: flex;
-  align-items: center;
-  gap: 5px;
-}
-
-.view-mode-btn {
+.gpx-action-btn {
   display: inline-flex;
   align-items: center;
-  gap: 4px;
-  padding: 3px 8px;
-  border-radius: 6px;
+  gap: 5px;
+  padding: 6px 11px;
+  border-radius: var(--radius-md);
   font-size: 11px;
   font-weight: 700;
   border: 1px solid var(--border-light);
-  background-color: var(--bg-subtle);
+  background-color: var(--bg-card);
   color: var(--text-secondary);
   cursor: pointer;
   transition: all 0.15s ease;
+  white-space: nowrap;
 }
 
-.view-mode-btn:hover {
-  background-color: #E2E8F0;
+.gpx-action-btn:hover {
+  background-color: #F1F5F9;
+  border-color: #CBD5E1;
   color: var(--text-primary);
 }
 
-.view-mode-btn.active {
-  background-color: #EFF6FF;
-  border-color: #BFDBFE;
-  color: var(--brand-blue);
+.gpx-action-btn:active {
+  transform: scale(0.98);
 }
 
-/* Terraink Custom Numbered Stop Pins */
-.terraink-pin {
+/* Terraink GPX Waypoint Pins (Terraink Approach) */
+.terraink-gpx-pin {
   width: 28px;
   height: 28px;
   border-radius: 50%;
@@ -940,33 +895,44 @@ body {
   justify-content: center;
   color: #FFFFFF;
   border: 2px solid #FFFFFF;
-  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.25);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.28);
   cursor: pointer;
   position: relative;
-  transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+  transition: transform 0.18s cubic-bezier(0.34, 1.56, 0.64, 1);
+  user-select: none;
 }
 
-.terraink-pin:hover {
+.terraink-gpx-pin:hover {
   transform: scale(1.22);
   z-index: 10;
 }
 
-.terraink-pin.active {
+.terraink-gpx-pin.active {
   transform: scale(1.25);
-  box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.4), 0 4px 10px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.35), 0 3px 10px rgba(0, 0, 0, 0.32);
   z-index: 20;
 }
 
-.terraink-pin-num {
-  font-size: 12px;
+.terraink-gpx-pin.pin-start {
+  border-color: #A7F3D0;
+}
+
+.terraink-gpx-pin.pin-finish {
+  border-color: #FECACA;
+}
+
+.gpx-pin-label {
+  font-size: 11px;
   font-weight: 800;
+  font-family: 'JetBrains Mono', monospace;
+  letter-spacing: -0.5px;
 }
 
 .terraink-pin-pulse {
   position: absolute;
   inset: -6px;
   border-radius: 50%;
-  border: 2px solid var(--brand-blue);
+  border: 2px solid currentColor;
   animation: pulse 1.8s infinite ease-in-out;
   pointer-events: none;
 }
@@ -1049,11 +1015,29 @@ body {
   min-width: 0;
 }
 
+.dock-meta-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 2px;
+}
+
 .dock-time {
   font-size: 11px;
   font-weight: 700;
   color: var(--brand-blue);
   font-family: 'JetBrains Mono', monospace;
+}
+
+.dock-coord-pill {
+  font-size: 10px;
+  font-family: 'JetBrains Mono', monospace;
+  font-weight: 600;
+  color: var(--text-tertiary);
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-light);
+  padding: 1px 6px;
+  border-radius: var(--radius-sm);
 }
 
 .dock-title {
