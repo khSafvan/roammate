@@ -1,0 +1,431 @@
+/* MojoLog Layout Styles: Header, Nav, Banners, and Dual-Pane Workspace */
+
+/* 1. Global Header */
+.header-root {
+  background-color: var(--bg-card);
+  border-bottom: 1px solid var(--border-light);
+  position: sticky;
+  top: 0;
+  z-index: 40;
+  backdrop-filter: blur(8px);
+  background-color: rgba(255, 255, 255, 0.95);
+}
+
+.header-container {
+  max-width: 1440px;
+  margin: 0 auto;
+  padding: 12px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.header-brand {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.brand-logo {
+  font-size: 22px;
+}
+
+.brand-name {
+  font-size: 19px;
+  font-weight: 800;
+  letter-spacing: -0.5px;
+  color: var(--text-primary);
+}
+
+.header-meta {
+  display: flex;
+  flex-direction: column;
+}
+
+.trip-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text-primary);
+  line-height: 1.2;
+}
+
+.trip-submeta {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 2px;
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+.meta-pill {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.meta-dot {
+  color: var(--border-strong);
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* Header Buttons: Vault & Readiness */
+.vault-auth-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background-color: var(--bg-subtle);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-md);
+  padding: 6px 12px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.vault-auth-btn:hover {
+  background-color: #E2E8F0;
+  border-color: var(--border-strong);
+}
+
+.vault-auth-btn.authenticated {
+  background-color: #ECFDF5;
+  border-color: #A7F3D0;
+  color: #065F46;
+}
+
+.vault-btn-text {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+}
+
+.readiness-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background-color: var(--bg-subtle);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-md);
+  padding: 6px 12px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.readiness-btn:hover {
+  background-color: #E2E8F0;
+  border-color: var(--border-strong);
+}
+
+.readiness-badge {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.readiness-val {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.readiness-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* 2. Notification & Welcome Banners */
+.vault-welcome-banner {
+  background: linear-gradient(135deg, #EFF6FF 0%, #F0FDF4 100%);
+  border-bottom: 1px solid #BFDBFE;
+  padding: 10px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.welcome-banner-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.welcome-banner-icon {
+  font-size: 18px;
+}
+
+.welcome-banner-title {
+  color: var(--brand-blue);
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.welcome-banner-desc {
+  color: var(--text-secondary);
+  font-size: 12.5px;
+}
+
+.welcome-banner-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.welcome-create-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 12px;
+  border-radius: var(--radius-full);
+  background-color: var(--brand-blue);
+  color: #FFFFFF;
+  border: none;
+  font-size: 11.5px;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 1px 3px rgba(37, 99, 235, 0.2);
+  transition: all 0.15s ease;
+}
+
+.welcome-create-btn:hover {
+  background-color: #1D4ED8;
+}
+
+.welcome-restore-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 12px;
+  border-radius: var(--radius-full);
+  background-color: #FFFFFF;
+  border: 1px solid var(--border-light);
+  color: var(--text-secondary);
+  font-size: 11.5px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.welcome-restore-btn:hover {
+  background-color: var(--bg-subtle);
+  color: var(--text-primary);
+}
+
+.read-only-banner {
+  background-color: #FEF3C7;
+  border-bottom: 1px solid #FCD34D;
+  color: #92400E;
+  padding: 8px 20px;
+  font-size: 12px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.read-only-exit-btn {
+  background-color: #FFFFFF;
+  border: 1px solid #FCD34D;
+  color: #92400E;
+  padding: 3px 8px;
+  border-radius: var(--radius-sm);
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+/* 3. Main Navigation Tabs Bar */
+.main-nav-bar {
+  background-color: var(--bg-card);
+  border-bottom: 1px solid var(--border-light);
+  padding: 8px 20px;
+}
+
+.nav-tabs-group {
+  max-width: 1440px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.nav-tab-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 8px 16px;
+  border-radius: var(--radius-full);
+  border: 1px solid transparent;
+  background: none;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.nav-tab-btn:hover {
+  background-color: var(--bg-subtle);
+  color: var(--text-primary);
+}
+
+.nav-tab-btn.active {
+  background-color: #EFF6FF;
+  border-color: #BFDBFE;
+  color: var(--brand-blue);
+}
+
+.nav-counter-pill {
+  font-size: 10px;
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-light);
+  padding: 1px 6px;
+  border-radius: var(--radius-full);
+  color: var(--text-primary);
+  font-weight: 800;
+}
+
+.nav-right-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.share-export-nav-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 14px;
+  border-radius: var(--radius-full);
+  border: 1px solid var(--border-light);
+  background-color: var(--bg-subtle);
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-primary);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.share-export-nav-btn:hover {
+  background-color: #E2E8F0;
+  border-color: var(--border-strong);
+}
+
+/* 4. Mobile View Switcher */
+.mobile-view-tabs {
+  display: none;
+  padding: 10px 20px;
+  background-color: var(--bg-card);
+  border-bottom: 1px solid var(--border-light);
+}
+
+.mobile-tab-btn {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 8px 12px;
+  background-color: var(--bg-subtle);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-md);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  cursor: pointer;
+}
+
+.mobile-tab-btn.active {
+  background-color: var(--brand-blue);
+  color: #FFFFFF;
+  border-color: var(--brand-blue);
+}
+
+/* 5. Main Workspace Dual-Pane Layout */
+.main-workspace {
+  max-width: 1440px;
+  margin: 0 auto;
+  width: 100%;
+  padding: 24px 20px 48px;
+  display: grid;
+  grid-template-columns: 1fr 1.15fr;
+  gap: 28px;
+  align-items: start;
+}
+
+.timeline-pane {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.day-summary-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 4px;
+}
+
+.day-heading {
+  font-size: 19px;
+  font-weight: 800;
+  color: var(--text-primary);
+  letter-spacing: -0.3px;
+}
+
+.day-subheading {
+  font-size: 13px;
+  color: var(--text-secondary);
+  margin-top: 2px;
+}
+
+.optimize-pill-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background-color: var(--brand-blue);
+  color: #FFFFFF;
+  border: none;
+  border-radius: var(--radius-full);
+  padding: 7px 14px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 2px 4px rgba(37, 99, 235, 0.2);
+  transition: all 0.15s ease;
+}
+
+.optimize-pill-btn:hover {
+  background-color: #1D4ED8;
+  transform: translateY(-1px);
+}
+
+.optimize-pill-btn.optimized {
+  background-color: #ECFDF5;
+  color: #059669;
+  border: 1px solid #10B981;
+  box-shadow: none;
+}
+
+.map-pane {
+  position: sticky;
+  top: 80px;
+}
