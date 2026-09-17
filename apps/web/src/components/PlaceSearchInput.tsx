@@ -103,7 +103,7 @@ export const PlaceSearchInput: React.FC<PlaceSearchInputProps> = ({
       return;
     }
     
-    const qLower = trimmed.toLowerCase();
+
     setIsLoading(true);
     
     const fetchPlacesAPI = async () => {
