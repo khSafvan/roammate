@@ -27,7 +27,7 @@ export async function initRustCore(): Promise<boolean> {
 
   wasmInitPromise = (async () => {
     try {
-      await initWasm(wasmUrl);
+      await initWasm({ module_or_path: wasmUrl });
       isWasmLoaded = true;
       console.log('⚡ Rust WebAssembly Core loaded successfully!');
       return true;

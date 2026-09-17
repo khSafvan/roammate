@@ -13,6 +13,7 @@ import {
 import { AuthModal } from './components/AuthModal';
 import { DaySelector } from './components/DaySelector';
 import { DistancePill } from './components/DistancePill';
+import { ErrorView } from './components/ErrorView';
 import { ExpenseTracker } from './components/ExpenseTracker';
 import { FlightTracker } from './components/FlightTracker';
 import { Header } from './components/Header';
@@ -35,6 +36,7 @@ import {
 } from './wasm/engine';
 
 export function App() {
+  const [currentPath, setCurrentPath] = useState<string>(window.location.pathname);
   const [trip, setTrip] = useState<Trip>(mockTripData);
   const [activeTab, setActiveTab] = useState<'timeline' | 'flights' | 'expenses'>('timeline');
   const [activeDayIdx, setActiveDayIdx] = useState<number>(1); // Day 2 by default
@@ -49,17 +51,24 @@ export function App() {
   const [mobileView, setMobileView] = useState<'timeline' | 'map'>('timeline');
   const [isReadOnly, setIsReadOnly] = useState(false);
 
-  // Initialize Rust WebAssembly module on mount
+  // Initialize Rust WebAssembly module on mount & listen to navigation
   useEffect(() => {
     initRustCore().then((ready) => {
       setIsWasmActive(ready && isRustReady());
     });
+
+    const onPopState = () => {
+      setCurrentPath(window.location.pathname);
+    };
+    window.addEventListener('popstate', onPopState);
 
     // Check if viewing via shared read-only link (?share=...)
     const params = new URLSearchParams(window.location.search);
     if (params.get('share')) {
       setIsReadOnly(true);
     }
+
+    return () => window.removeEventListener('popstate', onPopState);
   }, []);
 
   // Auto-sync itinerary to edge/local vault whenever trip or session updates
@@ -68,6 +77,18 @@ export function App() {
       saveItineraryToEdge(vaultSession.userId, trip);
     }
   }, [trip, vaultSession, isReadOnly]);
+
+  // If path is /error, render diagnostic system status view
+  if (currentPath === '/error') {
+    return (
+      <ErrorView
+        onGoHome={() => {
+          window.history.pushState({}, '', '/');
+          setCurrentPath('/');
+        }}
+      />
+    );
+  }
 
   const activeDay: TripDay = trip.days[activeDayIdx] || trip.days[0];
 
