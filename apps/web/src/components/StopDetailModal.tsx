@@ -29,15 +29,6 @@ interface StopDetailModalProps {
   onMoveStopToIdeas?: (stop: ItineraryStop) => void;
 }
 
-const CATEGORIES: { label: string; value: StopCategory; icon: string }[] = [
-  { label: 'Sight', value: 'sight', icon: '🏛️' },
-  { label: 'Dining', value: 'dining', icon: '🍜' },
-  { label: 'Lodging', value: 'lodging', icon: '🏨' },
-  { label: 'Transit', value: 'transit', icon: '🚆' },
-  { label: 'Flight', value: 'flight', icon: '✈️' },
-  { label: 'Note & Tip', value: 'note', icon: '📝' },
-];
-
 export const StopDetailModal: React.FC<StopDetailModalProps> = ({
   stop,
   themeColor,
@@ -169,25 +160,7 @@ export const StopDetailModal: React.FC<StopDetailModalProps> = ({
         {/* EDIT MODE */}
         {isEditing ? (
           <form onSubmit={handleSave} className="auth-content-col">
-            {/* Category Select */}
-            <div className="category-chips-select">
-              {CATEGORIES.map((cat) => (
-                <button
-                  key={cat.value}
-                  type="button"
-                  className={`cat-chip-btn ${category === cat.value ? 'selected' : ''}`}
-                  style={{
-                    borderColor: category === cat.value ? themeColor : undefined,
-                    backgroundColor: category === cat.value ? `${themeColor}15` : undefined,
-                    color: category === cat.value ? themeColor : undefined,
-                  }}
-                  onClick={() => setCategory(cat.value)}
-                >
-                  <span>{cat.icon}</span>
-                  <span>{cat.label}</span>
-                </button>
-              ))}
-            </div>
+
 
             <div>
               <label className="form-label">Title *</label>

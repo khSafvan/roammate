@@ -311,20 +311,6 @@ export const PlacesToVisitDrawer: React.FC<PlacesToVisitDrawerProps> = ({
                 onChange={(e) => setTitle(e.target.value)}
               />
             </div>
-            <div>
-              <label className="form-label">Category</label>
-              <select
-                className="form-input"
-                value={category}
-                onChange={(e) => setCategory(e.target.value as StopCategory)}
-              >
-                <option value="sight">Sight & Attraction</option>
-                <option value="dining">Food & Dining</option>
-                <option value="lodging">Hotel & Stay</option>
-                <option value="transit">Transit & Transfer</option>
-                <option value="flight">Flight</option>
-              </select>
-            </div>
           </div>
 
           <div>
