@@ -13,6 +13,6 @@
     "preview": "npm run preview --workspace=@mojolog/web",
     "test": "npm run test --workspace=@mojolog/web",
     "dev:api": "npm run dev --workspace=@mojolog/api",
-    "build:wasm": "cd packages/rust-core && wasm-pack build --target web --out-dir ../../apps/web/src/pkg"
+    "build:wasm": "cd packages/rust-core && npx wasm-pack build --target web --out-dir ../../apps/web/src/pkg"
   }
 }

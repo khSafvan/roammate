@@ -7,6 +7,7 @@ import {
   X,
 } from 'lucide-react';
 import { Expense, EXPENSE_CATEGORIES, ExpenseCategory } from '../types/trip';
+import { computeExpenseBreakdownWasm } from '../wasm/engine';
 
 interface ExpenseTrackerProps {
   expenses: Expense[];
@@ -38,18 +39,13 @@ export const ExpenseTracker: React.FC<ExpenseTrackerProps> = ({
   const [paidBy, setPaidBy] = useState('Me');
   const [notes, setNotes] = useState('');
 
-  // 1. Dynamic reduction: Calculate category totals on the fly
+  // 1. Dynamic reduction: Calculate category totals via native Rust WebAssembly (with JS fallback)
   const { categoryTotals, totalSpent } = useMemo(() => {
-    let sum = 0;
-    const totals = expenses.reduce((acc, curr) => {
-      const cat = curr.category || 'Miscellaneous';
-      const val = Number(curr.amount) || 0;
-      acc[cat] = (acc[cat] || 0) + val;
-      sum += val;
-      return acc;
-    }, {} as Record<ExpenseCategory, number>);
-
-    return { categoryTotals: totals, totalSpent: sum };
+    const res = computeExpenseBreakdownWasm(expenses);
+    return {
+      categoryTotals: res.categoryTotals as Record<ExpenseCategory, number>,
+      totalSpent: res.totalSpent,
+    };
   }, [expenses]);
 
   const handleSubmit = (e: React.FormEvent) => {
