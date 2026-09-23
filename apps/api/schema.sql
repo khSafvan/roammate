@@ -2,7 +2,8 @@
 -- Includes 3-Month Auto-Pruning Index & Retention Policy
 
 CREATE TABLE IF NOT EXISTS users (
-    id TEXT PRIMARY KEY,          -- SHA-256 hash of the 12-word mnemonic phrase
+    id TEXT PRIMARY KEY,          -- Account UUID or SHA-256 hash of legacy mnemonic
+    password_hash TEXT,           -- SHA-256 client-derived credential hash (AIOStreams style)
     created_at INTEGER NOT NULL,
     last_accessed_at INTEGER NOT NULL
 );

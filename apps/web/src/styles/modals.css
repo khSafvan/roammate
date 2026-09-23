@@ -507,6 +507,95 @@
   font-variant-numeric: tabular-nums;
 }
 
+/* AIOStreams UUID & Password Auth Styles */
+.auth-uuid-card {
+  background-color: var(--bg-subtle);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-md);
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.auth-uuid-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.auth-uuid-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-tertiary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.auth-uuid-display {
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  padding: 8px 10px;
+  font-size: 12.5px;
+  color: var(--brand-blue);
+  font-weight: 600;
+  word-break: break-all;
+  user-select: all;
+}
+
+.auth-fields-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.auth-text-input {
+  width: 100%;
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-md);
+  padding: 9px 12px;
+  font-size: 13px;
+  color: var(--text-primary);
+  background-color: var(--bg-card);
+  outline: none;
+  transition: all 0.15s ease;
+}
+
+.auth-text-input:focus {
+  border-color: var(--brand-blue);
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+}
+
+.password-input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.password-input-wrapper .auth-text-input {
+  padding-right: 36px;
+}
+
+.password-toggle-btn {
+  position: absolute;
+  right: 10px;
+  background: none;
+  border: none;
+  color: var(--text-tertiary);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px;
+  border-radius: var(--radius-sm);
+  transition: color 0.15s ease;
+}
+
+.password-toggle-btn:hover {
+  color: var(--text-primary);
+}
+
 .auth-error-banner {
   display: flex;
   align-items: center;
@@ -920,3 +1009,377 @@
   font-size: 11px;
   line-height: 1.45;
 }
+
+/* Vault Quick-Login QR Code Modal & Controls */
+.qr-modal-card {
+  max-width: 440px;
+  width: 100%;
+}
+
+.z-modal-top {
+  z-index: 1100;
+}
+
+.qr-presentation-col {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  margin-top: 14px;
+}
+
+.qr-image-container {
+  background-color: #FFFFFF;
+  padding: 16px;
+  border-radius: var(--radius-xl);
+  border: 1px solid var(--border-light);
+  box-shadow: var(--shadow-card);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.qr-image {
+  width: 240px;
+  height: 240px;
+  display: block;
+  border-radius: var(--radius-sm);
+}
+
+.qr-loading-placeholder {
+  width: 240px;
+  height: 240px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-tertiary);
+  font-size: 12px;
+}
+
+.qr-account-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background-color: var(--bg-subtle);
+  border: 1px solid var(--border-subtle);
+  padding: 4px 10px;
+  border-radius: var(--radius-pill);
+}
+
+.qr-actions-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+}
+
+.qr-view-trigger-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 6px 12px;
+  font-size: 11.5px;
+  font-weight: 500;
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--border-light);
+  background-color: var(--bg-card);
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  box-shadow: var(--shadow-sm);
+}
+
+.qr-view-trigger-btn:hover {
+  background-color: var(--bg-subtle);
+  border-color: var(--border-strong);
+  color: var(--text-primary);
+}
+
+.scanned-qr-banner {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background-color: rgba(16, 185, 129, 0.08);
+  border: 1px solid rgba(16, 185, 129, 0.25);
+  border-radius: var(--radius-md);
+  padding: 10px 14px;
+  margin-bottom: 8px;
+}
+
+/* 9. Trip Manager Modal & Multi-Trip Vault Styles */
+.trip-manager-card {
+  max-height: 85vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.trip-manager-nav {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background-color: var(--bg-subtle);
+  padding: 4px;
+  border-radius: var(--radius-pill);
+  margin-bottom: 16px;
+}
+
+.trip-nav-tab {
+  flex: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  padding: 6px 12px;
+  border-radius: var(--radius-pill);
+  border: none;
+  background: transparent;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.trip-nav-tab:hover {
+  color: var(--text-primary);
+}
+
+.trip-nav-tab.active {
+  background-color: var(--bg-card);
+  color: var(--text-primary);
+  font-weight: 600;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+}
+
+.trip-list-container {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  overflow-y: auto;
+  max-height: 52vh;
+  padding-right: 4px;
+}
+
+.trip-item-row {
+  display: flex;
+  flex-direction: column;
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-md);
+  padding: 12px 14px;
+  position: relative;
+  transition: all 0.15s ease;
+}
+
+.trip-item-row:hover {
+  border-color: var(--border-strong);
+  box-shadow: var(--shadow-sm);
+}
+
+.trip-item-row.active-trip-row {
+  background-color: #F8FAFC;
+  border-color: rgba(37, 99, 235, 0.35);
+  box-shadow: 0 0 0 1px rgba(37, 99, 235, 0.15);
+}
+
+.trip-item-clickable {
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.trip-item-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.trip-title-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.trip-item-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.active-badge {
+  font-size: 10.5px;
+  font-weight: 600;
+  color: var(--brand-blue);
+  background-color: rgba(37, 99, 235, 0.1);
+  padding: 2px 7px;
+  border-radius: var(--radius-pill);
+}
+
+.trip-readiness {
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.trip-item-sub {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11.5px;
+  color: var(--text-secondary);
+  flex-wrap: wrap;
+}
+
+.trip-sub-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.trip-sub-dot {
+  color: var(--text-tertiary);
+  font-size: 9px;
+}
+
+.trip-item-metrics {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  color: var(--text-tertiary);
+  margin-top: 2px;
+}
+
+.trip-item-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid var(--border-subtle);
+}
+
+.trip-switch-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background-color: var(--bg-subtle);
+  border: 1px solid var(--border-light);
+  padding: 4px 10px;
+  border-radius: var(--radius-pill);
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--text-primary);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.trip-switch-btn:hover {
+  background-color: #EFF6FF;
+  border-color: rgba(37, 99, 235, 0.3);
+  color: var(--brand-blue);
+}
+
+.trip-delete-btn {
+  background: none;
+  border: none;
+  color: var(--text-tertiary);
+  cursor: pointer;
+  padding: 4px;
+  border-radius: var(--radius-sm);
+  transition: color 0.15s ease;
+}
+
+.trip-delete-btn:hover {
+  color: var(--brand-rose);
+}
+
+.trip-delete-confirm-box {
+  margin-top: 8px;
+  background-color: #FEF2F2;
+  border: 1px solid rgba(239, 68, 68, 0.2);
+  border-radius: var(--radius-sm);
+  padding: 8px 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 12px;
+  color: #991B1B;
+}
+
+.confirm-btn-group {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.cancel-delete-btn {
+  background-color: #FFFFFF;
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  color: #991B1B;
+  padding: 2px 8px;
+  border-radius: var(--radius-pill);
+  font-size: 11px;
+  cursor: pointer;
+}
+
+.confirm-delete-btn {
+  background-color: var(--brand-rose);
+  border: none;
+  color: #FFFFFF;
+  padding: 2px 8px;
+  border-radius: var(--radius-pill);
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.add-new-trip-cta {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  background-color: var(--bg-subtle);
+  border: 1px dashed var(--border-medium);
+  border-radius: var(--radius-md);
+  padding: 10px;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--brand-blue);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.add-new-trip-cta:hover {
+  background-color: #EFF6FF;
+  border-color: rgba(37, 99, 235, 0.4);
+}
+
+.trip-form-container {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.form-grid-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.share-privacy-notice {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  background-color: rgba(16, 185, 129, 0.08);
+  border: 1px solid rgba(16, 185, 129, 0.25);
+  border-radius: var(--radius-md);
+  padding: 8px 12px;
+  font-size: 12px;
+  color: #065F46;
+  line-height: 1.45;
+}
+

@@ -554,3 +554,197 @@
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
+
+/* 4. Timeline Flight Card & Multi-Origin Companion Integration */
+.timeline-flight-card-container {
+  display: flex;
+  position: relative;
+  margin-bottom: 6px;
+}
+
+.flight-node-badge {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background-color: rgba(37, 99, 235, 0.12);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 0 0 4px var(--bg-canvas);
+  z-index: 2;
+}
+
+.timeline-flight-card {
+  flex: 1;
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-card);
+  padding: 16px 18px;
+  box-shadow: var(--shadow-sm);
+  margin-left: 12px;
+  transition: all 0.15s ease;
+}
+
+.timeline-flight-card:hover {
+  box-shadow: var(--shadow-md);
+  border-color: var(--border-medium);
+}
+
+.flight-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.flight-header-left {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.flight-card-type-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--brand-blue);
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+
+.flight-card-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.view-tickets-quick-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 10px;
+  border-radius: var(--radius-pill);
+  background-color: var(--bg-subtle);
+  border: 1px solid var(--border-light);
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.view-tickets-quick-btn:hover {
+  background-color: #EFF6FF;
+  border-color: rgba(37, 99, 235, 0.3);
+  color: var(--brand-blue);
+}
+
+.companion-flights-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.companion-flight-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background-color: var(--bg-subtle);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  padding: 9px 12px;
+  gap: 12px;
+}
+
+.companion-meta-col {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.companion-passenger-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background-color: #FFFFFF;
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-pill);
+  padding: 2px 7px;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.flight-carrier-tag {
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+.companion-origin-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 11px;
+  color: var(--text-tertiary);
+}
+
+.companion-route-col {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+
+.route-endpoints {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12.5px;
+  color: var(--text-primary);
+}
+
+.route-arrow {
+  color: var(--text-tertiary);
+  font-size: 11px;
+}
+
+.companion-sub-meta {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.meta-info-pill {
+  font-size: 10px;
+  color: var(--text-tertiary);
+  background-color: rgba(255, 255, 255, 0.7);
+  padding: 1px 5px;
+  border-radius: 4px;
+}
+
+.companion-actions-col {
+  display: flex;
+  align-items: center;
+}
+
+.radar-mini-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 10.5px;
+  font-weight: 600;
+  color: var(--brand-blue);
+  background-color: rgba(37, 99, 235, 0.08);
+  padding: 3px 8px;
+  border-radius: var(--radius-pill);
+  text-decoration: none;
+  transition: all 0.15s ease;
+}
+
+.radar-mini-link:hover {
+  background-color: rgba(37, 99, 235, 0.16);
+}
+

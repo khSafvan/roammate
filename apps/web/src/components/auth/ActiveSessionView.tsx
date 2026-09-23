@@ -2,13 +2,17 @@ import React, { useState } from 'react';
 import {
   AlertTriangle,
   Calendar,
+  Check,
   Clock,
+  Copy,
   LogOut,
+  QrCode,
   ShieldCheck,
   Trash2,
 } from 'lucide-react';
 import { formatAccountId, VaultSession } from '../../auth/crypto';
 import { DeleteAccountDialog } from './DeleteAccountDialog';
+import { VaultQrCodeModal } from './VaultQrCodeModal';
 
 interface ActiveSessionViewProps {
   activeSession: VaultSession;
@@ -26,19 +30,54 @@ export const ActiveSessionView: React.FC<ActiveSessionViewProps> = ({
   onDeleteAccount,
 }) => {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [showQrModal, setShowQrModal] = useState(false);
+  const [copied, setCopied] = useState(false);
+
+  const handleCopyId = () => {
+    navigator.clipboard.writeText(activeSession.userId);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
 
   return (
     <div className="auth-session-view">
       {/* Account Details Card */}
       <div className="vault-address-box">
         <div className="vault-address-row">
-          <span className="vault-address-label">Active Account ID:</span>
+          <span className="vault-address-label">Active Account UUID:</span>
           <span className="vault-address-val font-mono font-bold text-blue">
             {formatAccountId(activeSession.userId)}
           </span>
         </div>
-        <div className="vault-sha-line font-mono">{activeSession.userId}</div>
+        <div className="flex items-center justify-between gap-2 mt-1">
+          <div className="vault-sha-line font-mono flex-1">{activeSession.userId}</div>
+          <button
+            type="button"
+            className="copy-phrase-btn py-1 px-2 text-xs flex-shrink-0"
+            onClick={handleCopyId}
+            title="Copy full Account UUID"
+          >
+            {copied ? <Check size={13} className="text-emerald" /> : <Copy size={13} />}
+            <span>{copied ? 'Copied' : 'Copy'}</span>
+          </button>
+        </div>
+
+        <button
+          type="button"
+          className="qr-view-trigger-btn w-full mt-2"
+          onClick={() => setShowQrModal(true)}
+          title="Open QR code to scan and log in from your phone or another browser"
+        >
+          <QrCode size={14} />
+          <span>Download / View Login QR Code</span>
+        </button>
       </div>
+
+      <VaultQrCodeModal
+        isOpen={showQrModal}
+        accountUuid={activeSession.userId}
+        onClose={() => setShowQrModal(false)}
+      />
 
       <div className="vault-meta-grid">
         <div className="vault-meta-item">

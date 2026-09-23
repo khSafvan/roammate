@@ -57,21 +57,54 @@ async function pruneExpiredAccounts(turso: Client): Promise<{ deletedUsers: numb
   }
 }
 
-// 1. Generate new account or register client-generated 12-word mnemonic
+// Helper: Auto-ensure tables and columns exist idempotently
+async function ensureTables(turso: Client): Promise<void> {
+  try {
+    await turso.execute(`
+      CREATE TABLE IF NOT EXISTS users (
+        id TEXT PRIMARY KEY,
+        password_hash TEXT,
+        created_at INTEGER NOT NULL,
+        last_accessed_at INTEGER NOT NULL
+      )
+    `);
+    try {
+      await turso.execute('ALTER TABLE users ADD COLUMN password_hash TEXT');
+    } catch {
+      // Column already exists
+    }
+    await turso.execute(`
+      CREATE TABLE IF NOT EXISTS itineraries (
+        id TEXT PRIMARY KEY,
+        user_id TEXT NOT NULL REFERENCES users(id),
+        title TEXT NOT NULL,
+        start_date TEXT,
+        end_date TEXT,
+        data TEXT NOT NULL,
+        updated_at INTEGER NOT NULL,
+        last_accessed_at INTEGER NOT NULL
+      )
+    `);
+  } catch (e) {
+    console.warn('Table initialization notice:', e);
+  }
+}
+
+// 1. Generate new account or register client-generated UUID + passwordHash (AIOStreams pattern)
 app.post('/api/auth/register', async (c) => {
-  let body: { mnemonic?: string; userId?: string } = {};
+  let body: { uuid?: string; passwordHash?: string; mnemonic?: string; userId?: string } = {};
   try {
     body = await c.req.json();
   } catch {
     // Body is optional
   }
 
-  const mnemonic = body.mnemonic || generateMnemonic(wordlist, 128);
-  const userId = body.userId || (await hashPhrase(mnemonic));
   const now = Date.now();
+  const userId = body.uuid || body.userId || (body.mnemonic ? await hashPhrase(body.mnemonic) : crypto.randomUUID());
+  const passwordHash = body.passwordHash || null;
 
   if (!c.env.TURSO_DATABASE_URL || !c.env.TURSO_AUTH_TOKEN) {
-    return c.json({ mnemonic, userId, status: 'local_mode', lastAccessedAt: now });
+    return c.json({ userId, uuid: userId, status: 'local_mode', lastAccessedAt: now });
   }
 
   const turso = createClient({
@@ -79,32 +112,48 @@ app.post('/api/auth/register', async (c) => {
     authToken: c.env.TURSO_AUTH_TOKEN,
   });
 
-  // Prune any accounts inactive for > 3 months on new registrations
+  await ensureTables(turso);
   await pruneExpiredAccounts(turso);
 
   await turso.execute({
-    sql: `INSERT INTO users (id, created_at, last_accessed_at) 
-          VALUES (?, ?, ?)
-          ON CONFLICT(id) DO UPDATE SET last_accessed_at = excluded.last_accessed_at`,
-    args: [userId, now, now],
+    sql: `INSERT INTO users (id, password_hash, created_at, last_accessed_at) 
+          VALUES (?, ?, ?, ?)
+          ON CONFLICT(id) DO UPDATE SET 
+            password_hash = coalesce(excluded.password_hash, users.password_hash),
+            last_accessed_at = excluded.last_accessed_at`,
+    args: [userId, passwordHash, now, now],
   });
 
-  return c.json({ mnemonic, userId, success: true, lastAccessedAt: now });
+  return c.json({ success: true, userId, uuid: userId, lastAccessedAt: now });
 });
 
-// 2. Login with existing key (restore account) & touch last_accessed_at
+// 2. Login with UUID + passwordHash (or legacy 12-word phrase) & touch last_accessed_at
 app.post('/api/auth/login', async (c) => {
-  const { phrase } = await c.req.json<{ phrase: string }>();
-
-  if (!phrase || !validateMnemonic(phrase.trim().toLowerCase().replace(/\s+/g, ' '), wordlist)) {
-    return c.json({ error: 'Invalid BIP-39 recovery phrase' }, 400);
+  let body: { uuid?: string; passwordHash?: string; phrase?: string } = {};
+  try {
+    body = await c.req.json();
+  } catch {
+    return c.json({ error: 'Invalid JSON request body' }, 400);
   }
 
-  const userId = await hashPhrase(phrase);
   const now = Date.now();
+  let userId: string;
+  const passwordHash = body.passwordHash;
+
+  if (body.uuid) {
+    userId = body.uuid.trim().toLowerCase();
+  } else if (body.phrase) {
+    const clean = body.phrase.trim().toLowerCase().replace(/\s+/g, ' ');
+    if (!validateMnemonic(clean, wordlist)) {
+      return c.json({ error: 'Invalid BIP-39 recovery phrase' }, 400);
+    }
+    userId = await hashPhrase(clean);
+  } else {
+    return c.json({ error: 'Missing account UUID or credentials' }, 400);
+  }
 
   if (!c.env.TURSO_DATABASE_URL || !c.env.TURSO_AUTH_TOKEN) {
-    return c.json({ success: true, userId, status: 'local_mode', lastAccessedAt: now });
+    return c.json({ success: true, userId, uuid: userId, status: 'local_mode', lastAccessedAt: now });
   }
 
   const turso = createClient({
@@ -112,21 +161,26 @@ app.post('/api/auth/login', async (c) => {
     authToken: c.env.TURSO_AUTH_TOKEN,
   });
 
-  // Prune expired accounts
+  await ensureTables(turso);
   await pruneExpiredAccounts(turso);
 
   const user = await turso.execute({
-    sql: 'SELECT id, last_accessed_at FROM users WHERE id = ?',
+    sql: 'SELECT id, password_hash, last_accessed_at FROM users WHERE id = ?',
     args: [userId],
   });
 
   if (user.rows.length === 0) {
-    // Re-provision fresh account row
+    // Auto-provision user account row
     await turso.execute({
-      sql: 'INSERT INTO users (id, created_at, last_accessed_at) VALUES (?, ?, ?)',
-      args: [userId, now, now],
+      sql: 'INSERT INTO users (id, password_hash, created_at, last_accessed_at) VALUES (?, ?, ?, ?)',
+      args: [userId, passwordHash || null, now, now],
     });
   } else {
+    // If a password_hash is stored in database and provided, verify it
+    const storedHash = user.rows[0].password_hash as string | null;
+    if (storedHash && passwordHash && storedHash !== passwordHash) {
+      return c.json({ error: 'Incorrect account credentials' }, 401);
+    }
     // Touch last accessed timestamp
     await turso.execute({
       sql: 'UPDATE users SET last_accessed_at = ? WHERE id = ?',
@@ -134,19 +188,23 @@ app.post('/api/auth/login', async (c) => {
     });
   }
 
-  return c.json({ success: true, userId, lastAccessedAt: now });
+  return c.json({ success: true, userId, uuid: userId, lastAccessedAt: now });
 });
 
 // 3. Delete current account and all associated trip data
 app.delete('/api/auth/account', async (c) => {
-  const { userId, phrase } = await c.req.json<{ userId: string; phrase?: string }>();
+  const { userId, phrase, passwordHash } = await c.req.json<{
+    userId: string;
+    phrase?: string;
+    passwordHash?: string;
+  }>();
 
   if (!userId) {
     return c.json({ error: 'Missing userId' }, 400);
   }
 
   // If recovery phrase is supplied, verify ownership before deletion
-  if (phrase) {
+  if (phrase && phrase.includes(' ')) {
     const derivedId = await hashPhrase(phrase);
     if (derivedId !== userId) {
       return c.json({ error: 'Phrase does not match account User ID' }, 403);
@@ -161,6 +219,21 @@ app.delete('/api/auth/account', async (c) => {
     url: c.env.TURSO_DATABASE_URL,
     authToken: c.env.TURSO_AUTH_TOKEN,
   });
+
+  await ensureTables(turso);
+
+  // If user has a password_hash, verify credentials before deleting
+  if (passwordHash) {
+    const userRes = await turso.execute({
+      sql: 'SELECT password_hash FROM users WHERE id = ?',
+      args: [userId],
+    });
+    if (userRes.rows.length > 0 && userRes.rows[0].password_hash) {
+      if (userRes.rows[0].password_hash !== passwordHash) {
+        return c.json({ error: 'Invalid credentials for account deletion' }, 403);
+      }
+    }
+  }
 
   // Delete all itineraries for this user
   await turso.execute({
@@ -219,7 +292,44 @@ app.post('/api/itinerary', async (c) => {
   return c.json({ success: true });
 });
 
-// 5. Fetch itineraries for an authenticated user
+// 5. Delete a specific itinerary from user account
+app.delete('/api/itinerary/:id', async (c) => {
+  const id = c.req.param('id');
+  let userId: string | undefined;
+  try {
+    const body = await c.req.json();
+    userId = body.userId;
+  } catch {}
+
+  if (!id) {
+    return c.json({ error: 'Missing itinerary ID' }, 400);
+  }
+
+  if (!c.env.TURSO_DATABASE_URL || !c.env.TURSO_AUTH_TOKEN) {
+    return c.json({ success: true, status: 'local_mode' });
+  }
+
+  const turso = createClient({
+    url: c.env.TURSO_DATABASE_URL,
+    authToken: c.env.TURSO_AUTH_TOKEN,
+  });
+
+  if (userId) {
+    await turso.execute({
+      sql: 'DELETE FROM itineraries WHERE id = ? AND user_id = ?',
+      args: [id, userId],
+    });
+  } else {
+    await turso.execute({
+      sql: 'DELETE FROM itineraries WHERE id = ?',
+      args: [id],
+    });
+  }
+
+  return c.json({ success: true, message: 'Itinerary deleted' });
+});
+
+// 6. Fetch itineraries for an authenticated user
 app.get('/api/itineraries/:userId', async (c) => {
   const userId = c.req.param('userId');
 
@@ -253,9 +363,10 @@ app.get('/api/itineraries/:userId', async (c) => {
   return c.json({ itineraries });
 });
 
-// 6. Public Read-Only Share Route
+// 7. Secure Guest & Read-Only Share Route (Only person with link/guestKey can view)
 app.get('/api/share/:token', async (c) => {
   const token = c.req.param('token');
+  const guestKey = c.req.query('guestKey') || c.req.query('guest');
 
   if (!c.env.TURSO_DATABASE_URL || !c.env.TURSO_AUTH_TOKEN) {
     return c.json({ error: 'Database unconfigured' }, 503);
@@ -267,8 +378,12 @@ app.get('/api/share/:token', async (c) => {
   });
 
   const result = await turso.execute({
-    sql: `SELECT data FROM itineraries WHERE id = ? OR json_extract(data, '$.shareToken') = ? LIMIT 1`,
-    args: [token, token],
+    sql: `SELECT data FROM itineraries 
+          WHERE id = ? 
+             OR json_extract(data, '$.shareToken') = ? 
+             OR json_extract(data, '$.guestKey') = ? 
+          LIMIT 1`,
+    args: [token, token, token],
   });
 
   if (result.rows.length === 0) {
@@ -276,7 +391,17 @@ app.get('/api/share/:token', async (c) => {
   }
 
   const tripData = JSON.parse(result.rows[0].data as string);
-  return c.json({ trip: tripData, readOnly: true });
+
+  // Privacy verification: If trip has a guestKey, ensure request supplied valid key
+  if (tripData.guestKey) {
+    const isTokenMatch = token === tripData.guestKey || token === tripData.shareToken;
+    const isKeyParamMatch = guestKey === tripData.guestKey;
+    if (!isTokenMatch && !isKeyParamMatch) {
+      return c.json({ error: 'Private trip: secret invitation link required to view' }, 403);
+    }
+  }
+
+  return c.json({ trip: tripData, readOnly: true, isGuest: true });
 });
 
 // 7. Maintenance Endpoint: Run 3-Month Retention Cleanup

@@ -297,13 +297,17 @@ export const InteractiveMap: React.FC<InteractiveMapProps> = ({
         ? '#DC2626'
         : day.themeColor || '#2563EB';
 
-      // 1. Terralink Marker Anchor Container (Anchored at exact bottom point)
+      // 1. Terralink Marker Root Shell (Positioned strictly by MapLibre without CSS transition interference)
       const el = document.createElement('div');
-      el.className = `terralink-marker-anchor ${isCurrentSelected ? 'active' : ''} ${
+      el.className = `terralink-marker-shell ${isCurrentSelected ? 'active' : ''} ${
         isStart ? 'pin-start' : isFinish ? 'pin-finish' : 'pin-waypoint'
       }`;
 
-      // 2. Hover / Active Callout Tooltip
+      // 2. Visual Pin Wrapper (Handles scaling, transform origin, and child hierarchy)
+      const pinWrapper = document.createElement('div');
+      pinWrapper.className = 'terralink-pin-wrapper';
+
+      // 3. Hover / Active Callout Tooltip
       const callout = document.createElement('div');
       callout.className = 'terralink-pin-callout';
 
@@ -323,9 +327,9 @@ export const InteractiveMap: React.FC<InteractiveMapProps> = ({
       callout.appendChild(badgeSpan);
       callout.appendChild(timeSpan);
       callout.appendChild(titleSpan);
-      el.appendChild(callout);
+      pinWrapper.appendChild(callout);
 
-      // 3. Pin Head (Teardrop upper circular body)
+      // 4. Pin Head (Teardrop upper circular body)
       const head = document.createElement('div');
       head.className = 'terralink-pin-head';
       head.style.backgroundColor = pinColor;
@@ -335,20 +339,22 @@ export const InteractiveMap: React.FC<InteractiveMapProps> = ({
       const labelText = isStart ? 'S' : isFinish ? 'F' : String(index + 1).padStart(2, '0');
       labelSpan.textContent = labelText;
       head.appendChild(labelSpan);
-      el.appendChild(head);
+      pinWrapper.appendChild(head);
 
-      // 4. Pin Needle Stem (Points directly down to the GPS coordinate)
+      // 5. Pin Needle Stem (Points directly down to the GPS coordinate)
       const needle = document.createElement('div');
       needle.className = 'terralink-pin-needle';
       needle.style.borderTopColor = pinColor;
-      el.appendChild(needle);
+      pinWrapper.appendChild(needle);
 
-      // 5. Radar Sonar Pulse Ring (Pulsing wave at needle base when active)
+      // 6. Radar Sonar Pulse Ring (Pulsing wave at needle base when active)
       const pulseEl = document.createElement('div');
       pulseEl.className = 'terralink-pulse-ring';
       pulseEl.style.borderColor = pinColor;
       pulseEl.style.display = isCurrentSelected ? 'block' : 'none';
-      el.appendChild(pulseEl);
+      pinWrapper.appendChild(pulseEl);
+
+      el.appendChild(pinWrapper);
 
       el.addEventListener('click', (e) => {
         e.stopPropagation();
@@ -363,8 +369,8 @@ export const InteractiveMap: React.FC<InteractiveMapProps> = ({
         });
       });
 
-      // Anchor set to 'bottom' so the needle point touches the exact GPS coordinate
-      const marker = new Marker({ element: el, anchor: 'bottom' })
+      // Anchor set to 'bottom' so the needle point touches the exact GPS coordinate without drift
+      const marker = new Marker({ element: el, anchor: 'bottom', offset: [0, 0] })
         .setLngLat([stop.coordinates.longitude, stop.coordinates.latitude])
         .addTo(map);
 

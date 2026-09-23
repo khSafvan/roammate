@@ -3,11 +3,14 @@ import {
   clearVaultSession,
   deleteLocalAccount,
   formatAccountId,
+  generateAccountUuid,
   generateVaultPhrase,
   getVaultSession,
+  hashCredentials,
   hashPhrase,
   pruneInactiveLocalData,
   saveVaultSession,
+  validateAccountUuid,
   validateVaultPhrase,
 } from '../src/auth/crypto';
 import { RETENTION_POLICY, STORAGE_KEYS } from '../src/config/constants';
@@ -55,6 +58,40 @@ describe('Cryptographic Vault & Retention Policy', () => {
       expect(validateVaultPhrase('abandon abandon abandon')).toBe(false);
       expect(validateVaultPhrase('invalid word sequence that is not bip39 valid at all for sure')).toBe(false);
       expect(validateVaultPhrase('')).toBe(false);
+    });
+  });
+
+  describe('AIOStreams-Style UUID & Credentials (generateAccountUuid, validateAccountUuid, hashCredentials)', () => {
+    it('generates a valid RFC 4122 v4 UUID', () => {
+      const uuid = generateAccountUuid();
+      expect(uuid).toBeDefined();
+      expect(validateAccountUuid(uuid)).toBe(true);
+    });
+
+    it('validates UUIDs correctly', () => {
+      expect(validateAccountUuid('9f8b417e-3294-4cd0-9aa8-ec16d4ea71b2')).toBe(true);
+      expect(validateAccountUuid('c7a10f82-3d54-4bb8-8219-49cf0bdf0814')).toBe(true);
+      expect(validateAccountUuid('not-a-uuid')).toBe(false);
+      expect(validateAccountUuid('')).toBe(false);
+    });
+
+    it('hashes credentials into a deterministic SHA-256 string', async () => {
+      const uuid = '9f8b417e-3294-4cd0-9aa8-ec16d4ea71b2';
+      const password = 'mySecretPassword123!';
+      const hash1 = await hashCredentials(uuid, password);
+      const hash2 = await hashCredentials(uuid, password);
+      expect(hash1).toBe(hash2);
+      expect(hash1).toMatch(/^[0-9a-f]{64}$/);
+
+      // Different password produces different hash
+      const hash3 = await hashCredentials(uuid, 'differentPassword');
+      expect(hash3).not.toBe(hash1);
+    });
+
+    it('formats a UUID into a compact human-readable badge', () => {
+      const uuid = '9f8b417e-3294-4cd0-9aa8-ec16d4ea71b2';
+      const formatted = formatAccountId(uuid);
+      expect(formatted).toBe('9f8b...71b2');
     });
   });
 
