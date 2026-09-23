@@ -225,10 +225,10 @@ export const PlaceDetailView: React.FC<PlaceDetailViewProps> = ({
             <h1 className="place-detail-title">{stop.title}</h1>
             {stop.subtitle && <p className="place-detail-subtitle">{stop.subtitle}</p>}
 
-            {/* Google Places Key Indicators */}
+            {/* Foursquare Key Indicators */}
             <div className="place-detail-rating-tier-row">
               {typeof stop.rating === 'number' && (
-                <div className="place-rating-badge" title="Google Places Rating">
+                <div className="place-rating-badge" title="Rating">
                   <Star size={14} className="fill-amber text-amber" />
                   <span className="rating-value">{stop.rating.toFixed(1)}</span>
                   {stop.userRatingsTotal && (

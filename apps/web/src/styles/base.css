@@ -52,12 +52,22 @@ body {
   }
 }
 
-/* Zero-motion rule: No movement, jumping, or scaling on hover, focus, or active */
-*:hover,
-*:focus,
-*:focus-within,
-*:active {
+/* Prevent size/position shifting on interactive elements — no scale/translate on hover/focus/active */
+/* Allows modals, maps, and animations to still use transforms freely */
+button:hover, button:focus, button:active,
+a:hover, a:focus, a:active,
+input:hover, input:focus,
+select:hover, select:focus,
+.icon-btn:hover, .icon-btn:focus,
+[role="button"]:hover, [role="button"]:focus {
   transform: none !important;
+}
+
+/* Allow only subtle non-layout-shifting transitions globally */
+button, a, input, select, .icon-btn, [role="button"], [role="option"] {
+  transition: background-color var(--t-fast) ease, color var(--t-fast) ease,
+              border-color var(--t-fast) ease, opacity var(--t-fast) ease,
+              box-shadow var(--t-fast) ease;
 }
 
 /* Universal custom scrollbar */
@@ -112,15 +122,3 @@ body {
 }
 
 
-/* Global custom scrollbar */
-::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
-}
-::-webkit-scrollbar-track {
-  background: transparent;
-}
-::-webkit-scrollbar-thumb {
-  background: var(--border-medium, #cbd5e1);
-  border-radius: 4px;
-}

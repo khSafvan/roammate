@@ -103,6 +103,13 @@
   --t-fast: 150ms;
   --t-normal: 250ms;
 
+  /* 11. Z-Index Layer System */
+  --z-base: 0;
+  --z-sticky: 40;
+  --z-dropdown: 50;
+  --z-modal: 100;
+  --z-toast: 1100;
+
   /* Typography Foundation with Tabular Figures */
   font-family: 'Plus Jakarta Sans', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   font-feature-settings: 'tnum' 1, 'cv05' 1, 'cv08' 1;
