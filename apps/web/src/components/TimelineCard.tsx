@@ -321,7 +321,7 @@ export const TimelineCard = React.memo<TimelineCardProps>(function TimelineCard(
                 )}
 
                 {typeof stop.rating === 'number' && (
-                  <span className="place-rating-badge" title="Google Places Rating">
+                  <span className="place-rating-badge" title="Rating">
                     <Star size={11} className="fill-amber text-amber" />
                     <span>{stop.rating.toFixed(1)}</span>
                   </span>
