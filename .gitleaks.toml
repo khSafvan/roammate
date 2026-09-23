@@ -1,0 +1,12 @@
+[allowlist]
+description = "Allowlist for synthetic demo data values that are not real secrets"
+regexes = [
+  '''guest-tokyo-789a''',
+  '''guest-paris-543b''',
+  '''guest-dubai-442''',
+  '''guest-my-912''',
+  '''tokyo88x''',
+  '''paris77x''',
+  '''dubai-token-88z''',
+  '''malaysia-token-99m''',
+]
