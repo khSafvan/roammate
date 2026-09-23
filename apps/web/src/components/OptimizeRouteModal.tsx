@@ -92,7 +92,7 @@ export const OptimizeRouteModal: React.FC<OptimizeRouteModalProps> = ({
           </div>
         ) : (
           /* OPTIMIZATION PROMPT & METRICS */
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+          <div className="flex flex-col gap-4">
             {/* Savings Hero Banner */}
             <div
               style={{

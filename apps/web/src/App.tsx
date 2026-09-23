@@ -1514,7 +1514,7 @@ export function App() {
                           Day {activeDay.dayNumber} is wide open
                         </h3>
                         <p style={{ fontSize: '13px', color: 'var(--text-secondary)', maxWidth: '380px', margin: '0 auto 20px', lineHeight: '1.5' }}>
-                          Start building your day by adding places, sights, or restaurants with Google Places / OSM.
+                          Start building your day by adding places, sights, or restaurants with Foursquare / OSM.
                         </p>
                         <div className="flex flex-center">
                           <button
@@ -1535,7 +1535,7 @@ export function App() {
                         <button
                           className="timeline-action-primary"
                           onClick={() => handleOpenAddStop('sight')}
-                          title="Search and schedule places, sights, or restaurants with Google Places / OSM"
+                          title="Search and schedule places, sights, or restaurants with Foursquare / OSM"
                         >
                           <Plus size={15} />
                           <span>Add Place</span>

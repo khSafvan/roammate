@@ -175,11 +175,11 @@ export const AddStopModal: React.FC<AddStopModalProps> = ({
               <p className="modal-subtitle">
                 {isNote
                   ? 'Add formatted tips, reminders, instructions, or packing notes'
-                  : 'Search places with Google Places/OSM and schedule your itinerary'}
+                  : 'Search places with Foursquare/OSM and schedule your itinerary'}
               </p>
             </div>
           </div>
-          <button className="modal-close-btn" onClick={onClose} aria-label="Close" style={{ minWidth: '44px', minHeight: '44px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <button className="modal-close-btn flex items-center justify-center min-h-tap" onClick={onClose} aria-label="Close">
             <X size={20} />
           </button>
         </div>
@@ -189,9 +189,9 @@ export const AddStopModal: React.FC<AddStopModalProps> = ({
           {/* Quick Search & Autocomplete */}
           {!isNote && (
             <div>
-              <label className="form-label" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <label className="form-label flex items-center gap-2">
                 <Sparkles size={13} style={{ color: themeColor }} />
-                <span>Search Place / Autocomplete (Google Places & OSM)</span>
+                <span>Search Place / Autocomplete (Foursquare & OSM)</span>
               </label>
               <PlaceSearchInput
                 onSelectPlace={handlePlaceSelect}
@@ -215,8 +215,8 @@ export const AddStopModal: React.FC<AddStopModalProps> = ({
                     marginTop: '8px'
                   }}
                 >
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
                       <span style={{ fontSize: '24px' }}>
                         {CATEGORIES.find(c => c.value === category)?.icon || '📍'}
                       </span>
@@ -247,7 +247,7 @@ export const AddStopModal: React.FC<AddStopModalProps> = ({
                 </div>
               )}
               {!selectedPlaceMeta && (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', alignItems: 'center', margin: '20px 0 10px 0' }}>
+                <div className="flex flex-col items-center gap-3 mt-5 mb-2">
                   <button type="button" onClick={() => setShowAdvanced(true)} style={{ background: 'none', border: 'none', color: 'var(--text-secondary)', fontSize: '13px', fontWeight: 500, cursor: 'pointer' }}>
                     + Enter place details manually
                   </button>
@@ -351,7 +351,7 @@ export const AddStopModal: React.FC<AddStopModalProps> = ({
                   <label className="form-label" style={{ marginBottom: 0 }}>
                     {isNote ? 'Note & Details *' : 'Traveler Notes & Tips'}
                   </label>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                  <div className="flex items-center gap-1">
                     <button type="button" className="icon-btn" style={{ width: '32px', height: '32px', padding: 0 }} onClick={() => insertMarkdown('bold')} title="Bold">
                       <Bold size={14} />
                     </button>
