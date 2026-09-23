@@ -1,4 +1,4 @@
-/* MojoLog Map Styles: Soft Utility MapLibre GL Container, Terralink Waypoints & Floating Dock */
+/* roammate Map Styles: Soft Utility MapLibre GL Container, TerraWay Waypoints & Floating Dock */
 
 .map-view-card {
   background-color: var(--bg-card);
@@ -41,7 +41,8 @@
 }
 
 .terraink-engine-badge,
-.terralink-engine-badge {
+.terralink-engine-badge,
+.terraway-engine-badge {
   font-size: 10px;
   font-weight: 600;
   text-transform: uppercase;
@@ -128,8 +129,10 @@
   height: 100%;
 }
 
-/* Terralink GPS Waypoint Markers - Decoupled MapLibre Shell & Inner Pin */
-.terralink-marker-shell {
+/* TerraWay GPS Waypoint Markers - Decoupled MapLibre Shell & Inner Pin */
+.terraink-marker-shell,
+.terralink-marker-shell,
+.terraway-marker-shell {
   width: 32px;
   height: 42px;
   position: relative;
@@ -139,7 +142,9 @@
      MapLibre GL retains 100% exclusive per-frame translation matrix control without lag. */
 }
 
-.terralink-pin-wrapper {
+.terraink-pin-wrapper,
+.terralink-pin-wrapper,
+.terraway-pin-wrapper {
   width: 100%;
   height: 100%;
   position: relative;
@@ -150,17 +155,21 @@
   transition: transform 0.16s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
-.terralink-marker-shell:hover .terralink-pin-wrapper {
+.terralink-marker-shell:hover .terralink-pin-wrapper,
+.terraway-marker-shell:hover .terraway-pin-wrapper {
   transform: scale(1.15);
   z-index: 50;
 }
 
-.terralink-marker-shell.active .terralink-pin-wrapper {
+.terralink-marker-shell.active .terralink-pin-wrapper,
+.terraway-marker-shell.active .terraway-pin-wrapper {
   transform: scale(1.22);
   z-index: 60;
 }
 
-.terralink-pin-head {
+.terraink-pin-head,
+.terralink-pin-head,
+.terraway-pin-head {
   width: 30px;
   height: 30px;
   border-radius: var(--radius-pill);
@@ -177,18 +186,23 @@
   transition: box-shadow 0.2s ease;
 }
 
-.terralink-marker-shell.active .terralink-pin-head {
+.terralink-marker-shell.active .terralink-pin-head,
+.terraway-marker-shell.active .terraway-pin-head {
   box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.35), 0 4px 12px rgba(0, 0, 0, 0.3);
 }
 
-.terralink-pin-label {
+.terraink-pin-label,
+.terralink-pin-label,
+.terraway-pin-label {
   font-size: 11px;
   font-weight: 700;
   font-family: 'JetBrains Mono', monospace;
   letter-spacing: -0.5px;
 }
 
-.terralink-pin-needle {
+.terraink-pin-needle,
+.terralink-pin-needle,
+.terraway-pin-needle {
   width: 0;
   height: 0;
   border-left: 5px solid transparent;
@@ -199,7 +213,9 @@
   filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.25));
 }
 
-.terralink-pulse-ring {
+.terraink-pulse-ring,
+.terralink-pulse-ring,
+.terraway-pulse-ring {
   position: absolute;
   bottom: 0;
   left: 50%;
@@ -208,7 +224,7 @@
   height: 16px;
   border-radius: var(--radius-pill);
   border: 2px solid var(--brand-blue);
-  animation: terralink-sonar 1.8s infinite ease-out;
+  animation: terraway-sonar 1.8s infinite ease-out;
   pointer-events: none;
   z-index: 0;
 }
@@ -224,8 +240,21 @@
   }
 }
 
+@keyframes terraway-sonar {
+  0% {
+    transform: translate(-50%, 50%) scale(0.5);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(-50%, 50%) scale(2.6);
+    opacity: 0;
+  }
+}
+
 /* Hover & Active Waypoint Label Callout - Calm Utility */
-.terralink-pin-callout {
+.terraink-pin-callout,
+.terralink-pin-callout,
+.terraway-pin-callout {
   position: absolute;
   bottom: calc(100% + 6px);
   left: 50%;
@@ -251,7 +280,9 @@
 }
 
 .terralink-marker-shell:hover .terralink-pin-callout,
-.terralink-marker-shell.active .terralink-pin-callout {
+.terralink-marker-shell.active .terralink-pin-callout,
+.terraway-marker-shell:hover .terraway-pin-callout,
+.terraway-marker-shell.active .terraway-pin-callout {
   opacity: 1;
   transform: translateX(-50%) translateY(-3px);
 }
@@ -276,7 +307,8 @@
 }
 
 .terraink-watermark,
-.terralink-watermark {
+.terralink-watermark,
+.terraway-watermark {
   position: absolute;
   bottom: 8px;
   left: 8px;
@@ -290,7 +322,8 @@
 }
 
 .terraink-watermark-link,
-.terralink-watermark-link {
+.terralink-watermark-link,
+.terraway-watermark-link {
   font-size: 10px;
   font-weight: 600;
   color: var(--text-secondary);
@@ -298,7 +331,8 @@
 }
 
 .terraink-watermark-link:hover,
-.terralink-watermark-link:hover {
+.terralink-watermark-link:hover,
+.terraway-watermark-link:hover {
   color: var(--brand-blue);
 }
 

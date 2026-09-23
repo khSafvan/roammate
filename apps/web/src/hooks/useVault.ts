@@ -14,6 +14,7 @@ import {
   setActiveTripIdLocal,
 } from '../auth/syncService';
 import { Trip } from '../types/trip';
+import { STORAGE_KEYS } from '../config/constants';
 import { mockTripData } from '../data/mockTrip';
 
 export interface CreateTripParams {
@@ -157,7 +158,7 @@ export function useVault(): UseVaultReturn {
       saveItineraryToEdge(vaultSession.userId, activeTrip);
     } else {
       // Local encrypted vault persistence
-      localStorage.setItem(`mojolog_trip_${activeTrip.id}`, JSON.stringify(activeTrip));
+      localStorage.setItem(`${STORAGE_KEYS.TRIP_PREFIX}${activeTrip.id}`, JSON.stringify(activeTrip));
       setActiveTripIdLocal(activeTrip.id);
     }
   }, [activeTrip, vaultSession, isReadOnly, isGuestMode]);
@@ -194,7 +195,7 @@ export function useVault(): UseVaultReturn {
       if (vaultSession) {
         saveItineraryToEdge(vaultSession.userId, newTrip);
       } else {
-        localStorage.setItem(`mojolog_trip_${newTrip.id}`, JSON.stringify(newTrip));
+        localStorage.setItem(`${STORAGE_KEYS.TRIP_PREFIX}${newTrip.id}`, JSON.stringify(newTrip));
       }
 
       confetti({ particleCount: 60, spread: 60 });
@@ -241,7 +242,7 @@ export function useVault(): UseVaultReturn {
     if (vaultSession) {
       await saveItineraryToEdge(vaultSession.userId, clonedTrip);
     } else {
-      localStorage.setItem(`mojolog_trip_${clonedTrip.id}`, JSON.stringify(clonedTrip));
+      localStorage.setItem(`${STORAGE_KEYS.TRIP_PREFIX}${clonedTrip.id}`, JSON.stringify(clonedTrip));
     }
 
     confetti({ particleCount: 90, spread: 75 });

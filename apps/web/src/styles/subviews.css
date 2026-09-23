@@ -646,3 +646,957 @@
   color: var(--brand-blue);
   font-weight: 600;
 }
+
+/* ==========================================================================
+   TRIPS LIST LANDING DASHBOARD (Calm Utility)
+   ========================================================================== */
+
+.trips-dashboard-root {
+  min-height: 100vh;
+  background-color: var(--bg-app);
+}
+
+.trips-dashboard-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 32px 24px 64px;
+}
+
+.trips-hero-card {
+  background: linear-gradient(135deg, #FFFFFF 0%, #F8FAFC 100%);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-lg);
+  padding: 36px 32px;
+  margin-bottom: 32px;
+  box-shadow: 0 4px 16px rgba(15, 23, 42, 0.04);
+}
+
+.hero-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--brand-blue);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 10px;
+}
+
+.trips-hero-title {
+  font-size: 32px;
+  font-weight: 800;
+  letter-spacing: -0.8px;
+  color: var(--text-primary);
+  margin-bottom: 8px;
+}
+
+.trips-hero-desc {
+  font-size: 14.5px;
+  color: var(--text-secondary);
+  max-width: 620px;
+  line-height: 1.5;
+  margin-bottom: 24px;
+}
+
+.trips-stats-strip {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  padding-top: 20px;
+  border-top: 1px solid var(--border-light);
+}
+
+.trips-stat-item {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.trips-stat-item .stat-number {
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.trips-stat-item .stat-label {
+  font-size: 12px;
+  color: var(--text-tertiary);
+  font-weight: 500;
+}
+
+.trips-stat-divider {
+  width: 1px;
+  height: 32px;
+  background-color: var(--border-light);
+}
+
+.trips-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 24px;
+}
+
+.trips-filter-tabs {
+  display: flex;
+  gap: 6px;
+  background-color: var(--bg-subtle);
+  padding: 4px;
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--border-light);
+}
+
+.trip-filter-pill {
+  padding: 6px 16px;
+  border-radius: var(--radius-pill);
+  font-size: 12.5px;
+  font-weight: 500;
+  border: none;
+  background: transparent;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.trip-filter-pill.active {
+  background-color: #FFFFFF;
+  color: var(--text-primary);
+  font-weight: 600;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.08);
+}
+
+.trips-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+  gap: 24px;
+}
+
+/* Trip Card */
+.trip-card-root {
+  background-color: #FFFFFF;
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.04);
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+  display: flex;
+  flex-direction: column;
+}
+
+.trip-card-root:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.08);
+  border-color: rgba(37, 99, 235, 0.3);
+}
+
+.trip-card-root.active-trip-card {
+  border-color: var(--brand-blue);
+  box-shadow: 0 0 0 1px var(--brand-blue), 0 4px 16px rgba(37, 99, 235, 0.12);
+}
+
+.trip-card-banner {
+  height: 68px;
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  padding: 12px 14px;
+}
+
+.trip-card-banner-bg {
+  position: absolute;
+  inset: 0;
+  opacity: 0.12;
+}
+
+.trip-destination-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background-color: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(4px);
+  padding: 4px 10px;
+  border-radius: var(--radius-pill);
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--text-primary);
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  z-index: 1;
+}
+
+.trip-card-actions {
+  display: flex;
+  gap: 4px;
+  z-index: 1;
+}
+
+.card-icon-action-btn {
+  width: 28px;
+  height: 28px;
+  border-radius: var(--radius-pill);
+  background-color: rgba(255, 255, 255, 0.85);
+  border: 1px solid var(--border-light);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.card-icon-action-btn:hover {
+  background-color: #FFFFFF;
+  color: var(--text-primary);
+  transform: scale(1.05);
+}
+
+.card-icon-action-btn.danger-action:hover {
+  color: #DC2626;
+  background-color: #FEF2F2;
+}
+
+.trip-card-body {
+  padding: 16px 18px;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.trip-card-title {
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 6px;
+  line-height: 1.3;
+}
+
+.trip-card-dates {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12.5px;
+  color: var(--text-secondary);
+  margin-bottom: 16px;
+}
+
+.trip-card-metrics {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.card-metric-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  background-color: var(--bg-subtle);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-pill);
+  font-size: 11.5px;
+}
+
+.card-metric-label {
+  color: var(--text-tertiary);
+}
+
+.card-metric-val {
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.trip-card-footer {
+  margin-top: auto;
+  padding-top: 14px;
+  border-top: 1px solid var(--border-light);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.card-travelers-cluster {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+.card-enter-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  background-color: var(--brand-blue);
+  color: #FFFFFF;
+  border: none;
+  border-radius: var(--radius-pill);
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.card-enter-btn:hover {
+  background-color: var(--brand-blue-hover);
+}
+
+/* Dashed Create Trip Card */
+.create-trip-card-dashed {
+  background-color: transparent;
+  border: 2px dashed var(--border-strong);
+  border-radius: var(--radius-md);
+  padding: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  min-height: 240px;
+}
+
+.create-trip-card-dashed:hover {
+  border-color: var(--brand-blue);
+  background-color: rgba(37, 99, 235, 0.02);
+}
+
+.create-dashed-inner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.create-icon-bubble {
+  width: 48px;
+  height: 48px;
+  border-radius: var(--radius-pill);
+  background-color: var(--bg-subtle);
+  border: 1px solid var(--border-light);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--brand-blue);
+  margin-bottom: 12px;
+  transition: transform 0.2s ease;
+}
+
+.create-trip-card-dashed:hover .create-icon-bubble {
+  transform: scale(1.1);
+  background-color: var(--brand-blue);
+  color: #FFFFFF;
+}
+
+.create-card-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 4px;
+}
+
+.create-card-desc {
+  font-size: 12.5px;
+  color: var(--text-tertiary);
+  max-width: 220px;
+}
+
+.delete-confirm-box {
+  background-color: #FEF2F2;
+  border: 1px solid #FCA5A5;
+  border-radius: var(--radius-sm);
+  padding: 10px;
+  margin-top: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.delete-prompt-text {
+  font-size: 12px;
+  color: #991B1B;
+  font-weight: 500;
+}
+
+.delete-confirm-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.delete-btn-danger {
+  padding: 4px 12px;
+  background-color: #DC2626;
+  color: #FFFFFF;
+  border: none;
+  border-radius: var(--radius-pill);
+  font-size: 11.5px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.delete-btn-cancel {
+  padding: 4px 12px;
+  background-color: #FFFFFF;
+  border: 1px solid #D1D5DB;
+  color: var(--text-secondary);
+  border-radius: var(--radius-pill);
+  font-size: 11.5px;
+  cursor: pointer;
+}
+
+/* ==========================================================================
+   DEDICATED TRIP SETTINGS PAGE (Calm Utility)
+   ========================================================================== */
+
+.settings-page-root {
+  min-height: 100vh;
+  background-color: var(--bg-app);
+}
+
+.settings-header {
+  background-color: rgba(255, 255, 255, 0.94);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--border-light);
+  position: sticky;
+  top: 0;
+  z-index: 30;
+}
+
+.settings-header-inner {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 14px 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.settings-back-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: transparent;
+  border: none;
+  color: var(--text-secondary);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  padding: 6px 10px;
+  border-radius: var(--radius-sm);
+  transition: all 0.15s ease;
+}
+
+.settings-back-btn:hover {
+  background-color: var(--bg-subtle);
+  color: var(--text-primary);
+}
+
+.settings-title-group {
+  display: flex;
+  flex-direction: column;
+}
+
+.settings-page-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.settings-page-subtitle {
+  font-size: 12px;
+  color: var(--text-tertiary);
+}
+
+.settings-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.settings-container {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 32px 24px 64px;
+}
+
+.settings-grid {
+  display: grid;
+  grid-template-columns: 1fr 360px;
+  gap: 28px;
+  align-items: start;
+}
+
+@media (max-width: 900px) {
+  .settings-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.settings-main-col,
+.settings-side-col {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.settings-card {
+  background-color: #FFFFFF;
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-md);
+  padding: 24px;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.03);
+}
+
+.settings-card-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  margin-bottom: 20px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--border-light);
+}
+
+.card-title-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.settings-card-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.settings-card-subtitle {
+  font-size: 12.5px;
+  color: var(--text-tertiary);
+}
+
+.settings-form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.col-span-2 {
+  grid-column: span 2;
+}
+
+.settings-form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.settings-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.settings-input,
+.settings-select,
+.settings-textarea {
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-sm);
+  font-size: 13.5px;
+  color: var(--text-primary);
+  background-color: #FFFFFF;
+  transition: border-color 0.15s ease;
+  font-family: inherit;
+}
+
+.settings-input:focus,
+.settings-select:focus,
+.settings-textarea:focus {
+  outline: none;
+  border-color: var(--brand-blue);
+  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.12);
+}
+
+.settings-input-icon-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.settings-input-icon-wrap .input-icon {
+  position: absolute;
+  left: 10px;
+  color: var(--text-tertiary);
+  pointer-events: none;
+}
+
+.settings-input-icon-wrap .settings-input {
+  padding-left: 32px;
+}
+
+.color-swatches-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+}
+
+.color-swatch-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-sm);
+  background: #FFFFFF;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.color-swatch-btn:hover {
+  border-color: var(--border-strong);
+}
+
+.color-swatch-btn.selected {
+  border-color: var(--brand-blue);
+  background-color: rgba(37, 99, 235, 0.04);
+}
+
+.swatch-circle {
+  width: 16px;
+  height: 16px;
+  border-radius: var(--radius-pill);
+}
+
+.swatch-name {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-secondary);
+}
+
+/* Secret Companion Link Box */
+.guest-link-box {
+  background-color: var(--bg-subtle);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-sm);
+  padding: 12px;
+  margin-bottom: 12px;
+}
+
+.guest-url-preview {
+  font-family: monospace;
+  font-size: 11.5px;
+  color: var(--text-secondary);
+  word-break: break-all;
+  margin-bottom: 10px;
+  padding: 6px 8px;
+  background-color: #FFFFFF;
+  border: 1px solid var(--border-light);
+  border-radius: 4px;
+}
+
+.guest-link-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.copy-link-btn {
+  flex: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 7px 12px;
+  background-color: var(--brand-blue);
+  color: #FFFFFF;
+  border: none;
+  border-radius: var(--radius-pill);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.regen-key-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  padding: 7px 12px;
+  background-color: #FFFFFF;
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-pill);
+  font-size: 12px;
+  color: var(--text-secondary);
+  cursor: pointer;
+}
+
+.guest-link-desc {
+  font-size: 12px;
+  color: var(--text-tertiary);
+  line-height: 1.4;
+}
+
+.danger-card {
+  border-color: #FCA5A5;
+}
+
+.delete-trip-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  background-color: #FEF2F2;
+  border: 1px solid #FCA5A5;
+  color: #DC2626;
+  border-radius: var(--radius-pill);
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.delete-trip-btn:hover {
+  background-color: #DC2626;
+  color: #FFFFFF;
+}
+
+/* ==========================================================================
+   DOCUMENTS & BOOKINGS HUB (Hotels, Flights, Activities, Transit, Docs)
+   ========================================================================== */
+
+.bookings-hub-container {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.bookings-hub-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 14px 18px;
+  background-color: #FFFFFF;
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-md);
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.02);
+}
+
+.category-filter-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.category-pill-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  background-color: var(--bg-subtle);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-pill);
+  font-size: 12.5px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.category-pill-btn:hover {
+  background-color: #FFFFFF;
+  color: var(--text-primary);
+  border-color: var(--border-strong);
+}
+
+.category-pill-btn.active {
+  background-color: var(--brand-blue);
+  color: #FFFFFF;
+  border-color: var(--brand-blue);
+  font-weight: 600;
+}
+
+.category-count-badge {
+  padding: 1px 6px;
+  border-radius: var(--radius-pill);
+  font-size: 10.5px;
+  background-color: rgba(15, 23, 42, 0.08);
+}
+
+.category-pill-btn.active .category-count-badge {
+  background-color: rgba(255, 255, 255, 0.25);
+  color: #FFFFFF;
+}
+
+.hub-secondary-filters {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.companion-filter-select {
+  padding: 6px 12px;
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-pill);
+  font-size: 12.5px;
+  background-color: #FFFFFF;
+  color: var(--text-secondary);
+}
+
+.search-input-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.search-input-wrap .search-icon {
+  position: absolute;
+  left: 10px;
+  color: var(--text-tertiary);
+  pointer-events: none;
+}
+
+.search-input-wrap input {
+  padding: 6px 12px 6px 30px;
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-pill);
+  font-size: 12.5px;
+  width: 180px;
+  background-color: #FFFFFF;
+}
+
+.bookings-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+  gap: 20px;
+}
+
+/* Booking Voucher Card (Soft Utility Ticket Aesthetic) */
+.booking-voucher-card {
+  background-color: #FFFFFF;
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-md);
+  box-shadow: 0 1px 4px rgba(15, 23, 42, 0.03);
+  display: flex;
+  overflow: hidden;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.booking-voucher-card:hover {
+  transform: translateY(-1.5px);
+  box-shadow: 0 6px 18px rgba(15, 23, 42, 0.06);
+}
+
+.voucher-left-stub {
+  width: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #FFFFFF;
+  flex-shrink: 0;
+}
+
+.voucher-content {
+  padding: 16px 18px;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.voucher-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.voucher-category-badge {
+  font-size: 10.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding: 2px 7px;
+  border-radius: var(--radius-pill);
+}
+
+.voucher-code-badge {
+  font-family: monospace;
+  font-size: 11.5px;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 4px;
+  background-color: var(--bg-subtle);
+  border: 1px solid var(--border-light);
+  color: var(--text-primary);
+}
+
+.voucher-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 8px;
+}
+
+.voucher-meta-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 12px;
+  color: var(--text-secondary);
+  margin-bottom: 6px;
+}
+
+.voucher-meta-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.voucher-companion-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  background-color: rgba(37, 99, 235, 0.06);
+  border: 1px solid rgba(37, 99, 235, 0.15);
+  border-radius: var(--radius-pill);
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--brand-blue);
+  margin-top: 6px;
+  align-self: flex-start;
+}
+
+.voucher-notes {
+  margin-top: 10px;
+  padding-top: 8px;
+  border-top: 1px dashed var(--border-light);
+  font-size: 11.5px;
+  color: var(--text-tertiary);
+  font-style: italic;
+}
+
+.voucher-footer {
+  margin-top: auto;
+  padding-top: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+}
+
+.voucher-delete-btn {
+  background: none;
+  border: none;
+  color: var(--text-tertiary);
+  cursor: pointer;
+  padding: 4px;
+  border-radius: var(--radius-pill);
+  transition: all 0.15s ease;
+}
+
+.voucher-delete-btn:hover {
+  color: #DC2626;
+  background-color: #FEF2F2;
+}
+

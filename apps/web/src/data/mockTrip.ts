@@ -1,6 +1,13 @@
 import { Trip } from '../types/trip';
+import { mockDubaiTripData } from './mockDubaiTrip';
+import { mockMalaysiaTripData } from './mockMalaysiaTrip';
 
-export const mockTripData: Trip = {
+export { mockDubaiTripData, mockMalaysiaTripData };
+
+// Primary Default Sample Trip: Dubai & Abu Dhabi Discovery
+export const mockTripData: Trip = mockDubaiTripData;
+
+export const mockTokyoTripData: Trip = {
   id: 'tokyo-2026',
   tripId: 'tokyo-2026',
   title: 'Tokyo & Hakone Discovery',
@@ -14,6 +21,72 @@ export const mockTripData: Trip = {
   shareToken: 'tokyo88x',
   guestKey: 'guest-tokyo-789a',
   readinessScore: 80,
+  documents: [
+    {
+      id: 'doc_1',
+      category: 'hotel',
+      title: 'Hotel Gracery Shinjuku',
+      subtitle: '5 Nights · Godzilla View Double Room',
+      confirmationCode: 'GRAC-88192',
+      date: '2026-10-14',
+      time: '15:00',
+      endDate: '2026-10-19',
+      endTime: '11:00',
+      location: '1-19-1 Kabukicho, Shinjuku, Tokyo',
+      passengerOrGuestName: 'Alex, Elena, Carlos',
+      cabinOrRoomType: 'Superior Godzilla View',
+      seatOrRoomNumber: 'Room 2408',
+      notes: 'Front desk on 8th floor. Show digital booking voucher on phone.',
+    },
+    {
+      id: 'doc_2',
+      category: 'activity',
+      title: 'Shibuya Sky Observatory',
+      subtitle: 'Rooftop Sky Stage Sunset Entry',
+      confirmationCode: 'SKY-2026-991',
+      date: '2026-10-15',
+      time: '17:20',
+      location: 'Shibuya Scramble Square 47F',
+      passengerOrGuestName: 'Group Pass (3 Travelers)',
+      qrCodeData: 'https://shibuya-sky.jp/pass/SKY-991',
+      notes: 'Lockers required for bags. Sunset time is approx 17:35.',
+    },
+    {
+      id: 'doc_3',
+      category: 'activity',
+      title: 'Mori Art Museum & Tokyo City View',
+      subtitle: 'Roppongi Hills Mori Tower 52F',
+      confirmationCode: 'MORI-10492',
+      date: '2026-10-15',
+      time: '10:00',
+      location: '6-10-1 Roppongi, Minato City',
+      passengerOrGuestName: 'Alex',
+      notes: 'Includes entry to contemporary modern gallery and sky deck.',
+    },
+    {
+      id: 'doc_4',
+      category: 'transit',
+      title: 'JR East Rail Pass & Mobile Suica',
+      subtitle: 'Digital Transit Card & Shinkansen Voucher',
+      confirmationCode: 'SUICA-94812',
+      date: '2026-10-14',
+      location: 'JR East Travel Service Center, Haneda T3',
+      passengerOrGuestName: 'All Travelers',
+      notes: 'Exchange paper vouchers for physical IC cards or top-up Apple Pay.',
+    },
+    {
+      id: 'doc_5',
+      category: 'doc',
+      title: 'Japan Visit Web Customs QR Code',
+      subtitle: 'Fast-Track Immigration & Customs Clearance',
+      confirmationCode: 'JVW-88102',
+      date: '2026-10-14',
+      location: 'Haneda Airport Terminal 3',
+      passengerOrGuestName: 'Alex & Elena',
+      qrCodeData: 'JVW-CUSTOMS-APPROVED-2026',
+      notes: 'Show blue screen QR to customs inspection kiosk upon disembarking.',
+    },
+  ],
   readinessChecklist: [
     { id: '1', label: 'Flights Confirmed (HND Terminal 3)', completed: true, critical: true },
     { id: '2', label: 'Hotel Gracery booked for all 5 nights', completed: true, critical: true },
@@ -704,5 +777,9 @@ export const mockParisTripData: Trip = {
   ],
 };
 
-export const INITIAL_TRIPS_CATALOG: Trip[] = [mockTripData, mockParisTripData];
+export const INITIAL_TRIPS_CATALOG: Trip[] = [
+  mockDubaiTripData,
+  mockMalaysiaTripData,
+];
+
 

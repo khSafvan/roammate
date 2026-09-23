@@ -1,7 +1,7 @@
 {
-  "name": "MojoLog — Trip Planner",
-  "short_name": "MojoLog",
-  "description": "High-performance offline-first travel planner with Rust WebAssembly route optimization and Terraink GPX vector maps",
+  "name": "roammate — Trip Planner",
+  "short_name": "roammate",
+  "description": "High-performance offline-first travel planner with Rust WebAssembly route optimization and TerraWay GPX vector maps",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",

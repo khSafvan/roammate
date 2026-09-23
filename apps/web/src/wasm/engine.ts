@@ -187,7 +187,7 @@ export function computeTransitLegsWasm(
 /**
  * High-speed RFC/Topografix GPX 1.1 XML generation compiled in Rust WASM
  */
-export function generateDayGpxWasm(day: TripDay, tripTitle = 'MojoLog Trip'): string {
+export function generateDayGpxWasm(day: TripDay, tripTitle = 'roammate Trip'): string {
   if (isWasmLoaded) {
     try {
       const gpxDay = {
@@ -204,7 +204,8 @@ export function generateDayGpxWasm(day: TripDay, tripTitle = 'MojoLog Trip'): st
           longitude: s.coordinates.longitude,
         })),
       };
-      return wasm_generate_day_gpx(JSON.stringify(gpxDay), tripTitle);
+      const res = wasm_generate_day_gpx(JSON.stringify(gpxDay), tripTitle);
+      return res.replace('MojoLog / Terraink Engine', 'roammate / TerraWay Engine');
     } catch (e) {
       console.warn('WASM GPX generation notice, using JS fallback:', e);
     }
@@ -237,7 +238,7 @@ export function generateDayGpxWasm(day: TripDay, tripTitle = 'MojoLog Trip'): st
     .join('\n');
 
   return `<?xml version="1.0" encoding="UTF-8"?>
-<gpx version="1.1" creator="MojoLog / Terraink Engine" xmlns="http://www.topografix.com/GPX/1/1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.topografix.com/GPX/1/1 http://www.topografix.com/GPX/1/1/gpx.xsd">
+<gpx version="1.1" creator="roammate / TerraWay Engine" xmlns="http://www.topografix.com/GPX/1/1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.topografix.com/GPX/1/1 http://www.topografix.com/GPX/1/1/gpx.xsd">
   <metadata>
     <name>${escapeXml(tripTitle)} — Day ${day.dayNumber}: ${escapeXml(day.title)}</name>
     <desc>${escapeXml(day.dateStr)} route track and waypoints</desc>

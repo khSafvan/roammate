@@ -1,9 +1,9 @@
 /**
- * MojoLog Offline Service Worker
+ * roammate Offline Service Worker
  * Provides 100% offline flight & itinerary access for travelers without connectivity.
  */
 
-const CACHE_NAME = 'mojolog-cache-v1';
+const CACHE_NAME = 'roammate-cache-v1';
 const PRECACHE_ASSETS = [
   '/',
   '/index.html',

@@ -80,7 +80,7 @@ describe('GPX Utilities', () => {
       const gpx = generateDayGpx(mockDay, 'Tokyo Adventure');
 
       expect(gpx).toContain('<?xml version="1.0" encoding="UTF-8"?>');
-      expect(gpx).toContain('<gpx version="1.1" creator="MojoLog / Terraink Engine"');
+      expect(gpx).toContain('<gpx version="1.1" creator="roammate / TerraWay Engine"');
       expect(gpx).toContain('<metadata>');
       expect(gpx).toContain('Tokyo Adventure — Day 1: Tokyo Arrival &amp; Shinjuku');
     });

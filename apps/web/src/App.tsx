@@ -16,8 +16,8 @@ import {
 import { AuthModal } from './components/AuthModal';
 import { DaySelector } from './components/DaySelector';
 import { DistancePill } from './components/DistancePill';
+import { DocumentsAndTicketsHub } from './components/documents/DocumentsAndTicketsHub';
 import { ExpenseTracker } from './components/ExpenseTracker';
-import { FlightTracker } from './components/FlightTracker';
 import { Header } from './components/Header';
 import { InteractiveMap } from './components/InteractiveMap';
 import { ReadinessModal } from './components/ReadinessModal';
@@ -26,9 +26,11 @@ import { StopDetailModal } from './components/StopDetailModal';
 import { TimelineCard } from './components/TimelineCard';
 import { TimelineFlightCard } from './components/TimelineFlightCard';
 import { TripManagerModal } from './components/TripManagerModal';
+import { TripsListPage } from './components/trips/TripsListPage';
+import { TripSettingsPage } from './components/trips/TripSettingsPage';
 import { WeatherBanner } from './components/WeatherBanner';
 import { clearVaultSession, getVaultSession } from './auth/crypto';
-import { Expense, Flight, ItineraryStop, Trip, TripDay } from './types/trip';
+import { BookingDocument, Expense, Flight, ItineraryStop, Trip, TripDay } from './types/trip';
 import {
   useRustCore,
   useTransitLegs,
@@ -37,6 +39,13 @@ import {
 } from './hooks';
 
 export function App() {
+  const [currentView, setCurrentView] = useState<'trips_list' | 'trip_detail' | 'trip_settings'>(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('trip') || params.get('guest') || params.get('share') || params.get('view') === 'detail') {
+      return 'trip_detail';
+    }
+    return 'trips_list';
+  });
   const [activeTab, setActiveTab] = useState<'timeline' | 'flights' | 'expenses'>('timeline');
   const [activeDayIdx, setActiveDayIdx] = useState<number>(0); // Day 1 by default
   const [selectedStop, setSelectedStop] = useState<ItineraryStop | null>(null);
@@ -142,6 +151,29 @@ export function App() {
     }));
   }, [setTrip]);
 
+  // Document & Hotel/Activity Voucher Handlers
+  const handleAddDocument = useCallback((doc: BookingDocument) => {
+    setTrip((prev) => ({
+      ...prev,
+      documents: [doc, ...(prev.documents || [])],
+    }));
+  }, [setTrip]);
+
+  const handleDeleteDocument = useCallback((id: string) => {
+    setTrip((prev) => ({
+      ...prev,
+      documents: (prev.documents || []).filter((d) => d.id !== id),
+    }));
+  }, [setTrip]);
+
+  // General Trip Settings Update Handler
+  const handleUpdateTrip = useCallback((updated: Partial<Trip>) => {
+    setTrip((prev) => ({
+      ...prev,
+      ...updated,
+    }));
+  }, [setTrip]);
+
   // Expense Handlers
   const handleAddExpense = useCallback((expense: Expense) => {
     setTrip((prev) => ({
@@ -207,257 +239,313 @@ export function App() {
 
   return (
     <div className="app-shell">
-      {/* Guest Mode Invitation Banner */}
-      {isGuestMode && (
-        <div className="guest-banner">
-          <div className="guest-banner-left">
-            <span className="guest-badge">Invited Companion</span>
-            <span>You are viewing this itinerary with private guest access.</span>
-          </div>
-          <div className="guest-banner-actions">
-            <button
-              className="guest-join-btn"
-              onClick={saveGuestTripToVault}
-              title="Save a synchronized copy into your own private vault"
-            >
-              <UserPlus size={13} />
-              <span>Join Trip &amp; Save to Vault</span>
-            </button>
-            <button
-              className="guest-create-account-btn"
-              onClick={() => setIsAuthOpen(true)}
-            >
-              <span>Create Account</span>
-            </button>
-            <button className="read-only-exit-btn" onClick={exitReadOnly}>
-              Exit
-            </button>
-          </div>
-        </div>
+      {/* 1. TRIPS LIST LANDING VIEW */}
+      {currentView === 'trips_list' && (
+        <TripsListPage
+          trips={trips}
+          activeTripId={trip.id}
+          vaultSession={vaultSession}
+          isWasmActive={isWasmActive}
+          onSelectTrip={(id) => {
+            switchTrip(id);
+            setCurrentView('trip_detail');
+          }}
+          onOpenSettings={(id) => {
+            switchTrip(id);
+            setCurrentView('trip_settings');
+          }}
+          onShareTrip={(t) => {
+            switchTrip(t.id);
+            setIsShareModalOpen(true);
+          }}
+          onCreateTrip={(params) => {
+            createTrip(params);
+            setCurrentView('trip_detail');
+          }}
+          onDeleteTrip={(id) => {
+            deleteTrip(id);
+          }}
+          onOpenAuth={() => setIsAuthOpen(true)}
+        />
       )}
 
-      {/* Read-Only Notice Banner (Legacy Share) */}
-      {!isGuestMode && isReadOnly && (
-        <div className="read-only-banner">
-          <span>👀 Viewing shared itinerary in read-only mode</span>
-          <button className="read-only-exit-btn" onClick={exitReadOnly}>
-            Exit Preview
-          </button>
-        </div>
+      {/* 2. DEDICATED TRIP SETTINGS VIEW */}
+      {currentView === 'trip_settings' && (
+        <TripSettingsPage
+          trip={trip}
+          onUpdateTrip={handleUpdateTrip}
+          onDeleteTrip={(id) => {
+            deleteTrip(id);
+            setCurrentView('trips_list');
+          }}
+          onBackToWorkspace={() => setCurrentView('trip_detail')}
+        />
       )}
 
-      {/* 1. Global Navigation Bar with Multi-Trip Switcher & Timing Info */}
-      <Header
-        title={trip.title}
-        destination={trip.destination}
-        dates={trip.dates}
-        startTime={trip.startTime}
-        endTime={trip.endTime}
-        readinessScore={trip.readinessScore}
-        isWasmActive={isWasmActive}
-        activeSession={vaultSession}
-        tripsCount={trips.length}
-        onOpenTripManager={() => setIsTripManagerOpen(true)}
-        onOpenReadiness={() => setIsReadinessOpen(true)}
-        onOpenAuth={() => setIsAuthOpen(true)}
-        onShare={() => setIsShareModalOpen(true)}
-      />
-
-      {/* Zero-Knowledge Vault Welcome Banner for Unauthenticated Users */}
-      {!vaultSession && !isReadOnly && !isGuestMode && (
-        <div className="vault-welcome-banner">
-          <div className="welcome-banner-left">
-            <span className="welcome-banner-icon">🔐</span>
-            <div>
-              <strong className="welcome-banner-title">Private Travel Vault:</strong>
-              <span className="welcome-banner-desc">
-                {' '}Secure multiple trips with an anonymous Account UUID &amp; Password. Inactive accounts auto-expire after 3 months.
-              </span>
-            </div>
-          </div>
-          <div className="welcome-banner-actions">
-            <button className="welcome-create-btn" onClick={() => setIsAuthOpen(true)}>
-              <Sparkles size={13} />
-              <span>Create Account</span>
-            </button>
-            <button className="welcome-restore-btn" onClick={() => setIsAuthOpen(true)}>
-              <Key size={13} />
-              <span>Log In</span>
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* 2. Top Navigation Tabs */}
-      <nav className="main-nav-bar">
-        <div className="nav-tabs-group">
-          <button
-            className={`nav-tab-btn ${activeTab === 'timeline' ? 'active' : ''}`}
-            onClick={() => setActiveTab('timeline')}
-          >
-            <CalendarDays size={15} />
-            <span>Itinerary &amp; Map</span>
-          </button>
-
-          <button
-            className={`nav-tab-btn ${activeTab === 'flights' ? 'active' : ''}`}
-            onClick={() => setActiveTab('flights')}
-          >
-            <Plane size={15} />
-            <span>Flights &amp; Tickets</span>
-            <span className="nav-counter-pill">{trip.flights.length}</span>
-          </button>
-
-          <button
-            className={`nav-tab-btn ${activeTab === 'expenses' ? 'active' : ''}`}
-            onClick={() => setActiveTab('expenses')}
-          >
-            <Receipt size={15} />
-            <span>Expenses</span>
-            <span className="nav-counter-pill">{trip.expenses.length}</span>
-          </button>
-        </div>
-
-        <div className="nav-right-actions">
-          <button
-            className="share-export-nav-btn"
-            onClick={() => setIsShareModalOpen(true)}
-            title="Invite companion via private link or export JSON"
-          >
-            <Share2 size={14} />
-            <span>Invite &amp; Share</span>
-          </button>
-        </div>
-      </nav>
-
-      {/* 3. TAB CONTENT */}
-      {activeTab === 'timeline' && (
+      {/* 3. TRIP WORKSPACE DETAIL VIEW */}
+      {currentView === 'trip_detail' && (
         <>
-          {/* Horizontal Day Selector Tabs */}
-          <DaySelector
-            days={trip.days}
-            activeDayIndex={activeDayIdx}
-            onSelectDay={setActiveDayIdx}
+          {/* Guest Mode Invitation Banner */}
+          {isGuestMode && (
+            <div className="guest-banner">
+              <div className="guest-banner-left">
+                <span className="guest-badge">Invited Companion</span>
+                <span>You are viewing this itinerary with private guest access.</span>
+              </div>
+              <div className="guest-banner-actions">
+                <button
+                  className="guest-join-btn"
+                  onClick={saveGuestTripToVault}
+                  title="Save a synchronized copy into your own private vault"
+                >
+                  <UserPlus size={13} />
+                  <span>Join Trip &amp; Save to Vault</span>
+                </button>
+                <button
+                  className="guest-create-account-btn"
+                  onClick={() => setIsAuthOpen(true)}
+                >
+                  <span>Create Account</span>
+                </button>
+                <button className="read-only-exit-btn" onClick={exitReadOnly}>
+                  Exit
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* Read-Only Notice Banner (Legacy Share) */}
+          {!isGuestMode && isReadOnly && (
+            <div className="read-only-banner">
+              <span>👀 Viewing shared itinerary in read-only mode</span>
+              <button className="read-only-exit-btn" onClick={exitReadOnly}>
+                Exit Preview
+              </button>
+            </div>
+          )}
+
+          {/* 1. Global Navigation Bar with Multi-Trip Switcher & Timing Info */}
+          <Header
+            title={trip.title}
+            destination={trip.destination}
+            dates={trip.dates}
+            startTime={trip.startTime}
+            endTime={trip.endTime}
+            readinessScore={trip.readinessScore}
+            isWasmActive={isWasmActive}
+            activeSession={vaultSession}
+            tripsCount={trips.length}
+            currentView={currentView}
+            onNavigateView={setCurrentView}
+            onOpenTripManager={() => setIsTripManagerOpen(true)}
+            onOpenReadiness={() => setIsReadinessOpen(true)}
+            onOpenAuth={() => setIsAuthOpen(true)}
+            onShare={() => setIsShareModalOpen(true)}
+            onOpenSettings={() => setCurrentView('trip_settings')}
           />
 
-          {/* Mobile View Switcher (Visible on < 1024px screens) */}
-          <div className="mobile-view-tabs">
-            <button
-              className={`mobile-tab-btn ${mobileView === 'timeline' ? 'active' : ''}`}
-              onClick={() => setMobileView('timeline')}
-            >
-              <ListFilter size={16} />
-              <span>Timeline &amp; Weather</span>
-            </button>
-            <button
-              className={`mobile-tab-btn ${mobileView === 'map' ? 'active' : ''}`}
-              onClick={() => setMobileView('map')}
-            >
-              <MapIcon size={16} />
-              <span>Route Map</span>
-            </button>
-          </div>
-
-          {/* Dual-Pane Responsive Workspace */}
-          <main className="main-workspace">
-            {/* LEFT PANE: Day Itinerary & Weather */}
-            <section
-              className={`timeline-pane ${mobileView === 'map' ? 'mobile-hidden' : ''}`}
-            >
-              {/* Day Section Header */}
-              <div className="day-summary-banner">
+          {/* Zero-Knowledge Vault Welcome Banner for Unauthenticated Users */}
+          {!vaultSession && !isReadOnly && !isGuestMode && (
+            <div className="vault-welcome-banner">
+              <div className="welcome-banner-left">
+                <span className="welcome-banner-icon">🔐</span>
                 <div>
-                  <h2 className="day-heading">{activeDay.title}</h2>
-                  <p className="day-subheading">
-                    {activeDay.stops.length} destinations scheduled · {activeDay.dateStr}
-                    {trip.startTime && trip.endTime ? ` (${trip.startTime} – ${trip.endTime})` : ''}
-                  </p>
+                  <strong className="welcome-banner-title">Private Travel Vault:</strong>
+                  <span className="welcome-banner-desc">
+                    {' '}Secure multiple trips with an anonymous Account UUID &amp; Password. Inactive accounts auto-expire after 3 months.
+                  </span>
                 </div>
+              </div>
+              <div className="welcome-banner-actions">
+                <button className="welcome-create-btn" onClick={() => setIsAuthOpen(true)}>
+                  <Sparkles size={13} />
+                  <span>Create Account</span>
+                </button>
+                <button className="welcome-restore-btn" onClick={() => setIsAuthOpen(true)}>
+                  <Key size={13} />
+                  <span>Log In</span>
+                </button>
+              </div>
+            </div>
+          )}
 
+          {/* 2. Top Navigation Tabs */}
+          <nav className="main-nav-bar">
+            <div className="nav-tabs-group">
+              <button
+                className={`nav-tab-btn ${activeTab === 'timeline' ? 'active' : ''}`}
+                onClick={() => setActiveTab('timeline')}
+              >
+                <CalendarDays size={15} />
+                <span>Itinerary &amp; Map</span>
+              </button>
+
+              <button
+                className={`nav-tab-btn ${activeTab === 'flights' ? 'active' : ''}`}
+                onClick={() => setActiveTab('flights')}
+              >
+                <Plane size={15} />
+                <span>Bookings &amp; Passes</span>
+                <span className="nav-counter-pill">
+                  {trip.flights.length + (trip.documents?.length || 0)}
+                </span>
+              </button>
+
+              <button
+                className={`nav-tab-btn ${activeTab === 'expenses' ? 'active' : ''}`}
+                onClick={() => setActiveTab('expenses')}
+              >
+                <Receipt size={15} />
+                <span>Expenses</span>
+                <span className="nav-counter-pill">{trip.expenses.length}</span>
+              </button>
+            </div>
+
+            <div className="nav-right-actions">
+              <button
+                className="share-export-nav-btn"
+                onClick={() => setIsShareModalOpen(true)}
+                title="Invite companion via private link or export JSON"
+              >
+                <Share2 size={14} />
+                <span>Invite &amp; Share</span>
+              </button>
+            </div>
+          </nav>
+
+          {/* 3. TAB CONTENT */}
+          {activeTab === 'timeline' && (
+            <>
+              {/* Horizontal Day Selector Tabs */}
+              <DaySelector
+                days={trip.days}
+                activeDayIndex={activeDayIdx}
+                onSelectDay={setActiveDayIdx}
+              />
+
+              {/* Mobile View Switcher (Visible on < 1024px screens) */}
+              <div className="mobile-view-tabs">
                 <button
-                  className={`optimize-pill-btn ${isDayOptimized ? 'optimized' : ''}`}
-                  onClick={handleOptimizeDay}
-                  title="Run 2-opt Traveling Salesperson route optimizer via Rust WebAssembly"
+                  className={`mobile-tab-btn ${mobileView === 'timeline' ? 'active' : ''}`}
+                  onClick={() => setMobileView('timeline')}
                 >
-                  {isDayOptimized ? <Zap size={14} /> : <Sparkles size={14} />}
-                  <span>{isDayOptimized ? 'Optimized' : 'Optimize Route (WASM)'}</span>
+                  <ListFilter size={16} />
+                  <span>Timeline &amp; Weather</span>
+                </button>
+                <button
+                  className={`mobile-tab-btn ${mobileView === 'map' ? 'active' : ''}`}
+                  onClick={() => setMobileView('map')}
+                >
+                  <MapIcon size={16} />
+                  <span>Route Map</span>
                 </button>
               </div>
 
-              {/* Weather Prediction Card */}
-              <WeatherBanner
-                weather={activeDay.weather}
-                themeColor={activeDay.themeColor}
-              />
+              {/* Dual-Pane Responsive Workspace */}
+              <main className="main-workspace">
+                {/* LEFT PANE: Day Itinerary & Weather */}
+                <section
+                  className={`timeline-pane ${mobileView === 'map' ? 'mobile-hidden' : ''}`}
+                >
+                  {/* Day Section Header */}
+                  <div className="day-summary-banner">
+                    <div>
+                      <h2 className="day-heading">{activeDay.title}</h2>
+                      <p className="day-subheading">
+                        {activeDay.stops.length} destinations scheduled · {activeDay.dateStr}
+                        {trip.startTime && trip.endTime ? ` (${trip.startTime} – ${trip.endTime})` : ''}
+                      </p>
+                    </div>
 
-              {/* Itinerary Stream with Distance Connectors and Inbound Flights */}
-              <div className="itinerary-stream">
-                {/* Airplane / Flight Ticket Integration in Itinerary */}
-                {dayFlights.length > 0 && (
-                  <TimelineFlightCard
-                    flights={dayFlights}
+                    <button
+                      className={`optimize-pill-btn ${isDayOptimized ? 'optimized' : ''}`}
+                      onClick={handleOptimizeDay}
+                      title="Run 2-opt Traveling Salesperson route optimizer via Rust WebAssembly"
+                    >
+                      {isDayOptimized ? <Zap size={14} /> : <Sparkles size={14} />}
+                      <span>{isDayOptimized ? 'Optimized' : 'Optimize Route (WASM)'}</span>
+                    </button>
+                  </div>
+
+                  {/* Weather Prediction Card */}
+                  <WeatherBanner
+                    weather={activeDay.weather}
                     themeColor={activeDay.themeColor}
-                    onViewFlightsTab={() => setActiveTab('flights')}
                   />
-                )}
 
-                {activeDay.stops.map((stop, index) => (
-                  <React.Fragment key={stop.id}>
-                    <TimelineCard
-                      stop={stop}
-                      themeColor={activeDay.themeColor}
-                      onSelect={setSelectedStop}
-                    />
-
-                    {/* Distance & Transit duration connector */}
-                    {index < transitLegs.length && (
-                      <DistancePill
-                        leg={transitLegs[index]}
-                        onToggleMode={handleToggleMode}
+                  {/* Itinerary Stream with Distance Connectors and Inbound Flights */}
+                  <div className="itinerary-stream">
+                    {/* Airplane / Flight Ticket Integration in Itinerary */}
+                    {dayFlights.length > 0 && (
+                      <TimelineFlightCard
+                        flights={dayFlights}
+                        themeColor={activeDay.themeColor}
+                        onViewFlightsTab={() => setActiveTab('flights')}
                       />
                     )}
-                  </React.Fragment>
-                ))}
-              </div>
-            </section>
 
-            {/* RIGHT PANE: Interactive Route Map */}
-            <section
-              className={`map-pane ${mobileView === 'timeline' ? 'mobile-hidden' : ''}`}
-            >
-              <InteractiveMap
-                day={activeDay}
-                onSelectStop={setSelectedStop}
-                onOptimizeDay={handleOptimizeDay}
-                isOptimized={isDayOptimized}
-                transitModes={transitModes}
+                    {activeDay.stops.map((stop, index) => (
+                      <React.Fragment key={stop.id}>
+                        <TimelineCard
+                          stop={stop}
+                          themeColor={activeDay.themeColor}
+                          onSelect={setSelectedStop}
+                        />
+
+                        {/* Distance & Transit duration connector */}
+                        {index < transitLegs.length && (
+                          <DistancePill
+                            leg={transitLegs[index]}
+                            onToggleMode={handleToggleMode}
+                          />
+                        )}
+                      </React.Fragment>
+                    ))}
+                  </div>
+                </section>
+
+                {/* RIGHT PANE: Interactive Route Map */}
+                <section
+                  className={`map-pane ${mobileView === 'timeline' ? 'mobile-hidden' : ''}`}
+                >
+                  <InteractiveMap
+                    day={activeDay}
+                    onSelectStop={setSelectedStop}
+                    onOptimizeDay={handleOptimizeDay}
+                    isOptimized={isDayOptimized}
+                    transitModes={transitModes}
+                  />
+                </section>
+              </main>
+            </>
+          )}
+
+          {/* TAB 2: BOOKINGS, TICKETS, HOTEL VOUCHERS & TRAVEL DOCUMENTS */}
+          {activeTab === 'flights' && (
+            <main className="subview-workspace">
+              <DocumentsAndTicketsHub
+                flights={trip.flights}
+                documents={trip.documents || []}
+                onAddFlight={handleAddFlight}
+                onDeleteFlight={handleDeleteFlight}
+                onAddDocument={handleAddDocument}
+                onDeleteDocument={handleDeleteDocument}
               />
-            </section>
-          </main>
+            </main>
+          )}
+
+          {/* TAB 3: EXPENSE TRACKER */}
+          {activeTab === 'expenses' && (
+            <main className="subview-workspace">
+              <ExpenseTracker
+                expenses={trip.expenses}
+                baseCurrency={trip.baseCurrency}
+                onAddExpense={handleAddExpense}
+                onDeleteExpense={handleDeleteExpense}
+              />
+            </main>
+          )}
         </>
-      )}
-
-      {/* TAB 2: FLIGHT BOARDING PASSES & MULTI-ORIGIN COMPANION TICKETS */}
-      {activeTab === 'flights' && (
-        <main className="subview-workspace">
-          <FlightTracker
-            flights={trip.flights}
-            onAddFlight={handleAddFlight}
-            onDeleteFlight={handleDeleteFlight}
-          />
-        </main>
-      )}
-
-      {/* TAB 3: EXPENSE TRACKER */}
-      {activeTab === 'expenses' && (
-        <main className="subview-workspace">
-          <ExpenseTracker
-            expenses={trip.expenses}
-            baseCurrency={trip.baseCurrency}
-            onAddExpense={handleAddExpense}
-            onDeleteExpense={handleDeleteExpense}
-          />
-        </main>
       )}
 
       {/* 4. Modals & Drawers */}
@@ -466,9 +554,15 @@ export function App() {
         onClose={() => setIsTripManagerOpen(false)}
         trips={trips}
         activeTrip={trip}
-        onSwitchTrip={switchTrip}
-        onCreateTrip={createTrip}
-        onUpdateTrip={(updated) => setTrip((prev) => ({ ...prev, ...updated }))}
+        onSwitchTrip={(id) => {
+          switchTrip(id);
+          setCurrentView('trip_detail');
+        }}
+        onCreateTrip={(params) => {
+          createTrip(params);
+          setCurrentView('trip_detail');
+        }}
+        onUpdateTrip={handleUpdateTrip}
         onDeleteTrip={deleteTrip}
       />
 

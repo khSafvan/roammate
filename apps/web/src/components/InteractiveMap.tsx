@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { GeoJSONSource, LngLatBounds, Map as MapLibreMap, Marker, NavigationControl } from 'maplibre-gl';
+import { GeoJSONSource, LngLatBounds, Map as MapLibreMap, NavigationControl } from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
 import {
   Download,
@@ -33,8 +33,10 @@ export const InteractiveMap: React.FC<InteractiveMapProps> = ({
 }) => {
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<MapLibreMap | null>(null);
-  const markersRef = useRef<Marker[]>([]);
-  const markerElsRef = useRef<Map<string, { el: HTMLDivElement; pulseEl: HTMLDivElement }>>(new Map());
+  const stopsRef = useRef(day.stops);
+  stopsRef.current = day.stops;
+  const onSelectStopRef = useRef(onSelectStop);
+  onSelectStopRef.current = onSelectStop;
   const routeCoordinatesRef = useRef<[number, number][]>([]);
   const routeRequestIdRef = useRef(0);
 
@@ -273,125 +275,190 @@ export const InteractiveMap: React.FC<InteractiveMapProps> = ({
     });
   }, [day.stops, day.themeColor, transitModes, ensureRouteLayers, fitToStops]);
 
-  // Render Terralink GPS Waypoint HTML Markers (Teardrop pin, needle stem anchored at bottom)
-  const renderMarkers = useCallback(() => {
-    const map = mapRef.current;
-    if (!map) return;
+  // Setup native WebGL TerraWay Waypoint Layers (Zero DOM lag, locked to map projection matrix)
+  const ensureWaypointLayers = useCallback((map: MapLibreMap) => {
+    if (map.getSource('terraway-waypoints-source')) return;
 
-    // Clear previous markers
-    markersRef.current.forEach((m) => m.remove());
-    markersRef.current = [];
-    markerElsRef.current.clear();
+    map.addSource('terraway-waypoints-source', {
+      type: 'geojson',
+      data: {
+        type: 'FeatureCollection',
+        features: [],
+      },
+    });
+
+    // 1. Radar pulse / selection ring (WebGL circle)
+    map.addLayer({
+      id: 'terraway-waypoints-pulse',
+      type: 'circle',
+      source: 'terraway-waypoints-source',
+      paint: {
+        'circle-radius': [
+          'case',
+          ['boolean', ['get', 'selected'], false],
+          22,
+          0,
+        ],
+        'circle-color': ['get', 'color'],
+        'circle-opacity': 0.22,
+        'circle-stroke-width': [
+          'case',
+          ['boolean', ['get', 'selected'], false],
+          2,
+          0,
+        ],
+        'circle-stroke-color': ['get', 'color'],
+        'circle-stroke-opacity': 0.7,
+      },
+    });
+
+    // 2. High-contrast white halo casing (WebGL circle)
+    map.addLayer({
+      id: 'terraway-waypoints-halo',
+      type: 'circle',
+      source: 'terraway-waypoints-source',
+      paint: {
+        'circle-radius': [
+          'case',
+          ['boolean', ['get', 'selected'], false],
+          16,
+          13,
+        ],
+        'circle-color': '#FFFFFF',
+        'circle-stroke-width': 1.5,
+        'circle-stroke-color': 'rgba(15, 23, 42, 0.18)',
+      },
+    });
+
+    // 3. Colored waypoint body (WebGL circle)
+    map.addLayer({
+      id: 'terraway-waypoints-circle',
+      type: 'circle',
+      source: 'terraway-waypoints-source',
+      paint: {
+        'circle-radius': [
+          'case',
+          ['boolean', ['get', 'selected'], false],
+          13,
+          10.5,
+        ],
+        'circle-color': ['get', 'color'],
+      },
+    });
+
+    // 4. Centered Waypoint index label (WebGL symbol)
+    map.addLayer({
+      id: 'terraway-waypoints-label',
+      type: 'symbol',
+      source: 'terraway-waypoints-source',
+      layout: {
+        'text-field': ['get', 'label'],
+        'text-size': 10,
+        'text-allow-overlap': true,
+        'text-ignore-placement': true,
+        'text-anchor': 'center',
+      },
+      paint: {
+        'text-color': '#FFFFFF',
+      },
+    });
+
+    // 5. Waypoint title callout beneath marker (WebGL symbol)
+    map.addLayer({
+      id: 'terraway-waypoints-title',
+      type: 'symbol',
+      source: 'terraway-waypoints-source',
+      layout: {
+        'text-field': ['get', 'title'],
+        'text-size': 11,
+        'text-offset': [0, 1.4],
+        'text-anchor': 'top',
+        'text-optional': true,
+        'text-max-width': 9,
+      },
+      paint: {
+        'text-color': '#0F172A',
+        'text-halo-color': '#FFFFFF',
+        'text-halo-width': 2,
+      },
+    });
+
+    // Bind WebGL interaction listeners (pointer cursor + click selection)
+    const interactiveLayerIds = [
+      'terraway-waypoints-circle',
+      'terraway-waypoints-halo',
+      'terraway-waypoints-label',
+      'terraway-waypoints-title',
+    ];
+
+    interactiveLayerIds.forEach((layerId) => {
+      map.on('click', layerId, (e: any) => {
+        const feature = e.features?.[0];
+        if (!feature) return;
+        const stopId = feature.properties?.id;
+        const stop = stopsRef.current.find((s) => s.id === stopId);
+        if (stop) {
+          setSelectedStopId(stop.id);
+          onSelectStopRef.current(stop);
+          map.flyTo({
+            center: [stop.coordinates.longitude, stop.coordinates.latitude],
+            zoom: Math.max(map.getZoom(), 14.5),
+            pitch: 0,
+            bearing: 0,
+            duration: UI_CONFIG.MAP_FLY_DURATION_MS,
+          });
+        }
+      });
+
+      map.on('mouseenter', layerId, () => {
+        map.getCanvas().style.cursor = 'pointer';
+      });
+      map.on('mouseleave', layerId, () => {
+        map.getCanvas().style.cursor = '';
+      });
+    });
+  }, []);
+
+  // Update GeoJSON source for waypoints (zero DOM lag, rendered directly by GPU)
+  const updateWaypointLayer = useCallback((map: MapLibreMap) => {
+    ensureWaypointLayers(map);
+    const source = map.getSource('terraway-waypoints-source') as GeoJSONSource | undefined;
+    if (!source) return;
 
     const totalStops = day.stops.length;
-    const currentSelectedId = selectedStopIdRef.current;
-
-    day.stops.forEach((stop, index) => {
+    const features = day.stops.map((stop, index) => {
       const isStart = index === 0;
       const isFinish = index === totalStops - 1 && totalStops > 1;
-      const isCurrentSelected = stop.id === currentSelectedId;
-
-      const pinColor = isStart
+      const isSelected = stop.id === selectedStopId;
+      const label = isStart ? 'S' : isFinish ? 'F' : String(index + 1).padStart(2, '0');
+      const color = isStart
         ? '#059669'
         : isFinish
         ? '#DC2626'
         : day.themeColor || '#2563EB';
 
-      // 1. Terralink Marker Root Shell (Positioned strictly by MapLibre without CSS transition interference)
-      const el = document.createElement('div');
-      el.className = `terralink-marker-shell ${isCurrentSelected ? 'active' : ''} ${
-        isStart ? 'pin-start' : isFinish ? 'pin-finish' : 'pin-waypoint'
-      }`;
-
-      // 2. Visual Pin Wrapper (Handles scaling, transform origin, and child hierarchy)
-      const pinWrapper = document.createElement('div');
-      pinWrapper.className = 'terralink-pin-wrapper';
-
-      // 3. Hover / Active Callout Tooltip
-      const callout = document.createElement('div');
-      callout.className = 'terralink-pin-callout';
-
-      const badgeSpan = document.createElement('span');
-      badgeSpan.className = 'callout-badge';
-      badgeSpan.style.backgroundColor = pinColor;
-      badgeSpan.textContent = isStart ? 'START' : isFinish ? 'FINISH' : `WP ${String(index + 1).padStart(2, '0')}`;
-
-      const timeSpan = document.createElement('span');
-      timeSpan.className = 'callout-time';
-      timeSpan.textContent = stop.startTime;
-
-      const titleSpan = document.createElement('span');
-      titleSpan.className = 'callout-title';
-      titleSpan.textContent = stop.title;
-
-      callout.appendChild(badgeSpan);
-      callout.appendChild(timeSpan);
-      callout.appendChild(titleSpan);
-      pinWrapper.appendChild(callout);
-
-      // 4. Pin Head (Teardrop upper circular body)
-      const head = document.createElement('div');
-      head.className = 'terralink-pin-head';
-      head.style.backgroundColor = pinColor;
-
-      const labelSpan = document.createElement('span');
-      labelSpan.className = 'terralink-pin-label';
-      const labelText = isStart ? 'S' : isFinish ? 'F' : String(index + 1).padStart(2, '0');
-      labelSpan.textContent = labelText;
-      head.appendChild(labelSpan);
-      pinWrapper.appendChild(head);
-
-      // 5. Pin Needle Stem (Points directly down to the GPS coordinate)
-      const needle = document.createElement('div');
-      needle.className = 'terralink-pin-needle';
-      needle.style.borderTopColor = pinColor;
-      pinWrapper.appendChild(needle);
-
-      // 6. Radar Sonar Pulse Ring (Pulsing wave at needle base when active)
-      const pulseEl = document.createElement('div');
-      pulseEl.className = 'terralink-pulse-ring';
-      pulseEl.style.borderColor = pinColor;
-      pulseEl.style.display = isCurrentSelected ? 'block' : 'none';
-      pinWrapper.appendChild(pulseEl);
-
-      el.appendChild(pinWrapper);
-
-      el.addEventListener('click', (e) => {
-        e.stopPropagation();
-        setSelectedStopId(stop.id);
-        onSelectStop(stop);
-        map.flyTo({
-          center: [stop.coordinates.longitude, stop.coordinates.latitude],
-          zoom: Math.max(map.getZoom(), 14.5),
-          pitch: 0,
-          bearing: 0,
-          duration: UI_CONFIG.MAP_FLY_DURATION_MS,
-        });
-      });
-
-      // Anchor set to 'bottom' so the needle point touches the exact GPS coordinate without drift
-      const marker = new Marker({ element: el, anchor: 'bottom', offset: [0, 0] })
-        .setLngLat([stop.coordinates.longitude, stop.coordinates.latitude])
-        .addTo(map);
-
-      markersRef.current.push(marker);
-      markerElsRef.current.set(stop.id, { el, pulseEl });
+      return {
+        type: 'Feature' as const,
+        geometry: {
+          type: 'Point' as const,
+          coordinates: [stop.coordinates.longitude, stop.coordinates.latitude],
+        },
+        properties: {
+          id: stop.id,
+          label,
+          title: stop.title,
+          color,
+          selected: isSelected,
+          index,
+        },
+      };
     });
-  }, [day.stops, day.themeColor, onSelectStop]);
 
-  // Fast in-place DOM update when selectedStopId changes (avoids destroying/recreating MapLibre markers)
-  useEffect(() => {
-    markerElsRef.current.forEach(({ el, pulseEl }, id) => {
-      const isSelected = id === selectedStopId;
-      if (isSelected) {
-        el.classList.add('active');
-        pulseEl.style.display = 'block';
-      } else {
-        el.classList.remove('active');
-        pulseEl.style.display = 'none';
-      }
+    source.setData({
+      type: 'FeatureCollection',
+      features,
     });
-  }, [selectedStopId]);
+  }, [day.stops, day.themeColor, selectedStopId, ensureWaypointLayers]);
 
   // 1. Initialize MapLibre 2D Planar Map Instance (Zero 3D overhead)
   useEffect(() => {
@@ -431,13 +498,13 @@ export const InteractiveMap: React.FC<InteractiveMapProps> = ({
       map.on('load', () => {
         mapRef.current = map;
         map.resize();
-        renderMarkers();
+        updateWaypointLayer(map);
         updateRouteLayer(map);
         fitToStops(true);
       });
 
       map.on('error', (e: any) => {
-        console.warn('Terralink MapLibre notice:', e);
+        console.warn('TerraWay MapLibre notice:', e);
       });
 
       mapRef.current = map;
@@ -456,25 +523,24 @@ export const InteractiveMap: React.FC<InteractiveMapProps> = ({
     } catch (err) {
       console.warn('MapLibre WebGL unavailable:', err);
     }
-  }, []);
+  }, [updateWaypointLayer, updateRouteLayer, fitToStops]);
 
-  // Update markers, polyline and bounds when day stops, color, or transit modes change
+  // Update WebGL waypoints, polyline and bounds when day stops, color, or transit modes change
   useEffect(() => {
     const map = mapRef.current;
     if (!map) return;
 
-    renderMarkers();
-
     if (map.isStyleLoaded()) {
+      updateWaypointLayer(map);
       updateRouteLayer(map);
       fitToStops(false);
     }
-  }, [day.stops, day.themeColor, transitModes, renderMarkers, updateRouteLayer, fitToStops]);
+  }, [day.stops, day.themeColor, transitModes, updateWaypointLayer, updateRouteLayer, fitToStops]);
 
   // Export RFC / Topografix Compliant GPX 1.1 file
   const handleExportGpx = () => {
-    const gpxXml = generateDayGpx(day, 'MojoLog Tokyo & Hakone Discovery');
-    downloadGpx(gpxXml, `mojolog_day_${day.dayNumber}_track.gpx`);
+    const gpxXml = generateDayGpx(day, 'roammate Itinerary');
+    downloadGpx(gpxXml, `roammate_day_${day.dayNumber}_track.gpx`);
   };
 
   const handleOpenGoogleMaps = (stop: ItineraryStop) => {
@@ -499,17 +565,17 @@ export const InteractiveMap: React.FC<InteractiveMapProps> = ({
 
   return (
     <div className="map-view-card">
-      {/* Top Map Action Bar with Terralink Denotation */}
+      {/* Top Map Action Bar with TerraWay Denotation */}
       <div className="map-toolbar">
         <div className="map-metrics">
           <div className="map-title-row">
             <span className="map-day-indicator" style={{ backgroundColor: day.themeColor }} />
             <h3 className="map-title">Day {day.dayNumber} Route</h3>
             <span
-              className="terralink-engine-badge"
-              title="Terralink Cartographic Engine with Multi-Modal Road, Track & Passage Routing"
+              className="terraway-engine-badge"
+              title="TerraWay Cartographic Engine with Multi-Modal Road, Track & Passage Routing"
             >
-              Terralink GPS
+              TerraWay GPS
             </span>
           </div>
           <p className="map-subtitle">
@@ -548,27 +614,27 @@ export const InteractiveMap: React.FC<InteractiveMapProps> = ({
         </div>
       </div>
 
-      {/* MapLibre 2D Planar Container with Terralink Viewport */}
+      {/* MapLibre 2D Planar Container with TerraWay Viewport */}
       <div className="map-canvas-container terraink-viewport-wrapper">
         <div
           ref={mapContainerRef}
           className="terraink-maplibre-viewport"
         />
 
-        {/* Tactile Terralink Engine & OpenFreeMap Watermark */}
-        <div className="terralink-watermark">
+        {/* Tactile TerraWay Engine & OpenFreeMap Watermark */}
+        <div className="terraway-watermark">
           <a
             href="https://github.com/yousifamanuel/terraink"
             target="_blank"
             rel="noopener noreferrer"
-            className="terralink-watermark-link"
+            className="terraway-watermark-link"
           >
-            Terralink · OpenFreeMap
+            TerraWay · OpenFreeMap
           </a>
         </div>
       </div>
 
-      {/* Selected Terralink Waypoint Floating Dock */}
+      {/* Selected TerraWay Waypoint Floating Dock */}
       {activeStop && (
         <div className="map-selected-dock">
           <div
@@ -586,7 +652,7 @@ export const InteractiveMap: React.FC<InteractiveMapProps> = ({
           <div className="dock-details">
             <div className="dock-meta-row">
               <span className="dock-time">{activeStop.startTime}</span>
-              <span className="dock-coord-pill" title="Terralink Waypoint Coordinates">
+              <span className="dock-coord-pill" title="TerraWay Waypoint Coordinates">
                 {formatGpxCoordinate(activeStop.coordinates.latitude, activeStop.coordinates.longitude)}
               </span>
             </div>
@@ -597,7 +663,7 @@ export const InteractiveMap: React.FC<InteractiveMapProps> = ({
             <button
               className="dock-focus-btn"
               onClick={() => handleFocusStop(activeStop)}
-              title="Focus map camera on this Terralink waypoint"
+              title="Focus map camera on this TerraWay waypoint"
             >
               <Eye size={13} />
               <span>Center</span>
