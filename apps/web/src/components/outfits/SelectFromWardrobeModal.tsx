@@ -117,17 +117,16 @@ export const SelectFromWardrobeModal: React.FC<SelectFromWardrobeModalProps> = (
         </div>
 
         {/* Filter & Search Bar */}
-        <div style={{ padding: '12px 20px', borderBottom: '1px solid var(--border-light)', display: 'flex', flexDirection: 'column', gap: '10px' }}>
-          <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+        <div className="flex flex-col gap-3 p-4 border-b border-subtle">
+          <div className="flex gap-2 items-center">
             <div className="search-input-box" style={{ flex: 1, minHeight: '36px' }}>
               <Search size={14} className="text-secondary" />
               <input
                 type="text"
-                className="search-field"
+                className="search-field text-sm"
                 placeholder="Search outfits by title, label, or notes..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                style={{ fontSize: '13px' }}
               />
               {searchQuery && (
                 <button
@@ -142,12 +141,11 @@ export const SelectFromWardrobeModal: React.FC<SelectFromWardrobeModalProps> = (
             </div>
 
             {/* Person Filter */}
-            <div style={{ display: 'inline-flex', background: 'var(--bg-subtle)', padding: '2px', borderRadius: '8px', border: '1px solid var(--border-light)' }}>
+            <div className="flex gap-1 p-1 bg-surface rounded-lg border border-subtle">
               <button
                 type="button"
                 className={`slot-action-btn ${selectedPerson === 'all' ? 'active-toggle' : ''}`}
                 onClick={() => setSelectedPerson('all')}
-                style={{ fontSize: '12px', padding: '4px 8px', border: 'none', background: selectedPerson === 'all' ? 'var(--bg-card)' : 'transparent' }}
               >
                 Both
               </button>
@@ -155,7 +153,6 @@ export const SelectFromWardrobeModal: React.FC<SelectFromWardrobeModalProps> = (
                 type="button"
                 className={`slot-action-btn ${selectedPerson === 'p1' ? 'active-toggle' : ''}`}
                 onClick={() => setSelectedPerson('p1')}
-                style={{ fontSize: '12px', padding: '4px 8px', border: 'none', background: selectedPerson === 'p1' ? 'var(--bg-card)' : 'transparent' }}
               >
                 {person1Name}
               </button>
@@ -163,7 +160,6 @@ export const SelectFromWardrobeModal: React.FC<SelectFromWardrobeModalProps> = (
                 type="button"
                 className={`slot-action-btn ${selectedPerson === 'p2' ? 'active-toggle' : ''}`}
                 onClick={() => setSelectedPerson('p2')}
-                style={{ fontSize: '12px', padding: '4px 8px', border: 'none', background: selectedPerson === 'p2' ? 'var(--bg-card)' : 'transparent' }}
               >
                 {person2Name}
               </button>
@@ -171,7 +167,7 @@ export const SelectFromWardrobeModal: React.FC<SelectFromWardrobeModalProps> = (
           </div>
 
           {/* Occasion Filter Pills */}
-          <div style={{ display: 'flex', gap: '6px', overflowX: 'auto', paddingBottom: '2px' }}>
+          <div className="flex gap-2 overflow-x-auto pb-1">
             <button
               type="button"
               className={`category-filter-btn ${selectedOccasion === 'all' ? 'active' : ''}`}
@@ -196,18 +192,16 @@ export const SelectFromWardrobeModal: React.FC<SelectFromWardrobeModalProps> = (
         </div>
 
         {/* Content Body: Grid of Looks */}
-        <div style={{ flex: 1, overflowY: 'auto', padding: '16px 20px' }}>
+        <div className="flex-1 overflow-y-auto p-4">
           {filteredLooks.length === 0 ? (
-            <div style={{ textAlign: 'center', padding: '40px 16px', color: 'var(--text-tertiary)' }}>
-              <div style={{ fontSize: '36px', marginBottom: '8px' }}>🧥</div>
-              <h4 style={{ margin: '0 0 4px 0', fontSize: '15px', color: 'var(--text-primary)', fontWeight: 600 }}>
-                No matching outfits found
-              </h4>
-              <p style={{ margin: 0, fontSize: '13px', lineHeight: 1.4 }}>
+            <div className="not-found-state">
+              <span className="not-found-icon">🧥</span>
+              <span className="not-found-title">No matching outfits found</span>
+              <span className="not-found-hint">
                 {availableLooks.length === 0
                   ? 'Your wardrobe closet is empty. Create your first look to start styling!'
                   : 'Try adjusting your search query or filters to find saved looks.'}
-              </p>
+              </span>
             </div>
           ) : (
             <div

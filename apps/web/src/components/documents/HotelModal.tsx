@@ -92,7 +92,7 @@ export const HotelModal: React.FC<HotelModalProps> = ({ isOpen, onClose, onSave,
         </div>
         <form onSubmit={handleSave} className="modal-body form-grid" style={{ overflow: 'visible' }}>
           <div className="form-group full-span" style={{ zIndex: 50 }}>
-            <label>Search Hotel (Google Places / TripAdvisor)</label>
+            <label>Search Hotel (Foursquare / OSM)</label>
             <PlaceSearchInput
               onSelectPlace={handleSelectPlace}
               placeholder="Search hotel name or location..."
