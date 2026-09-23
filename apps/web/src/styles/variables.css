@@ -1,45 +1,72 @@
-/* MojoLog Design System: Design Tokens & Custom Properties */
+/* MojoLog Design System: "Soft Utility / Calm Utility" Tokens */
 
 :root {
-  /* Surface & Canvas Colors */
-  --bg-canvas: #F8FAFC;
-  --bg-card: #FFFFFF;
-  --bg-subtle: #F1F5F9;
-  --bg-hover: #F8FAFC;
-  
-  /* Borders */
-  --border-light: #E2E8F0;
-  --border-strong: #CBD5E1;
-  
-  /* Text */
-  --text-primary: #0F172A;
-  --text-secondary: #64748B;
-  --text-tertiary: #94A3B8;
+  /* 1. Surfaces & Canvas Architecture */
+  --bg-canvas: #F8F9FA;         /* Calm off-white / cool slate-tinted canvas */
+  --bg-card: #FFFFFF;           /* Pure white modular card containers */
+  --bg-subtle: #F1F3F5;         /* Soft neutral background wash */
+  --bg-subtle-hover: #E9ECEF;   /* Gentle interactive hover state */
+  --bg-muted: #E2E8F0;          /* Secondary divider / subtle tint */
+  --bg-active: #E7EAEE;         /* Selected / active neutral state */
+
+  /* 2. Hairline Containment Borders */
+  --border-hairline: 1px solid rgba(15, 23, 42, 0.06);
+  --border-light: rgba(15, 23, 42, 0.08);
+  --border-subtle: rgba(15, 23, 42, 0.04);
+  --border-strong: rgba(15, 23, 42, 0.14);
+  --border-dashed: 1.5px dashed rgba(15, 23, 42, 0.16);
+
+  /* 3. Text & Typography Hierarchy */
+  --text-primary: #0F172A;      /* Primary high-contrast labels & titles */
+  --text-secondary: #64748B;    /* Neutral muted secondary details */
+  --text-tertiary: #94A3B8;     /* Metadata, uppercase sub-labels, hints */
   --text-white: #FFFFFF;
 
-  /* Brand Accents */
-  --brand-blue: #2563EB;
-  --brand-blue-subtle: #EFF6FF;
+  /* 4. Single High-Saturation Accent & Muted Utility Tints */
+  --brand-blue: #2563EB;         /* Strictly for primary interactive anchors */
+  --brand-blue-hover: #1D4ED8;
+  --brand-blue-subtle: rgba(37, 99, 235, 0.08);
   --brand-coral: #F97316;
   --brand-emerald: #10B981;
   --brand-amber: #F59E0B;
   --brand-rose: #EF4444;
 
-  /* Shadows */
-  --shadow-sm: 0 1px 2px 0 rgba(15, 23, 42, 0.05);
-  --shadow-card: 0 2px 8px -1px rgba(15, 23, 42, 0.06), 0 1px 3px -1px rgba(15, 23, 42, 0.04);
-  --shadow-elevated: 0 10px 25px -3px rgba(15, 23, 42, 0.1), 0 4px 6px -4px rgba(15, 23, 42, 0.05);
+  /* Soft Categorical Tint Washes (10-15% Opacity Accent Fill) */
+  --cat-flight-bg: rgba(14, 165, 233, 0.12);
+  --cat-flight-fg: #0284C7;
+  --cat-lodging-bg: rgba(99, 102, 241, 0.12);
+  --cat-lodging-fg: #4F46E5;
+  --cat-sight-bg: rgba(244, 63, 94, 0.12);
+  --cat-sight-fg: #E11D48;
+  --cat-dining-bg: rgba(249, 115, 22, 0.12);
+  --cat-dining-fg: #D97706;
+  --cat-transit-bg: rgba(16, 185, 129, 0.12);
+  --cat-transit-fg: #059669;
 
-  /* Border Radii */
-  --radius-sm: 6px;
-  --radius-md: 10px;
-  --radius-lg: 14px;
-  --radius-xl: 18px;
+  /* 5. Soft Layered Elevation Shadows */
+  --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.03);
+  --shadow-card: 0 1px 3px rgba(15, 23, 42, 0.02), 0 4px 14px -2px rgba(15, 23, 42, 0.03);
+  --shadow-card-hover: 0 2px 6px rgba(15, 23, 42, 0.03), 0 8px 22px -3px rgba(15, 23, 42, 0.05);
+  --shadow-elevated: 0 4px 6px -1px rgba(15, 23, 42, 0.02), 0 14px 28px -4px rgba(15, 23, 42, 0.06);
+  --shadow-modal: 0 20px 40px -8px rgba(15, 23, 42, 0.08), 0 1px 3px rgba(15, 23, 42, 0.04);
+
+  /* 6. Soft Generous Border Radii */
+  --radius-xs: 4px;
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-card: 20px;          /* Soft, generous card radii (16px to 24px) */
+  --radius-xl: 20px;
+  --radius-2xl: 24px;
+  --radius-pill: 9999px;        /* Pill shapes for chips, tags, small badges */
   --radius-full: 9999px;
 
-  /* Typography */
-  font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  /* 7. Typography Foundation with Tabular Figures */
+  font-family: 'Plus Jakarta Sans', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-feature-settings: 'tnum' 1, 'cv05' 1, 'cv08' 1;
+  font-variant-numeric: tabular-nums;
   color: var(--text-primary);
   background-color: var(--bg-canvas);
   -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }

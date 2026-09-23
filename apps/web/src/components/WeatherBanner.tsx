@@ -22,14 +22,14 @@ const getWeatherIcon = (condition: WeatherCondition, size = 20) => {
   switch (condition) {
     case 'sunny':
     case 'clear':
-      return <Sun size={size} className="text-amber animate-spin-slow" />;
+      return <Sun size={size} strokeWidth={1.75} className="text-amber animate-spin-slow" />;
     case 'partly_cloudy':
-      return <CloudSun size={size} className="text-amber" />;
+      return <CloudSun size={size} strokeWidth={1.75} className="text-amber" />;
     case 'rainy':
-      return <CloudRain size={size} className="text-blue" />;
+      return <CloudRain size={size} strokeWidth={1.75} className="text-blue" />;
     case 'cloudy':
     default:
-      return <Cloud size={size} className="text-slate" />;
+      return <Cloud size={size} strokeWidth={1.75} className="text-slate" />;
   }
 };
 
@@ -50,13 +50,13 @@ export const WeatherBanner = React.memo<WeatherBannerProps>(function WeatherBann
         <div className="weather-left">
           <div className="weather-temp-block">
             <div className="weather-icon-wrapper" style={{ backgroundColor: `${themeColor}15` }}>
-              {getWeatherIcon(weather.condition, 26)}
+              {getWeatherIcon(weather.condition, 24)}
             </div>
             <div>
-              <div className="weather-temp-main">
+              <div className="weather-temp-main tabular">
                 {weather.tempC}°<span className="weather-unit">C</span>
               </div>
-              <div className="weather-highlow">
+              <div className="weather-highlow tabular">
                 <span>H: {weather.highC}°</span>
                 <span className="sep">•</span>
                 <span>L: {weather.lowC}°</span>
@@ -67,7 +67,7 @@ export const WeatherBanner = React.memo<WeatherBannerProps>(function WeatherBann
           <div className="weather-condition-info">
             <div className="weather-condition-text">{weather.conditionText}</div>
             <div className="weather-comfort-pill">
-              <Sparkles size={12} className="text-amber" />
+              <Sparkles size={11} strokeWidth={1.75} className="text-amber" />
               <span>{comfortLabel}</span>
             </div>
           </div>
@@ -77,35 +77,35 @@ export const WeatherBanner = React.memo<WeatherBannerProps>(function WeatherBann
         <div className="weather-metrics">
           <div className="metric-cell">
             <div className="metric-label">
-              <Umbrella size={13} />
-              <span>Precipitation</span>
+              <Umbrella size={12} strokeWidth={1.75} />
+              <span>Rain Chance</span>
             </div>
-            <div className={`metric-value ${weather.rainProbability >= 50 ? 'text-rain' : ''}`}>
+            <div className={`metric-value tabular ${weather.rainProbability >= 50 ? 'text-rain' : ''}`}>
               {weather.rainProbability}%
             </div>
           </div>
 
           <div className="metric-cell">
             <div className="metric-label">
-              <Droplets size={13} />
+              <Droplets size={12} strokeWidth={1.75} />
               <span>Humidity</span>
             </div>
-            <div className="metric-value">{weather.humidity}%</div>
+            <div className="metric-value tabular">{weather.humidity}%</div>
           </div>
 
           <div className="metric-cell">
             <div className="metric-label">
-              <SunMedium size={13} />
+              <SunMedium size={12} strokeWidth={1.75} />
               <span>UV Index</span>
             </div>
-            <div className="metric-value">{weather.uvIndex} of 10</div>
+            <div className="metric-value tabular">{weather.uvIndex} of 10</div>
           </div>
         </div>
       </div>
 
-      {/* Clothing Tip (TripMojo Contextual Intelligence) */}
+      {/* Attire Tip */}
       <div className="weather-tip-strip">
-        <Shirt size={14} className="text-slate flex-shrink-0" />
+        <Shirt size={14} strokeWidth={1.75} className="text-slate flex-shrink-0" />
         <span className="weather-tip-text">
           <strong>Attire Tip:</strong> {weather.clothingTip}
         </span>
@@ -117,10 +117,10 @@ export const WeatherBanner = React.memo<WeatherBannerProps>(function WeatherBann
           {weather.hourly.map((hour, idx) => (
             <div key={idx} className="hourly-chip">
               <span className="hourly-time">{hour.time}</span>
-              <div className="hourly-icon">{getWeatherIcon(hour.condition, 16)}</div>
-              <span className="hourly-temp">{hour.tempC}°</span>
+              <div className="hourly-icon">{getWeatherIcon(hour.condition, 15)}</div>
+              <span className="hourly-temp tabular">{hour.tempC}°</span>
               {hour.rainChance > 10 && (
-                <span className="hourly-rain">{hour.rainChance}%</span>
+                <span className="hourly-rain tabular">{hour.rainChance}%</span>
               )}
             </div>
           ))}

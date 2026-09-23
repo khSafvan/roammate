@@ -1,6 +1,7 @@
 import React from 'react';
 import {
   BedDouble,
+  Clock,
   Compass,
   FileCheck2,
   Landmark,
@@ -19,62 +20,71 @@ interface TimelineCardProps {
 const getCategoryIcon = (category: StopCategory) => {
   switch (category) {
     case 'flight':
-      return <Plane size={13} />;
+      return <Plane size={15} strokeWidth={1.75} />;
     case 'lodging':
-      return <BedDouble size={13} />;
+      return <BedDouble size={15} strokeWidth={1.75} />;
     case 'sight':
-      return <Landmark size={13} />;
+      return <Landmark size={15} strokeWidth={1.75} />;
     case 'dining':
-      return <UtensilsCrossed size={13} />;
+      return <UtensilsCrossed size={15} strokeWidth={1.75} />;
     default:
-      return <Compass size={13} />;
+      return <Compass size={15} strokeWidth={1.75} />;
   }
 };
 
 export const TimelineCard = React.memo<TimelineCardProps>(function TimelineCard({
   stop,
-  themeColor,
   onSelect,
 }) {
   return (
-    <div className="timeline-card" onClick={() => onSelect(stop)}>
-      <div className="card-inner">
-        {/* Left Numerical Index Badge (Day Color Coded) */}
-        <div className="stop-badge" style={{ backgroundColor: themeColor }}>
-          {stop.orderIndex}
-        </div>
+    <div className="timeline-item-wrapper">
+      {/* Category Node Anchored on the Sequential Axis */}
+      <div className={`category-node node-${stop.category}`} title={stop.category.toUpperCase()}>
+        {getCategoryIcon(stop.category)}
+      </div>
 
-        {/* Card Content Stack */}
+      {/* Main Modular Card Container */}
+      <div className="timeline-card" onClick={() => onSelect(stop)}>
         <div className="card-body">
-          {/* Top Line: Time & Category */}
+          {/* Top Line: Sequence, Time, Duration & Ticket Pill */}
           <div className="card-meta-line">
+            <span className="card-order-pill">
+              #{String(stop.orderIndex).padStart(2, '0')}
+            </span>
             <span className="card-time">{stop.startTime}</span>
-            <span className="card-category-tag">
-              {getCategoryIcon(stop.category)}
-              <span>{stop.category.toUpperCase()}</span>
+
+            <span className="card-category-sublabel">
+              {stop.category}
             </span>
 
+            {stop.durationMinutes > 0 && (
+              <span className="card-duration-pill">
+                <Clock size={10} strokeWidth={1.75} />
+                <span>{stop.durationMinutes}m</span>
+              </span>
+            )}
+
             {stop.hasTicket && (
-              <span className="card-ticket-tag">
-                <FileCheck2 size={12} />
-                <span>Ticket</span>
+              <span className="card-ticket-pill">
+                <FileCheck2 size={11} strokeWidth={1.75} />
+                <span>Ticket Ready</span>
               </span>
             )}
           </div>
 
-          {/* Title & Subtitle */}
+          {/* Primary Label / Title & Subtitle */}
           <h3 className="card-title">{stop.title}</h3>
-          <p className="card-subtitle">{stop.subtitle}</p>
+          {stop.subtitle && <p className="card-subtitle">{stop.subtitle}</p>}
 
-          {/* Footer Metadata */}
+          {/* Secondary Footer Metadata */}
           <div className="card-footer-line">
             <div className="card-address">
-              <MapPin size={12} />
+              <MapPin size={12} strokeWidth={1.75} />
               <span>{stop.address.split(',')[0]}</span>
             </div>
 
             {stop.bookingRef && (
-              <span className="card-ref-badge">Ref: {stop.bookingRef}</span>
+              <span className="card-ref-badge">REF: {stop.bookingRef}</span>
             )}
           </div>
         </div>

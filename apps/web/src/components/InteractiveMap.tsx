@@ -10,16 +10,18 @@ import {
   Sparkles,
   Zap,
 } from 'lucide-react';
-import { ItineraryStop, TripDay } from '../types/trip';
+import { ItineraryStop, TransitMode, TripDay } from '../types/trip';
 import { computeDistanceKm } from '../wasm/engine';
 import { downloadGpx, formatGpxCoordinate, generateDayGpx } from '../utils/gpx';
 import { MAP_CONFIG, TRANSIT_CONFIG, UI_CONFIG } from '../config/constants';
+import { computeDayRouteData } from '../utils/routing';
 
 interface InteractiveMapProps {
   day: TripDay;
   onSelectStop: (stop: ItineraryStop) => void;
   onOptimizeDay: () => void;
   isOptimized: boolean;
+  transitModes?: Record<string, TransitMode>;
 }
 
 export const InteractiveMap: React.FC<InteractiveMapProps> = ({
@@ -27,15 +29,19 @@ export const InteractiveMap: React.FC<InteractiveMapProps> = ({
   onSelectStop,
   onOptimizeDay,
   isOptimized,
+  transitModes = {},
 }) => {
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<MapLibreMap | null>(null);
   const markersRef = useRef<Marker[]>([]);
   const markerElsRef = useRef<Map<string, { el: HTMLDivElement; pulseEl: HTMLDivElement }>>(new Map());
+  const routeCoordinatesRef = useRef<[number, number][]>([]);
+  const routeRequestIdRef = useRef(0);
 
   const [selectedStopId, setSelectedStopId] = useState<string | null>(
     day.stops[0]?.id || null
   );
+  const [actualRouteKm, setActualRouteKm] = useState<number | null>(null);
   const selectedStopIdRef = useRef(selectedStopId);
   selectedStopIdRef.current = selectedStopId;
 
@@ -44,8 +50,8 @@ export const InteractiveMap: React.FC<InteractiveMapProps> = ({
     setSelectedStopId(day.stops[0]?.id || null);
   }, [day.id]);
 
-  // Compute total sequence route distance via Rust WASM engine
-  const totalDistanceKm = useMemo(() => {
+  // Direct sequence distance fallback
+  const directDistanceKm = useMemo(() => {
     let dist = 0;
     for (let i = 0; i < day.stops.length - 1; i++) {
       dist += computeDistanceKm(
@@ -58,11 +64,13 @@ export const InteractiveMap: React.FC<InteractiveMapProps> = ({
     return Number((dist * TRANSIT_CONFIG.ROAD_WINDING_FACTOR).toFixed(1));
   }, [day.stops]);
 
+  const displayDistanceKm = actualRouteKm ?? directDistanceKm;
+
   const activeIndex = day.stops.findIndex((s) => s.id === selectedStopId);
   const activeStop = (activeIndex >= 0 ? day.stops[activeIndex] : null) || day.stops[0];
   const activeStopIndex = activeIndex >= 0 ? activeIndex : 0;
 
-  // Fit 2D map camera smoothly to all day stops
+  // Fit 2D map camera smoothly to all day stops or route coordinates
   const fitToStops = useCallback((immediate = false) => {
     const map = mapRef.current;
     if (!map || day.stops.length === 0) return;
@@ -80,8 +88,12 @@ export const InteractiveMap: React.FC<InteractiveMapProps> = ({
     }
 
     const bounds = new LngLatBounds();
-    day.stops.forEach((s) => {
-      bounds.extend([s.coordinates.longitude, s.coordinates.latitude]);
+    const coords = routeCoordinatesRef.current.length > 0
+      ? routeCoordinatesRef.current
+      : day.stops.map((s) => [s.coordinates.longitude, s.coordinates.latitude] as [number, number]);
+
+    coords.forEach(([lng, lat]) => {
+      bounds.extend([lng, lat]);
     });
 
     map.fitBounds(bounds, {
@@ -93,79 +105,175 @@ export const InteractiveMap: React.FC<InteractiveMapProps> = ({
     });
   }, [day.stops]);
 
-  // Render or update continuous GPX Track Polyline (Terraink approach)
+  // Setup multi-modal GeoJSON source and styled line layers if not yet added
+  const ensureRouteLayers = useCallback((map: MapLibreMap) => {
+    if (map.getSource('gpx-route-source')) return;
+
+    map.addSource('gpx-route-source', {
+      type: 'geojson',
+      data: {
+        type: 'FeatureCollection',
+        features: [],
+      },
+    });
+
+    // 1. High-contrast casing halo (crisp background separation)
+    map.addLayer({
+      id: 'gpx-route-casing',
+      type: 'line',
+      source: 'gpx-route-source',
+      layout: {
+        'line-join': 'round',
+        'line-cap': 'round',
+      },
+      paint: {
+        'line-color': '#FFFFFF',
+        'line-width': 7,
+        'line-opacity': 0.9,
+      },
+    });
+
+    // 2. Drive / Road layer (Solid themed line following real street network)
+    map.addLayer({
+      id: 'gpx-route-drive',
+      type: 'line',
+      source: 'gpx-route-source',
+      filter: ['==', ['coalesce', ['get', 'mode'], 'drive'], 'drive'] as any,
+      layout: {
+        'line-join': 'round',
+        'line-cap': 'round',
+      },
+      paint: {
+        'line-color': day.themeColor || '#2563EB',
+        'line-width': 4,
+        'line-opacity': 0.95,
+      },
+    });
+
+    // 3. Walk / Pedestrian layer (Dotted/dashed emerald path following sidewalks/walkways)
+    map.addLayer({
+      id: 'gpx-route-walk',
+      type: 'line',
+      source: 'gpx-route-source',
+      filter: ['==', ['get', 'mode'], 'walk'],
+      layout: {
+        'line-join': 'round',
+        'line-cap': 'round',
+      },
+      paint: {
+        'line-color': '#059669',
+        'line-width': 3.5,
+        'line-dasharray': [1.5, 2],
+        'line-opacity': 0.95,
+      },
+    });
+
+    // 4. Rail Transit base track (dark track bed)
+    map.addLayer({
+      id: 'gpx-route-transit-base',
+      type: 'line',
+      source: 'gpx-route-source',
+      filter: ['==', ['get', 'mode'], 'transit'],
+      layout: {
+        'line-join': 'round',
+        'line-cap': 'round',
+      },
+      paint: {
+        'line-color': '#1E293B',
+        'line-width': 4.5,
+        'line-opacity': 0.95,
+      },
+    });
+
+    // 5. Rail Transit track ties (alternating railroad ties ladder)
+    map.addLayer({
+      id: 'gpx-route-transit-ties',
+      type: 'line',
+      source: 'gpx-route-source',
+      filter: ['==', ['get', 'mode'], 'transit'],
+      layout: {
+        'line-join': 'round',
+        'line-cap': 'butt',
+      },
+      paint: {
+        'line-color': '#F8FAFC',
+        'line-width': 2.5,
+        'line-dasharray': [1.5, 2],
+        'line-opacity': 0.95,
+      },
+    });
+
+    // 6. Flight sky passage arc (curved geodesic aerial corridor)
+    map.addLayer({
+      id: 'gpx-route-flight',
+      type: 'line',
+      source: 'gpx-route-source',
+      filter: ['==', ['get', 'mode'], 'flight'],
+      layout: {
+        'line-join': 'round',
+        'line-cap': 'round',
+      },
+      paint: {
+        'line-color': '#0284C7',
+        'line-width': 3,
+        'line-dasharray': [3, 2],
+        'line-opacity': 0.9,
+      },
+    });
+
+    // 7. Boat maritime fairway passage (curved nautical fairway channel)
+    map.addLayer({
+      id: 'gpx-route-boat',
+      type: 'line',
+      source: 'gpx-route-source',
+      filter: ['==', ['get', 'mode'], 'boat'],
+      layout: {
+        'line-join': 'round',
+        'line-cap': 'round',
+      },
+      paint: {
+        'line-color': '#06B6D4',
+        'line-width': 3.5,
+        'line-dasharray': [4, 2],
+        'line-opacity': 0.95,
+      },
+    });
+  }, [day.themeColor]);
+
+  // Asynchronously compute and render multi-modal road & passage geometry
   const updateRouteLayer = useCallback((map: MapLibreMap) => {
-    if (day.stops.length < 2) return;
+    ensureRouteLayers(map);
 
-    const coordinates = day.stops.map((s) => [
-      s.coordinates.longitude,
-      s.coordinates.latitude,
-    ]);
-
-    const geojson: GeoJSON.FeatureCollection<GeoJSON.LineString> = {
-      type: 'FeatureCollection',
-      features: [
-        {
-          type: 'Feature',
-          properties: {
-            name: `Day ${day.dayNumber} GPX Track`,
-          },
-          geometry: {
-            type: 'LineString',
-            coordinates,
-          },
-        },
-      ],
-    };
-
-    const source = map.getSource('gpx-route-source') as GeoJSONSource | undefined;
-    if (source) {
-      source.setData(geojson);
-    } else {
-      map.addSource('gpx-route-source', {
-        type: 'geojson',
-        data: geojson,
-      });
-
-      // Outer Casing line (Terraink signature high-contrast white halo)
-      map.addLayer({
-        id: 'gpx-route-casing',
-        type: 'line',
-        source: 'gpx-route-source',
-        layout: {
-          'line-join': 'round',
-          'line-cap': 'round',
-        },
-        paint: {
-          'line-color': '#FFFFFF',
-          'line-width': 6.5,
-          'line-opacity': 0.9,
-        },
-      });
-
-      // Inner Themed Route Line
-      map.addLayer({
-        id: 'gpx-route-line',
-        type: 'line',
-        source: 'gpx-route-source',
-        layout: {
-          'line-join': 'round',
-          'line-cap': 'round',
-        },
-        paint: {
-          'line-color': day.themeColor || '#2563EB',
-          'line-width': 3.5,
-          'line-opacity': 0.95,
-        },
-      });
+    if (map.getLayer('gpx-route-drive')) {
+      map.setPaintProperty('gpx-route-drive', 'line-color', day.themeColor || '#2563EB');
     }
 
-    if (map.getLayer('gpx-route-line')) {
-      map.setPaintProperty('gpx-route-line', 'line-color', day.themeColor || '#2563EB');
+    if (day.stops.length < 2) {
+      const source = map.getSource('gpx-route-source') as GeoJSONSource | undefined;
+      if (source) {
+        source.setData({ type: 'FeatureCollection', features: [] });
+      }
+      routeCoordinatesRef.current = [];
+      setActualRouteKm(0);
+      return;
     }
-  }, [day.stops, day.themeColor, day.dayNumber]);
 
-  // Render GPX Waypoint HTML Markers (Terraink Approach)
+    const currentReqId = ++routeRequestIdRef.current;
+
+    computeDayRouteData(day.stops, transitModes).then((routeData) => {
+      if (currentReqId !== routeRequestIdRef.current) return;
+      routeCoordinatesRef.current = routeData.fullCoordinates;
+      setActualRouteKm(routeData.totalDistanceKm);
+
+      const source = map.getSource('gpx-route-source') as GeoJSONSource | undefined;
+      if (source) {
+        source.setData(routeData.geojson);
+      }
+      fitToStops(false);
+    });
+  }, [day.stops, day.themeColor, transitModes, ensureRouteLayers, fitToStops]);
+
+  // Render Terralink GPS Waypoint HTML Markers (Teardrop pin, needle stem anchored at bottom)
   const renderMarkers = useCallback(() => {
     const map = mapRef.current;
     if (!map) return;
@@ -178,35 +286,67 @@ export const InteractiveMap: React.FC<InteractiveMapProps> = ({
     const totalStops = day.stops.length;
     const currentSelectedId = selectedStopIdRef.current;
 
-    // Create GPX waypoint markers: S (Start), F (Finish), 02, 03... (Intermediate)
     day.stops.forEach((stop, index) => {
       const isStart = index === 0;
       const isFinish = index === totalStops - 1 && totalStops > 1;
       const isCurrentSelected = stop.id === currentSelectedId;
 
-      const el = document.createElement('div');
-      el.className = `terraink-gpx-pin ${isCurrentSelected ? 'active' : ''} ${
-        isStart ? 'pin-start' : isFinish ? 'pin-finish' : 'pin-waypoint'
-      }`;
-
-      // Dynamic theme-matching background
-      el.style.backgroundColor = isStart
+      const pinColor = isStart
         ? '#059669'
         : isFinish
         ? '#DC2626'
         : day.themeColor || '#2563EB';
 
-      const labelText = isStart ? 'S' : isFinish ? 'F' : String(index + 1).padStart(2, '0');
-      el.title = `${stop.title} [${formatGpxCoordinate(stop.coordinates.latitude, stop.coordinates.longitude)}]`;
+      // 1. Terralink Marker Anchor Container (Anchored at exact bottom point)
+      const el = document.createElement('div');
+      el.className = `terralink-marker-anchor ${isCurrentSelected ? 'active' : ''} ${
+        isStart ? 'pin-start' : isFinish ? 'pin-finish' : 'pin-waypoint'
+      }`;
+
+      // 2. Hover / Active Callout Tooltip
+      const callout = document.createElement('div');
+      callout.className = 'terralink-pin-callout';
+
+      const badgeSpan = document.createElement('span');
+      badgeSpan.className = 'callout-badge';
+      badgeSpan.style.backgroundColor = pinColor;
+      badgeSpan.textContent = isStart ? 'START' : isFinish ? 'FINISH' : `WP ${String(index + 1).padStart(2, '0')}`;
+
+      const timeSpan = document.createElement('span');
+      timeSpan.className = 'callout-time';
+      timeSpan.textContent = stop.startTime;
+
+      const titleSpan = document.createElement('span');
+      titleSpan.className = 'callout-title';
+      titleSpan.textContent = stop.title;
+
+      callout.appendChild(badgeSpan);
+      callout.appendChild(timeSpan);
+      callout.appendChild(titleSpan);
+      el.appendChild(callout);
+
+      // 3. Pin Head (Teardrop upper circular body)
+      const head = document.createElement('div');
+      head.className = 'terralink-pin-head';
+      head.style.backgroundColor = pinColor;
 
       const labelSpan = document.createElement('span');
-      labelSpan.className = 'gpx-pin-label';
+      labelSpan.className = 'terralink-pin-label';
+      const labelText = isStart ? 'S' : isFinish ? 'F' : String(index + 1).padStart(2, '0');
       labelSpan.textContent = labelText;
-      el.appendChild(labelSpan);
+      head.appendChild(labelSpan);
+      el.appendChild(head);
 
+      // 4. Pin Needle Stem (Points directly down to the GPS coordinate)
+      const needle = document.createElement('div');
+      needle.className = 'terralink-pin-needle';
+      needle.style.borderTopColor = pinColor;
+      el.appendChild(needle);
+
+      // 5. Radar Sonar Pulse Ring (Pulsing wave at needle base when active)
       const pulseEl = document.createElement('div');
-      pulseEl.className = 'terraink-pin-pulse';
-      pulseEl.style.borderColor = day.themeColor || '#2563EB';
+      pulseEl.className = 'terralink-pulse-ring';
+      pulseEl.style.borderColor = pinColor;
       pulseEl.style.display = isCurrentSelected ? 'block' : 'none';
       el.appendChild(pulseEl);
 
@@ -223,7 +363,8 @@ export const InteractiveMap: React.FC<InteractiveMapProps> = ({
         });
       });
 
-      const marker = new Marker({ element: el })
+      // Anchor set to 'bottom' so the needle point touches the exact GPS coordinate
+      const marker = new Marker({ element: el, anchor: 'bottom' })
         .setLngLat([stop.coordinates.longitude, stop.coordinates.latitude])
         .addTo(map);
 
@@ -272,7 +413,7 @@ export const InteractiveMap: React.FC<InteractiveMapProps> = ({
         attributionControl: false,
       });
 
-      // Add minimal zoom controls (Compass/pitch rotation control disabled)
+      // Minimal zoom controls (Compass/pitch rotation control disabled)
       map.addControl(
         new NavigationControl({
           showCompass: false,
@@ -290,7 +431,7 @@ export const InteractiveMap: React.FC<InteractiveMapProps> = ({
       });
 
       map.on('error', (e: any) => {
-        console.warn('Terraink MapLibre notice:', e);
+        console.warn('Terralink MapLibre notice:', e);
       });
 
       mapRef.current = map;
@@ -311,7 +452,7 @@ export const InteractiveMap: React.FC<InteractiveMapProps> = ({
     }
   }, []);
 
-  // Update markers, polyline and bounds when day stops or color changes
+  // Update markers, polyline and bounds when day stops, color, or transit modes change
   useEffect(() => {
     const map = mapRef.current;
     if (!map) return;
@@ -322,7 +463,7 @@ export const InteractiveMap: React.FC<InteractiveMapProps> = ({
       updateRouteLayer(map);
       fitToStops(false);
     }
-  }, [day.stops, day.themeColor, renderMarkers, updateRouteLayer, fitToStops]);
+  }, [day.stops, day.themeColor, transitModes, renderMarkers, updateRouteLayer, fitToStops]);
 
   // Export RFC / Topografix Compliant GPX 1.1 file
   const handleExportGpx = () => {
@@ -352,21 +493,21 @@ export const InteractiveMap: React.FC<InteractiveMapProps> = ({
 
   return (
     <div className="map-view-card">
-      {/* Top Map Action Bar with GPX Denotation */}
+      {/* Top Map Action Bar with Terralink Denotation */}
       <div className="map-toolbar">
         <div className="map-metrics">
           <div className="map-title-row">
             <span className="map-day-indicator" style={{ backgroundColor: day.themeColor }} />
-            <h3 className="map-title">Day {day.dayNumber} GPX Track</h3>
+            <h3 className="map-title">Day {day.dayNumber} Route</h3>
             <span
-              className="terraink-engine-badge"
-              title="Terraink Cartographic Engine with GPX 1.1 Track & Waypoint Denotation"
+              className="terralink-engine-badge"
+              title="Terralink Cartographic Engine with Multi-Modal Road, Track & Passage Routing"
             >
-              GPX 1.1 Track
+              Terralink GPS
             </span>
           </div>
           <p className="map-subtitle">
-            {day.stops.length} Waypoints · {totalDistanceKm} km sequence path
+            {day.stops.length} Waypoints · {displayDistanceKm} km multi-modal path
           </p>
         </div>
 
@@ -384,7 +525,7 @@ export const InteractiveMap: React.FC<InteractiveMapProps> = ({
           <button
             className="gpx-action-btn"
             onClick={() => fitToStops(false)}
-            title="Recenter and fit all GPX waypoints into view"
+            title="Recenter and fit all waypoints and route turns into view"
           >
             <Maximize2 size={13} />
             <span>Fit Track</span>
@@ -401,27 +542,27 @@ export const InteractiveMap: React.FC<InteractiveMapProps> = ({
         </div>
       </div>
 
-      {/* MapLibre 2D Planar Container with Terraink Viewport */}
+      {/* MapLibre 2D Planar Container with Terralink Viewport */}
       <div className="map-canvas-container terraink-viewport-wrapper">
         <div
           ref={mapContainerRef}
           className="terraink-maplibre-viewport"
         />
 
-        {/* Tactile Terraink Engine & OpenFreeMap Watermark */}
-        <div className="terraink-watermark">
+        {/* Tactile Terralink Engine & OpenFreeMap Watermark */}
+        <div className="terralink-watermark">
           <a
             href="https://github.com/yousifamanuel/terraink"
             target="_blank"
             rel="noopener noreferrer"
-            className="terraink-watermark-link"
+            className="terralink-watermark-link"
           >
-            Terraink · OpenFreeMap
+            Terralink · OpenFreeMap
           </a>
         </div>
       </div>
 
-      {/* Selected GPX Waypoint Floating Dock */}
+      {/* Selected Terralink Waypoint Floating Dock */}
       {activeStop && (
         <div className="map-selected-dock">
           <div
@@ -439,7 +580,7 @@ export const InteractiveMap: React.FC<InteractiveMapProps> = ({
           <div className="dock-details">
             <div className="dock-meta-row">
               <span className="dock-time">{activeStop.startTime}</span>
-              <span className="dock-coord-pill" title="GPX Waypoint Coordinates">
+              <span className="dock-coord-pill" title="Terralink Waypoint Coordinates">
                 {formatGpxCoordinate(activeStop.coordinates.latitude, activeStop.coordinates.longitude)}
               </span>
             </div>
@@ -450,7 +591,7 @@ export const InteractiveMap: React.FC<InteractiveMapProps> = ({
             <button
               className="dock-focus-btn"
               onClick={() => handleFocusStop(activeStop)}
-              title="Focus map camera on this GPX waypoint"
+              title="Focus map camera on this Terralink waypoint"
             >
               <Eye size={13} />
               <span>Center</span>

@@ -20,6 +20,7 @@ MojoLog consists of three decoupled components orchestrated within a single mono
 | :--- | :--- | :--- | :--- | :--- |
 | `VITE_API_URL` | `apps/web` | Optional | `https://mojolog-api.workers.dev` | Points the frontend to the Cloudflare Worker API. If left empty, MojoLog runs 100% offline in client-only vault mode. |
 | `VITE_MAP_STYLE_URL` | `apps/web` | Optional | `https://tiles.openfreemap.org/styles/positron` | Vector tile stylesheet URL for the Terraink cartography engine. OpenFreeMap Positron requires **zero API keys and zero billing**. |
+| `VITE_OSRM_ROUTER_URL` | `apps/web` | Optional | `https://router.project-osrm.org` | Multi-modal real-world road and pedestrian routing engine endpoint. |
 | `TURSO_DATABASE_URL` | `apps/api` | Required (Cloud Sync) | `libsql://mojolog-db-[user].turso.io` | Connection URL for your distributed Turso edge database. |
 | `TURSO_AUTH_TOKEN` | `apps/api` | Required (Cloud Sync) | `eyJhbGciOi...` | Encrypted JWT authentication token for database read/write queries. |
 
