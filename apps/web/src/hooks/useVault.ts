@@ -154,12 +154,12 @@ export function useVault(): UseVaultReturn {
       return [activeTrip, ...prevTrips];
     });
 
+    // Always persist to local storage synchronously for offline reliability
+    localStorage.setItem(`${STORAGE_KEYS.TRIP_PREFIX}${activeTrip.id}`, JSON.stringify(activeTrip));
+    setActiveTripIdLocal(activeTrip.id);
+
     if (vaultSession) {
       saveItineraryToEdge(vaultSession.userId, activeTrip);
-    } else {
-      // Local encrypted vault persistence
-      localStorage.setItem(`${STORAGE_KEYS.TRIP_PREFIX}${activeTrip.id}`, JSON.stringify(activeTrip));
-      setActiveTripIdLocal(activeTrip.id);
     }
   }, [activeTrip, vaultSession, isReadOnly, isGuestMode]);
 

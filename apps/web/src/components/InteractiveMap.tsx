@@ -7,6 +7,7 @@ import {
   Eye,
   Maximize2,
   Navigation,
+  RotateCcw,
   Sparkles,
   Zap,
 } from 'lucide-react';
@@ -21,7 +22,11 @@ interface InteractiveMapProps {
   onSelectStop: (stop: ItineraryStop) => void;
   onOptimizeDay: () => void;
   isOptimized: boolean;
+  canUndo?: boolean;
+  onUndoOptimization?: () => void;
   transitModes?: Record<string, TransitMode>;
+  selectedStopId?: string | null;
+  tripTitle?: string;
 }
 
 export const InteractiveMap: React.FC<InteractiveMapProps> = ({
@@ -29,7 +34,11 @@ export const InteractiveMap: React.FC<InteractiveMapProps> = ({
   onSelectStop,
   onOptimizeDay,
   isOptimized,
+  canUndo = false,
+  onUndoOptimization,
   transitModes = {},
+  selectedStopId: propSelectedStopId,
+  tripTitle,
 }) => {
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<MapLibreMap | null>(null);
@@ -40,17 +49,21 @@ export const InteractiveMap: React.FC<InteractiveMapProps> = ({
   const routeCoordinatesRef = useRef<[number, number][]>([]);
   const routeRequestIdRef = useRef(0);
 
-  const [selectedStopId, setSelectedStopId] = useState<string | null>(
+  const [internalSelectedStopId, setInternalSelectedStopId] = useState<string | null>(
     day.stops[0]?.id || null
   );
+  const selectedStopId = propSelectedStopId !== undefined ? propSelectedStopId : internalSelectedStopId;
+
   const [actualRouteKm, setActualRouteKm] = useState<number | null>(null);
   const selectedStopIdRef = useRef(selectedStopId);
   selectedStopIdRef.current = selectedStopId;
 
   // Sync selected stop when active day changes
   useEffect(() => {
-    setSelectedStopId(day.stops[0]?.id || null);
-  }, [day.id]);
+    if (propSelectedStopId === undefined) {
+      setInternalSelectedStopId(day.stops[0]?.id || null);
+    }
+  }, [day.id, propSelectedStopId]);
 
   // Direct sequence distance fallback
   const directDistanceKm = useMemo(() => {
@@ -398,7 +411,7 @@ export const InteractiveMap: React.FC<InteractiveMapProps> = ({
         const stopId = feature.properties?.id;
         const stop = stopsRef.current.find((s) => s.id === stopId);
         if (stop) {
-          setSelectedStopId(stop.id);
+          setInternalSelectedStopId(stop.id);
           onSelectStopRef.current(stop);
           map.flyTo({
             center: [stop.coordinates.longitude, stop.coordinates.latitude],
@@ -460,7 +473,15 @@ export const InteractiveMap: React.FC<InteractiveMapProps> = ({
     });
   }, [day.stops, day.themeColor, selectedStopId, ensureWaypointLayers]);
 
-  // 1. Initialize MapLibre 2D Planar Map Instance (Zero 3D overhead)
+  // Keep refs for callback execution during map initialization
+  const updateWaypointLayerRef = useRef(updateWaypointLayer);
+  updateWaypointLayerRef.current = updateWaypointLayer;
+  const updateRouteLayerRef = useRef(updateRouteLayer);
+  updateRouteLayerRef.current = updateRouteLayer;
+  const fitToStopsRef = useRef(fitToStops);
+  fitToStopsRef.current = fitToStops;
+
+  // 1. Initialize MapLibre 2D Planar Map Instance (Zero 3D overhead - runs ONCE on mount)
   useEffect(() => {
     if (!mapContainerRef.current) return;
 
@@ -475,7 +496,6 @@ export const InteractiveMap: React.FC<InteractiveMapProps> = ({
         style: import.meta.env.VITE_MAP_STYLE_URL || MAP_CONFIG.TILE_STYLE_URL,
         center: initialCenter,
         zoom: MAP_CONFIG.DEFAULT_ZOOM,
-        // Pure 2D Planar Configuration - All 3D tilt & rotation disabled
         pitch: 0,
         maxPitch: 0,
         minPitch: 0,
@@ -486,7 +506,6 @@ export const InteractiveMap: React.FC<InteractiveMapProps> = ({
         attributionControl: false,
       });
 
-      // Minimal zoom controls (Compass/pitch rotation control disabled)
       map.addControl(
         new NavigationControl({
           showCompass: false,
@@ -498,9 +517,9 @@ export const InteractiveMap: React.FC<InteractiveMapProps> = ({
       map.on('load', () => {
         mapRef.current = map;
         map.resize();
-        updateWaypointLayer(map);
-        updateRouteLayer(map);
-        fitToStops(true);
+        updateWaypointLayerRef.current(map);
+        updateRouteLayerRef.current(map);
+        fitToStopsRef.current(true);
       });
 
       map.on('error', (e: any) => {
@@ -509,7 +528,6 @@ export const InteractiveMap: React.FC<InteractiveMapProps> = ({
 
       mapRef.current = map;
 
-      // Observe container resize for responsive canvas resizing
       const resizeObserver = new ResizeObserver(() => {
         map.resize();
       });
@@ -523,9 +541,9 @@ export const InteractiveMap: React.FC<InteractiveMapProps> = ({
     } catch (err) {
       console.warn('MapLibre WebGL unavailable:', err);
     }
-  }, [updateWaypointLayer, updateRouteLayer, fitToStops]);
+  }, []);
 
-  // Update WebGL waypoints, polyline and bounds when day stops, color, or transit modes change
+  // Update WebGL waypoints, polyline and bounds when day stops, color, transit modes, or selected stop changes
   useEffect(() => {
     const map = mapRef.current;
     if (!map) return;
@@ -535,12 +553,14 @@ export const InteractiveMap: React.FC<InteractiveMapProps> = ({
       updateRouteLayer(map);
       fitToStops(false);
     }
-  }, [day.stops, day.themeColor, transitModes, updateWaypointLayer, updateRouteLayer, fitToStops]);
+  }, [day.stops, day.themeColor, transitModes, selectedStopId, updateWaypointLayer, updateRouteLayer, fitToStops]);
 
   // Export RFC / Topografix Compliant GPX 1.1 file
   const handleExportGpx = () => {
-    const gpxXml = generateDayGpx(day, 'roammate Itinerary');
-    downloadGpx(gpxXml, `roammate_day_${day.dayNumber}_track.gpx`);
+    const gpxTitle = tripTitle ? `${tripTitle} — Day ${day.dayNumber}` : 'roammate Itinerary';
+    const fileName = `${(tripTitle || 'roammate').toLowerCase().replace(/\s+/g, '_')}_day_${day.dayNumber}_track.gpx`;
+    const gpxXml = generateDayGpx(day, gpxTitle);
+    downloadGpx(gpxXml, fileName);
   };
 
   const handleOpenGoogleMaps = (stop: ItineraryStop) => {
@@ -611,6 +631,22 @@ export const InteractiveMap: React.FC<InteractiveMapProps> = ({
             {isOptimized ? <Zap size={15} /> : <Sparkles size={15} />}
             <span>{isOptimized ? 'Optimized (WASM)' : '1-Click Optimize'}</span>
           </button>
+
+          {canUndo && onUndoOptimization && (
+            <button
+              className="optimize-route-btn"
+              onClick={onUndoOptimization}
+              title="Undo route optimization and restore previous itinerary sequence"
+              style={{
+                borderColor: '#F59E0B',
+                color: '#D97706',
+                backgroundColor: 'rgba(245, 158, 11, 0.08)',
+              }}
+            >
+              <RotateCcw size={14} />
+              <span>Undo</span>
+            </button>
+          )}
         </div>
       </div>
 

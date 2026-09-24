@@ -1,4 +1,4 @@
-import { Trip } from '../types/trip';
+import { Trip, TripDay } from '../types/trip';
 import { deleteLocalAccount, pruneInactiveLocalData } from './crypto';
 import { STORAGE_KEYS } from '../config/constants';
 import { INITIAL_TRIPS_CATALOG, mockTripData } from '../data/mockTrip';
@@ -376,8 +376,54 @@ export function createDefaultTrip(
   const id = `trip_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
   const shareToken = Math.random().toString(36).substring(2, 10);
   const guestKey = `guest_${Math.random().toString(36).substring(2, 12)}`;
-
   const datesFormatted = startDate && endDate ? `${startDate} – ${endDate}` : 'Flexible Dates';
+
+  let numDays = 1;
+  if (startDate && endDate) {
+    const startMs = Date.parse(startDate);
+    const endMs = Date.parse(endDate);
+    if (!isNaN(startMs) && !isNaN(endMs) && endMs >= startMs) {
+      const diffDays = Math.round((endMs - startMs) / (1000 * 60 * 60 * 24)) + 1;
+      numDays = Math.min(30, Math.max(1, diffDays));
+    }
+  }
+
+  const days: TripDay[] = [];
+  const startObj = startDate ? new Date(startDate) : null;
+
+  for (let i = 0; i < numDays; i++) {
+    let dateStr = i === 0 ? (startDate || 'Day 1') : `Day ${i + 1}`;
+    if (startObj && !isNaN(startObj.getTime())) {
+      const current = new Date(startObj);
+      current.setDate(startObj.getDate() + i);
+      dateStr = current.toISOString().split('T')[0];
+    }
+
+    days.push({
+      id: `day_${id}_${i + 1}`,
+      dayNumber: i + 1,
+      dateStr,
+      title: i === 0 ? 'Arrival & Welcome' : i === numDays - 1 && numDays > 1 ? 'Departure & Farewell' : `Day ${i + 1} Exploration`,
+      themeColor: '#3B82F6',
+      weather: {
+        tempC: 22,
+        highC: 24,
+        lowC: 16,
+        condition: 'sunny',
+        conditionText: 'Fair & Clear',
+        rainProbability: 5,
+        humidity: 50,
+        uvIndex: 4,
+        clothingTip: 'Casual daywear and comfortable shoes for exploring.',
+        hourly: [
+          { time: '12 PM', tempC: 22, condition: 'sunny', rainChance: 0 },
+          { time: '3 PM', tempC: 24, condition: 'sunny', rainChance: 5 },
+          { time: '6 PM', tempC: 20, condition: 'clear', rainChance: 0 },
+        ],
+      },
+      stops: [],
+    });
+  }
 
   return {
     id,
@@ -394,32 +440,7 @@ export function createDefaultTrip(
     guestKey,
     readinessScore: 0,
     flights: [],
-    days: [
-      {
-        id: `day_${id}_1`,
-        dayNumber: 1,
-        dateStr: startDate || 'Day 1',
-        title: 'Arrival & Welcome',
-        themeColor: '#3B82F6',
-        weather: {
-          tempC: 22,
-          highC: 24,
-          lowC: 16,
-          condition: 'sunny',
-          conditionText: 'Fair & Clear',
-          rainProbability: 5,
-          humidity: 50,
-          uvIndex: 4,
-          clothingTip: 'Casual daywear and comfortable shoes for exploring.',
-          hourly: [
-            { time: '12 PM', tempC: 22, condition: 'sunny', rainChance: 0 },
-            { time: '3 PM', tempC: 24, condition: 'sunny', rainChance: 5 },
-            { time: '6 PM', tempC: 20, condition: 'clear', rainChance: 0 },
-          ],
-        },
-        stops: [],
-      },
-    ],
+    days,
     expenses: [],
     readinessChecklist: [
       { id: 'chk_1', label: 'Passports & visas verified', completed: false, critical: true },

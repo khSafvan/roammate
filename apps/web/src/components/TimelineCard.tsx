@@ -80,7 +80,7 @@ export const TimelineCard = React.memo<TimelineCardProps>(function TimelineCard(
           <div className="card-footer-line">
             <div className="card-address">
               <MapPin size={12} strokeWidth={1.75} />
-              <span>{stop.address.split(',')[0]}</span>
+              <span>{(stop.address || '').split(',')[0] || 'Location pending'}</span>
             </div>
 
             {stop.bookingRef && (

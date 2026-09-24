@@ -2,17 +2,22 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import confetti from 'canvas-confetti';
 import {
   CalendarDays,
+  FileText,
   Key,
   ListFilter,
   Map as MapIcon,
   Plane,
+  Plus,
   Receipt,
+  RotateCcw,
   Share2,
   ShieldAlert,
   Sparkles,
+  Trash2,
   UserPlus,
   Zap,
 } from 'lucide-react';
+import { AddStopModal } from './components/AddStopModal';
 import { AuthModal } from './components/AuthModal';
 import { DaySelector } from './components/DaySelector';
 import { DistancePill } from './components/DistancePill';
@@ -20,7 +25,11 @@ import { DocumentsAndTicketsHub } from './components/documents/DocumentsAndTicke
 import { ExpenseTracker } from './components/ExpenseTracker';
 import { Header } from './components/Header';
 import { InteractiveMap } from './components/InteractiveMap';
+import { OptimizeRouteModal } from './components/OptimizeRouteModal';
+import { PlacesToVisitDrawer } from './components/PlacesToVisitDrawer';
+import { PrintTravelPacket } from './components/PrintTravelPacket';
 import { ReadinessModal } from './components/ReadinessModal';
+import { ScratchpadModal } from './components/ScratchpadModal';
 import { ShareModal } from './components/ShareModal';
 import { StopDetailModal } from './components/StopDetailModal';
 import { TimelineCard } from './components/TimelineCard';
@@ -30,7 +39,8 @@ import { TripsListPage } from './components/trips/TripsListPage';
 import { TripSettingsPage } from './components/trips/TripSettingsPage';
 import { WeatherBanner } from './components/WeatherBanner';
 import { clearVaultSession, getVaultSession } from './auth/crypto';
-import { BookingDocument, Expense, Flight, ItineraryStop, Trip, TripDay } from './types/trip';
+import { BookingDocument, Expense, Flight, ItineraryStop, PackingCategory, PackingItem, Trip, TripDay } from './types/trip';
+import { detectTransitConflict } from './utils/scheduleConflicts';
 import {
   useRustCore,
   useTransitLegs,
@@ -48,11 +58,15 @@ export function App() {
   });
   const [activeTab, setActiveTab] = useState<'timeline' | 'flights' | 'expenses'>('timeline');
   const [activeDayIdx, setActiveDayIdx] = useState<number>(0); // Day 1 by default
+  const [isPlacesToVisitActive, setIsPlacesToVisitActive] = useState<boolean>(false);
   const [selectedStop, setSelectedStop] = useState<ItineraryStop | null>(null);
   const [isReadinessOpen, setIsReadinessOpen] = useState(false);
+  const [isScratchpadOpen, setIsScratchpadOpen] = useState(false);
   const [isAuthOpen, setIsAuthOpen] = useState(false);
   const [isShareModalOpen, setIsShareModalOpen] = useState(false);
   const [isTripManagerOpen, setIsTripManagerOpen] = useState(false);
+  const [isAddStopModalOpen, setIsAddStopModalOpen] = useState(false);
+  const [isDeleteDayConfirming, setIsDeleteDayConfirming] = useState(false);
   const [mobileView, setMobileView] = useState<'timeline' | 'map'>('timeline');
   const [prefilledUuid, setPrefilledUuid] = useState<string | undefined>(undefined);
 
@@ -119,22 +133,31 @@ export function App() {
     };
 
   const { transitLegs, transitModes, handleToggleMode } = useTransitLegs(activeDay?.stops || []);
-  const { isDayOptimized, handleOptimizeDay } = useTripOptimization(
-    activeDay,
-    activeDayIdx,
-    setTrip
-  );
+  const {
+    isDayOptimized,
+    canUndo,
+    previewData,
+    handleOptimizeDay,
+    handleApplyOptimization,
+    handleCancelOptimization,
+    handleUndoOptimization,
+  } = useTripOptimization(activeDay, activeDayIdx, setTrip);
 
   // Filter flights scheduled on the active itinerary day
   const dayFlights = useMemo(() => {
     if (!trip?.flights || trip.flights.length === 0) return [];
-    return trip.flights.filter(
-      (f) =>
-        f.date === activeDay.dateStr ||
-        f.date === activeDay.dateStr.replace(/^[A-Za-z]+,\s*/, '') ||
-        (activeDayIdx === 0 && (!f.date || f.date.includes('2026-10-14') || f.date.includes('2027-05-10')))
-    );
-  }, [trip?.flights, activeDay.dateStr, activeDayIdx]);
+    return trip.flights.filter((f) => {
+      if (!f.date) return activeDayIdx === 0;
+      const normalizedFlightDate = f.date.trim();
+      const normalizedDayDate = activeDay.dateStr.replace(/^[A-Za-z]+,\s*/, '').trim();
+      const normalizedStartDate = (trip.startDate || '').trim();
+      return (
+        normalizedFlightDate === activeDay.dateStr ||
+        normalizedFlightDate === normalizedDayDate ||
+        (activeDayIdx === 0 && (normalizedFlightDate === normalizedStartDate || !f.date))
+      );
+    });
+  }, [trip?.flights, trip?.startDate, activeDay.dateStr, activeDayIdx]);
 
   // Flight Handlers
   const handleAddFlight = useCallback((flight: Flight) => {
@@ -189,6 +212,286 @@ export function App() {
     }));
   }, [setTrip]);
 
+  // Stop CRUD Handlers (Feature F4, Bug 4 & 5)
+  const handleAddStop = useCallback(
+    (stopData: Omit<ItineraryStop, 'id' | 'orderIndex'>) => {
+      setTrip((prev) => {
+        const updatedDays = [...prev.days];
+        const currentDay = updatedDays[activeDayIdx];
+        if (!currentDay) return prev;
+        const newStop: ItineraryStop = {
+          ...stopData,
+          id: `stop_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
+          orderIndex: (currentDay.stops?.length || 0) + 1,
+        };
+        updatedDays[activeDayIdx] = {
+          ...currentDay,
+          stops: [...(currentDay.stops || []), newStop],
+        };
+        return { ...prev, days: updatedDays };
+      });
+      confetti({ particleCount: 40, spread: 50 });
+    },
+    [activeDayIdx, setTrip]
+  );
+
+  const handleUpdateStop = useCallback(
+    (stopId: string, updated: Partial<ItineraryStop>) => {
+      setTrip((prev) => {
+        const updatedDays = [...prev.days];
+        const currentDay = updatedDays[activeDayIdx];
+        if (!currentDay) return prev;
+        updatedDays[activeDayIdx] = {
+          ...currentDay,
+          stops: currentDay.stops.map((s) => (s.id === stopId ? { ...s, ...updated } : s)),
+        };
+        return { ...prev, days: updatedDays };
+      });
+      setSelectedStop((prev) => (prev && prev.id === stopId ? { ...prev, ...updated } : prev));
+    },
+    [activeDayIdx, setTrip]
+  );
+
+  const handleDeleteStop = useCallback(
+    (stopId: string) => {
+      setTrip((prev) => {
+        const updatedDays = [...prev.days];
+        const currentDay = updatedDays[activeDayIdx];
+        if (!currentDay) return prev;
+        const remainingStops = currentDay.stops
+          .filter((s) => s.id !== stopId)
+          .map((s, idx) => ({ ...s, orderIndex: idx + 1 }));
+        updatedDays[activeDayIdx] = {
+          ...currentDay,
+          stops: remainingStops,
+        };
+        return { ...prev, days: updatedDays };
+      });
+      setSelectedStop((prev) => (prev?.id === stopId ? null : prev));
+    },
+    [activeDayIdx, setTrip]
+  );
+
+  const handleMoveStopToDay = useCallback(
+    (stopId: string, targetDayId: string) => {
+      setTrip((prev) => {
+        const updatedDays = [...prev.days];
+        const sourceDayIdx = updatedDays.findIndex((d) => d.id === activeDay.id);
+        const targetDayIdx = updatedDays.findIndex((d) => d.id === targetDayId);
+        if (sourceDayIdx === -1 || targetDayIdx === -1) return prev;
+
+        const stopToMove = updatedDays[sourceDayIdx].stops.find((s) => s.id === stopId);
+        if (!stopToMove) return prev;
+
+        // Remove from source day and re-index
+        updatedDays[sourceDayIdx] = {
+          ...updatedDays[sourceDayIdx],
+          stops: updatedDays[sourceDayIdx].stops
+            .filter((s) => s.id !== stopId)
+            .map((s, idx) => ({ ...s, orderIndex: idx + 1 })),
+        };
+
+        // Append to target day
+        const targetStops = updatedDays[targetDayIdx].stops || [];
+        updatedDays[targetDayIdx] = {
+          ...updatedDays[targetDayIdx],
+          stops: [
+            ...targetStops,
+            { ...stopToMove, orderIndex: targetStops.length + 1 },
+          ],
+        };
+
+        return { ...prev, days: updatedDays };
+      });
+      setSelectedStop(null);
+      confetti({ particleCount: 50, spread: 60 });
+    },
+    [activeDay.id, setTrip]
+  );
+
+  // Places to Visit / Ideas Bucket Handlers (Feature F1)
+  const handleAddPlaceToVisit = useCallback(
+    (placeData: Omit<ItineraryStop, 'id' | 'orderIndex'>) => {
+      setTrip((prev) => {
+        const currentPlaces = prev.placesToVisit || [];
+        const newPlace: ItineraryStop = {
+          ...placeData,
+          id: `idea_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
+          orderIndex: currentPlaces.length + 1,
+        };
+        return {
+          ...prev,
+          placesToVisit: [...currentPlaces, newPlace],
+        };
+      });
+      confetti({ particleCount: 30, spread: 45 });
+    },
+    [setTrip]
+  );
+
+  const handleDeletePlaceToVisit = useCallback(
+    (placeId: string) => {
+      setTrip((prev) => ({
+        ...prev,
+        placesToVisit: (prev.placesToVisit || []).filter((p) => p.id !== placeId),
+      }));
+    },
+    [setTrip]
+  );
+
+  const handleUpdatePlaceToVisit = useCallback(
+    (updatedPlace: ItineraryStop) => {
+      setTrip((prev) => ({
+        ...prev,
+        placesToVisit: (prev.placesToVisit || []).map((p) =>
+          p.id === updatedPlace.id ? updatedPlace : p
+        ),
+      }));
+    },
+    [setTrip]
+  );
+
+  const handleAssignPlaceToDay = useCallback(
+    (placeId: string, dayIndex: number) => {
+      setTrip((prev) => {
+        const place = (prev.placesToVisit || []).find((p) => p.id === placeId);
+        if (!place) return prev;
+
+        const updatedPlaces = (prev.placesToVisit || []).filter((p) => p.id !== placeId);
+        const updatedDays = [...prev.days];
+        const targetDay = updatedDays[dayIndex];
+        if (!targetDay) return prev;
+
+        const targetStops = targetDay.stops || [];
+        const newStop: ItineraryStop = {
+          ...place,
+          id: `stop_${Date.now()}`,
+          orderIndex: targetStops.length + 1,
+        };
+
+        updatedDays[dayIndex] = {
+          ...targetDay,
+          stops: [...targetStops, newStop],
+        };
+
+        return {
+          ...prev,
+          placesToVisit: updatedPlaces,
+          days: updatedDays,
+        };
+      });
+      setActiveDayIdx(dayIndex);
+      setIsPlacesToVisitActive(false);
+      confetti({ particleCount: 50, spread: 60 });
+    },
+    [setTrip]
+  );
+
+  const handleMoveStopToIdeas = useCallback(
+    (stop: ItineraryStop) => {
+      setTrip((prev) => {
+        const updatedDays = [...prev.days];
+        const currentDay = updatedDays[activeDayIdx];
+        if (!currentDay) return prev;
+
+        // Remove from day stops and re-index
+        const remainingStops = currentDay.stops
+          .filter((s) => s.id !== stop.id)
+          .map((s, idx) => ({ ...s, orderIndex: idx + 1 }));
+
+        updatedDays[activeDayIdx] = {
+          ...currentDay,
+          stops: remainingStops,
+        };
+
+        const currentPlaces = prev.placesToVisit || [];
+        const unassignedIdea: ItineraryStop = {
+          ...stop,
+          orderIndex: currentPlaces.length + 1,
+        };
+
+        return {
+          ...prev,
+          days: updatedDays,
+          placesToVisit: [...currentPlaces, unassignedIdea],
+        };
+      });
+      setSelectedStop(null);
+      confetti({ particleCount: 35, spread: 45 });
+    },
+    [activeDayIdx, setTrip]
+  );
+
+  // Day CRUD Handlers (Feature F5, Bug 6)
+  const handleAddDay = useCallback(() => {
+    setTrip((prev) => {
+      const nextDayNum = prev.days.length + 1;
+      const lastDay = prev.days[prev.days.length - 1];
+      let nextDateStr = `Day ${nextDayNum}`;
+
+      if (lastDay?.dateStr) {
+        const parsedMs = Date.parse(lastDay.dateStr);
+        if (!isNaN(parsedMs)) {
+          const nextDate = new Date(parsedMs);
+          nextDate.setDate(nextDate.getDate() + 1);
+          nextDateStr = nextDate.toISOString().split('T')[0];
+        }
+      }
+
+      const dayColors = ['#3B82F6', '#10B981', '#F59E0B', '#8B5CF6', '#EC4899', '#06B6D4'];
+      const themeColor = dayColors[(nextDayNum - 1) % dayColors.length];
+
+      const newDay: TripDay = {
+        id: `day_${Date.now()}_${nextDayNum}`,
+        dayNumber: nextDayNum,
+        dateStr: nextDateStr,
+        title: `Day ${nextDayNum} Exploration`,
+        themeColor,
+        weather: {
+          tempC: 22,
+          highC: 24,
+          lowC: 16,
+          condition: 'sunny',
+          conditionText: 'Fair',
+          rainProbability: 0,
+          humidity: 50,
+          uvIndex: 4,
+          clothingTip: 'Casual daywear and comfortable shoes for exploring.',
+          hourly: [],
+        },
+        stops: [],
+      };
+
+      return {
+        ...prev,
+        days: [...prev.days, newDay],
+      };
+    });
+
+    setActiveDayIdx(trip.days.length);
+    confetti({ particleCount: 50, spread: 60 });
+  }, [trip.days.length, setTrip, setActiveDayIdx]);
+
+  const handleDeleteDay = useCallback(
+    (dayIdxToDelete: number) => {
+      if (trip.days.length <= 1) return;
+      setTrip((prev) => {
+        const filteredDays = prev.days.filter((_, idx) => idx !== dayIdxToDelete);
+        const renumberedDays = filteredDays.map((d, idx) => ({
+          ...d,
+          dayNumber: idx + 1,
+        }));
+        return {
+          ...prev,
+          days: renumberedDays,
+        };
+      });
+      setActiveDayIdx((prevIdx) => Math.max(0, Math.min(prevIdx, trip.days.length - 2)));
+      setIsDeleteDayConfirming(false);
+    },
+    [trip.days.length, setTrip, setActiveDayIdx]
+  );
+
   // Import Handler
   const handleImportSuccess = useCallback((importedTrip: Trip) => {
     setTrip(importedTrip);
@@ -215,6 +518,55 @@ export function App() {
       };
     });
   }, [setTrip]);
+
+  // Packing List Handlers (Feature F7)
+  const handleTogglePackingItem = useCallback(
+    (id: string) => {
+      setTrip((prev) => {
+        const currentList = prev.packingList || [];
+        const updatedList = currentList.map((item) =>
+          item.id === id ? { ...item, packed: !item.packed } : item
+        );
+        return {
+          ...prev,
+          packingList: updatedList,
+        };
+      });
+    },
+    [setTrip]
+  );
+
+  const handleAddPackingItem = useCallback(
+    (category: PackingCategory, name: string) => {
+      setTrip((prev) => {
+        const currentList = prev.packingList || [];
+        const newItem: PackingItem = {
+          id: `pack_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
+          name,
+          category,
+          packed: false,
+        };
+        return {
+          ...prev,
+          packingList: [...currentList, newItem],
+        };
+      });
+    },
+    [setTrip]
+  );
+
+  const handleDeletePackingItem = useCallback(
+    (id: string) => {
+      setTrip((prev) => {
+        const currentList = prev.packingList || [];
+        return {
+          ...prev,
+          packingList: currentList.filter((item) => item.id !== id),
+        };
+      });
+    },
+    [setTrip]
+  );
 
   // If a private trip link failed guest verification
   if (guestError) {
@@ -404,6 +756,15 @@ export function App() {
             <div className="nav-right-actions">
               <button
                 className="share-export-nav-btn"
+                onClick={() => setIsScratchpadOpen(true)}
+                title="Trip scratchpad, emergency contacts & day notes"
+              >
+                <FileText size={14} />
+                <span>Notes &amp; Emergency</span>
+              </button>
+
+              <button
+                className="share-export-nav-btn"
                 onClick={() => setIsShareModalOpen(true)}
                 title="Invite companion via private link or export JSON"
               >
@@ -416,15 +777,35 @@ export function App() {
           {/* 3. TAB CONTENT */}
           {activeTab === 'timeline' && (
             <>
-              {/* Horizontal Day Selector Tabs */}
+              {/* Horizontal Day Selector Tabs with Ideas Bucket */}
               <DaySelector
                 days={trip.days}
                 activeDayIndex={activeDayIdx}
-                onSelectDay={setActiveDayIdx}
+                placesCount={trip.placesToVisit?.length || 0}
+                isPlacesActive={isPlacesToVisitActive}
+                onSelectPlaces={() => setIsPlacesToVisitActive(true)}
+                onSelectDay={(idx) => {
+                  setIsPlacesToVisitActive(false);
+                  setActiveDayIdx(idx);
+                }}
+                onAddDay={handleAddDay}
               />
 
-              {/* Mobile View Switcher (Visible on < 1024px screens) */}
-              <div className="mobile-view-tabs">
+              {isPlacesToVisitActive ? (
+                <main className="subview-workspace" style={{ maxWidth: '100%', padding: '0 20px' }}>
+                  <PlacesToVisitDrawer
+                    places={trip.placesToVisit || []}
+                    days={trip.days}
+                    onAddPlace={handleAddPlaceToVisit}
+                    onDeletePlace={handleDeletePlaceToVisit}
+                    onAssignToDay={handleAssignPlaceToDay}
+                    onUpdatePlace={handleUpdatePlaceToVisit}
+                  />
+                </main>
+              ) : (
+                <>
+                  {/* Mobile View Switcher (Visible on < 1024px screens) */}
+                  <div className="mobile-view-tabs">
                 <button
                   className={`mobile-tab-btn ${mobileView === 'timeline' ? 'active' : ''}`}
                   onClick={() => setMobileView('timeline')}
@@ -457,14 +838,93 @@ export function App() {
                       </p>
                     </div>
 
-                    <button
-                      className={`optimize-pill-btn ${isDayOptimized ? 'optimized' : ''}`}
-                      onClick={handleOptimizeDay}
-                      title="Run 2-opt Traveling Salesperson route optimizer via Rust WebAssembly"
-                    >
-                      {isDayOptimized ? <Zap size={14} /> : <Sparkles size={14} />}
-                      <span>{isDayOptimized ? 'Optimized' : 'Optimize Route (WASM)'}</span>
-                    </button>
+                    <div className="flex items-center gap-2">
+                      {trip.days.length > 1 && (
+                        isDeleteDayConfirming ? (
+                          <div className="flex items-center gap-1.5">
+                            <button
+                              className="cancel-delete-btn text-xs py-1 px-2.5"
+                              onClick={() => setIsDeleteDayConfirming(false)}
+                            >
+                              Cancel
+                            </button>
+                            <button
+                              className="confirm-delete-btn text-xs py-1 px-2.5"
+                              onClick={() => handleDeleteDay(activeDayIdx)}
+                            >
+                              Delete Day {activeDay.dayNumber}
+                            </button>
+                          </div>
+                        ) : (
+                          <button
+                            className="day-delete-trigger-btn"
+                            onClick={() => setIsDeleteDayConfirming(true)}
+                            title={`Delete Day ${activeDay.dayNumber}`}
+                            style={{
+                              background: 'var(--bg-card)',
+                              border: '1px solid var(--border-light)',
+                              borderRadius: 'var(--radius-pill)',
+                              padding: '5px 10px',
+                              color: 'var(--text-tertiary)',
+                              cursor: 'pointer',
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              gap: '4px',
+                              fontSize: '12px',
+                            }}
+                          >
+                            <Trash2 size={13} />
+                            <span>Delete Day</span>
+                          </button>
+                        )
+                      )}
+
+                      <button
+                        className="day-delete-trigger-btn"
+                        onClick={() => setIsScratchpadOpen(true)}
+                        title={activeDay.notes ? `Day ${activeDay.dayNumber} Notes: ${activeDay.notes}` : `Add notes for Day ${activeDay.dayNumber}`}
+                        style={{
+                          background: activeDay.notes ? 'rgba(245, 158, 11, 0.12)' : 'var(--bg-card)',
+                          border: activeDay.notes ? '1px solid rgba(245, 158, 11, 0.4)' : '1px solid var(--border-light)',
+                          borderRadius: 'var(--radius-pill)',
+                          padding: '5px 10px',
+                          color: activeDay.notes ? '#D97706' : 'var(--text-tertiary)',
+                          cursor: 'pointer',
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: '4px',
+                          fontSize: '12px',
+                        }}
+                      >
+                        <FileText size={13} />
+                        <span>{activeDay.notes ? 'Day Note' : 'Add Note'}</span>
+                      </button>
+
+                      <button
+                        className={`optimize-pill-btn ${isDayOptimized ? 'optimized' : ''}`}
+                        onClick={handleOptimizeDay}
+                        title="Analyze and preview 2-opt Traveling Salesperson route optimization via Rust WebAssembly"
+                      >
+                        {isDayOptimized ? <Zap size={14} /> : <Sparkles size={14} />}
+                        <span>{isDayOptimized ? 'Optimized' : 'Optimize Route (WASM)'}</span>
+                      </button>
+
+                      {canUndo && (
+                        <button
+                          className="optimize-pill-btn"
+                          onClick={handleUndoOptimization}
+                          title="Undo route optimization and restore previous itinerary sequence"
+                          style={{
+                            borderColor: '#F59E0B',
+                            color: '#D97706',
+                            backgroundColor: 'rgba(245, 158, 11, 0.08)',
+                          }}
+                        >
+                          <RotateCcw size={14} />
+                          <span>Undo</span>
+                        </button>
+                      )}
+                    </div>
                   </div>
 
                   {/* Weather Prediction Card */}
@@ -497,10 +957,37 @@ export function App() {
                           <DistancePill
                             leg={transitLegs[index]}
                             onToggleMode={handleToggleMode}
+                            conflict={
+                              index < activeDay.stops.length - 1
+                                ? detectTransitConflict(
+                                    stop,
+                                    activeDay.stops[index + 1],
+                                    transitLegs[index]?.durationMinutes || 0
+                                  )
+                                : null
+                            }
                           />
                         )}
                       </React.Fragment>
                     ))}
+
+                    {/* + Add Place to Day Action Button */}
+                    <div className="add-place-action-container mt-3 mb-2">
+                      <button
+                        className="secondary-action-btn w-full flex items-center justify-center gap-2 py-2.5"
+                        onClick={() => setIsAddStopModalOpen(true)}
+                        style={{
+                          borderStyle: 'dashed',
+                          borderWidth: '1.5px',
+                          backgroundColor: 'var(--bg-card)',
+                          borderRadius: 'var(--radius-lg)',
+                          cursor: 'pointer',
+                        }}
+                      >
+                        <Plus size={15} />
+                        <span>Add Place to Day {activeDay.dayNumber}</span>
+                      </button>
+                    </div>
                   </div>
                 </section>
 
@@ -513,12 +1000,18 @@ export function App() {
                     onSelectStop={setSelectedStop}
                     onOptimizeDay={handleOptimizeDay}
                     isOptimized={isDayOptimized}
+                    canUndo={canUndo}
+                    onUndoOptimization={handleUndoOptimization}
                     transitModes={transitModes}
+                    selectedStopId={selectedStop?.id}
+                    tripTitle={trip.title}
                   />
                 </section>
               </main>
             </>
           )}
+        </>
+      )}
 
           {/* TAB 2: BOOKINGS, TICKETS, HOTEL VOUCHERS & TRAVEL DOCUMENTS */}
           {activeTab === 'flights' && (
@@ -570,14 +1063,59 @@ export function App() {
         isOpen={isReadinessOpen}
         score={trip.readinessScore}
         items={trip.readinessChecklist}
+        packingList={trip.packingList || []}
         onToggleItem={handleToggleReadinessItem}
+        onTogglePackingItem={handleTogglePackingItem}
+        onAddPackingItem={handleAddPackingItem}
+        onDeletePackingItem={handleDeletePackingItem}
         onClose={() => setIsReadinessOpen(false)}
       />
+
+      <ScratchpadModal
+        isOpen={isScratchpadOpen}
+        trip={trip}
+        activeDay={activeDay}
+        onUpdateTrip={handleUpdateTrip}
+        onClose={() => setIsScratchpadOpen(false)}
+      />
+
+      <PrintTravelPacket trip={trip} />
 
       <StopDetailModal
         stop={selectedStop}
         themeColor={activeDay.themeColor}
+        days={trip.days}
+        currentDayId={activeDay.id}
         onClose={() => setSelectedStop(null)}
+        onUpdateStop={handleUpdateStop}
+        onDeleteStop={handleDeleteStop}
+        onMoveStopToDay={handleMoveStopToDay}
+        onMoveStopToIdeas={handleMoveStopToIdeas}
+      />
+
+      <OptimizeRouteModal
+        preview={previewData}
+        themeColor={activeDay.themeColor}
+        onApply={handleApplyOptimization}
+        onClose={handleCancelOptimization}
+      />
+
+      <AddStopModal
+        isOpen={isAddStopModalOpen}
+        dayNumber={activeDay.dayNumber}
+        themeColor={activeDay.themeColor}
+        defaultStartTime={
+          activeDay.stops && activeDay.stops.length > 0
+            ? activeDay.stops[activeDay.stops.length - 1].startTime
+            : trip.startTime || '09:30 AM'
+        }
+        fallbackCoordinates={
+          activeDay.stops && activeDay.stops.length > 0
+            ? activeDay.stops[activeDay.stops.length - 1].coordinates
+            : undefined
+        }
+        onClose={() => setIsAddStopModalOpen(false)}
+        onAddStop={handleAddStop}
       />
 
       <AuthModal

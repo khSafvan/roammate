@@ -128,11 +128,11 @@ export const DocumentsAndTicketsHub: React.FC<DocumentsAndTicketsHubProps> = ({
       const q = searchQuery.toLowerCase();
       result = result.filter(
         (f) =>
-          f.flightNumber.toLowerCase().includes(q) ||
-          f.carrier.toLowerCase().includes(q) ||
-          f.departure.airport.toLowerCase().includes(q) ||
-          f.arrival.airport.toLowerCase().includes(q) ||
-          f.bookingRef?.toLowerCase().includes(q)
+          f.flightNumber?.toLowerCase()?.includes(q) ||
+          f.carrier?.toLowerCase()?.includes(q) ||
+          f.departure?.airport?.toLowerCase()?.includes(q) ||
+          f.arrival?.airport?.toLowerCase()?.includes(q) ||
+          f.bookingRef?.toLowerCase()?.includes(q)
       );
     }
     return result;

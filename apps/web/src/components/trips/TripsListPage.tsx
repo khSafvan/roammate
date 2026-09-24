@@ -60,12 +60,22 @@ export const TripsListPage: React.FC<TripsListPageProps> = ({
 
   // Filter trips
   const filteredTrips = useMemo(() => {
-    const today = new Date().toISOString().split('T')[0];
+    const todayStr = new Date().toISOString().split('T')[0];
+    const todayTs = Date.parse(todayStr);
+
     if (filter === 'upcoming') {
-      return trips.filter((t) => !t.endDate || t.endDate >= today);
+      return trips.filter((t) => {
+        if (!t.endDate) return true;
+        const endTs = Date.parse(t.endDate);
+        return isNaN(endTs) ? t.endDate >= todayStr : endTs >= todayTs;
+      });
     }
     if (filter === 'completed') {
-      return trips.filter((t) => t.endDate && t.endDate < today);
+      return trips.filter((t) => {
+        if (!t.endDate) return false;
+        const endTs = Date.parse(t.endDate);
+        return isNaN(endTs) ? t.endDate < todayStr : endTs < todayTs;
+      });
     }
     return trips;
   }, [trips, filter]);

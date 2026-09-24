@@ -62,6 +62,22 @@ export interface TripDay {
   themeColor: string;
   weather: DayWeather;
   stops: ItineraryStop[];
+  notes?: string; // Day-level notes / scratchpad
+}
+
+export type PackingCategory =
+  | 'Clothes'
+  | 'Toiletries'
+  | 'Electronics'
+  | 'Documents'
+  | 'Essentials';
+
+export interface PackingItem {
+  id: string;
+  category: PackingCategory;
+  name: string;
+  packed: boolean;
+  quantity?: number;
 }
 
 export interface ReadinessItem {
@@ -124,7 +140,22 @@ export interface Expense {
   amount: number;
   currency: string;
   paidBy: string;
+  splitWith?: string[]; // Array of participant names (defaults to all travelers if omitted or empty)
   notes?: string;
+  isSettlement?: boolean; // Marker for debt settlement reimbursement transactions
+}
+
+export interface DebtSettlement {
+  from: string;
+  to: string;
+  amount: number;
+}
+
+export interface TravelerBalance {
+  name: string;
+  paid: number;
+  share: number;
+  net: number; // positive = owed money (+), negative = owes money (-)
 }
 
 export type ReservationCategory = 'flight' | 'hotel' | 'activity' | 'transit' | 'doc';
@@ -167,8 +198,12 @@ export interface Trip {
   flights: Flight[];
   documents?: BookingDocument[];
   days: TripDay[];
+  placesToVisit?: ItineraryStop[]; // Unscheduled Ideas / Places to Visit bucket
   expenses: Expense[];
   readinessChecklist: ReadinessItem[];
+  packingList?: PackingItem[]; // Categorized Packing Checklist
+  generalNotes?: string; // Scratchpad & general trip notes
+  emergencyContacts?: string; // Emergency numbers, embassy contacts, door codes
   createdAt?: number;
   updatedAt?: number;
 }
