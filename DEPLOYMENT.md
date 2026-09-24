@@ -8,8 +8,8 @@ This guide covers everything required to configure, obtain keys for, and deploy 
 
 roammate consists of three decoupled components orchestrated within a single monorepo:
 
-1. **Frontend (`apps/web`)**: React 18 SPA + Vite + Rust WebAssembly + PWA Offline Service Worker + TerraWay GPX Vector Map engine.
-2. **Backend API (`apps/api`)**: Cloudflare Worker + Hono edge router providing zero-knowledge BIP-39 authentication, itinerary synchronization, read-only link sharing, and 3-month account auto-pruning.
+1. **Frontend (`apps/web`)**: React 18 SPA + Vite + Rust WebAssembly + PWA Service Worker + TerraWay GPX vector map engine. Full stop/day CRUD, TSP route optimizer with undo, expense settlement, packing lists, iCal export, scratchpad, printable travel packet, and schedule conflict detection. 87 Vitest unit tests passing.
+2. **Backend API (`apps/api`)**: Cloudflare Worker + Hono edge router providing zero-knowledge BIP-39 authentication, itinerary sync, read-only share links, and 90-day auto-pruning.
 3. **Database (Turso libSQL)**: Globally distributed serverless SQLite database.
 
 ---
