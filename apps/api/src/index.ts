@@ -1,11 +1,15 @@
 import { Hono } from 'hono';
+import { authRouter } from './routes/auth';
+import { syncRouter } from './routes/sync';
+import { placesRouter } from './routes/places';
+
 import { cors } from 'hono/cors';
 import { sign, verify } from 'hono/jwt';
 import { Client, createClient } from '@libsql/client/web';
 import { Look, OutboxEntry, SyncRecord } from '@roammate/shared';
 import { parseOpeningHours, resolveFlightNumber } from '@roammate/core';
 
-type Bindings = {
+export type Bindings = {
   TURSO_DATABASE_URL?: string;
   TURSO_AUTH_TOKEN?: string;
   PASSWORD?: string;
@@ -14,6 +18,8 @@ type Bindings = {
   JWT_SECRET?: string;
   ALLOWED_ORIGINS?: string;
   BUCKET?: any; // Cloudflare R2 bucket binding if configured
+  FOURSQUARE_API_KEY?: string;
+  YELP_API_KEY?: string;
 };
 
 const app = new Hono<{ Bindings: Bindings }>();
@@ -36,12 +42,12 @@ app.use('*', async (c, next) => {
 });
 
 // Helper: Configured Password
-function getPassword(c: any): string | null {
+export function getPassword(c: any): string | null {
   return c.env.PASSWORD || c.env.PASSCODE || c.env.AUTH_PASSCODE || null;
 }
 
 // Helper: JWT Secret
-function getJwtSecret(c: any): string {
+export function getJwtSecret(c: any): string {
   if (!c.env.JWT_SECRET) {
     throw new Error('JWT_SECRET environment variable is missing');
   }
@@ -49,7 +55,7 @@ function getJwtSecret(c: any): string {
 }
 
 // Helper: Bearer / Password Auth Guard
-async function verifyAuth(c: any): Promise<boolean> {
+export async function verifyAuth(c: any): Promise<boolean> {
   const required = getPassword(c);
   if (!required) return false;
 
@@ -77,7 +83,7 @@ async function verifyAuth(c: any): Promise<boolean> {
 }
 
 // Helper: Auto-ensure single-user trips table exists
-async function ensureTables(turso: Client): Promise<void> {
+export async function ensureTables(turso: Client): Promise<void> {
   try {
     await turso.execute(`
       CREATE TABLE IF NOT EXISTS trips (
@@ -183,188 +189,16 @@ app.get('/health', (c) => {
   return c.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
-// --- Auth Endpoints ---
-
-// 1. Password Login (POST /auth/login)
-const handleLogin = async (c: any) => {
-  let body: { password?: string; passcode?: string } = {};
-  try {
-    body = await c.req.json();
-  } catch {}
-
-  const required = getPassword(c);
-  const input = (body.password || body.passcode || '').trim();
-
-  if (!required) {
-    return c.json({ error: 'PASSWORD is not configured on the backend. Please set PASSWORD in Worker secrets.' }, 401);
-  }
-
-  if (!input || input !== required) {
-    return c.json({ error: 'Incorrect password' }, 401);
-  }
-
-  const token = await sign(
-    { authenticated: true, iat: Math.floor(Date.now() / 1000) },
-    getJwtSecret(c)
-  );
-
-  return c.json({
-    success: true,
-    token,
-    authenticated: true,
-  });
-};
-
-app.post('/auth/login', handleLogin);
-app.post('/api/auth/login', handleLogin);
-
-// 2. Get Current Status (/me)
-const handleMe = async (c: any) => {
-  const isAuth = await verifyAuth(c);
-  const required = getPassword(c);
-
-  if (!isAuth) {
-    return c.json({ authenticated: false, passwordProtected: !!required }, 401);
-  }
-
-  return c.json({ authenticated: true, passwordProtected: !!required });
-};
-
-app.get('/me', handleMe);
-app.get('/api/me', handleMe);
-
-// 3. Check Server Password Status (/auth/status)
-const handleAuthStatus = (c: any) => {
-  const required = getPassword(c);
-  return c.json({
-    configured: Boolean(required),
-    error: required ? undefined : 'PASSWORD environment variable is not configured on the server.',
-  });
-};
-
-app.get('/auth/status', handleAuthStatus);
-app.get('/api/auth/status', handleAuthStatus);
-
 // --- Sync Routes (Offline Push / Pull) ---
 
-// 3. Pull Sync: GET /sync/pull?since=...
-const handleSyncPull = async (c: any) => {
-  if (!(await verifyAuth(c))) {
-    return c.json({ error: 'Unauthorized: valid password required' }, 401);
-  }
+app.route('/auth', authRouter);
+app.route('/api/auth', authRouter);
+app.route('/', authRouter);
+app.route('/api', authRouter);
 
-  const since = parseInt(c.req.query('since') || '0', 10);
-  const serverTimestamp = Date.now();
 
-  if (!c.env.TURSO_DATABASE_URL || !c.env.TURSO_AUTH_TOKEN) {
-    return c.json({ serverTimestamp, records: [] });
-  }
-
-  const turso = createClient({
-    url: c.env.TURSO_DATABASE_URL,
-    authToken: c.env.TURSO_AUTH_TOKEN,
-  });
-
-  await ensureTables(turso);
-
-  const result = await turso.execute({
-    sql: `SELECT id, data, updated_at, deleted_at 
-          FROM trips 
-          WHERE updated_at > ? 
-          ORDER BY updated_at ASC`,
-    args: [since],
-  });
-
-  const records: SyncRecord[] = result.rows.map((row) => {
-    const isDeleted = row.deleted_at !== null && row.deleted_at !== undefined;
-    return {
-      id: row.id as string,
-      entity: 'trip',
-      op: isDeleted ? 'delete' : 'upsert',
-      data: isDeleted ? { id: row.id } : JSON.parse(row.data as string),
-      updatedAt: (row.updated_at as number) || serverTimestamp,
-    };
-  });
-
-  return c.json({ serverTimestamp, records });
-};
-
-app.get('/sync/pull', handleSyncPull);
-app.get('/api/sync/pull', handleSyncPull);
-
-// 4. Push Sync: POST /sync/push
-const handleSyncPush = async (c: any) => {
-  if (!(await verifyAuth(c))) {
-    return c.json({ error: 'Unauthorized: valid password required' }, 401);
-  }
-
-  const body = await c.req.json().catch(() => ({}));
-  const mutations: OutboxEntry[] = Array.isArray(body.mutations) ? body.mutations : [];
-  const serverTimestamp = Date.now();
-
-  if (!c.env.TURSO_DATABASE_URL || !c.env.TURSO_AUTH_TOKEN) {
-    return c.json({ success: true, applied: mutations.length, serverTimestamp });
-  }
-
-  const turso = createClient({
-    url: c.env.TURSO_DATABASE_URL,
-    authToken: c.env.TURSO_AUTH_TOKEN,
-  });
-
-  await ensureTables(turso);
-
-  try {
-    const stmts = [];
-    for (const mut of mutations) {
-      if (mut.entity === 'trip' || mut.entity === 'itinerary') {
-        if (mut.op === 'delete') {
-          stmts.push({
-            sql: `UPDATE trips 
-                  SET deleted_at = ?, updated_at = ? 
-                  WHERE id = ?`,
-            args: [serverTimestamp, serverTimestamp, mut.id],
-          });
-        } else {
-          const payload = mut.payload || {};
-          const title = payload.title || 'My Trip';
-          const destination = payload.destination || '';
-          stmts.push({
-            sql: `INSERT INTO trips (id, title, destination, start_date, end_date, data, updated_at, deleted_at) 
-                  VALUES (?, ?, ?, ?, ?, ?, ?, NULL)
-                  ON CONFLICT(id) DO UPDATE SET 
-                    title = excluded.title, 
-                    destination = excluded.destination,
-                    start_date = excluded.start_date,
-                    end_date = excluded.end_date,
-                    data = excluded.data, 
-                    updated_at = excluded.updated_at,
-                    deleted_at = NULL`,
-            args: [
-              mut.id,
-              title,
-              destination,
-              payload.startDate || null,
-              payload.endDate || null,
-              JSON.stringify(payload),
-              serverTimestamp,
-            ],
-          });
-        }
-      }
-    }
-    
-    if (stmts.length > 0) {
-      await turso.batch(stmts, "write");
-    }
-    return c.json({ success: true, applied: mutations.length, serverTimestamp });
-  } catch (err) {
-    console.error('Sync push failed:', err);
-    return c.json({ error: 'Failed to process sync batch', details: (err as Error).message }, 500);
-  }
-};
-
-app.post('/sync/push', handleSyncPush);
-app.post('/api/sync/push', handleSyncPush);
+app.route('/sync', syncRouter);
+app.route('/api/sync', syncRouter);
 
 // --- Direct Trips Endpoints ---
 
@@ -820,174 +654,8 @@ const handleUploadGet = async (c: any) => {
 app.get('/uploads/:key{.+}', handleUploadGet);
 app.get('/api/uploads/:key{.+}', handleUploadGet);
 
-// 16. Places Search Proxy and Cache
-app.get('/api/places/search', async (c) => {
-  const q = c.req.query('q');
-  if (!q) return c.json([]);
-
-  const now = Date.now();
-  const foursquareApiKey = c.env.FOURSQUARE_API_KEY;
-  const yelpApiKey = c.env.YELP_API_KEY;
-
-  try {
-    let turso: Client | null = null;
-    if (c.env.TURSO_DATABASE_URL && c.env.TURSO_AUTH_TOKEN) {
-      turso = createClient({
-        url: c.env.TURSO_DATABASE_URL,
-        authToken: c.env.TURSO_AUTH_TOKEN,
-      });
-      await ensureTables(turso);
-    }
-
-    let results = [];
-
-    // --- 1. Foursquare Places API (Primary for Places) ---
-    if (foursquareApiKey) {
-      const fsqUrl = \`https://api.foursquare.com/v3/places/search?query=\${encodeURIComponent(q)}&limit=5&fields=fsq_id,name,location,rating,geocodes,categories,website,tel\`;
-      let fsqRes;
-      try {
-        fsqRes = await fetch(fsqUrl, {
-          headers: {
-            'Accept': 'application/json',
-            'Authorization': foursquareApiKey
-          }
-        });
-      } catch (err) {
-        console.warn('Foursquare API network error, falling back:', err);
-      }
-      
-      if (fsqRes && fsqRes.ok) {
-        const fsqData: any = await fsqRes.json();
-        if (fsqData.results && fsqData.results.length > 0) {
-          results = fsqData.results.map((place: any) => {
-            return {
-              placeId: \`fsq_\${place.fsq_id}\`,
-              title: place.name || q,
-              address: place.location?.formatted_address,
-              coordinates: { 
-                latitude: place.geocodes?.main?.latitude, 
-                longitude: place.geocodes?.main?.longitude 
-              },
-              osmClass: 'foursquare',
-              osmType: place.categories?.[0]?.name,
-              openTime: undefined,
-              closeTime: undefined,
-              website: place.website,
-              phoneNumber: place.tel,
-              rating: place.rating ? place.rating / 2 : undefined // Foursquare rating is out of 10
-            };
-          });
-        }
-      }
-    }
-    
-    // --- 2. Yelp Fusion API (Backup for Attractions & Restaurants) ---
-    if (results.length === 0 && yelpApiKey) {
-      const term = q.split(',')[0].trim();
-      const yelpUrl = \`https://api.yelp.com/v3/businesses/search?location=\${encodeURIComponent(q)}&term=\${encodeURIComponent(term)}&limit=5&sort_by=best_match\`;
-      let yelpRes;
-      try {
-        yelpRes = await fetch(yelpUrl, {
-          headers: {
-            'Accept': 'application/json',
-            'Authorization': \`Bearer \${yelpApiKey}\`
-          }
-        });
-      } catch (err) {
-        console.warn('Yelp API network error, falling back:', err);
-      }
-      
-      if (yelpRes && yelpRes.ok) {
-        const yelpData: any = await yelpRes.json();
-        if (yelpData.businesses && yelpData.businesses.length > 0) {
-          results = yelpData.businesses.map((biz: any) => {
-            return {
-              placeId: \`yelp_\${biz.id}\`,
-              title: biz.name || q,
-              address: biz.location?.display_address?.join(', '),
-              coordinates: { latitude: biz.coordinates?.latitude, longitude: biz.coordinates?.longitude },
-              osmClass: 'yelp',
-              osmType: biz.categories?.[0]?.alias,
-              openTime: undefined,
-              closeTime: undefined,
-              website: biz.url,
-              phoneNumber: biz.display_phone || biz.phone,
-              rating: biz.rating // Yelp rating is already out of 5
-            };
-          });
-        }
-      }
-    }
-    
-    // --- 3. Nominatim Fallback (If no keys or no results) ---
-    if (results.length === 0) {
-      const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(q)}&addressdetails=1&extratags=1&limit=5`;
-      let res;
-      try {
-        res = await fetch(url, { headers: { 'Accept-Language': 'en', 'User-Agent': 'roammate/1.0' } });
-      } catch (err) {
-        console.warn('Nominatim API network error:', err);
-      }
-
-      if (res && res.ok) {
-        const data: any[] = await res.json();
-        results = await Promise.all(data.map(async (item: any) => {
-          const extratags = item.extratags || {};
-          const openTimeRaw = extratags.opening_hours;
-          
-          let openTime, closeTime;
-          if (openTimeRaw && typeof openTimeRaw === 'string') {
-            const parsedHours = parseOpeningHours(openTimeRaw);
-            openTime = parsedHours.openTime;
-            closeTime = parsedHours.closeTime;
-          }
-
-          return {
-            placeId: `osm_${item.osm_type}_${item.osm_id}`,
-            title: item.name || item.display_name?.split(',')[0] || q,
-            address: item.display_name,
-            coordinates: { latitude: parseFloat(item.lat), longitude: parseFloat(item.lon) },
-            osmClass: item.class,
-            osmType: item.type,
-            openTime,
-            closeTime,
-            website: extratags.website || extratags['contact:website'],
-            phoneNumber: extratags.phone || extratags['contact:phone'],
-            rating: parseFloat((Math.random() * 1.5 + 3.5).toFixed(1)),
-          };
-        }));
-      }
-    }
-
-    // Cache in Turso
-    if (turso && results.length > 0) {
-      for (const placeData of results) {
-        try {
-          await turso.execute({
-            sql: `INSERT INTO places (id, name, lat, lon, address, type, rating, open_time, close_time, website, phone, data, updated_at) 
-                  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-                  ON CONFLICT(id) DO UPDATE SET 
-                    name = excluded.name, address = excluded.address, rating = excluded.rating,
-                    open_time = excluded.open_time, close_time = excluded.close_time, updated_at = excluded.updated_at`,
-            args: [
-              placeData.placeId, placeData.title, placeData.coordinates.latitude || 0, placeData.coordinates.longitude || 0,
-              placeData.address || '', placeData.osmClass || '', placeData.rating || 0,
-              placeData.openTime || null, placeData.closeTime || null, placeData.website || null, placeData.phoneNumber || null,
-              JSON.stringify(placeData), now
-            ],
-          });
-        } catch (dbErr) {
-          console.warn('Failed to cache place', dbErr);
-        }
-      }
-    }
-
-    return c.json(results);
-  } catch (err) {
-    console.error('Places search error:', err);
-    return c.json([]);
-  }
-});
+app.route('/places', placesRouter);
+app.route('/api/places', placesRouter);
 
 // 17. Flights Lookup API
 app.get('/api/flights/lookup', async (c) => {
