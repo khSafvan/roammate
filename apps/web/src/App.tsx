@@ -1,3 +1,4 @@
+import { useTransitLegs } from "./features/routing/useTransitLegs";
 import React, { Suspense, lazy, useCallback, useEffect, useMemo, useState } from 'react';
 import {
   AlertTriangle,
@@ -10,33 +11,33 @@ import {
   Trash2,
   Zap,
 } from 'lucide-react';
-import { AddStopModal } from './components/AddStopModal';
-import { DayNotesCard } from './components/DayNotesCard';
-import { PasscodeAuthModal } from './components/auth';
-import { AuthModal } from './components/AuthModal';
-import { DaySelector } from './components/DaySelector';
-import { DistancePill } from './components/DistancePill';
-const DocumentsAndTicketsHub = lazy(() => import('./components/documents/DocumentsAndTicketsHub').then(m => ({ default: m.DocumentsAndTicketsHub })));
-const ExpenseTracker = lazy(() => import('./components/ExpenseTracker').then(m => ({ default: m.ExpenseTracker })));
-import { Header } from './components/Header';
-import { OptimizeRouteModal } from './components/OptimizeRouteModal';
-const PlacesToVisitDrawer = lazy(() => import('./components/PlacesToVisitDrawer').then(m => ({ default: m.PlacesToVisitDrawer })));
-const PrintTravelPacket = lazy(() => import('./components/PrintTravelPacket').then(m => ({ default: m.PrintTravelPacket })));
-import { ReadinessModal } from './components/ReadinessModal';
-import { ScratchpadModal } from './components/ScratchpadModal';
-import { ShareModal } from './components/ShareModal';
-import { StopDetailModal } from './components/StopDetailModal';
-import { TimelineCard } from './components/TimelineCard';
-import { TimelineFlightCard } from './components/TimelineFlightCard';
-import { PlaceDetailView } from './components/places/PlaceDetailView';
-import { PlaceContextMenu } from './components/places/PlaceContextMenu';
-import { TripManagerModal } from './components/TripManagerModal';
-const TripsListPage = lazy(() => import('./components/trips/TripsListPage').then(m => ({ default: m.TripsListPage })));
-const TripSettingsPage = lazy(() => import('./components/trips/TripSettingsPage').then(m => ({ default: m.TripSettingsPage })));
-import { WeatherBanner } from './components/WeatherBanner';
-const PackingView = lazy(() => import('./components/outfits/PackingView').then(m => ({ default: m.PackingView })));
+import { AddStopModal } from './features/timeline/AddStopModal';
+import { DayNotesCard } from './features/trip-management/DayNotesCard';
+import { PasscodeAuthModal } from './features/auth';
+import { AuthModal } from './features/auth/AuthModal';
+import { DaySelector } from './features/timeline/DaySelector';
+import { DistancePill } from './components/ui/DistancePill';
+const DocumentsAndTicketsHub = lazy(() => import('./features/documents/DocumentsAndTicketsHub').then(m => ({ default: m.DocumentsAndTicketsHub })));
+const ExpenseTracker = lazy(() => import('./features/expenses/ExpenseTracker').then(m => ({ default: m.ExpenseTracker })));
+import { Header } from './components/ui/Header';
+import { OptimizeRouteModal } from './features/routing/OptimizeRouteModal';
+const PlacesToVisitDrawer = lazy(() => import('./features/timeline/PlacesToVisitDrawer').then(m => ({ default: m.PlacesToVisitDrawer })));
+const PrintTravelPacket = lazy(() => import('./features/trip-management/PrintTravelPacket').then(m => ({ default: m.PrintTravelPacket })));
+import { ReadinessModal } from './features/trip-management/ReadinessModal';
+import { ScratchpadModal } from './features/trip-management/ScratchpadModal';
+import { ShareModal } from './features/trip-management/ShareModal';
+import { StopDetailModal } from './features/timeline/StopDetailModal';
+import { TimelineCard } from './features/timeline/TimelineCard';
+import { TimelineFlightCard } from './features/timeline/TimelineFlightCard';
+import { PlaceDetailView } from './features/places/PlaceDetailView';
+import { PlaceContextMenu } from './features/places/PlaceContextMenu';
+import { TripManagerModal } from './features/trip-management/TripManagerModal';
+const TripsListPage = lazy(() => import('./pages/TripsListPage').then(m => ({ default: m.TripsListPage })));
+const TripSettingsPage = lazy(() => import('./pages/TripSettingsPage').then(m => ({ default: m.TripSettingsPage })));
+import { WeatherBanner } from './components/ui/WeatherBanner';
+const PackingView = lazy(() => import('./features/outfits/PackingView').then(m => ({ default: m.PackingView })));
 import { apiClient } from './auth/syncService';
-import { BookingDocument, Expense, Flight, ItineraryStop, Look, PackingCategory, PackingItem, StopCategory, Trip, TripDay } from './types/trip';
+import { BookingDocument, Expense, Flight, ItineraryStop, Look, PackingCategory, PackingItem, Trip, TripDay } from './types/trip';
 import {
   detectTransitConflict,
   getDayAnchors,
@@ -51,42 +52,52 @@ import { fetchHolidaysForRange } from './utils/holidayService';
 import { fetchWeeklyForecast, geocodeDestination, tripDayToIso } from './utils/weatherService';
 import { isPasswordConfigured } from './auth/syncService';
 import {
-  useTransitLegs,
+  
   useTripOptimization,
   useVault,
 } from './hooks';
 
 const InteractiveMap = lazy(() =>
-  import('./components/InteractiveMap').then((module) => ({ default: module.InteractiveMap }))
+  import('./features/routing/InteractiveMap').then((module) => ({ default: module.InteractiveMap }))
 );
 
-export function App() {
-  const [currentView, setCurrentView] = useState<'trips_list' | 'trip_detail' | 'trip_settings'>(() => {
-    const params = new URLSearchParams(window.location.search);
-    if (params.get('trip') || params.get('share') || params.get('view') === 'detail') {
-      return 'trip_detail';
-    }
-    return 'trips_list';
-  });
-  const [activeTab, setActiveTab] = useState<'timeline' | 'bookings' | 'expenses' | 'outfits'>(() => {
-    const params = new URLSearchParams(window.location.search);
-    return (params.get('tab') as any) || 'timeline';
-  });
+import { UIProvider, useUI } from './contexts/UIContext';
+
+function AppContent() {
+  const {
+    currentView,
+    activeTab,
+    mobileView,
+    isPlacesToVisitActive,
+    isReadinessOpen,
+    isScratchpadOpen,
+    isAuthOpen,
+    isShareModalOpen,
+    isTripManagerOpen,
+    isAddStopModalOpen,
+    addStopCategory,
+    setView: setCurrentView,
+    setTab: setActiveTab,
+    setMobileView,
+    setPlacesToVisitActive: setIsPlacesToVisitActive,
+    setReadinessOpen: setIsReadinessOpen,
+    setScratchpadOpen: setIsScratchpadOpen,
+    setAuthOpen: setIsAuthOpen,
+    setShareModalOpen: setIsShareModalOpen,
+    setTripManagerOpen: setIsTripManagerOpen,
+    openAddStopModal: handleOpenAddStop,
+    closeAddStopModal
+  } = useUI();
+  const setIsAddStopModalOpen = (o: boolean) => o ? handleOpenAddStop(addStopCategory) : closeAddStopModal();
+
   const [activeDayIdx, setActiveDayIdx] = useState<number>(() => {
     const params = new URLSearchParams(window.location.search);
     return parseInt(params.get('day') || '0', 10);
   });
-  const [isPlacesToVisitActive, setIsPlacesToVisitActive] = useState<boolean>(false);
   const [selectedStopId, setSelectedStopId] = useState<string | null>(null);
   const [activeDetailStopId, setActiveDetailStopId] = useState<string | null>(null);
   const [editingStop, setEditingStop] = useState<ItineraryStop | null>(null);
-  const [isReadinessOpen, setIsReadinessOpen] = useState(false);
-  const [isScratchpadOpen, setIsScratchpadOpen] = useState(false);
-  const [isAuthOpen, setIsAuthOpen] = useState(false);
-  const [isShareModalOpen, setIsShareModalOpen] = useState(false);
-  const [isTripManagerOpen, setIsTripManagerOpen] = useState(false);
-  const [isAddStopModalOpen, setIsAddStopModalOpen] = useState(false);
-  const [addStopCategory, setAddStopCategory] = useState<StopCategory>('sight');
+  
   const [contextMenu, setContextMenu] = useState<{
     x: number;
     y: number;
@@ -98,13 +109,7 @@ export function App() {
     setContextMenu({ x: e.clientX, y: e.clientY, stop });
   }, []);
 
-  const handleOpenAddStop = useCallback((cat: StopCategory = 'sight') => {
-    setAddStopCategory(cat);
-    setIsAddStopModalOpen(true);
-  }, []);
-
   const [isDeleteDayConfirming, setIsDeleteDayConfirming] = useState(false);
-  const [mobileView, setMobileView] = useState<'timeline' | 'map'>('timeline');
   const [holidaysByDate, setHolidaysByDate] = useState<Record<string, string>>({});
   const [draggedStopIdx, setDraggedStopIdx] = useState<number | null>(null);
   const [dragOverStopIdx, setDragOverStopIdx] = useState<number | null>(null);
@@ -1185,7 +1190,7 @@ export function App() {
           onDeleteTrip={(id) => {
             deleteTrip(id);
           }}
-          onOpenAuth={() => setIsAuthOpen(true)}
+          
           onLogout={handleLogout}
         />
       )}
@@ -1195,7 +1200,7 @@ export function App() {
         <TripSettingsPage
           trip={trip}
           activeSession={vaultSession}
-          onOpenAuth={() => setIsAuthOpen(true)}
+          
           onUpdateTrip={handleUpdateTrip}
           onDeleteTrip={(id) => {
             deleteTrip(id);
@@ -1229,19 +1234,19 @@ export function App() {
             readinessScore={trip?.readinessScore || 0}
             activeSession={vaultSession}
             tripsCount={trips.length}
-            currentView={currentView}
-            activeTab={activeTab}
+            
+            
             flightsCount={(trip?.flights?.length || 0) + (trip?.documents?.length || 0)}
             expensesCount={trip?.expenses?.length || 0}
             looksCount={(trip?.looks || []).length}
-            onSelectTab={setActiveTab}
-            onNavigateView={setCurrentView}
+            
+            
             onOpenTripManager={() => setIsTripManagerOpen(true)}
-            onOpenReadiness={() => setIsReadinessOpen(true)}
-            onOpenAuth={() => setIsAuthOpen(true)}
-            onShare={() => setIsShareModalOpen(true)}
-            onOpenScratchpad={() => setIsScratchpadOpen(true)}
-            onOpenSettings={() => setCurrentView('trip_settings')}
+            
+            
+            
+            
+            
             onLogout={handleLogout}
           />
 
@@ -1765,4 +1770,13 @@ export function App() {
   );
 }
 
+export function App() {
+  return (
+    <UIProvider>
+      <AppContent />
+    </UIProvider>
+  );
+}
+
 export default App;
+
