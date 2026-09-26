@@ -36,6 +36,57 @@
   to { opacity: 1; transform: translateY(0) scale(1); }
 }
 
+/* Universal Form Primitives */
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-1, 4px);
+}
+
+.form-label {
+  font-size: var(--font-xs, 11px);
+  font-weight: var(--fw-semibold, 600);
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+
+.form-input {
+  width: 100%;
+  min-height: var(--tap-min, 44px);
+  padding: var(--sp-2, 8px) var(--sp-3, 12px);
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-sm, 8px);
+  color: var(--text-primary);
+  font-family: inherit;
+  font-size: var(--font-base, 13.5px);
+  outline: none;
+  transition: border-color var(--t-fast) ease, box-shadow var(--t-fast) ease;
+  box-sizing: border-box;
+}
+
+.form-input:focus {
+  border-color: var(--brand-blue);
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+}
+
+.form-input::placeholder {
+  color: var(--text-tertiary);
+}
+
+.form-row-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--sp-3, 12px);
+}
+
+@media (max-width: 640px) {
+  .form-row-2 {
+    grid-template-columns: 1fr;
+  }
+}
+
 .modal-header {
   display: flex;
   align-items: flex-start;

@@ -1,5 +1,4 @@
 import { useCallback, useState } from 'react';
-import confetti from 'canvas-confetti';
 import { ItineraryStop, Trip, TripDay } from '../types/trip';
 import { computeTransitLegsWasm, optimizeRouteTspWasm } from '../wasm/engine';
 
@@ -188,15 +187,6 @@ export function useTripOptimization(
       ...prev,
       [activeDay.id]: true,
     }));
-
-    // Fire celebration confetti if time was saved
-    if (previewData.minutesSaved > 0) {
-      confetti({
-        particleCount: 80,
-        spread: 70,
-        origin: { y: 0.6 },
-      });
-    }
 
     setPreviewData(null);
   }, [activeDay, activeDayIdx, previewData, setTrip]);

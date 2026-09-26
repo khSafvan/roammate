@@ -452,7 +452,7 @@
 .guest-error-icon {
   width: 60px;
   height: 60px;
-  border-radius: 50%;
+  border-radius: var(--radius-lg, 16px);
   background-color: rgba(245, 158, 11, 0.1);
   display: flex;
   align-items: center;

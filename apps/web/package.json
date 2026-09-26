@@ -12,7 +12,6 @@
   "dependencies": {
     "@mojolog/shared": "*",
     "@scure/bip39": "^2.4.0",
-    "canvas-confetti": "^1.9.4",
     "lucide-react": "^0.453.0",
     "maplibre-gl": "^6.10.0",
     "qrcode": "^1.5.4",
@@ -20,7 +19,6 @@
     "react-dom": "^18.3.1"
   },
   "devDependencies": {
-    "@types/canvas-confetti": "^1.9.0",
     "@types/qrcode": "^1.5.6",
     "@types/react": "^18.3.11",
     "@types/react-dom": "^18.3.0",
