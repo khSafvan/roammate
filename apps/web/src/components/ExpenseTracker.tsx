@@ -165,20 +165,20 @@ export const ExpenseTracker = React.memo<ExpenseTrackerProps>(function ExpenseTr
       </div>
 
       {/* Sub-view Navigation Switcher */}
-      <div style={{ display: 'flex', gap: '10px', marginBottom: '20px' }}>
+      <div className="category-filter-strip">
         <button
-          className={`nav-tab-btn ${activeView === 'breakdown' ? 'active' : ''}`}
+          type="button"
+          className={`category-filter-btn ${activeView === 'breakdown' ? 'active' : ''}`}
           onClick={() => setActiveView('breakdown')}
-          style={{ padding: '8px 16px', borderRadius: '10px', fontSize: '13px' }}
         >
           <Receipt size={14} />
           <span>Category Breakdown</span>
         </button>
 
         <button
-          className={`nav-tab-btn ${activeView === 'settlement' ? 'active' : ''}`}
+          type="button"
+          className={`category-filter-btn ${activeView === 'settlement' ? 'active' : ''}`}
           onClick={() => setActiveView('settlement')}
-          style={{ padding: '8px 16px', borderRadius: '10px', fontSize: '13px' }}
         >
           <Scale size={14} />
           <span>Who Owes Whom ({debtSettlements.length})</span>

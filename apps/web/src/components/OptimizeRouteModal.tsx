@@ -65,7 +65,7 @@ export const OptimizeRouteModal: React.FC<OptimizeRouteModalProps> = ({
                 height: '48px',
                 borderRadius: 'var(--radius-lg, 16px)',
                 backgroundColor: 'rgba(16, 185, 129, 0.15)',
-                color: '#059669',
+                color: 'var(--brand-emerald)',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
@@ -105,17 +105,17 @@ export const OptimizeRouteModal: React.FC<OptimizeRouteModalProps> = ({
                     fontSize: '11px',
                     fontWeight: 700,
                     textTransform: 'uppercase',
-                    color: '#059669',
+                    color: 'var(--brand-emerald)',
                     letterSpacing: '0.05em',
                   }}
                 >
                   Estimated Savings
                 </span>
-                <div style={{ fontSize: '24px', fontWeight: 800, color: '#047857', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <div style={{ fontSize: '24px', fontWeight: 800, color: 'var(--brand-emerald)', display: 'flex', alignItems: 'center', gap: '6px' }}>
                   <TrendingDown size={22} />
                   <span>{preview.minutesSaved} mins faster</span>
                 </div>
-                <div style={{ fontSize: '12px', color: '#065F46', marginTop: '2px' }}>
+                <div style={{ fontSize: '12px', color: 'var(--brand-emerald)', marginTop: '2px' }}>
                   {pctSaved > 0 && <span>{pctSaved}% less transit time · </span>}
                   <span>{(preview.originalDistanceKm - preview.optimizedDistanceKm).toFixed(1)} km shorter</span>
                 </div>
@@ -127,14 +127,14 @@ export const OptimizeRouteModal: React.FC<OptimizeRouteModalProps> = ({
                   <span style={{ textDecoration: 'line-through' }}>
                     {preview.originalTransitMinutes}m
                   </span>{' '}
-                  ➔ <strong style={{ color: '#047857' }}>{preview.optimizedTransitMinutes}m</strong>
+                  ➔ <strong style={{ color: 'var(--brand-emerald)' }}>{preview.optimizedTransitMinutes}m</strong>
                 </div>
                 <div>
                   Distance:{' '}
                   <span style={{ textDecoration: 'line-through' }}>
                     {preview.originalDistanceKm.toFixed(1)}km
                   </span>{' '}
-                  ➔ <strong style={{ color: '#047857' }}>{preview.optimizedDistanceKm.toFixed(1)}km</strong>
+                  ➔ <strong style={{ color: 'var(--brand-emerald)' }}>{preview.optimizedDistanceKm.toFixed(1)}km</strong>
                 </div>
               </div>
             </div>
@@ -191,7 +191,7 @@ export const OptimizeRouteModal: React.FC<OptimizeRouteModalProps> = ({
                             width: '24px',
                             height: '24px',
                             borderRadius: 'var(--radius-sm, 8px)',
-                            backgroundColor: orderChanged ? '#3B82F6' : '#64748B',
+                            backgroundColor: orderChanged ? 'var(--brand-blue)' : 'var(--text-secondary)',
                             color: '#ffffff',
                             fontSize: '11px',
                             fontWeight: 700,
@@ -207,7 +207,7 @@ export const OptimizeRouteModal: React.FC<OptimizeRouteModalProps> = ({
                             {stop.title}
                           </div>
                           {orderChanged && (
-                            <div style={{ fontSize: '10px', color: '#2563EB' }}>
+                            <div style={{ fontSize: '10px', color: 'var(--brand-blue)' }}>
                               Moved from stop #{originalIdx + 1}
                             </div>
                           )}

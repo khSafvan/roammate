@@ -56,7 +56,7 @@ export const ScratchpadModal: React.FC<ScratchpadModalProps> = ({
           <div className="modal-header-left">
             <div
               className="stop-badge-lg"
-              style={{ backgroundColor: '#F59E0B' }}
+              style={{ backgroundColor: 'var(--brand-amber)' }}
             >
               <FileText size={18} />
             </div>
