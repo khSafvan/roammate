@@ -4,15 +4,19 @@
   background-color: var(--bg-card);
   border: 1px solid var(--border-light);
   border-radius: var(--radius-card);
-  padding: 18px;
+  padding: 16px 18px;
   box-shadow: var(--shadow-card);
+  height: 100%;
+  display: flex;
+  flex-direction: column;
 }
 
 .map-toolbar {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 14px;
+  margin-bottom: 12px;
+  flex-shrink: 0;
 }
 
 .map-title-row {
@@ -117,11 +121,16 @@
   border: 1px solid var(--border-light);
   background-color: #F8FAFC;
   position: relative;
+  flex: 1;
+  min-height: 400px;
+  display: flex;
+  flex-direction: column;
 }
 
 .terraink-viewport-wrapper {
-  height: 480px;
+  height: 100%;
   width: 100%;
+  flex: 1;
 }
 
 .terraink-maplibre-viewport {
@@ -415,6 +424,28 @@
   display: flex;
   align-items: center;
   gap: 6px;
+}
+
+.dock-edit-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-pill);
+  padding: 5px 11px;
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  box-shadow: var(--shadow-sm);
+}
+
+.dock-edit-btn:hover {
+  background-color: var(--brand-blue-subtle);
+  color: var(--brand-blue);
+  border-color: rgba(37, 99, 235, 0.3);
 }
 
 .dock-focus-btn {

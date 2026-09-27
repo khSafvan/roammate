@@ -4,36 +4,75 @@
 .day-selector-container {
   background-color: var(--bg-card);
   border-bottom: 1px solid var(--border-light);
-  padding: 10px 20px;
+  padding: 8px 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  position: relative;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.day-scroll-arrow-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--border-light);
+  background-color: var(--bg-card);
+  color: var(--text-secondary);
+  cursor: pointer;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+  flex-shrink: 0;
+  transition: all 0.15s ease;
+  z-index: 5;
+}
+
+.day-scroll-arrow-btn:hover {
+  background-color: var(--bg-subtle-hover);
+  color: var(--text-primary);
+  border-color: var(--border-strong);
 }
 
 .day-selector-scroll {
-  max-width: 1440px;
-  margin: 0 auto;
+  flex: 1;
+  min-width: 0;
+  margin: 0;
+  padding: 2px 4px;
   display: flex;
   align-items: center;
   gap: 8px;
   overflow-x: auto;
+  scroll-behavior: smooth;
   scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
 }
 
 .day-selector-scroll::-webkit-scrollbar {
   display: none;
 }
 
+/* Permanent, uniform container sizing for day pills */
 .day-tab-pill {
   display: inline-flex;
   align-items: center;
-  gap: 10px;
+  gap: 9px;
   background-color: var(--bg-card);
-  border: 1px solid var(--border-light);
+  border: 1.5px solid var(--border-light);
   border-radius: var(--radius-pill);
-  padding: 6px 14px;
+  height: 42px;
+  min-height: 42px;
+  max-height: 42px;
+  padding: 0 14px;
   cursor: pointer;
   white-space: nowrap;
-  transition: all 0.15s ease;
+  transition: border-color 0.15s ease, background-color 0.15s ease, color 0.15s ease, box-shadow 0.15s ease;
   box-shadow: var(--shadow-sm);
   color: var(--text-secondary);
+  flex-shrink: 0;
+  box-sizing: border-box;
 }
 
 .day-tab-pill:hover {
@@ -42,11 +81,21 @@
   border-color: var(--border-strong);
 }
 
+/* Active & Focused states: colored outline, light version of color background, colored text appropriately */
 .day-tab-pill.active {
-  background-color: var(--bg-card);
-  color: var(--text-primary);
-  border-color: rgba(15, 23, 42, 0.22);
-  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.05), 0 3px 8px -1px rgba(15, 23, 42, 0.04);
+  border-color: var(--day-theme-color, var(--brand-blue));
+  background-color: var(--day-theme-bg, rgba(37, 99, 235, 0.08));
+  color: var(--day-theme-color, var(--brand-blue));
+  box-shadow: 0 0 0 1px var(--day-theme-color, var(--brand-blue)), var(--shadow-sm);
+}
+
+.day-tab-pill:focus-visible {
+  outline: 2px solid var(--day-theme-color, var(--brand-blue));
+  outline-offset: 2px;
+}
+
+.day-tab-pill.active .day-title {
+  color: var(--day-theme-color, var(--brand-blue));
 }
 
 .day-color-dot {
@@ -88,6 +137,27 @@
   font-weight: 600;
   color: var(--text-secondary);
   font-variant-numeric: tabular-nums;
+}
+
+.day-holiday-dot {
+  font-size: 11px;
+  line-height: 1;
+}
+
+.active-day-holiday-banner {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  border-radius: var(--radius-pill);
+  background-color: rgba(245, 158, 11, 0.08);
+  border: 1px solid rgba(245, 158, 11, 0.25);
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+.active-day-holiday-banner strong {
+  color: #D97706;
 }
 
 /* 2. Weather Prediction Card - Calm Utility */
@@ -263,23 +333,37 @@
 .hourly-chip {
   background-color: var(--bg-subtle);
   border-radius: var(--radius-md);
-  padding: 7px 10px;
+  padding: 8px 6px;
   display: flex;
   flex-direction: column;
   align-items: center;
+  justify-content: center;
   gap: 3px;
-  min-width: 58px;
+  width: 68px;
+  min-width: 68px;
+  max-width: 68px;
+  height: 84px;
+  min-height: 84px;
+  max-height: 84px;
   border: 1px solid var(--border-subtle);
+  box-sizing: border-box;
+  flex-shrink: 0;
 }
 
 .hourly-time {
   font-size: 11px;
   color: var(--text-tertiary);
   font-weight: 500;
+  line-height: 1.1;
+  white-space: nowrap;
 }
 
 .hourly-icon {
   margin: 1px 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 18px;
 }
 
 .hourly-temp {
@@ -287,6 +371,7 @@
   font-weight: 600;
   color: var(--text-primary);
   font-variant-numeric: tabular-nums;
+  line-height: 1.1;
 }
 
 .hourly-rain {
@@ -294,6 +379,8 @@
   font-weight: 600;
   color: var(--brand-blue);
   font-variant-numeric: tabular-nums;
+  height: 14px;
+  line-height: 14px;
 }
 
 /* 3. Sequential Timeline Stream & Categorical Nodes */
@@ -312,8 +399,8 @@
 
 /* Category Node Anchored on the Sequential Axis */
 .category-node {
-  width: 32px;
-  height: 32px;
+  width: 36px;
+  height: 36px;
   border-radius: var(--radius-pill);
   display: flex;
   align-items: center;
@@ -352,23 +439,81 @@
   color: var(--cat-transit-fg);
 }
 
-/* Timeline Modular Card */
+/* Timeline Modular Card - Permanent Dimensions */
 .timeline-card {
   flex: 1;
   background-color: var(--bg-card);
   border: 1px solid var(--border-light);
   border-radius: var(--radius-card);
-  padding: 16px 18px;
+  padding: 18px 22px;
   box-shadow: var(--shadow-card);
   cursor: pointer;
-  transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: border-color 0.15s ease, box-shadow 0.15s ease, background-color 0.15s ease;
   min-width: 0;
+  box-sizing: border-box;
 }
 
 .timeline-card:hover {
   box-shadow: var(--shadow-card-hover);
   border-color: var(--border-strong);
-  transform: translateY(-1px);
+}
+
+.timeline-card.is-selected {
+  border-color: var(--brand-blue);
+  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.18), var(--shadow-card-hover);
+  background-color: var(--bg-card);
+}
+
+.timeline-card:focus-visible {
+  outline: 2px solid var(--brand-blue);
+  outline-offset: 2px;
+}
+
+.card-edit-action-btn {
+  margin-left: auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--border-light);
+  background-color: var(--bg-subtle);
+  color: var(--text-tertiary);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.card-edit-action-btn:hover {
+  background-color: var(--bg-subtle-hover);
+  border-color: var(--border-strong);
+  color: var(--brand-blue);
+}
+
+.card-fixed-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 10px;
+  font-weight: 600;
+  color: #B45309;
+  background-color: rgba(245, 158, 11, 0.1);
+  border: 1px solid rgba(245, 158, 11, 0.25);
+  padding: 1px 6px;
+  border-radius: var(--radius-pill);
+}
+
+.card-hours-pill {
+  display: inline-flex;
+  align-items: center;
+  font-size: 10px;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-tertiary);
+  background-color: var(--bg-subtle);
+  border: 1px solid var(--border-subtle);
+  padding: 1px 6px;
+  border-radius: var(--radius-pill);
 }
 
 .card-body {
@@ -392,6 +537,60 @@
   padding: 1px 7px;
   border-radius: var(--radius-pill);
   border: 1px solid var(--border-subtle);
+}
+
+.card-reorder-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.card-drag-grip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: grab;
+  color: var(--text-tertiary);
+  padding: 1px 2px;
+  transition: color 0.15s ease;
+}
+
+.card-drag-grip:hover {
+  color: var(--text-primary);
+}
+
+.card-drag-grip:active {
+  cursor: grabbing;
+}
+
+.reorder-arrow-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 19px;
+  height: 19px;
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--border-subtle);
+  background-color: var(--bg-subtle);
+  color: var(--text-tertiary);
+  cursor: pointer;
+  padding: 0;
+  transition: all 0.15s ease;
+}
+
+.reorder-arrow-btn:hover {
+  background-color: var(--bg-card);
+  color: var(--brand-blue);
+  border-color: var(--border-strong);
+}
+
+.timeline-item-wrapper.is-dragging {
+  opacity: 0.45;
+}
+
+.timeline-item-wrapper.is-drag-over .timeline-card {
+  border-color: var(--brand-blue);
+  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.25);
 }
 
 .card-time {
@@ -474,6 +673,100 @@
   border: 1px solid var(--border-subtle);
 }
 
+/* Note & Tip Styles */
+.card-notes-preview {
+  margin-top: 8px;
+  padding: 8px 12px;
+  background-color: rgba(245, 158, 11, 0.06);
+  border-left: 3px solid var(--brand-amber);
+  border-radius: 0 var(--radius-md) var(--radius-md) 0;
+  font-size: 12px;
+  color: var(--text-secondary);
+  line-height: 1.5;
+}
+
+.card-notes-preview.is-standalone {
+  background-color: transparent;
+  border-left: none;
+  padding: 4px 0 0 0;
+}
+
+.timeline-card.is-note-card {
+  background-color: var(--bg-card);
+  box-shadow: inset 3px 0 0 var(--brand-amber), var(--shadow-card);
+}
+
+.timeline-card.is-note-card.is-selected {
+  border-color: var(--brand-blue);
+  box-shadow: inset 3px 0 0 var(--brand-amber), 0 0 0 2px rgba(37, 99, 235, 0.18), var(--shadow-card-hover);
+}
+
+.category-node.node-note {
+  background-color: rgba(245, 158, 11, 0.12);
+  color: var(--brand-amber);
+  border-color: rgba(245, 158, 11, 0.3);
+}
+
+.note-label {
+  color: var(--brand-amber) !important;
+  font-weight: 600;
+}
+
+/* Markdown Rendering Primitives */
+.markdown-content {
+  font-size: inherit;
+  line-height: inherit;
+}
+
+.markdown-p {
+  margin-bottom: 4px;
+}
+
+.markdown-p:last-child {
+  margin-bottom: 0;
+}
+
+.markdown-break {
+  display: block;
+  height: 6px;
+}
+
+.markdown-list {
+  margin: 4px 0;
+  padding-left: 18px;
+}
+
+.markdown-ul {
+  list-style-type: disc;
+}
+
+.markdown-ol {
+  list-style-type: decimal;
+}
+
+.markdown-list li {
+  margin-bottom: 2px;
+}
+
+.markdown-list li:last-child {
+  margin-bottom: 0;
+}
+
+.markdown-inline-code {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.9em;
+  background-color: var(--bg-subtle);
+  padding: 1px 4px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-subtle);
+}
+
+.markdown-link {
+  color: var(--brand-blue);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
 /* 4. Inter-Stop Distance Connector Pill (De-emphasized Transit State) */
 .distance-connector-track {
   display: flex;
@@ -484,7 +777,7 @@
 }
 
 .track-spine-node {
-  width: 32px;
+  width: 36px;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -515,7 +808,6 @@
   background-color: var(--bg-subtle);
   border-color: var(--border-strong);
   color: var(--text-primary);
-  transform: translateY(-0.5px);
 }
 
 .distance-pill-btn.outlier {
@@ -556,22 +848,8 @@
 }
 
 /* 4. Timeline Flight Card & Multi-Origin Companion Integration */
-.timeline-flight-card-container {
-  display: flex;
-  position: relative;
+.timeline-flight-item {
   margin-bottom: 6px;
-}
-
-.flight-node-badge {
-  width: 28px;
-  height: 28px;
-  border-radius: var(--radius-md, 12px);
-  background-color: rgba(37, 99, 235, 0.12);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: 0 0 0 4px var(--bg-canvas);
-  z-index: 2;
 }
 
 .timeline-flight-card {
@@ -579,15 +857,16 @@
   background-color: var(--bg-card);
   border: 1px solid var(--border-light);
   border-radius: var(--radius-card);
-  padding: 16px 18px;
-  box-shadow: var(--shadow-sm);
-  margin-left: 12px;
+  padding: 16px 20px;
+  box-shadow: var(--shadow-card);
   transition: all 0.15s ease;
+  min-width: 0;
+  box-sizing: border-box;
 }
 
 .timeline-flight-card:hover {
-  box-shadow: var(--shadow-md);
-  border-color: var(--border-medium);
+  box-shadow: var(--shadow-card-hover);
+  border-color: var(--border-strong);
 }
 
 .flight-card-header {

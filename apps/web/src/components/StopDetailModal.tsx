@@ -14,6 +14,7 @@ import {
   X,
 } from 'lucide-react';
 import { ItineraryStop, StopCategory, TripDay } from '../types/trip';
+import { MarkdownText } from './MarkdownText';
 
 interface StopDetailModalProps {
   stop: ItineraryStop | null;
@@ -33,6 +34,7 @@ const CATEGORIES: { label: string; value: StopCategory; icon: string }[] = [
   { label: 'Lodging', value: 'lodging', icon: '🏨' },
   { label: 'Transit', value: 'transit', icon: '🚆' },
   { label: 'Flight', value: 'flight', icon: '✈️' },
+  { label: 'Note & Tip', value: 'note', icon: '📝' },
 ];
 
 export const StopDetailModal: React.FC<StopDetailModalProps> = ({
@@ -241,11 +243,12 @@ export const StopDetailModal: React.FC<StopDetailModalProps> = ({
                   onChange={(e) => setBookingRef(e.target.value)}
                 />
               </div>
-              <div>
-                <label className="form-label">Note / Tip</label>
-                <input
-                  type="text"
-                  className="form-input"
+              <div className="full-span">
+                <label className="form-label">Note / Tip <span style={{ color: 'var(--text-tertiary)', fontWeight: 400 }}>(supports **bold**, *italic*, - bullet lists)</span></label>
+                <textarea
+                  rows={3}
+                  className="form-input text-xs"
+                  placeholder="e.g. Remember to bring passport. **Must try**: garlic naan. - Ticket code #123"
                   value={notes}
                   onChange={(e) => setNotes(e.target.value)}
                 />
@@ -316,7 +319,9 @@ export const StopDetailModal: React.FC<StopDetailModalProps> = ({
                   <FileText size={14} className="text-amber" />
                   <span>Traveler Note</span>
                 </div>
-                <p className="detail-note-text">{stop.notes}</p>
+                <div className="detail-note-text">
+                  <MarkdownText text={stop.notes} />
+                </div>
               </div>
             )}
 

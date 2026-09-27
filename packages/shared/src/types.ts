@@ -1,6 +1,6 @@
 export type TransitMode = 'drive' | 'walk' | 'transit';
 
-export type StopCategory = 'flight' | 'lodging' | 'sight' | 'dining' | 'transit';
+export type StopCategory = 'flight' | 'lodging' | 'sight' | 'dining' | 'transit' | 'note';
 
 export interface Coordinates {
   latitude: number;
@@ -21,6 +21,10 @@ export interface ItineraryStop {
   hasTicket?: boolean;
   notes?: string;
   isAnchor?: boolean; // Morning/night anchor (e.g. hotel)
+  openTime?: string; // e.g. "09:00 AM" (opening hours)
+  closeTime?: string; // e.g. "05:00 PM" (closing hours)
+  isFixedTime?: boolean; // Locked reservation or timed ticket slot
+  mealType?: 'breakfast' | 'lunch' | 'dinner' | 'snack';
 }
 
 export interface TransitLeg {
@@ -52,6 +56,9 @@ export interface DayWeather {
   uvIndex: number;
   clothingTip: string;
   hourly: HourlyForecast[];
+  sunrise?: string;
+  sunset?: string;
+  goldenHour?: string;
 }
 
 export interface TripDay {
@@ -183,6 +190,7 @@ export interface BookingDocument {
 // 3. Unified Itinerary Document (Single flexible JSON document)
 export interface Trip {
   id: string;
+  userId?: string; // Owning account UUID
   tripId?: string; // Unified identifier alias
   title: string;
   dates: string;
@@ -191,7 +199,9 @@ export interface Trip {
   startTime?: string; // HH:mm
   endTime?: string;   // HH:mm
   destination: string;
-  baseCurrency: string;
+  countryCode?: string;   // ISO 3166-1 alpha-2 (e.g. "AE", "MY") for public holiday lookup
+  baseCurrency: string;   // destination/trip currency
+  homeCurrency?: string;  // user's home currency for live conversion
   shareToken?: string;
   guestKey?: string;  // Secret guest link key - only persons with this key can view the trip
   readinessScore: number;

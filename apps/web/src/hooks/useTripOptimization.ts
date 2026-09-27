@@ -1,6 +1,13 @@
 import { useCallback, useState } from 'react';
 import { ItineraryStop, Trip, TripDay } from '../types/trip';
-import { computeTransitLegsWasm, optimizeRouteTspWasm } from '../wasm/engine';
+import { computeTransitLegsWasm } from '../wasm/engine';
+import { optimizeTimeWindowRoute } from '../utils/timeWindowOptimizer';
+
+export interface ConstraintsRespected {
+  mealsAligned: string[];
+  operatingHoursPassed: number;
+  fixedSlotsPreserved: number;
+}
 
 export interface RouteOptimizationPreview {
   dayId: string;
@@ -13,6 +20,7 @@ export interface RouteOptimizationPreview {
   originalDistanceKm: number;
   optimizedDistanceKm: number;
   isAlreadyOptimal: boolean;
+  constraintsRespected?: ConstraintsRespected;
 }
 
 export interface UseTripOptimizationReturn {
@@ -77,7 +85,7 @@ export function useTripOptimization(
   const [dayHistory, setDayHistory] = useState<Record<string, ItineraryStop[]>>({});
   const [previewData, setPreviewData] = useState<RouteOptimizationPreview | null>(null);
 
-  // Request Route Optimization: Computes TSP, metrics diff, and opens the preview dialog
+  // Request Route Optimization: Computes TSP-TW, metrics diff, and opens the preview dialog
   const handleRequestOptimize = useCallback(() => {
     if (!activeDay.stops || activeDay.stops.length <= 1) {
       setPreviewData({
@@ -95,68 +103,40 @@ export function useTripOptimization(
       return;
     }
 
-    const stopsForWasm = activeDay.stops.map((s) => ({
-      id: s.id,
-      latitude: s.coordinates.latitude,
-      longitude: s.coordinates.longitude,
-    }));
+    // Time-window aware TSP optimizer (respects meal windows, opening hours, fixed slots)
+    const firstStartTime = activeDay.stops[0]?.startTime || '09:00 AM';
+    const twResult = optimizeTimeWindowRoute(activeDay.stops, 'drive', firstStartTime);
 
-    const result = optimizeRouteTspWasm(stopsForWasm, 'drive');
+    const reorderedStops = twResult.optimizedStops;
 
-    if (result.optimized_ids && result.optimized_ids.length > 0) {
-      const idToStopMap = new Map(activeDay.stops.map((s) => [s.id, s]));
-      const rawReordered: ItineraryStop[] = result.optimized_ids
-        .map((id) => idToStopMap.get(id))
-        .filter((s): s is ItineraryStop => s !== undefined);
+    // Compute transit legs for both sequences to get distance/time metrics
+    const originalLegs = computeTransitLegsWasm(activeDay.stops, {});
+    const originalTransitMinutes = originalLegs.reduce((sum, l) => sum + (l.durationMinutes || 0), 0);
+    const originalDistanceKm = originalLegs.reduce((sum, l) => sum + (l.distanceKm || 0), 0);
 
-      // Re-flow start times chronologically from the initial stop's departure time
-      const firstStartTime = activeDay.stops[0]?.startTime || '09:00 AM';
-      const use12Hour = /am|pm/i.test(firstStartTime);
-      let currentMinutes = parseTimeToMinutes(firstStartTime);
+    const optimizedLegs = computeTransitLegsWasm(reorderedStops, {});
+    const optimizedTransitMinutes = optimizedLegs.reduce((sum, l) => sum + (l.durationMinutes || 0), 0);
+    const optimizedDistanceKm = optimizedLegs.reduce((sum, l) => sum + (l.distanceKm || 0), 0);
 
-      // Compute transit leg durations between consecutive stops for both sequences
-      const originalLegs = computeTransitLegsWasm(activeDay.stops, {});
-      const originalTransitMinutes = originalLegs.reduce((sum, l) => sum + (l.durationMinutes || 0), 0);
-      const originalDistanceKm = originalLegs.reduce((sum, l) => sum + (l.distanceKm || 0), 0);
+    const isSameOrder = activeDay.stops.every((s, i) => s.id === reorderedStops[i]?.id);
+    const minutesSaved = Math.max(0, originalTransitMinutes - optimizedTransitMinutes);
+    const isAlreadyOptimal = isSameOrder || (minutesSaved === 0 && activeDay.stops.length <= 2);
 
-      const optimizedLegs = computeTransitLegsWasm(rawReordered, {});
-      const optimizedTransitMinutes = optimizedLegs.reduce((sum, l) => sum + (l.durationMinutes || 0), 0);
-      const optimizedDistanceKm = optimizedLegs.reduce((sum, l) => sum + (l.distanceKm || 0), 0);
-
-      const reorderedStops: ItineraryStop[] = rawReordered.map((stop, index) => {
-        if (index > 0) {
-          const prevStop = rawReordered[index - 1];
-          const transitMinutes = optimizedLegs[index - 1]?.durationMinutes ?? 15;
-          const visitDuration = prevStop.durationMinutes > 0 ? prevStop.durationMinutes : 60;
-          currentMinutes += visitDuration + transitMinutes;
-        }
-
-        return {
-          ...stop,
-          orderIndex: index + 1,
-          startTime: formatMinutesToTime(currentMinutes, use12Hour),
-        };
-      });
-
-      // Check if order actually changed
-      const isSameOrder = activeDay.stops.every((s, i) => s.id === reorderedStops[i]?.id);
-      const minutesSaved = Math.max(0, originalTransitMinutes - optimizedTransitMinutes);
-      const isAlreadyOptimal = isSameOrder || (minutesSaved === 0 && activeDay.stops.length <= 2);
-
-      setPreviewData({
-        dayId: activeDay.id,
-        dayNumber: activeDay.dayNumber,
-        originalStops: [...activeDay.stops],
-        optimizedStops: reorderedStops,
-        minutesSaved,
-        originalTransitMinutes,
-        optimizedTransitMinutes,
-        originalDistanceKm,
-        optimizedDistanceKm,
-        isAlreadyOptimal,
-      });
-    }
+    setPreviewData({
+      dayId: activeDay.id,
+      dayNumber: activeDay.dayNumber,
+      originalStops: [...activeDay.stops],
+      optimizedStops: reorderedStops,
+      minutesSaved,
+      originalTransitMinutes,
+      optimizedTransitMinutes,
+      originalDistanceKm,
+      optimizedDistanceKm,
+      isAlreadyOptimal,
+      constraintsRespected: twResult.constraintsRespected,
+    });
   }, [activeDay]);
+
 
   // Apply Optimization: Saves previous stops to history, applies new stops to trip state, fires confetti
   const handleApplyOptimization = useCallback(() => {

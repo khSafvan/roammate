@@ -3,17 +3,14 @@ import {
   Calendar,
   CheckCircle2,
   Clock,
-  ExternalLink,
   FileCheck,
   FileText,
   Globe,
   Hotel,
   MapPin,
-  Navigation2,
   Plane,
   Plus,
   QrCode,
-  Radio,
   Search,
   Tag,
   Ticket,
@@ -24,6 +21,8 @@ import {
   X,
 } from 'lucide-react';
 import { BookingDocument, Flight, ReservationCategory } from '../../types/trip';
+import { PlaceSearchInput } from '../PlaceSearchInput';
+import { lookupAirport } from '../../utils/airportDatabase';
 
 interface DocumentsAndTicketsHubProps {
   flights: Flight[];
@@ -66,8 +65,30 @@ export const DocumentsAndTicketsHub: React.FC<DocumentsAndTicketsHubProps> = ({
   const [carrier, setCarrier] = useState('');
   const [depAirport, setDepAirport] = useState('');
   const [arrAirport, setArrAirport] = useState('');
+  const [depTerminal, setDepTerminal] = useState('');
+  const [arrTerminal, setArrTerminal] = useState('');
   const [originCountry, setOriginCountry] = useState('');
   const [originCity, setOriginCity] = useState('');
+  const [arrCity, setArrCity] = useState('');
+
+  const handleDepAirportChange = (val: string) => {
+    setDepAirport(val);
+    const info = lookupAirport(val);
+    if (info) {
+      if (!originCity) setOriginCity(info.city);
+      if (!originCountry) setOriginCountry(info.country);
+      if (!depTerminal && info.defaultTerminal) setDepTerminal(info.defaultTerminal);
+    }
+  };
+
+  const handleArrAirportChange = (val: string) => {
+    setArrAirport(val);
+    const info = lookupAirport(val);
+    if (info) {
+      if (!arrCity) setArrCity(info.city);
+      if (!arrTerminal && info.defaultTerminal) setArrTerminal(info.defaultTerminal);
+    }
+  };
 
   // Extract companions across flights & documents
   const companionNames = useMemo(() => {
@@ -143,27 +164,34 @@ export const DocumentsAndTicketsHub: React.FC<DocumentsAndTicketsHubProps> = ({
 
     if (formCategory === 'flight') {
       if (!flightNumber || !depAirport || !arrAirport) return;
+      const depInfo = lookupAirport(depAirport);
+      const arrInfo = lookupAirport(arrAirport);
       const newFlight: Flight = {
         id: `fl_${Date.now()}`,
         flightNumber: flightNumber.toUpperCase().trim(),
         carrier: carrier.trim() || 'Airline',
         date: date || new Date().toISOString().split('T')[0],
         passengerName: passengerOrGuestName.trim() || undefined,
-        originCountry: originCountry.trim() || undefined,
-        originCity: originCity.trim() || undefined,
+        originCountry: originCountry.trim() || depInfo?.country || undefined,
+        originCity: originCity.trim() || depInfo?.city || undefined,
         cabinClass: (cabinOrRoomType as any) || 'Economy',
         bookingRef: confirmationCode.trim() || undefined,
         seat: seatOrRoomNumber.trim() || undefined,
         notes: notes.trim() || undefined,
         departure: {
           airport: depAirport.toUpperCase().trim(),
-          city: originCity.trim() || depAirport.toUpperCase().trim(),
+          city: originCity.trim() || depInfo?.city || depAirport.toUpperCase().trim(),
+          country: originCountry.trim() || depInfo?.country,
           time: time || '12:00',
+          terminal: depTerminal.trim() || depInfo?.defaultTerminal || undefined,
         },
         arrival: {
           airport: arrAirport.toUpperCase().trim(),
-          city: arrAirport.toUpperCase().trim(),
+          city: arrCity.trim() || arrInfo?.city || arrAirport.toUpperCase().trim(),
+          country: arrInfo?.country,
           time: endTime || '15:00',
+          terminal: arrTerminal.trim() || arrInfo?.defaultTerminal || undefined,
+          nextDay: !!(endDate && endDate !== date),
         },
       };
       onAddFlight(newFlight);
@@ -327,8 +355,6 @@ export const DocumentsAndTicketsHub: React.FC<DocumentsAndTicketsHubProps> = ({
       <div className="bookings-grid">
         {/* Render Flight Passes */}
         {filteredFlights.map((fl) => {
-          const flightTrackerUrl = `https://www.flightradar24.com/data/flights/${fl.flightNumber.toLowerCase()}`;
-
           return (
             <div key={fl.id} className="boarding-pass-card">
               <div className="pass-header">
@@ -336,18 +362,11 @@ export const DocumentsAndTicketsHub: React.FC<DocumentsAndTicketsHubProps> = ({
                   <Plane size={16} className="text-blue" />
                   <span className="pass-carrier">{fl.carrier}</span>
                   <span className="pass-flight-num">{fl.flightNumber}</span>
+                  {fl.bookingRef && (
+                    <span className="stub-ref" title="Booking Reference (PNR)">{fl.bookingRef}</span>
+                  )}
                 </div>
                 <div className="pass-header-actions">
-                  <a
-                    href={flightTrackerUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="live-radar-tag"
-                  >
-                    <Radio size={12} className="radar-pulse" />
-                    <span>Live Radar</span>
-                    <ExternalLink size={10} />
-                  </a>
                   <button
                     className="pass-delete-btn"
                     onClick={() => onDeleteFlight(fl.id)}
@@ -387,28 +406,42 @@ export const DocumentsAndTicketsHub: React.FC<DocumentsAndTicketsHubProps> = ({
 
               <div className="pass-route-row">
                 <div className="airport-block">
-                  <span className="airport-code">{fl.departure.airport}</span>
-                  <span className="airport-time">{fl.departure.time}</span>
-                  <span className="airport-meta">
-                    {fl.departure.city || fl.departure.terminal || 'Departure'}
-                  </span>
+                  <div className="airport-code-row">
+                    <span className="airport-code">{fl.departure.airport}</span>
+                    <span className="airport-time">{fl.departure.time}</span>
+                  </div>
+                  <div className="airport-city-name">{fl.departure.city || 'Departure'}</div>
+                  {fl.departure.terminal && (
+                    <div className="airport-terminal-pill">
+                      <span>{fl.departure.terminal}</span>
+                      {fl.departure.gate && <span className="terminal-gate">· Gate {fl.departure.gate}</span>}
+                    </div>
+                  )}
                 </div>
 
                 <div className="route-graphic">
                   <div className="route-line-decor" />
-                  <Navigation2 size={18} className="plane-graphic-icon" />
+                  <div className="plane-icon-wrap">
+                    <Plane size={15} className="plane-graphic-icon" />
+                  </div>
                   <div className="route-line-decor" />
                 </div>
 
                 <div className="airport-block text-right">
-                  <span className="airport-code">{fl.arrival.airport}</span>
-                  <span className="airport-time">
-                    {fl.arrival.time}
-                    {fl.arrival.nextDay && <sup className="next-day-sup">+1d</sup>}
-                  </span>
-                  <span className="airport-meta">
-                    {fl.arrival.city || fl.arrival.terminal || 'Arrival'}
-                  </span>
+                  <div className="airport-code-row" style={{ justifyContent: 'flex-end' }}>
+                    <span className="airport-time">
+                      {fl.arrival.time}
+                      {fl.arrival.nextDay && <sup className="next-day-sup">+1d</sup>}
+                    </span>
+                    <span className="airport-code">{fl.arrival.airport}</span>
+                  </div>
+                  <div className="airport-city-name">{fl.arrival.city || 'Arrival'}</div>
+                  {fl.arrival.terminal && (
+                    <div className="airport-terminal-pill">
+                      <span>{fl.arrival.terminal}</span>
+                      {fl.arrival.gate && <span className="terminal-gate">· Gate {fl.arrival.gate}</span>}
+                    </div>
+                  )}
                 </div>
               </div>
 
@@ -673,10 +706,10 @@ export const DocumentsAndTicketsHub: React.FC<DocumentsAndTicketsHubProps> = ({
                         type="text"
                         required
                         maxLength={4}
-                        placeholder="e.g. JFK, LHR"
+                        placeholder="e.g. JFK, LHR, DXB"
                         className="form-input text-uppercase"
                         value={depAirport}
-                        onChange={(e) => setDepAirport(e.target.value)}
+                        onChange={(e) => handleDepAirportChange(e.target.value)}
                       />
                     </div>
                     <div>
@@ -685,10 +718,33 @@ export const DocumentsAndTicketsHub: React.FC<DocumentsAndTicketsHubProps> = ({
                         type="text"
                         required
                         maxLength={4}
-                        placeholder="e.g. HND, CDG"
+                        placeholder="e.g. HND, CDG, KUL"
                         className="form-input text-uppercase"
                         value={arrAirport}
-                        onChange={(e) => setArrAirport(e.target.value)}
+                        onChange={(e) => handleArrAirportChange(e.target.value)}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="form-row-2">
+                    <div>
+                      <label className="form-label">Departure Terminal</label>
+                      <input
+                        type="text"
+                        placeholder="e.g. Terminal 4"
+                        className="form-input"
+                        value={depTerminal}
+                        onChange={(e) => setDepTerminal(e.target.value)}
+                      />
+                    </div>
+                    <div>
+                      <label className="form-label">Arrival Terminal</label>
+                      <input
+                        type="text"
+                        placeholder="e.g. Terminal 3"
+                        className="form-input"
+                        value={arrTerminal}
+                        onChange={(e) => setArrTerminal(e.target.value)}
                       />
                     </div>
                   </div>
@@ -759,6 +815,29 @@ export const DocumentsAndTicketsHub: React.FC<DocumentsAndTicketsHubProps> = ({
               ) : (
                 /* HOTEL / ACTIVITY / TRANSIT / DOC INPUTS */
                 <>
+                  {(formCategory === 'hotel' || formCategory === 'activity') && (
+                    <div>
+                      <label className="form-label" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        <span>
+                          {formCategory === 'hotel'
+                            ? 'Search Hotel (Google Places & OSM)'
+                            : 'Search Activity / Sight (Google Places & OSM)'}
+                        </span>
+                      </label>
+                      <PlaceSearchInput
+                        placeholder={
+                          formCategory === 'hotel'
+                            ? 'Search hotel e.g. Hilton Tokyo, Park Hyatt, Hotel Gracery...'
+                            : 'Search sight or venue e.g. Shibuya Sky, Louvre...'
+                        }
+                        onSelectPlace={(place) => {
+                          setTitle(place.title);
+                          if (place.address) setLocation(place.address);
+                        }}
+                      />
+                    </div>
+                  )}
+
                   <div>
                     <label className="form-label">
                       {formCategory === 'hotel' && 'Hotel / Accommodation Name *'}

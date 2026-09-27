@@ -47,7 +47,7 @@ export const OptimizeRouteModal: React.FC<OptimizeRouteModalProps> = ({
             <div>
               <h2 className="modal-title">Route Optimization (Day {preview.dayNumber})</h2>
               <p className="modal-subtitle">
-                2-opt Traveling Salesperson comparison powered by Rust WASM
+                Time-window aware 2-opt TSP — respects meal times, opening hours &amp; fixed slots
               </p>
             </div>
           </div>
@@ -138,6 +138,27 @@ export const OptimizeRouteModal: React.FC<OptimizeRouteModalProps> = ({
                 </div>
               </div>
             </div>
+
+            {/* Constraint badges — meal alignment, opening hours, fixed slots */}
+            {preview.constraintsRespected && (
+              <div className="constraints-badge-strip">
+                {preview.constraintsRespected.mealsAligned.map((meal) => (
+                  <span key={meal} className="constraint-badge meal-badge">
+                    🍽️ {meal} aligned
+                  </span>
+                ))}
+                {preview.constraintsRespected.operatingHoursPassed > 0 && (
+                  <span className="constraint-badge hours-badge">
+                    🏛️ {preview.constraintsRespected.operatingHoursPassed} sight{preview.constraintsRespected.operatingHoursPassed !== 1 ? 's' : ''} within opening hours
+                  </span>
+                )}
+                {preview.constraintsRespected.fixedSlotsPreserved > 0 && (
+                  <span className="constraint-badge fixed-badge">
+                    🔒 {preview.constraintsRespected.fixedSlotsPreserved} fixed slot{preview.constraintsRespected.fixedSlotsPreserved !== 1 ? 's' : ''} preserved
+                  </span>
+                )}
+              </div>
+            )}
 
             {/* Sequence Comparison */}
             <div>

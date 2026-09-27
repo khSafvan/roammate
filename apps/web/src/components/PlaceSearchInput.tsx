@@ -69,6 +69,7 @@ const CATEGORY_EMOJIS: Record<StopCategory, string> = {
   lodging: '🏨',
   transit: '🚆',
   flight: '✈️',
+  note: '📝',
 };
 
 export const PlaceSearchInput: React.FC<PlaceSearchInputProps> = ({

@@ -145,8 +145,9 @@ export function generateIcalendarFeed(trip: Trip): string {
       }
 
       (day.stops || []).forEach((stop) => {
+        const isNote = stop.category === 'note';
         const startMins = parseTimeToMinutes(stop.startTime || '09:00 AM');
-        const duration = stop.durationMinutes > 0 ? stop.durationMinutes : 60;
+        const duration = stop.durationMinutes > 0 ? stop.durationMinutes : (isNote ? 15 : 60);
         const endMins = startMins + duration;
 
         const start = new Date(baseDate);
@@ -160,8 +161,8 @@ export function generateIcalendarFeed(trip: Trip): string {
         lines.push(`DTSTAMP:${nowIcs}`);
         lines.push(`DTSTART:${formatIcsDateTime(start)}`);
         lines.push(`DTEND:${formatIcsDateTime(end)}`);
-        lines.push(`SUMMARY:${escapeIcsText(stop.title)}`);
-        if (stop.address) {
+        lines.push(`SUMMARY:${isNote ? '📝 ' : ''}${escapeIcsText(stop.title)}`);
+        if (stop.address && !isNote) {
           lines.push(`LOCATION:${escapeIcsText(stop.address)}`);
         }
 

@@ -17,6 +17,7 @@ import { PlaceSearchInput, PlaceSearchResult } from './PlaceSearchInput';
 interface PlacesToVisitDrawerProps {
   places: ItineraryStop[];
   days: TripDay[];
+  destination?: string;
   onAddPlace: (place: Omit<ItineraryStop, 'id' | 'orderIndex'>) => void;
   onDeletePlace: (id: string) => void;
   onAssignToDay: (placeId: string, dayIndex: number) => void;
@@ -24,12 +25,21 @@ interface PlacesToVisitDrawerProps {
   onBackToTimeline?: () => void;
 }
 
+const DISCOVERY_PRESETS = [
+  { label: '🏛️ Top Sights', query: 'attractions and sights', category: 'sight' as StopCategory },
+  { label: '🍜 Local Dining', query: 'restaurants and local food', category: 'dining' as StopCategory },
+  { label: '☕ Specialty Cafes', query: 'coffee shops and cafes', category: 'dining' as StopCategory },
+  { label: '🌳 Scenic Parks', query: 'parks and viewpoints', category: 'sight' as StopCategory },
+  { label: '🛍️ Shopping', query: 'markets and shopping', category: 'sight' as StopCategory },
+];
+
 const CATEGORY_COLORS: Record<StopCategory, string> = {
   sight: '#3B82F6',
   dining: '#F97316',
   lodging: '#8B5CF6',
   transit: '#10B981',
   flight: '#0EA5E9',
+  note: '#F59E0B',
 };
 
 const CATEGORY_LABELS: Record<StopCategory, string> = {
@@ -38,11 +48,13 @@ const CATEGORY_LABELS: Record<StopCategory, string> = {
   lodging: 'Hotel & Stay',
   transit: 'Transit',
   flight: 'Flight',
+  note: 'Note & Tip',
 };
 
 export const PlacesToVisitDrawer: React.FC<PlacesToVisitDrawerProps> = ({
   places = [],
   days,
+  destination,
   onAddPlace,
   onDeletePlace,
   onAssignToDay,
@@ -52,6 +64,41 @@ export const PlacesToVisitDrawer: React.FC<PlacesToVisitDrawerProps> = ({
   const [selectedCategory, setSelectedCategory] = useState<StopCategory | 'all'>('all');
   const [editingPlace, setEditingPlace] = useState<ItineraryStop | null>(null);
   const [isManualAddOpen, setIsManualAddOpen] = useState(false);
+  const [discoveryResults, setDiscoveryResults] = useState<PlaceSearchResult[]>([]);
+  const [isDiscovering, setIsDiscovering] = useState(false);
+  const [activePreset, setActivePreset] = useState<string | null>(null);
+
+  const handlePresetClick = async (preset: typeof DISCOVERY_PRESETS[0]) => {
+    setActivePreset(preset.label);
+    setIsDiscovering(true);
+    try {
+      const dest = destination ? destination.split(',')[0].trim() : '';
+      const q = dest ? `${preset.query} in ${dest}` : preset.query;
+      const url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(q)}&format=json&addressdetails=1&limit=6`;
+      const res = await fetch(url, {
+        headers: { 'Accept-Language': 'en', 'User-Agent': 'MojoLog/1.0' },
+        signal: AbortSignal.timeout(6000),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        const results: PlaceSearchResult[] = data.map((item: any) => ({
+          title: item.display_name.split(',')[0],
+          subtitle: item.display_name.split(',').slice(1, 3).join(',').trim(),
+          address: item.display_name,
+          coordinates: {
+            latitude: parseFloat(item.lat),
+            longitude: parseFloat(item.lon),
+          },
+          category: preset.category,
+        }));
+        setDiscoveryResults(results);
+      }
+    } catch {
+      setDiscoveryResults([]);
+    } finally {
+      setIsDiscovering(false);
+    }
+  };
 
   // Manual Add Form states
   const [title, setTitle] = useState('');
@@ -184,6 +231,100 @@ export const PlacesToVisitDrawer: React.FC<PlacesToVisitDrawerProps> = ({
           onSelectPlace={handleQuickAddFromSearch}
           placeholder="Type any landmark, museum, or eatery (e.g. Miracle Garden, Time Out Market, Tokyo Skytree)..."
         />
+
+        {/* Instant POI Discovery Presets */}
+        <div style={{ marginTop: '14px', paddingTop: '12px', borderTop: '1px solid var(--border-light)' }}>
+          <div style={{ fontSize: '11px', fontWeight: 600, color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.4px', marginBottom: '8px' }}>
+            Instant POI Discovery {destination ? `· ${destination.split(',')[0]}` : ''}
+          </div>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+            {DISCOVERY_PRESETS.map((preset) => (
+              <button
+                key={preset.label}
+                type="button"
+                onClick={() => handlePresetClick(preset)}
+                disabled={isDiscovering}
+                style={{
+                  padding: '6px 12px',
+                  borderRadius: 'var(--radius-pill, 9999px)',
+                  backgroundColor: activePreset === preset.label ? 'rgba(59, 130, 246, 0.12)' : 'var(--bg-subtle)',
+                  border: `1px solid ${activePreset === preset.label ? 'var(--brand-blue, #3B82F6)' : 'var(--border-light)'}`,
+                  color: activePreset === preset.label ? 'var(--brand-blue, #3B82F6)' : 'var(--text-secondary)',
+                  fontSize: '12px',
+                  fontWeight: 600,
+                  cursor: isDiscovering ? 'wait' : 'pointer',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                }}
+              >
+                <span>{preset.label}</span>
+              </button>
+            ))}
+          </div>
+
+          {/* Discovery Loading State */}
+          {isDiscovering && (
+            <div style={{ padding: '16px 0', fontSize: '12px', color: 'var(--text-tertiary)', textAlign: 'center' }}>
+              Finding top spots via OpenStreetMap...
+            </div>
+          )}
+
+          {/* Discovery Results Grid */}
+          {!isDiscovering && discoveryResults.length > 0 && (
+            <div style={{ marginTop: '12px', display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: '10px' }}>
+              {discoveryResults.map((item, idx) => (
+                <div
+                  key={idx}
+                  style={{
+                    padding: '10px 12px',
+                    borderRadius: 'var(--radius-md, 8px)',
+                    backgroundColor: 'var(--bg-subtle)',
+                    border: '1px solid var(--border-light)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    gap: '8px',
+                  }}
+                >
+                  <div style={{ minWidth: 0, flex: 1 }}>
+                    <div style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-primary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                      {item.title}
+                    </div>
+                    <div style={{ fontSize: '11px', color: 'var(--text-tertiary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                      {item.subtitle}
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      handleQuickAddFromSearch(item);
+                      setDiscoveryResults((prev) => prev.filter((_, i) => i !== idx));
+                    }}
+                    style={{
+                      padding: '4px 8px',
+                      borderRadius: 'var(--radius-pill, 9999px)',
+                      backgroundColor: 'var(--brand-blue, #3B82F6)',
+                      color: '#fff',
+                      border: 'none',
+                      fontSize: '11px',
+                      fontWeight: 600,
+                      cursor: 'pointer',
+                      flexShrink: 0,
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '4px',
+                    }}
+                    title="Add to Ideas"
+                  >
+                    <Plus size={12} />
+                    <span>Add</span>
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Manual Place Creation Form */}

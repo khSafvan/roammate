@@ -1,6 +1,11 @@
-import React, { useState } from 'react';
-import { FileText, PhoneCall, Save, Wifi, X } from 'lucide-react';
+import React, { useMemo, useState } from 'react';
+import { FileText, PhoneCall, Save, Sparkles, Wifi, X } from 'lucide-react';
 import { Trip, TripDay } from '../types/trip';
+import {
+  formatEmergencySnippet,
+  formatTravelUtilitySnippet,
+  getCountryIntelligence,
+} from '../utils/countryIntelligence';
 
 interface ScratchpadModalProps {
   isOpen: boolean;
@@ -21,6 +26,19 @@ export const ScratchpadModal: React.FC<ScratchpadModalProps> = ({
   const [generalNotes, setGeneralNotes] = useState(trip.generalNotes || '');
   const [dayNotes, setDayNotes] = useState(activeDay?.notes || '');
   const [isSaved, setIsSaved] = useState(false);
+
+  const intel = useMemo(
+    () => getCountryIntelligence(trip.countryCode, trip.destination),
+    [trip.countryCode, trip.destination]
+  );
+
+  const handleAutoFillIntel = () => {
+    if (!intel) return;
+    const emSnippet = formatEmergencySnippet(intel);
+    const utilSnippet = formatTravelUtilitySnippet(intel);
+    setEmergencyContacts((prev) => (prev ? `${prev}\n\n${emSnippet}` : emSnippet));
+    setGeneralNotes((prev) => (prev ? `${prev}\n\n${utilSnippet}` : utilSnippet));
+  };
 
   if (!isOpen) return null;
 
@@ -73,6 +91,46 @@ export const ScratchpadModal: React.FC<ScratchpadModalProps> = ({
         </div>
 
         <form onSubmit={handleSave} className="auth-content-col">
+          {/* Quick Pre-fill from Destination Intelligence */}
+          {intel && (
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                padding: '8px 12px',
+                borderRadius: 'var(--radius-md, 8px)',
+                backgroundColor: 'rgba(59, 130, 246, 0.08)',
+                border: '1px solid rgba(59, 130, 246, 0.2)',
+                fontSize: '12px',
+              }}
+            >
+              <span>
+                Destination detected: <strong>{intel.name}</strong> ({intel.countryCode})
+              </span>
+              <button
+                type="button"
+                onClick={handleAutoFillIntel}
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '4px',
+                  padding: '4px 10px',
+                  borderRadius: 'var(--radius-pill, 9999px)',
+                  backgroundColor: 'var(--brand-blue, #3B82F6)',
+                  color: '#fff',
+                  border: 'none',
+                  fontSize: '11px',
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                }}
+              >
+                <Sparkles size={12} />
+                <span>Auto-Fill Info</span>
+              </button>
+            </div>
+          )}
+
           {/* Emergency & Embassy Contacts */}
           <div>
             <label className="form-label" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>

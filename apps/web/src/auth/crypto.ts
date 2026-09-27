@@ -19,7 +19,14 @@ export interface VaultSession {
  * Generates an RFC 4122 v4 UUID for new accounts (AIOStreams pattern)
  */
 export function generateAccountUuid(): string {
-  return crypto.randomUUID();
+  if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+    return crypto.randomUUID();
+  }
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
+    const r = (Math.random() * 16) | 0;
+    const v = c === 'x' ? r : (r & 0x3) | 0x8;
+    return v.toString(16);
+  });
 }
 
 /**
@@ -33,16 +40,37 @@ export function validateAccountUuid(uuid: string): boolean {
 }
 
 /**
+ * Fallback deterministic 64-char hex hash when crypto.subtle is unavailable (e.g. non-HTTPS IP contexts)
+ */
+function fallbackHash64(input: string): string {
+  let h1 = 0xdeadbeef;
+  let h2 = 0x41c6ce57;
+  for (let i = 0; i < input.length; i++) {
+    const ch = input.charCodeAt(i);
+    h1 = Math.imul(h1 ^ ch, 2654435761);
+    h2 = Math.imul(h2 ^ ch, 1597334677);
+  }
+  h1 = Math.imul(h1 ^ (h1 >>> 16), 2246822507) ^ Math.imul(h2 ^ (h2 >>> 13), 3266489909);
+  h2 = Math.imul(h2 ^ (h2 >>> 16), 2246822507) ^ Math.imul(h1 ^ (h1 >>> 13), 3266489909);
+  const p1 = (h1 >>> 0).toString(16).padStart(8, '0');
+  const p2 = (h2 >>> 0).toString(16).padStart(8, '0');
+  return (p1 + p2).repeat(4);
+}
+
+/**
  * Hashes user credentials (UUID + Password) via native Web Crypto API (SHA-256)
  * Produces an irreversible, deterministic zero-knowledge auth token / password hash
  */
 export async function hashCredentials(uuid: string, password: string): Promise<string> {
   const normalized = `${uuid.trim().toLowerCase()}:${password}`;
-  const encoder = new TextEncoder();
-  const data = encoder.encode(normalized);
-  const hashBuffer = await crypto.subtle.digest('SHA-256', data);
-  const hashArray = Array.from(new Uint8Array(hashBuffer));
-  return hashArray.map((b) => b.toString(16).padStart(2, '0')).join('');
+  if (typeof crypto !== 'undefined' && crypto.subtle && typeof crypto.subtle.digest === 'function') {
+    const encoder = new TextEncoder();
+    const data = encoder.encode(normalized);
+    const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+    const hashArray = Array.from(new Uint8Array(hashBuffer));
+    return hashArray.map((b) => b.toString(16).padStart(2, '0')).join('');
+  }
+  return fallbackHash64(normalized);
 }
 
 /**
@@ -67,11 +95,14 @@ export function validateVaultPhrase(phrase: string): boolean {
  */
 export async function hashPhrase(phrase: string): Promise<string> {
   const normalized = phrase.trim().toLowerCase().replace(/\s+/g, ' ');
-  const encoder = new TextEncoder();
-  const data = encoder.encode(normalized);
-  const hashBuffer = await crypto.subtle.digest('SHA-256', data);
-  const hashArray = Array.from(new Uint8Array(hashBuffer));
-  return hashArray.map((b) => b.toString(16).padStart(2, '0')).join('');
+  if (typeof crypto !== 'undefined' && crypto.subtle && typeof crypto.subtle.digest === 'function') {
+    const encoder = new TextEncoder();
+    const data = encoder.encode(normalized);
+    const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+    const hashArray = Array.from(new Uint8Array(hashBuffer));
+    return hashArray.map((b) => b.toString(16).padStart(2, '0')).join('');
+  }
+  return fallbackHash64(normalized);
 }
 
 /**
@@ -242,12 +273,25 @@ export function deleteLocalAccount(userId: string): void {
   clearVaultSession();
   localStorage.removeItem(`${STORAGE_KEYS.USER_PREFIX}${userId}`);
   
-  // Remove all cached itineraries associated with this app/vault
+  // Remove all cached itineraries associated with this specific user
   const keysToRemove: string[] = [];
   for (let i = 0; i < localStorage.length; i++) {
     const key = localStorage.key(i);
-    if (key && (key.startsWith(STORAGE_KEYS.TRIP_PREFIX) || key.startsWith(`roammate_sync_${userId}`) || key.startsWith(`mojolog_sync_${userId}`))) {
+    if (!key) continue;
+    if (key.startsWith(`roammate_sync_${userId}`) || key.startsWith(`mojolog_sync_${userId}`)) {
       keysToRemove.push(key);
+    } else if (key.startsWith(STORAGE_KEYS.TRIP_PREFIX)) {
+      const item = localStorage.getItem(key);
+      if (item) {
+        try {
+          const parsed = JSON.parse(item);
+          if (!parsed.userId || parsed.userId === userId || key.includes(userId)) {
+            keysToRemove.push(key);
+          }
+        } catch {
+          keysToRemove.push(key);
+        }
+      }
     }
   }
   keysToRemove.forEach((k) => localStorage.removeItem(k));

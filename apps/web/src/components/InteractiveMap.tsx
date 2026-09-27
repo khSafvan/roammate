@@ -3,6 +3,7 @@ import { GeoJSONSource, LngLatBounds, Map as MapLibreMap, NavigationControl } fr
 import 'maplibre-gl/dist/maplibre-gl.css';
 import {
   Download,
+  Edit2,
   ExternalLink,
   Eye,
   Maximize2,
@@ -20,6 +21,7 @@ import { computeDayRouteData } from '../utils/routing';
 interface InteractiveMapProps {
   day: TripDay;
   onSelectStop: (stop: ItineraryStop) => void;
+  onEditStop?: (stop: ItineraryStop) => void;
   onOptimizeDay: () => void;
   isOptimized: boolean;
   canUndo?: boolean;
@@ -32,6 +34,7 @@ interface InteractiveMapProps {
 export const InteractiveMap: React.FC<InteractiveMapProps> = ({
   day,
   onSelectStop,
+  onEditStop,
   onOptimizeDay,
   isOptimized,
   canUndo = false,
@@ -49,8 +52,13 @@ export const InteractiveMap: React.FC<InteractiveMapProps> = ({
   const routeCoordinatesRef = useRef<[number, number][]>([]);
   const routeRequestIdRef = useRef(0);
 
+  const geographicStops = useMemo(
+    () => day.stops.filter((s) => s.category !== 'note'),
+    [day.stops]
+  );
+
   const [internalSelectedStopId, setInternalSelectedStopId] = useState<string | null>(
-    day.stops[0]?.id || null
+    geographicStops[0]?.id || null
   );
   const selectedStopId = propSelectedStopId !== undefined ? propSelectedStopId : internalSelectedStopId;
 
@@ -61,38 +69,38 @@ export const InteractiveMap: React.FC<InteractiveMapProps> = ({
   // Sync selected stop when active day changes
   useEffect(() => {
     if (propSelectedStopId === undefined) {
-      setInternalSelectedStopId(day.stops[0]?.id || null);
+      setInternalSelectedStopId(geographicStops[0]?.id || null);
     }
-  }, [day.id, propSelectedStopId]);
+  }, [day.id, propSelectedStopId, geographicStops]);
 
   // Direct sequence distance fallback
   const directDistanceKm = useMemo(() => {
     let dist = 0;
-    for (let i = 0; i < day.stops.length - 1; i++) {
+    for (let i = 0; i < geographicStops.length - 1; i++) {
       dist += computeDistanceKm(
-        day.stops[i].coordinates.latitude,
-        day.stops[i].coordinates.longitude,
-        day.stops[i + 1].coordinates.latitude,
-        day.stops[i + 1].coordinates.longitude
+        geographicStops[i].coordinates.latitude,
+        geographicStops[i].coordinates.longitude,
+        geographicStops[i + 1].coordinates.latitude,
+        geographicStops[i + 1].coordinates.longitude
       );
     }
     return Number((dist * TRANSIT_CONFIG.ROAD_WINDING_FACTOR).toFixed(1));
-  }, [day.stops]);
+  }, [geographicStops]);
 
   const displayDistanceKm = actualRouteKm ?? directDistanceKm;
 
-  const activeIndex = day.stops.findIndex((s) => s.id === selectedStopId);
-  const activeStop = (activeIndex >= 0 ? day.stops[activeIndex] : null) || day.stops[0];
+  const activeIndex = geographicStops.findIndex((s) => s.id === selectedStopId);
+  const activeStop = (activeIndex >= 0 ? geographicStops[activeIndex] : null) || geographicStops[0];
   const activeStopIndex = activeIndex >= 0 ? activeIndex : 0;
 
   // Fit 2D map camera smoothly to all day stops or route coordinates
   const fitToStops = useCallback((immediate = false) => {
     const map = mapRef.current;
-    if (!map || day.stops.length === 0) return;
+    if (!map || geographicStops.length === 0) return;
 
-    if (day.stops.length === 1) {
+    if (geographicStops.length === 1) {
       map.flyTo({
-        center: [day.stops[0].coordinates.longitude, day.stops[0].coordinates.latitude],
+        center: [geographicStops[0].coordinates.longitude, geographicStops[0].coordinates.latitude],
         zoom: 14,
         pitch: 0,
         bearing: 0,
@@ -105,7 +113,7 @@ export const InteractiveMap: React.FC<InteractiveMapProps> = ({
     const bounds = new LngLatBounds();
     const coords = routeCoordinatesRef.current.length > 0
       ? routeCoordinatesRef.current
-      : day.stops.map((s) => [s.coordinates.longitude, s.coordinates.latitude] as [number, number]);
+      : geographicStops.map((s) => [s.coordinates.longitude, s.coordinates.latitude] as [number, number]);
 
     coords.forEach(([lng, lat]) => {
       bounds.extend([lng, lat]);
@@ -118,7 +126,7 @@ export const InteractiveMap: React.FC<InteractiveMapProps> = ({
       bearing: 0,
       duration: immediate ? 0 : UI_CONFIG.MAP_FIT_DURATION_MS,
     });
-  }, [day.stops]);
+  }, [geographicStops]);
 
   // Setup multi-modal GeoJSON source and styled line layers if not yet added
   const ensureRouteLayers = useCallback((map: MapLibreMap) => {
@@ -263,7 +271,7 @@ export const InteractiveMap: React.FC<InteractiveMapProps> = ({
       map.setPaintProperty('gpx-route-drive', 'line-color', day.themeColor || '#2563EB');
     }
 
-    if (day.stops.length < 2) {
+    if (geographicStops.length < 2) {
       const source = map.getSource('gpx-route-source') as GeoJSONSource | undefined;
       if (source) {
         source.setData({ type: 'FeatureCollection', features: [] });
@@ -275,7 +283,7 @@ export const InteractiveMap: React.FC<InteractiveMapProps> = ({
 
     const currentReqId = ++routeRequestIdRef.current;
 
-    computeDayRouteData(day.stops, transitModes).then((routeData) => {
+    computeDayRouteData(geographicStops, transitModes).then((routeData) => {
       if (currentReqId !== routeRequestIdRef.current) return;
       routeCoordinatesRef.current = routeData.fullCoordinates;
       setActualRouteKm(routeData.totalDistanceKm);
@@ -286,7 +294,7 @@ export const InteractiveMap: React.FC<InteractiveMapProps> = ({
       }
       fitToStops(false);
     });
-  }, [day.stops, day.themeColor, transitModes, ensureRouteLayers, fitToStops]);
+  }, [geographicStops, day.themeColor, transitModes, ensureRouteLayers, fitToStops]);
 
   // Setup native WebGL TerraWay Waypoint Layers (Zero DOM lag, locked to map projection matrix)
   const ensureWaypointLayers = useCallback((map: MapLibreMap) => {
@@ -438,8 +446,8 @@ export const InteractiveMap: React.FC<InteractiveMapProps> = ({
     const source = map.getSource('terraway-waypoints-source') as GeoJSONSource | undefined;
     if (!source) return;
 
-    const totalStops = day.stops.length;
-    const features = day.stops.map((stop, index) => {
+    const totalStops = geographicStops.length;
+    const features = geographicStops.map((stop, index) => {
       const isStart = index === 0;
       const isFinish = index === totalStops - 1 && totalStops > 1;
       const isSelected = stop.id === selectedStopId;
@@ -471,7 +479,7 @@ export const InteractiveMap: React.FC<InteractiveMapProps> = ({
       type: 'FeatureCollection',
       features,
     });
-  }, [day.stops, day.themeColor, selectedStopId, ensureWaypointLayers]);
+  }, [geographicStops, day.themeColor, selectedStopId, ensureWaypointLayers]);
 
   // Keep refs for callback execution during map initialization
   const updateWaypointLayerRef = useRef(updateWaypointLayer);
@@ -487,8 +495,8 @@ export const InteractiveMap: React.FC<InteractiveMapProps> = ({
 
     try {
       const initialCenter: [number, number] =
-        day.stops.length > 0
-          ? [day.stops[0].coordinates.longitude, day.stops[0].coordinates.latitude]
+        geographicStops.length > 0
+          ? [geographicStops[0].coordinates.longitude, geographicStops[0].coordinates.latitude]
           : [MAP_CONFIG.DEFAULT_CENTER.longitude, MAP_CONFIG.DEFAULT_CENTER.latitude];
 
       const map = new MapLibreMap({
@@ -553,7 +561,7 @@ export const InteractiveMap: React.FC<InteractiveMapProps> = ({
       updateRouteLayer(map);
       fitToStops(false);
     }
-  }, [day.stops, day.themeColor, transitModes, selectedStopId, updateWaypointLayer, updateRouteLayer, fitToStops]);
+  }, [geographicStops, day.themeColor, transitModes, selectedStopId, updateWaypointLayer, updateRouteLayer, fitToStops]);
 
   // Export RFC / Topografix Compliant GPX 1.1 file
   const handleExportGpx = () => {
@@ -581,7 +589,7 @@ export const InteractiveMap: React.FC<InteractiveMapProps> = ({
   };
 
   const isStartStop = activeStopIndex === 0;
-  const isFinishStop = activeStopIndex === day.stops.length - 1 && day.stops.length > 1;
+  const isFinishStop = activeStopIndex === geographicStops.length - 1 && geographicStops.length > 1;
 
   return (
     <div className="map-view-card">
@@ -599,7 +607,7 @@ export const InteractiveMap: React.FC<InteractiveMapProps> = ({
             </span>
           </div>
           <p className="map-subtitle">
-            {day.stops.length} Waypoints · {displayDistanceKm} km multi-modal path
+            {geographicStops.length} Waypoints · {displayDistanceKm} km multi-modal path
           </p>
         </div>
 
@@ -696,6 +704,17 @@ export const InteractiveMap: React.FC<InteractiveMapProps> = ({
             <div className="dock-address">{activeStop.address}</div>
           </div>
           <div className="dock-actions">
+            {onEditStop && (
+              <button
+                type="button"
+                className="dock-edit-btn"
+                onClick={() => onEditStop(activeStop)}
+                title="Edit stop details"
+              >
+                <Edit2 size={13} />
+                <span>Edit</span>
+              </button>
+            )}
             <button
               className="dock-focus-btn"
               onClick={() => handleFocusStop(activeStop)}

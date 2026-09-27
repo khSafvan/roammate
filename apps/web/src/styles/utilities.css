@@ -332,3 +332,88 @@
   width: 112px;
 }
 
+/* Viewport Lock (optional modal/immersive mode) */
+@media (min-width: 1025px) {
+  .app-shell.viewport-locked {
+    height: 100vh;
+    overflow: hidden;
+  }
+
+  .app-shell.viewport-locked .main-workspace {
+    flex: 1;
+    min-height: 0;
+    max-width: 100%;
+    margin: 0 auto;
+    width: 100%;
+    padding: 16px 24px 20px;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 24px;
+    align-items: stretch;
+    overflow: hidden;
+  }
+
+  .app-shell.viewport-locked .timeline-pane {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    height: 100%;
+    overflow-y: auto;
+    padding-right: 6px;
+  }
+
+  .app-shell.viewport-locked .map-pane {
+    height: 100%;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .app-shell.viewport-locked .map-pane .terraink-viewport-wrapper {
+    height: 100% !important;
+    flex: 1;
+    min-height: 0;
+  }
+}
+
+/* Optimization Constraint Badges */
+.constraints-badge-strip {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  padding: 10px 14px;
+  border-radius: var(--radius-md);
+  background-color: var(--bg-subtle);
+  border: 1px solid var(--border-light);
+}
+
+.constraint-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 3px 8px;
+  border-radius: var(--radius-pill);
+}
+
+.constraint-badge.meal-badge {
+  background-color: rgba(245, 158, 11, 0.12);
+  color: #B45309;
+  border: 1px solid rgba(245, 158, 11, 0.25);
+}
+
+.constraint-badge.hours-badge {
+  background-color: rgba(16, 185, 129, 0.1);
+  color: #059669;
+  border: 1px solid rgba(16, 185, 129, 0.25);
+}
+
+.constraint-badge.fixed-badge {
+  background-color: rgba(59, 130, 246, 0.1);
+  color: #2563EB;
+  border: 1px solid rgba(59, 130, 246, 0.25);
+}
+
+

@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { getVaultSession, VaultSession } from '../auth/crypto';
+import { clearVaultSession, deleteLocalAccount, getVaultSession, VaultSession } from '../auth/crypto';
 import {
   createDefaultTrip,
   deleteTripOnEdge,
@@ -38,6 +38,7 @@ export interface UseVaultReturn {
   createTrip: (params: CreateTripParams) => Trip;
   deleteTrip: (tripId: string) => Promise<void>;
   saveGuestTripToVault: () => Promise<void>;
+  handleLogout: () => void;
   handleDeleteAccount: () => void;
   exitReadOnly: () => void;
 }
@@ -49,8 +50,19 @@ export interface UseVaultReturn {
  */
 export function useVault(): UseVaultReturn {
   const [vaultSession, setVaultSession] = useState<VaultSession | null>(getVaultSession());
-  const [trips, setTrips] = useState<Trip[]>(() => loadAllLocalTrips());
-  const [activeTrip, setActiveTrip] = useState<Trip>(() => loadLocalTrip() || mockTripData);
+  const [trips, setTrips] = useState<Trip[]>(() => {
+    const s = getVaultSession();
+    return s ? loadAllLocalTrips(s.userId) : [];
+  });
+  const [activeTrip, setActiveTrip] = useState<Trip>(() => {
+    const s = getVaultSession();
+    if (s) {
+      const userTrips = loadAllLocalTrips(s.userId);
+      const preferred = getActiveTripIdLocal();
+      return userTrips.find((t) => t.id === preferred) || userTrips[0] || mockTripData;
+    }
+    return mockTripData;
+  });
   const [isReadOnly, setIsReadOnly] = useState(false);
   const [isGuestMode, setIsGuestMode] = useState(false);
   const [guestError, setGuestError] = useState<string | null>(null);
@@ -102,26 +114,28 @@ export function useVault(): UseVaultReturn {
     }
 
     // 5. Normal multi-trip vault hydration
-    const initialTrips = loadAllLocalTrips();
-    setTrips(initialTrips);
-
     const activeSession = getVaultSession();
     if (activeSession) {
+      const userTrips = loadAllLocalTrips(activeSession.userId);
+      setTrips(userTrips);
+      const preferredId = getActiveTripIdLocal();
+      const target = userTrips.find((t) => t.id === preferredId) || userTrips[0];
+      if (target) {
+        setActiveTrip(target);
+        setActiveTripIdLocal(target.id);
+      }
       fetchItinerariesFromEdge(activeSession.userId).then((edgeTrips) => {
         if (edgeTrips && edgeTrips.length > 0) {
           setTrips(edgeTrips);
-          const preferredId = getActiveTripIdLocal();
-          const target = edgeTrips.find((t) => t.id === preferredId) || edgeTrips[0];
-          setActiveTrip(target);
-          setActiveTripIdLocal(target.id);
+          const pref = getActiveTripIdLocal();
+          const edgeTarget = edgeTrips.find((t) => t.id === pref) || edgeTrips[0];
+          setActiveTrip(edgeTarget);
+          setActiveTripIdLocal(edgeTarget.id);
         }
         isHydratedRef.current = true;
       });
     } else {
-      const preferredId = getActiveTripIdLocal();
-      const target = initialTrips.find((t) => t.id === preferredId) || initialTrips[0] || mockTripData;
-      setActiveTrip(target);
-      setActiveTripIdLocal(target.id);
+      setTrips([]);
       isHydratedRef.current = true;
     }
   }, []);
@@ -129,12 +143,21 @@ export function useVault(): UseVaultReturn {
   // When vault session changes (login/restore), fetch remote trips
   useEffect(() => {
     if (vaultSession && !isReadOnly && isHydratedRef.current) {
+      const userTrips = loadAllLocalTrips(vaultSession.userId);
+      setTrips(userTrips);
+      const preferredId = getActiveTripIdLocal();
+      const target = userTrips.find((t) => t.id === preferredId) || userTrips[0];
+      if (target) {
+        setActiveTrip(target);
+        setActiveTripIdLocal(target.id);
+      }
       fetchItinerariesFromEdge(vaultSession.userId).then((edgeTrips) => {
         if (edgeTrips && edgeTrips.length > 0) {
           setTrips(edgeTrips);
-          const preferredId = getActiveTripIdLocal();
-          const target = edgeTrips.find((t) => t.id === preferredId) || edgeTrips[0];
-          setActiveTrip(target);
+          const pref = getActiveTripIdLocal();
+          const edgeTarget = edgeTrips.find((t) => t.id === pref) || edgeTrips[0];
+          setActiveTrip(edgeTarget);
+          setActiveTripIdLocal(edgeTarget.id);
         }
       });
     }
@@ -185,6 +208,9 @@ export function useVault(): UseVaultReturn {
         params.startTime,
         params.endTime
       );
+      if (vaultSession?.userId) {
+        newTrip.userId = vaultSession.userId;
+      }
 
       setTrips((prev) => [newTrip, ...prev]);
       setActiveTrip(newTrip);
@@ -192,9 +218,8 @@ export function useVault(): UseVaultReturn {
 
       if (vaultSession) {
         saveItineraryToEdge(vaultSession.userId, newTrip);
-      } else {
-        localStorage.setItem(`${STORAGE_KEYS.TRIP_PREFIX}${newTrip.id}`, JSON.stringify(newTrip));
       }
+      localStorage.setItem(`${STORAGE_KEYS.TRIP_PREFIX}${newTrip.id}`, JSON.stringify(newTrip));
 
       return newTrip;
     },
@@ -223,6 +248,7 @@ export function useVault(): UseVaultReturn {
       ...activeTrip,
       id: `trip_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
       title: `${activeTrip.title} (Joined)`,
+      userId: vaultSession?.userId,
       shareToken: Math.random().toString(36).substring(2, 10),
       guestKey: `guest_${Math.random().toString(36).substring(2, 12)}`,
     };
@@ -243,13 +269,26 @@ export function useVault(): UseVaultReturn {
     }
   }, [activeTrip, vaultSession]);
 
+  // Account logout handler
+  const handleLogout = useCallback(() => {
+    clearVaultSession();
+    setVaultSession(null);
+    setTrips([]);
+    setActiveTrip(mockTripData);
+    localStorage.removeItem(STORAGE_KEYS.ACTIVE_TRIP_ID);
+  }, []);
+
   // Account deletion reset handler
   const handleDeleteAccount = useCallback(() => {
+    if (vaultSession) {
+      deleteLocalAccount(vaultSession.userId);
+    }
+    clearVaultSession();
     setVaultSession(null);
-    setTrips([mockTripData]);
+    setTrips([]);
     setActiveTrip(mockTripData);
-    setActiveTripIdLocal(mockTripData.id);
-  }, []);
+    localStorage.removeItem(STORAGE_KEYS.ACTIVE_TRIP_ID);
+  }, [vaultSession]);
 
   // Read-only / Guest preview exit handler
   const exitReadOnly = useCallback(() => {
@@ -276,6 +315,7 @@ export function useVault(): UseVaultReturn {
     createTrip,
     deleteTrip,
     saveGuestTripToVault,
+    handleLogout,
     handleDeleteAccount,
     exitReadOnly,
   };

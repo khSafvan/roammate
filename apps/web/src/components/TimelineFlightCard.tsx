@@ -1,9 +1,7 @@
 import React from 'react';
 import {
-  ExternalLink,
   Globe,
   Plane,
-  Radio,
   Tag,
   Ticket,
   User,
@@ -26,27 +24,25 @@ export const TimelineFlightCard: React.FC<TimelineFlightCardProps> = ({
   const isMultiCompanion = flights.length > 1;
 
   return (
-    <div className="timeline-flight-card-container">
-      {/* Timeline Node Anchor on left */}
-      <div className="timeline-axis-node">
-        <div className="flight-node-badge">
-          <Plane size={15} className="text-blue" />
-        </div>
+    <div className="timeline-item-wrapper timeline-flight-item">
+      {/* Category Node Anchored on the Sequential Axis */}
+      <div className="category-node node-flight" title="FLIGHTS">
+        <Plane size={16} strokeWidth={1.75} style={{ flexShrink: 0 }} />
       </div>
 
       {/* Card Content */}
-      <div className="timeline-flight-card">
+      <div className="timeline-card timeline-flight-card">
         <div className="flight-card-header">
           <div className="flight-header-left">
             <span className="flight-card-type-tag">
               {isMultiCompanion ? (
                 <>
-                  <Users size={12} />
+                  <Users size={12} style={{ flexShrink: 0 }} />
                   <span>Group Flight Arrivals · {flights.length} Travelers</span>
                 </>
               ) : (
                 <>
-                  <Plane size={12} />
+                  <Plane size={12} style={{ flexShrink: 0 }} />
                   <span>Inbound Flight Itinerary</span>
                 </>
               )}
@@ -72,14 +68,12 @@ export const TimelineFlightCard: React.FC<TimelineFlightCardProps> = ({
         {/* Flight Legs List */}
         <div className="companion-flights-list">
           {flights.map((fl) => {
-            const flightRadarUrl = `https://www.flightradar24.com/data/flights/${fl.flightNumber.toLowerCase()}`;
-
             return (
               <div key={fl.id} className="companion-flight-row">
                 <div className="companion-meta-col">
                   {fl.passengerName && (
                     <span className="companion-passenger-pill">
-                      <User size={11} className="text-blue" />
+                      <User size={11} className="text-blue" style={{ flexShrink: 0 }} />
                       <span>{fl.passengerName}</span>
                     </span>
                   )}
@@ -88,9 +82,9 @@ export const TimelineFlightCard: React.FC<TimelineFlightCardProps> = ({
                   </span>
                   {(fl.originCountry || fl.originCity) && (
                     <span className="companion-origin-pill">
-                      <Globe size={10} />
+                      <Globe size={11} style={{ flexShrink: 0 }} />
                       <span>
-                        {fl.originCity ? `${fl.originCity}, ` : ''}
+                        From {fl.originCity ? `${fl.originCity}, ` : ''}
                         {fl.originCountry || fl.departure.city}
                       </span>
                     </span>
@@ -109,31 +103,20 @@ export const TimelineFlightCard: React.FC<TimelineFlightCardProps> = ({
                   </div>
 
                   <div className="companion-sub-meta">
+                    {fl.departure.terminal && (
+                      <span className="meta-info-pill dep-term">Dep: {fl.departure.terminal}</span>
+                    )}
+                    {fl.arrival.terminal && (
+                      <span className="meta-info-pill arr-term">Arr: {fl.arrival.terminal}</span>
+                    )}
                     {fl.seat && <span className="meta-info-pill">Seat {fl.seat}</span>}
                     {fl.cabinClass && (
                       <span className="meta-info-pill">
-                        <Tag size={10} />
+                        <Tag size={10} style={{ flexShrink: 0 }} />
                         {fl.cabinClass}
                       </span>
                     )}
-                    {fl.arrival.terminal && (
-                      <span className="meta-info-pill">{fl.arrival.terminal}</span>
-                    )}
                   </div>
-                </div>
-
-                <div className="companion-actions-col">
-                  <a
-                    href={flightRadarUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="radar-mini-link"
-                    title="Live FlightRadar24 Tracker"
-                  >
-                    <Radio size={11} className="radar-pulse" />
-                    <span>Live</span>
-                    <ExternalLink size={10} />
-                  </a>
                 </div>
               </div>
             );

@@ -5,13 +5,48 @@
   .settings-content-container,
   .subview-workspace,
   .places-to-visit-container {
-    max-width: 960px;
+    max-width: 1140px;
     margin: 0 auto;
+  }
+}
+
+@media (max-width: 1280px) {
+  .btn-label-responsive {
+    display: none;
+  }
+  .trip-submeta {
+    display: none;
   }
 }
 
 /* 2. Tablet Viewport (<= 1024px) */
 @media (max-width: 1024px) {
+  .header-root {
+    min-height: 56px;
+    padding: 8px 0;
+  }
+
+  .header-container {
+    flex-wrap: wrap;
+    gap: 10px;
+    padding: 0 16px;
+  }
+
+  .trip-submeta {
+    display: none;
+  }
+
+  .header-center {
+    order: 3;
+    width: 100%;
+    margin-top: 2px;
+  }
+
+  .header-nav-tabs {
+    width: 100%;
+    justify-content: center;
+  }
+
   .main-workspace {
     grid-template-columns: 1fr;
     padding: 16px 14px 40px;
@@ -25,6 +60,17 @@
 
   .map-pane {
     position: static;
+    height: auto;
+    min-height: unset;
+  }
+
+  .terraink-viewport-wrapper {
+    height: 480px;
+    min-height: 480px;
+  }
+
+  .timeline-actions-bar {
+    grid-template-columns: 1fr 1fr;
   }
 
   .mobile-hidden {
@@ -34,6 +80,23 @@
 
 /* 3. Mid-Tablet Viewport (<= 768px) */
 @media (max-width: 768px) {
+  .wasm-badge {
+    display: none;
+  }
+
+  .trips-count-badge {
+    display: none;
+  }
+
+  .header-action-pill span {
+    display: none;
+  }
+
+  .header-action-pill {
+    padding: 8px;
+    border-radius: var(--radius-pill);
+  }
+
   .settings-content-container,
   .trips-dashboard-container,
   .places-to-visit-container {
@@ -70,6 +133,12 @@
 
   .trip-title {
     font-size: 15px;
+  }
+
+  .header-tab-btn {
+    padding: 5px 8px;
+    font-size: 11px;
+    gap: 4px;
   }
 
   .weather-metrics {

@@ -120,5 +120,29 @@ describe('GPX Utilities', () => {
       expect(gpx).toContain('Special &amp; Test — Day 1: Art &amp; Design &lt;Gallery&gt; &quot;Tokyo&quot;');
       expect(gpx).toContain('START: Mori Art &amp; Museum &lt;Roppongi&gt;');
     });
+
+    it('excludes note stops from waypoints and trackpoints', () => {
+      const dayWithNote: TripDay = {
+        ...mockDay,
+        stops: [
+          ...mockDay.stops,
+          {
+            id: 'note-stop',
+            orderIndex: 4,
+            title: 'Packing Reminder Note',
+            subtitle: 'Note',
+            address: 'Itinerary Note',
+            category: 'note',
+            startTime: '20:30',
+            durationMinutes: 0,
+            coordinates: { latitude: 0, longitude: 0 },
+          },
+        ],
+      };
+
+      const gpx = generateDayGpx(dayWithNote, 'Tokyo Adventure');
+      expect(gpx).not.toContain('Packing Reminder Note');
+      expect(gpx).not.toContain('lat="0.000000" lon="0.000000"');
+    });
   });
 });

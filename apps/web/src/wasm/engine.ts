@@ -145,14 +145,19 @@ export function computeTransitLegsWasm(
       }));
       const resStr = wasm_compute_transit_legs(JSON.stringify(stopsCoord), JSON.stringify(modes));
       const parsed = JSON.parse(resStr);
-      return parsed.map((item: any) => ({
-        fromStopId: item.from_stop_id,
-        toStopId: item.to_stop_id,
-        mode: item.mode as TransitMode,
-        distanceKm: item.distance_km,
-        durationMinutes: item.duration_minutes,
-        isOutlier: item.is_outlier,
-      }));
+      return parsed.map((item: any, idx: number) => {
+        const from = stops[idx];
+        const to = stops[idx + 1];
+        const isNoteLeg = from?.category === 'note' || to?.category === 'note';
+        return {
+          fromStopId: item.from_stop_id,
+          toStopId: item.to_stop_id,
+          mode: item.mode as TransitMode,
+          distanceKm: isNoteLeg ? 0 : item.distance_km,
+          durationMinutes: isNoteLeg ? 0 : item.duration_minutes,
+          isOutlier: isNoteLeg ? false : item.is_outlier,
+        };
+      });
     } catch (e) {
       console.warn('WASM batch transit error, using JS fallback:', e);
     }
@@ -165,20 +170,23 @@ export function computeTransitLegsWasm(
     const to = stops[i + 1];
     const legKey = `${from.id}->${to.id}`;
     const mode = modes[legKey] || 'drive';
-    const dist = computeDistanceKm(
-      from.coordinates.latitude,
-      from.coordinates.longitude,
-      to.coordinates.latitude,
-      to.coordinates.longitude
-    );
-    const duration = estimateDurationMins(dist, mode);
+    const isNoteLeg = from.category === 'note' || to.category === 'note';
+    const dist = isNoteLeg
+      ? 0
+      : computeDistanceKm(
+          from.coordinates.latitude,
+          from.coordinates.longitude,
+          to.coordinates.latitude,
+          to.coordinates.longitude
+        );
+    const duration = isNoteLeg ? 0 : estimateDurationMins(dist, mode);
     legs.push({
       fromStopId: from.id,
       toStopId: to.id,
       mode,
       distanceKm: dist,
       durationMinutes: duration,
-      isOutlier: duration > 45 || dist > 20,
+      isOutlier: isNoteLeg ? false : (duration > 45 || dist > 20),
     });
   }
   return legs;
@@ -188,13 +196,15 @@ export function computeTransitLegsWasm(
  * High-speed RFC/Topografix GPX 1.1 XML generation compiled in Rust WASM
  */
 export function generateDayGpxWasm(day: TripDay, tripTitle = 'roammate Trip'): string {
+  const geoStops = day.stops.filter((s) => s.category !== 'note');
+
   if (isWasmLoaded) {
     try {
       const gpxDay = {
         day_number: day.dayNumber,
         title: day.title,
         date_str: day.dateStr,
-        stops: day.stops.map((s) => ({
+        stops: geoStops.map((s) => ({
           title: s.title,
           subtitle: s.subtitle,
           category: s.category,
@@ -215,10 +225,10 @@ export function generateDayGpxWasm(day: TripDay, tripTitle = 'roammate Trip'): s
   const escapeXml = (str: string) =>
     str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&apos;');
 
-  const waypointsXml = day.stops
+  const waypointsXml = geoStops
     .map((stop, index) => {
       const isStart = index === 0;
-      const isFinish = index === day.stops.length - 1 && day.stops.length > 1;
+      const isFinish = index === geoStops.length - 1 && geoStops.length > 1;
       const tag = isStart ? 'START' : isFinish ? 'FINISH' : `WPT ${index + 1}`;
       const name = `${tag}: ${escapeXml(stop.title)}`;
       const desc = escapeXml(`${stop.subtitle || ''} | ${stop.address} (${stop.startTime})`);
@@ -231,7 +241,7 @@ export function generateDayGpxWasm(day: TripDay, tripTitle = 'roammate Trip'): s
     })
     .join('\n');
 
-  const trackPointsXml = day.stops
+  const trackPointsXml = geoStops
     .map((stop) => `      <trkpt lat="${stop.coordinates.latitude.toFixed(6)}" lon="${stop.coordinates.longitude.toFixed(6)}">
         <name>${escapeXml(stop.title)}</name>
       </trkpt>`)

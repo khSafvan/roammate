@@ -1,6 +1,7 @@
-import React from 'react';
-import { Cloud, CloudRain, CloudSun, Lightbulb, Plus, Sun } from 'lucide-react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { ChevronLeft, ChevronRight, Cloud, CloudRain, CloudSun, Lightbulb, Plus, Sun } from 'lucide-react';
 import { TripDay, WeatherCondition } from '../types/trip';
+import { tripDayToIso } from '../utils/weatherService';
 
 interface DaySelectorProps {
   days: TripDay[];
@@ -10,6 +11,8 @@ interface DaySelectorProps {
   placesCount?: number;
   isPlacesActive?: boolean;
   onSelectPlaces?: () => void;
+  holidaysByDate?: Record<string, string>;
+  tripStartDate?: string;
 }
 
 const getWeatherIcon = (condition: WeatherCondition, size = 13) => {
@@ -35,10 +38,62 @@ export const DaySelector = React.memo<DaySelectorProps>(function DaySelector({
   placesCount = 0,
   isPlacesActive = false,
   onSelectPlaces,
+  holidaysByDate,
+  tripStartDate,
 }) {
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const [canScrollLeft, setCanScrollLeft] = useState(false);
+  const [canScrollRight, setCanScrollRight] = useState(false);
+
+  const checkScroll = useCallback(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    const { scrollLeft, scrollWidth, clientWidth } = el;
+    setCanScrollLeft(scrollLeft > 4);
+    setCanScrollRight(scrollLeft + clientWidth < scrollWidth - 4);
+  }, []);
+
+  useEffect(() => {
+    checkScroll();
+    const el = scrollRef.current;
+    if (!el) return;
+
+    el.addEventListener('scroll', checkScroll, { passive: true });
+    window.addEventListener('resize', checkScroll);
+    return () => {
+      el.removeEventListener('scroll', checkScroll);
+      window.removeEventListener('resize', checkScroll);
+    };
+  }, [checkScroll, days.length]);
+
+  const handleScroll = (direction: 'left' | 'right') => {
+    const el = scrollRef.current;
+    if (!el) return;
+    const scrollAmount = 260;
+    el.scrollBy({
+      left: direction === 'left' ? -scrollAmount : scrollAmount,
+      behavior: 'smooth',
+    });
+  };
+
   return (
     <div className="day-selector-container">
-      <div className="day-selector-scroll">
+      {canScrollLeft && (
+        <button
+          type="button"
+          className="day-scroll-arrow-btn left"
+          onClick={() => handleScroll('left')}
+          title="Scroll Left"
+          aria-label="Scroll left"
+        >
+          <ChevronLeft size={16} />
+        </button>
+      )}
+
+      <div
+        className={`day-selector-scroll ${canScrollLeft ? 'has-left-shadow' : ''} ${canScrollRight ? 'has-right-shadow' : ''}`}
+        ref={scrollRef}
+      >
         {/* Unassigned Places to Visit (Ideas Bucket) Tab */}
         {onSelectPlaces && (
           <button
@@ -46,9 +101,9 @@ export const DaySelector = React.memo<DaySelectorProps>(function DaySelector({
             onClick={onSelectPlaces}
             title="Unassigned Ideas / Places to Visit bucket"
             style={{
-              borderColor: isPlacesActive ? '#D97706' : undefined,
-              backgroundColor: isPlacesActive ? 'rgba(245, 158, 11, 0.12)' : undefined,
-            }}
+              '--day-theme-color': '#D97706',
+              '--day-theme-bg': 'rgba(245, 158, 11, 0.12)',
+            } as React.CSSProperties}
           >
             <span
               className="day-color-dot"
@@ -66,18 +121,29 @@ export const DaySelector = React.memo<DaySelectorProps>(function DaySelector({
 
         {days.map((day, idx) => {
           const isActive = !isPlacesActive && idx === activeDayIndex;
+          const iso = tripStartDate ? tripDayToIso(tripStartDate, idx) : undefined;
+          const holidayName = iso && holidaysByDate ? holidaysByDate[iso] : undefined;
+
           return (
             <button
               key={day.id}
               className={`day-tab-pill ${isActive ? 'active' : ''}`}
               onClick={() => onSelectDay(idx)}
+              title={holidayName ? `Public Holiday: ${holidayName}` : undefined}
+              style={{
+                '--day-theme-color': day.themeColor,
+                '--day-theme-bg': `${day.themeColor}14`,
+              } as React.CSSProperties}
             >
               <span
                 className="day-color-dot"
                 style={{ backgroundColor: day.themeColor }}
               />
               <div className="day-info-stack">
-                <span className="day-title">Day {day.dayNumber}</span>
+                <span className="day-title" style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                  <span>Day {day.dayNumber}</span>
+                  {holidayName && <span className="day-holiday-dot" title={holidayName}>🎉</span>}
+                </span>
                 <span className="day-date">
                   {day.dateStr?.includes(', ') ? day.dateStr.split(', ')[1] : day.dateStr || ''}
                 </span>
@@ -102,6 +168,18 @@ export const DaySelector = React.memo<DaySelectorProps>(function DaySelector({
           </button>
         )}
       </div>
+
+      {canScrollRight && (
+        <button
+          type="button"
+          className="day-scroll-arrow-btn right"
+          onClick={() => handleScroll('right')}
+          title="Scroll Right"
+          aria-label="Scroll right"
+        >
+          <ChevronRight size={16} />
+        </button>
+      )}
     </div>
   );
 });

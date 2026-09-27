@@ -19,6 +19,7 @@ export function detectTransitConflict(
   transitMinutes: number
 ): ScheduleConflict | null {
   if (!prevStop?.startTime || !nextStop?.startTime) return null;
+  if (prevStop.category === 'note' || nextStop.category === 'note') return null;
 
   const prevStartMins = parseTimeToMinutes(prevStop.startTime);
   const nextStartMins = parseTimeToMinutes(nextStop.startTime);
