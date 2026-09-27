@@ -112,9 +112,6 @@ export const TimelineCard = React.memo<TimelineCardProps>(function TimelineCard(
         onDragEnd={onDragEnd}
         onDrop={onDrop}
       >
-        <div className="category-node node-note" title="NOTE">
-          <FileText size={15} strokeWidth={1.75} />
-        </div>
         <div
           className={`timeline-card is-note-card ${isSelected ? 'is-selected' : ''}`}
           onClick={() => onSelect(stop)}
@@ -127,29 +124,34 @@ export const TimelineCard = React.memo<TimelineCardProps>(function TimelineCard(
             }
           }}
         >
-          <div className="card-body">
-            <div className="card-meta-line">
-              <span className="card-order-pill">#{String(stop.orderIndex).padStart(2, '0')}</span>
-              {reorderControls}
-              <span className="card-time">{stop.startTime}</span>
-              <span className="card-category-sublabel note-label">Note &amp; Tips</span>
-              {onEdit && (
-                <button
-                  type="button"
-                  className="card-edit-action-btn"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onEdit(stop);
-                  }}
-                  title="Edit note"
-                >
-                  <Edit2 size={12} strokeWidth={2} />
-                </button>
-              )}
+          <div className="timeline-card-content">
+            <div className="category-node node-note" title="NOTE">
+              <FileText size={15} strokeWidth={1.75} />
             </div>
-            {stop.title && stop.title !== 'Note' && <h3 className="card-title">{stop.title}</h3>}
-            <div className="card-notes-preview is-standalone">
-              <MarkdownText text={stop.notes || stop.subtitle} />
+            <div className="card-body">
+              <div className="card-meta-line">
+                <span className="card-order-pill">#{String(stop.orderIndex).padStart(2, '0')}</span>
+                {reorderControls}
+                <span className="card-time">{stop.startTime}</span>
+                <span className="card-category-sublabel note-label">Note &amp; Tips</span>
+                {onEdit && (
+                  <button
+                    type="button"
+                    className="card-edit-action-btn"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onEdit(stop);
+                    }}
+                    title="Edit note"
+                  >
+                    <Edit2 size={12} strokeWidth={2} />
+                  </button>
+                )}
+              </div>
+              {stop.title && stop.title !== 'Note' && <h3 className="card-title">{stop.title}</h3>}
+              <div className="card-notes-preview is-standalone">
+                <MarkdownText text={stop.notes || stop.subtitle} />
+              </div>
             </div>
           </div>
         </div>
@@ -167,11 +169,6 @@ export const TimelineCard = React.memo<TimelineCardProps>(function TimelineCard(
       onDragEnd={onDragEnd}
       onDrop={onDrop}
     >
-      {/* Category Node Anchored on the Sequential Axis */}
-      <div className={`category-node node-${stop.category}`} title={stop.category.toUpperCase()}>
-        {getCategoryIcon(stop.category)}
-      </div>
-
       {/* Main Modular Card Container */}
       <div
         className={`timeline-card ${isSelected ? 'is-selected' : ''}`}
@@ -185,83 +182,88 @@ export const TimelineCard = React.memo<TimelineCardProps>(function TimelineCard(
           }
         }}
       >
-        <div className="card-body">
-          {/* Top Line: Sequence, Time, Duration & Ticket Pill */}
-          <div className="card-meta-line">
-            <span className="card-order-pill">
-              #{String(stop.orderIndex).padStart(2, '0')}
-            </span>
-            {reorderControls}
-            <span className="card-time">{stop.startTime}</span>
-
-            <span className="card-category-sublabel">
-              {stop.category}
-            </span>
-
-            {stop.durationMinutes > 0 && (
-              <span className="card-duration-pill">
-                <Clock size={10} strokeWidth={1.75} />
-                <span>{stop.durationMinutes}m</span>
-              </span>
-            )}
-
-            {stop.isFixedTime && (
-              <span className="card-fixed-pill" title="Locked reservation time">
-                <Lock size={10} strokeWidth={2} />
-                <span>Fixed</span>
-              </span>
-            )}
-
-            {stop.openTime && stop.closeTime && (
-              <span className="card-hours-pill" title={`Open ${stop.openTime} – ${stop.closeTime}`}>
-                {stop.openTime}–{stop.closeTime}
-              </span>
-            )}
-
-            {stop.hasTicket && (
-              <span className="card-ticket-pill">
-                <FileCheck2 size={11} strokeWidth={1.75} />
-                <span>Ticket Ready</span>
-              </span>
-            )}
-
-            {onEdit && (
-              <button
-                type="button"
-                className="card-edit-action-btn"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onEdit(stop);
-                }}
-                title="Edit stop details"
-                aria-label={`Edit ${stop.title}`}
-              >
-                <Edit2 size={12} strokeWidth={2} />
-              </button>
-            )}
+        <div className="timeline-card-content">
+          <div className={`category-node node-${stop.category}`} title={stop.category.toUpperCase()}>
+            {getCategoryIcon(stop.category)}
           </div>
+          <div className="card-body">
+            {/* Top Line: Sequence, Time, Duration & Ticket Pill */}
+            <div className="card-meta-line">
+              <span className="card-order-pill">
+                #{String(stop.orderIndex).padStart(2, '0')}
+              </span>
+              {reorderControls}
+              <span className="card-time">{stop.startTime}</span>
+
+              <span className="card-category-sublabel">
+                {stop.category}
+              </span>
+
+              {stop.durationMinutes > 0 && (
+                <span className="card-duration-pill">
+                  <Clock size={10} strokeWidth={1.75} />
+                  <span>{stop.durationMinutes}m</span>
+                </span>
+              )}
+
+              {stop.isFixedTime && (
+                <span className="card-fixed-pill" title="Locked reservation time">
+                  <Lock size={10} strokeWidth={2} />
+                  <span>Fixed</span>
+                </span>
+              )}
+
+              {stop.openTime && stop.closeTime && (
+                <span className="card-hours-pill" title={`Open ${stop.openTime} – ${stop.closeTime}`}>
+                  {stop.openTime}–{stop.closeTime}
+                </span>
+              )}
+
+              {stop.hasTicket && (
+                <span className="card-ticket-pill">
+                  <FileCheck2 size={11} strokeWidth={1.75} />
+                  <span>Ticket Ready</span>
+                </span>
+              )}
+
+              {onEdit && (
+                <button
+                  type="button"
+                  className="card-edit-action-btn"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onEdit(stop);
+                  }}
+                  title="Edit stop details"
+                  aria-label={`Edit ${stop.title}`}
+                >
+                  <Edit2 size={12} strokeWidth={2} />
+                </button>
+              )}
+            </div>
 
           {/* Primary Label / Title & Subtitle */}
-          <h3 className="card-title">{stop.title}</h3>
-          {stop.subtitle && <p className="card-subtitle">{stop.subtitle}</p>}
+            <h3 className="card-title">{stop.title}</h3>
+            {stop.subtitle && <p className="card-subtitle">{stop.subtitle}</p>}
 
           {/* Rich Markdown Notes for this Location */}
-          {stop.notes && (
-            <div className="card-notes-preview">
-              <MarkdownText text={stop.notes} />
-            </div>
-          )}
+            {stop.notes && (
+              <div className="card-notes-preview">
+                <MarkdownText text={stop.notes} />
+              </div>
+            )}
 
           {/* Secondary Footer Metadata */}
-          <div className="card-footer-line">
-            <div className="card-address">
-              <MapPin size={12} strokeWidth={1.75} />
-              <span>{(stop.address || '').split(',')[0] || 'Location pending'}</span>
-            </div>
+            <div className="card-footer-line">
+              <div className="card-address">
+                <MapPin size={12} strokeWidth={1.75} />
+                <span>{(stop.address || '').split(',')[0] || 'Location pending'}</span>
+              </div>
 
-            {stop.bookingRef && (
-              <span className="card-ref-badge">REF: {stop.bookingRef}</span>
-            )}
+              {stop.bookingRef && (
+                <span className="card-ref-badge">REF: {stop.bookingRef}</span>
+              )}
+            </div>
           </div>
         </div>
       </div>

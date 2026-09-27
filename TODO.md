@@ -168,7 +168,7 @@ Cohesive design language applied across all styles, components, and responsive v
 ### Phase 12 — Visual Consistency & Layout Hardening
 - [x] Unify voucher and flight card styling, alignment, and spacing.
 - [x] Keep card text geometry stable and truncate long text with ellipses.
-- [ ] Keep category icons (food, hotel, and similar) inside their stop cards and aligned to the card width.
+- [x] Keep category icons (food, hotel, and similar) inside their stop cards and aligned to the card width.
 
 ---
 
