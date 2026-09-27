@@ -1,0 +1,15 @@
+- uniform design styles for voucher-cards and flight cards
+- fix alignments and spacings
+- sizes and positions of text should not change based on content, if text is to long do ... (ellipsis)
+- analyse the mock trip logic better
+- if not logged in, dont let the user use the site, always redirect to login
+- login is device presistent - once cache stored in browser, until user logs out mannually login stays
+- add logic for unique trip id & username
+- invite other users to trip by tripcode and inviter user will get request username  want to join the trip
+- figure out shared trip code shared flow for invitee and inviter
+- add tutorial for new user
+- alsways use hotal/stay as start and end point in trip automatically until manually changed by user
+- treat stays as locations in itinary
+- give location info on  bottom half of map when plce is in focus in itinarry&&map (itinary focus and map focus are always together), this also as nots for places that user will add.
+- make map rander on half of the desktop screen in itinary like wanderlog, in mobile both are on different full screen tabs where location info opens as another full screen with appropriate back option 
+- on maps, always treat markers as the higest z-index
