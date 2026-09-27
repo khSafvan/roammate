@@ -131,6 +131,75 @@
     padding: 10px 14px;
   }
 
+  .header-left {
+    width: 100%;
+    min-width: 0;
+    flex: 1 1 100%;
+    gap: var(--sp-2, 8px);
+  }
+
+  .header-divider {
+    display: none;
+  }
+
+  .header-brand {
+    flex: 0 0 auto;
+  }
+
+  .header-meta {
+    width: 0;
+    min-width: 0;
+    flex: 1 1 auto;
+  }
+
+  .trip-switcher-trigger-btn {
+    width: 100%;
+    max-width: none;
+    min-width: 0;
+  }
+
+  .trip-switcher-text {
+    width: 0;
+    flex: 1 1 auto;
+  }
+
+  .trip-title-row,
+  .trip-title {
+    min-width: 0;
+    max-width: 100%;
+  }
+
+  .header-actions {
+    width: 100%;
+    min-width: 0;
+    flex: 1 1 100%;
+    justify-content: flex-start;
+    flex-wrap: wrap;
+  }
+
+  .header-nav-tabs {
+    display: flex;
+    width: 100%;
+    min-width: 0;
+  }
+
+  .header-tab-btn {
+    min-width: 0;
+    flex: 1 1 0;
+    justify-content: center;
+    gap: 4px;
+    padding: 5px 6px;
+    text-align: center;
+  }
+
+  .header-tab-btn span {
+    min-width: 0;
+  }
+
+  .header-tab-btn svg {
+    flex-shrink: 0;
+  }
+
   .trip-title {
     font-size: 15px;
   }

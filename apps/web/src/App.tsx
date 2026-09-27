@@ -47,6 +47,23 @@ import {
   useVault,
 } from './hooks';
 
+function getTripTravelerNames(trip: Trip): string[] {
+  if (trip.travelers) return trip.travelers;
+
+  const splitNames = (value?: string) =>
+    (value || '').split(/\s*(?:,|&|\band\b)\s*/i).map((name) => name.trim()).filter(Boolean);
+  const names = [
+    ...(trip.flights || []).flatMap((flight) => splitNames(flight.passengerName)),
+    ...(trip.documents || []).flatMap((document) => splitNames(document.passengerOrGuestName)),
+    ...(trip.expenses || []).flatMap((expense) => [
+      ...splitNames(expense.paidBy),
+      ...(expense.splitWith || []).flatMap(splitNames),
+    ]),
+  ];
+
+  return Array.from(new Set(names.length > 0 ? names : ['Me']));
+}
+
 export function App() {
   const [currentView, setCurrentView] = useState<'trips_list' | 'trip_detail' | 'trip_settings'>(() => {
     const params = new URLSearchParams(window.location.search);
@@ -97,6 +114,11 @@ export function App() {
     handleDeleteAccount,
     exitReadOnly,
   } = useVault();
+
+  const tripTravelerNames = useMemo(
+    () => getTripTravelerNames(trip),
+    [trip.travelers, trip.flights, trip.documents, trip.expenses]
+  );
 
   const isWasmActive = useRustCore();
 
@@ -276,6 +298,79 @@ export function App() {
       ...prev,
       expenses: prev.expenses.filter((e) => e.id !== id),
     }));
+  }, [setTrip]);
+
+  const handleAddTraveler = useCallback((value: string) => {
+    const name = value.trim();
+    if (!name) return;
+
+    setTrip((prev) => {
+      const travelers = getTripTravelerNames(prev);
+      if (travelers.some((traveler) => traveler.toLowerCase() === name.toLowerCase())) return prev;
+
+      return {
+        ...prev,
+        travelers: [...travelers, name],
+        expenses: prev.expenses.map((expense) =>
+          expense.splitWith?.length ? expense : { ...expense, splitWith: travelers }
+        ),
+      };
+    });
+  }, [setTrip]);
+
+  const handleRenameTraveler = useCallback((oldName: string, value: string) => {
+    const newName = value.trim();
+    if (!newName) return;
+
+    setTrip((prev) => {
+      const travelers = getTripTravelerNames(prev);
+      if (
+        !travelers.includes(oldName) ||
+        travelers.some((traveler) => traveler !== oldName && traveler.toLowerCase() === newName.toLowerCase())
+      ) return prev;
+
+      return {
+        ...prev,
+        travelers: travelers.map((traveler) => traveler === oldName ? newName : traveler),
+        expenses: prev.expenses.map((expense) => {
+          const splitWith = expense.splitWith?.length ? expense.splitWith : travelers;
+          return {
+            ...expense,
+            paidBy: expense.paidBy === oldName ? newName : expense.paidBy,
+            splitWith: splitWith.map((traveler) => traveler === oldName ? newName : traveler),
+          };
+        }),
+        flights: prev.flights.map((flight) =>
+          flight.passengerName === oldName ? { ...flight, passengerName: newName } : flight
+        ),
+        documents: (prev.documents || []).map((document) =>
+          ({
+            ...document,
+            passengerOrGuestName: document.passengerOrGuestName === oldName
+              ? newName
+              : document.passengerOrGuestName,
+            flightData: document.flightData?.passengerName === oldName
+              ? { ...document.flightData, passengerName: newName }
+              : document.flightData,
+          })
+        ),
+      };
+    });
+  }, [setTrip]);
+
+  const handleRemoveTraveler = useCallback((name: string) => {
+    setTrip((prev) => {
+      const travelers = getTripTravelerNames(prev);
+      if (!travelers.includes(name)) return prev;
+
+      return {
+        ...prev,
+        travelers: travelers.filter((traveler) => traveler !== name),
+        expenses: prev.expenses.map((expense) =>
+          expense.splitWith?.length ? expense : { ...expense, splitWith: travelers }
+        ),
+      };
+    });
   }, [setTrip]);
 
   // Stop CRUD Handlers (Feature F4, Bug 4 & 5)
@@ -1212,8 +1307,12 @@ export function App() {
                 expenses={trip.expenses}
                 baseCurrency={trip.baseCurrency}
                 homeCurrency={trip.homeCurrency}
+                travelers={tripTravelerNames}
                 onAddExpense={handleAddExpense}
                 onDeleteExpense={handleDeleteExpense}
+                onAddTraveler={handleAddTraveler}
+                onRenameTraveler={handleRenameTraveler}
+                onRemoveTraveler={handleRemoveTraveler}
               />
             </main>
           )}

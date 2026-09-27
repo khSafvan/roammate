@@ -2504,6 +2504,727 @@
   color: #F59E0B;
 }
 
+/* Keep flight passes and vouchers aligned as one reservation-card family. */
+.bookings-grid {
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 340px), 1fr));
+  gap: var(--sp-4, 16px);
+  align-items: stretch;
+}
+
+.bookings-grid > .boarding-pass-card,
+.bookings-grid > .booking-voucher-card {
+  box-sizing: border-box;
+  height: 320px;
+  min-width: 0;
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-card);
+  background-color: var(--bg-card);
+  box-shadow: var(--shadow-card);
+}
+
+.bookings-grid > .boarding-pass-card {
+  padding: var(--sp-4, 16px);
+  gap: var(--sp-3, 12px);
+}
+
+.bookings-grid > .booking-voucher-card {
+  border-top-width: 1px;
+}
+
+.bookings-grid > .booking-voucher-card[class*='color-'] {
+  border-top-color: var(--border-light);
+}
+
+.pass-header,
+.pass-carrier-row,
+.voucher-card-top,
+.voucher-type-row {
+  min-width: 0;
+}
+
+.pass-carrier-row,
+.voucher-type-row {
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+.pass-carrier,
+.pass-flight-num,
+.voucher-type-name,
+.voucher-title,
+.voucher-subtitle,
+.voucher-info-item span,
+.guest-badge span,
+.guest-sub-badge,
+.passenger-badge strong,
+.origin-badge span,
+.airport-city-name,
+.airport-terminal-pill,
+.pass-stub-item span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.voucher-title {
+  display: -webkit-box;
+  height: 40px;
+  margin: 0;
+  line-height: 20px;
+  white-space: normal;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+}
+
+.voucher-subtitle {
+  max-width: 100%;
+}
+
+.voucher-info-item,
+.guest-badge,
+.guest-sub-badge,
+.pass-stub-item {
+  max-width: 100%;
+}
+
+.voucher-footer {
+  min-height: 32px;
+  margin-top: auto;
+  gap: var(--sp-2, 8px);
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+.voucher-code-pill,
+.voucher-qr-tag {
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+.voucher-code-pill strong {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.voucher-notes-strip,
+.pass-notes-strip {
+  display: -webkit-box;
+  height: 34px;
+  max-height: 34px;
+  margin: 0;
+  overflow: hidden;
+  line-height: 16px;
+  text-overflow: ellipsis;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+}
+
+.pass-route-row {
+  min-width: 0;
+}
+
+.airport-code-row,
+.airport-block {
+  min-width: 0;
+}
+
+.airport-code,
+.airport-time {
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+.airport-terminal-pill {
+  max-width: 100%;
+}
+
+.pass-footer {
+  min-width: 0;
+  flex-wrap: nowrap;
+  overflow: hidden;
+}
+
+.settlement-view {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-5, 20px);
+}
+
+.traveler-management-header,
+.traveler-management-title,
+.traveler-section-heading {
+  display: flex;
+  align-items: center;
+}
+
+.traveler-management-header {
+  justify-content: space-between;
+  gap: var(--sp-3, 12px);
+  margin-bottom: var(--sp-3, 12px);
+}
+
+.traveler-management-title,
+.traveler-section-heading {
+  gap: var(--sp-2, 8px);
+  color: var(--brand-blue);
+}
+
+.traveler-management-title h3,
+.traveler-section-heading h3 {
+  margin: 0;
+  color: var(--text-primary);
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.traveler-roster-grid,
+.traveler-balance-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 240px), 1fr));
+  gap: var(--sp-3, 12px);
+}
+
+.traveler-voucher-card,
+.traveler-balance-card {
+  min-width: 0;
+  height: 148px;
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-card);
+}
+
+.traveler-voucher-card .voucher-card-top,
+.traveler-balance-card .voucher-card-top {
+  min-height: 44px;
+  padding: var(--sp-2, 8px) var(--sp-3, 12px);
+}
+
+.traveler-voucher-card .voucher-type-name,
+.traveler-balance-card .voucher-type-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.traveler-voucher-card .voucher-main-body,
+.traveler-balance-card .voucher-main-body {
+  min-height: 0;
+  justify-content: center;
+  padding: var(--sp-2, 8px) var(--sp-3, 12px);
+}
+
+.traveler-voucher-card .voucher-title {
+  height: 40px;
+  font-size: 16px;
+}
+
+.traveler-voucher-card .voucher-footer,
+.traveler-balance-card .voucher-footer {
+  min-height: 32px;
+  padding: 0 var(--sp-3, 12px) var(--sp-2, 8px);
+}
+
+.traveler-card-actions {
+  display: inline-flex;
+  flex-shrink: 0;
+  gap: var(--sp-1, 4px);
+}
+
+.traveler-icon-btn {
+  display: inline-flex;
+  width: 30px;
+  height: 30px;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-sm);
+  background: var(--bg-card);
+  color: var(--text-secondary);
+  cursor: pointer;
+}
+
+.traveler-icon-btn:hover {
+  border-color: var(--brand-blue);
+  color: var(--brand-blue);
+}
+
+.traveler-icon-btn.danger:hover {
+  border-color: var(--brand-rose);
+  color: var(--brand-rose);
+}
+
+.traveler-balance-card.is-owed {
+  border-top: 3px solid var(--brand-emerald);
+}
+
+.traveler-balance-card.owes {
+  border-top: 3px solid var(--brand-rose);
+}
+
+.traveler-balance-card.is-settled {
+  border-top: 3px solid var(--border-medium);
+}
+
+.traveler-balance-status {
+  flex-shrink: 0;
+  border-radius: var(--radius-pill);
+  background: var(--bg-subtle);
+  color: var(--text-secondary);
+  font-size: 11px;
+  font-weight: 600;
+  padding: 3px 8px;
+}
+
+.is-owed .traveler-balance-status {
+  background: rgba(16, 185, 129, 0.1);
+  color: var(--brand-emerald);
+}
+
+.owes .traveler-balance-status {
+  background: rgba(239, 68, 68, 0.1);
+  color: var(--brand-rose);
+}
+
+.traveler-balance-amount {
+  margin: 0;
+  color: var(--text-primary);
+  font-size: 20px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.traveler-balance-footer {
+  justify-content: flex-start;
+  gap: var(--sp-3, 12px);
+  color: var(--text-secondary);
+  font-size: 11px;
+  white-space: nowrap;
+}
+
+.traveler-balances-section {
+  padding: var(--sp-4, 16px);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-card);
+  background: var(--bg-card);
+  box-shadow: var(--shadow-card);
+}
+
+.traveler-section-heading {
+  margin-bottom: var(--sp-4, 16px);
+}
+
+.traveler-modal-card {
+  max-width: 480px;
+}
+
+.form-error-text {
+  margin-top: var(--sp-1, 4px);
+  color: var(--brand-rose);
+  font-size: 12px;
+}
+
+.settlement-view,
+.traveler-management-section,
+.traveler-balances-section,
+.debt-settlement-section {
+  width: 100%;
+  min-width: 0;
+}
+
+.settlement-view {
+  gap: var(--sp-8, 32px);
+}
+
+.traveler-management-header {
+  flex-wrap: wrap;
+  margin-bottom: var(--sp-4, 16px);
+}
+
+.traveler-management-title,
+.traveler-section-heading {
+  min-width: 0;
+}
+
+.traveler-roster-grid {
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 272px), 1fr));
+  gap: var(--sp-3, 12px);
+}
+
+.traveler-voucher-card {
+  width: 100%;
+  height: auto;
+  min-height: 104px;
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-card);
+}
+
+.traveler-card-head {
+  display: flex;
+  min-width: 0;
+  min-height: 104px;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-3, 12px);
+  padding: var(--sp-3, 12px);
+}
+
+.traveler-identity,
+.traveler-name-stack {
+  min-width: 0;
+}
+
+.traveler-identity {
+  display: flex;
+  flex: 1 1 auto;
+  align-items: center;
+  gap: var(--sp-3, 12px);
+}
+
+.traveler-avatar {
+  display: flex;
+  width: 40px;
+  height: 40px;
+  flex: 0 0 40px;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-md);
+  background: var(--brand-blue-subtle);
+  color: var(--brand-blue);
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.traveler-name-stack {
+  flex: 1 1 auto;
+}
+
+.traveler-index {
+  display: block;
+  margin-bottom: var(--sp-1, 4px);
+  color: var(--text-tertiary);
+  font-size: 10px;
+  font-weight: 600;
+  line-height: 1.2;
+}
+
+.traveler-name {
+  display: -webkit-box;
+  max-width: 100%;
+  margin: 0;
+  overflow: hidden;
+  color: var(--text-primary);
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 20px;
+  overflow-wrap: anywhere;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+}
+
+.traveler-card-actions {
+  flex: 0 0 auto;
+  gap: var(--sp-1, 4px);
+}
+
+.traveler-icon-btn {
+  width: 44px;
+  height: 44px;
+  flex: 0 0 44px;
+  border-radius: var(--radius-sm);
+  touch-action: manipulation;
+}
+
+.traveler-icon-btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+}
+
+.traveler-voucher-card .voucher-card-top,
+.traveler-balance-card .voucher-card-top,
+.traveler-voucher-card .voucher-main-body,
+.traveler-balance-card .voucher-main-body,
+.traveler-voucher-card .voucher-footer,
+.traveler-balance-card .voucher-footer {
+  display: none;
+}
+
+.traveler-balance-grid {
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr));
+  gap: var(--sp-3, 12px);
+}
+
+.traveler-balance-card {
+  display: flex;
+  width: 100%;
+  height: auto;
+  min-height: 0;
+  flex-direction: column;
+  gap: 0;
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-card);
+}
+
+.traveler-balance-card.is-owed {
+  border-top-width: 3px;
+}
+
+.traveler-balance-card.owes {
+  border-top-width: 3px;
+}
+
+.traveler-balance-card.is-settled {
+  border-top-width: 3px;
+}
+
+.traveler-balance-head,
+.traveler-balance-main {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-2, 8px);
+  padding: var(--sp-3, 12px);
+}
+
+.traveler-balance-head {
+  border-bottom: 1px solid var(--border-subtle);
+  background: var(--bg-subtle);
+}
+
+.traveler-balance-name {
+  display: -webkit-box;
+  min-width: 0;
+  margin: 0;
+  overflow: hidden;
+  color: var(--text-primary);
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 18px;
+  overflow-wrap: anywhere;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+}
+
+.traveler-balance-status {
+  flex: 0 0 auto;
+  max-width: 44%;
+  padding: var(--sp-1, 4px) var(--sp-2, 8px);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.traveler-balance-main {
+  align-items: baseline;
+}
+
+.traveler-balance-label {
+  min-width: 0;
+  color: var(--text-secondary);
+  font-size: 12px;
+}
+
+.traveler-balance-amount {
+  min-width: 0;
+  overflow-wrap: anywhere;
+  text-align: right;
+}
+
+.traveler-balance-footer {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--sp-2, 8px);
+  padding: 0 var(--sp-3, 12px) var(--sp-3, 12px);
+  overflow: hidden;
+  color: var(--text-secondary);
+  font-size: 11px;
+  white-space: normal;
+}
+
+.traveler-balance-footer > div {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: var(--sp-1, 4px);
+}
+
+.traveler-balance-footer span,
+.traveler-balance-footer strong {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.traveler-balance-footer strong {
+  color: var(--text-primary);
+  font-variant-numeric: tabular-nums;
+}
+
+.traveler-balances-section {
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.traveler-section-heading {
+  gap: var(--sp-2, 8px);
+  margin-bottom: var(--sp-4, 16px);
+}
+
+.debt-settlement-section {
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.debt-settlement-list {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: var(--sp-2, 8px);
+}
+
+.debt-settlement-row {
+  display: grid;
+  min-width: 0;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: var(--sp-3, 12px);
+  padding: var(--sp-3, 12px);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-md);
+  background: var(--bg-card);
+}
+
+.debt-parties {
+  display: grid;
+  min-width: 0;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  align-items: center;
+  gap: var(--sp-2, 8px);
+}
+
+.debt-parties > strong {
+  min-width: 0;
+  overflow: hidden;
+  color: var(--text-primary);
+  font-size: 13px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.debt-parties > strong:last-child {
+  text-align: right;
+}
+
+.debt-transfer-label {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-1, 4px);
+  color: var(--text-tertiary);
+  font-size: 11px;
+}
+
+.debt-settlement-action {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--sp-3, 12px);
+}
+
+.debt-amount {
+  min-width: 0;
+  color: var(--text-primary);
+  font-size: 15px;
+  font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere;
+}
+
+.debt-settlement-action .primary-action-btn {
+  min-height: 44px;
+  white-space: nowrap;
+}
+
+.debt-empty-state {
+  display: flex;
+  min-height: 140px;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--sp-2, 8px);
+  padding: var(--sp-5, 20px);
+  border: 1px dashed var(--border-strong);
+  border-radius: var(--radius-md);
+  color: var(--text-secondary);
+  text-align: center;
+}
+
+.debt-empty-state p {
+  margin: 0;
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+.debt-empty-state .debt-empty-detail {
+  color: var(--text-secondary);
+  font-size: 12px;
+  font-weight: 400;
+}
+
+@media (max-width: 520px) {
+  .settlement-view {
+    gap: var(--sp-6, 24px);
+  }
+
+  .traveler-management-header {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .traveler-management-header .primary-action-btn {
+    align-self: flex-start;
+    min-height: 44px;
+  }
+
+  .traveler-card-head {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .traveler-card-actions {
+    justify-content: flex-end;
+  }
+
+  .traveler-index {
+    overflow-wrap: anywhere;
+  }
+
+  .traveler-roster-grid,
+  .traveler-balance-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .debt-settlement-row {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .debt-settlement-action {
+    justify-content: space-between;
+  }
+}
+
 .modal-type-tabs {
   display: flex;
   flex-wrap: wrap;
