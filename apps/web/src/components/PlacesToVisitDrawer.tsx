@@ -76,7 +76,7 @@ export const PlacesToVisitDrawer: React.FC<PlacesToVisitDrawerProps> = ({
       const q = dest ? `${preset.query} in ${dest}` : preset.query;
       const url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(q)}&format=json&addressdetails=1&limit=6`;
       const res = await fetch(url, {
-        headers: { 'Accept-Language': 'en', 'User-Agent': 'MojoLog/1.0' },
+        headers: { 'Accept-Language': 'en', 'User-Agent': 'roammate/1.0' },
         signal: AbortSignal.timeout(6000),
       });
       if (res.ok) {

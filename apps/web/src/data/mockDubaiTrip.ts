@@ -13,14 +13,13 @@ export const mockDubaiTripData: Trip = {
   startDate: '2027-01-07',
   endDate: '2027-01-13',
   startTime: '09:00',
-  endTime: '22:00',
+  endTime: '23:00',
   destination: 'Dubai & Abu Dhabi, UAE',
   countryCode: 'AE',
   baseCurrency: 'AED',
   homeCurrency: 'USD',
-  shareToken: 'dubai-token-88z',
-  guestKey: 'guest-dubai-442',
   readinessScore: 85,
+  travelers: ['Alex Chen', 'Jordan Taylor'],
   documents: [
     {
       id: 'doc_dxb_1',
@@ -175,11 +174,11 @@ export const mockDubaiTripData: Trip = {
           title: 'Palace Downtown Dubai',
           subtitle: 'Check-in, Unpack & Freshen Up',
           category: 'lodging',
-          startTime: '06:30 PM',
+          startTime: '06:45 PM',
           durationMinutes: 60,
           coordinates: { latitude: 25.1950, longitude: 55.2798 },
           address: 'Sheikh Mohammed bin Rashid Blvd, Downtown Dubai',
-          notes: '**Check-in code**: `PAL-9981`\n- Free airport shuttle every 30m\n- *Must see*: Burj Khalifa fountain show from terrace',
+          notes: 'Keep check-in instructions in the secure booking record. Free airport shuttle every 30 minutes. The terrace has views of the Burj Khalifa fountain show.',
           isAnchor: true,
         },
         {
@@ -188,7 +187,7 @@ export const mockDubaiTripData: Trip = {
           title: 'Waterfront Dining at JBR Walk',
           subtitle: 'Casual Dinner & Arabic Espresso along The Walk',
           category: 'dining',
-          startTime: '08:00 PM',
+          startTime: '08:50 PM',
           durationMinutes: 90,
           coordinates: { latitude: 25.0784, longitude: 55.1328 },
           address: 'The Walk, Jumeirah Beach Residence, Dubai',
@@ -199,7 +198,7 @@ export const mockDubaiTripData: Trip = {
           title: 'Dubai Marina Night Life Lounge',
           subtitle: 'Marina Promenade & Shisha / Hookah Lounge',
           category: 'sight',
-          startTime: '10:00 PM',
+          startTime: '10:45 PM',
           durationMinutes: 100,
           coordinates: { latitude: 25.0805, longitude: 55.1403 },
           address: 'Dubai Marina Walk, Dubai',
@@ -235,7 +234,7 @@ export const mockDubaiTripData: Trip = {
           title: 'Seaside Brunch at JBR',
           subtitle: 'Outdoor Brunch overlooking Ain Dubai',
           category: 'dining',
-          startTime: '10:00 AM',
+          startTime: '08:00 AM',
           durationMinutes: 75,
           coordinates: { latitude: 25.0792, longitude: 55.1336 },
           address: 'The Beach, JBR, Dubai',
@@ -246,7 +245,7 @@ export const mockDubaiTripData: Trip = {
           title: 'JBR Beach & Promenade',
           subtitle: 'Coastal Walk along the Arabian Gulf',
           category: 'sight',
-          startTime: '11:30 AM',
+          startTime: '09:30 AM',
           durationMinutes: 90,
           coordinates: { latitude: 25.0784, longitude: 55.1328 },
           address: 'JBR The Beach, Dubai',
@@ -257,7 +256,7 @@ export const mockDubaiTripData: Trip = {
           title: 'Lahbab Red Dunes ATV Safari',
           subtitle: 'Half-Day Desert Safari, Quad Biking & Sandboarding',
           category: 'sight',
-          startTime: '02:30 PM',
+          startTime: '01:30 PM',
           durationMinutes: 180,
           coordinates: { latitude: 24.9750, longitude: 55.5900 },
           address: 'Lahbab Red Dunes Desert, Dubai',
@@ -486,7 +485,7 @@ export const mockDubaiTripData: Trip = {
           title: 'Dubai Miracle Garden',
           subtitle: '150 Million Blooming Flowers & Emirates A380 Sculpture',
           category: 'sight',
-          startTime: '02:45 PM',
+          startTime: '04:00 PM',
           durationMinutes: 120,
           coordinates: { latitude: 25.0597, longitude: 55.2444 },
           address: 'Street 3, Al Barsha South, Dubai',
@@ -497,7 +496,7 @@ export const mockDubaiTripData: Trip = {
           title: 'Dubai Butterfly Garden',
           subtitle: 'Climate-controlled Domes with 15,000 Butterflies',
           category: 'sight',
-          startTime: '05:00 PM',
+          startTime: '06:15 PM',
           durationMinutes: 60,
           coordinates: { latitude: 25.0605, longitude: 55.2458 },
           address: 'Al Barsha South 3, Dubailand, Dubai',
@@ -508,7 +507,7 @@ export const mockDubaiTripData: Trip = {
           title: 'Global Village Cultural Pavilions',
           subtitle: 'International Crafts, Street Food & Evening Performances',
           category: 'sight',
-          startTime: '06:30 PM',
+          startTime: '08:00 PM',
           durationMinutes: 120,
           coordinates: { latitude: 25.0678, longitude: 55.3005 },
           address: 'Sheikh Mohamed Bin Zayed Rd, Dubai',
@@ -650,7 +649,7 @@ export const mockDubaiTripData: Trip = {
           title: 'Dubai Fountain Finale Show',
           subtitle: 'Late Evening Fountain Choreography & Downtown Goodbye',
           category: 'sight',
-          startTime: '09:15 PM',
+          startTime: '10:15 PM',
           durationMinutes: 45,
           coordinates: { latitude: 25.1955, longitude: 55.2778 },
           address: 'Downtown Dubai Lake, Dubai',
@@ -686,7 +685,7 @@ export const mockDubaiTripData: Trip = {
       },
       bookingRef: 'EK-DXB77',
       seat: '7K (A380 Upper Deck)',
-      notes: 'Direct flight arriving into Dubai Terminal 3 around 5:00 PM.',
+      notes: 'Departs New York late on Jan 6 and arrives in Dubai on Jan 7 around 5:00 PM.',
     },
     {
       id: 'fl_dxb_2',
@@ -798,10 +797,9 @@ export const mockDubaiTripData: Trip = {
 • US Consulate General Dubai: +971 4 309 4000 (Corner of Al Seef Rd and Sheikh Khalifa bin Zayed Rd)
 • British Embassy Dubai: +971 4 309 4444 (Al Seef St, Bur Dubai)
 • Palace Downtown Concierge: +971 4 428 7888
-• Travel Insurance Policy: Allianz Global #AZ-9982104 (24/7 Assist: +1 800 555 0199)`,
-  generalNotes: `• Wifi Passwords:
-  - Palace Downtown: PalaceGuest / falcon2027
-  - Dubai Mall Free Wifi: "Dubai Mall by Emaar" (SMS OTP required)
+• Keep your travel insurer's emergency number with your policy documents.`,
+  generalNotes: `• Connectivity:
+  - Use hotel and venue guest Wi-Fi; avoid storing passwords in shared trip notes.
 • Metro / Nol Card:
   - Silver Nol card loaded with 50 AED each for Red Line metro trips
 • Dress Code Reminders:

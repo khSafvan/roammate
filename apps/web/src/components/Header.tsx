@@ -73,7 +73,7 @@ export const Header: React.FC<HeaderProps> = ({
               onClick={() => onNavigateView && onNavigateView('trips_list')}
               title="Return to All Trips"
             >
-              <span className="brand-logo">✈️</span>
+              <img className="brand-logo" src="/icon.svg" alt="" />
               <span className="brand-name">roammate</span>
             </button>
             {isWasmActive && (

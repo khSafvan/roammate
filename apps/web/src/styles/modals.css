@@ -1,4 +1,4 @@
-/* MojoLog Modal Styles: Soft Utility / Calm Utility Dialog Architecture */
+/* roammate modal styles */
 
 /* 1. Universal Modal Primitives */
 .modal-backdrop {
@@ -1478,7 +1478,11 @@
 }
 
 .auth-landing-logo {
-  font-size: 15px;
+  display: block;
+  width: 20px;
+  height: 20px;
+  flex: 0 0 20px;
+  border-radius: var(--radius-xs);
 }
 
 .auth-landing-brand {

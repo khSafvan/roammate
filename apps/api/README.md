@@ -1,4 +1,4 @@
-# ☁️ MojoLog Edge Backend (Cloudflare Workers + Turso libSQL)
+# ☁️ roammate Edge Backend (Cloudflare Workers + Turso libSQL)
 
 This directory contains the edge API server powering zero-knowledge authentication via **12-word cryptographic seed phrases (BIP-39)** and serverless database persistence via **Turso (libSQL)**.
 

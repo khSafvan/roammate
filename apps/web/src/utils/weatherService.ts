@@ -142,7 +142,7 @@ export async function geocodeDestination(
     const url = `${NOMINATIM}?q=${encodeURIComponent(destination)}&format=json&limit=1`;
     const res = await fetch(url, {
       signal: AbortSignal.timeout(5000),
-      headers: { 'Accept-Language': 'en', 'User-Agent': 'MojoLog/1.0' },
+      headers: { 'Accept-Language': 'en', 'User-Agent': 'roammate/1.0' },
     });
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const data = await res.json();
