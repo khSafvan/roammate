@@ -3,7 +3,6 @@ import {
   CalendarDays,
   CheckCircle2,
   ChevronDown,
-  Cpu,
   FileText,
   Key,
   Lock,
@@ -21,7 +20,6 @@ interface HeaderProps {
   startTime?: string;
   endTime?: string;
   readinessScore: number;
-  isWasmActive: boolean;
   activeSession: VaultSession | null;
   tripsCount?: number;
   currentView?: 'trips_list' | 'trip_detail' | 'trip_settings';
@@ -45,7 +43,6 @@ export const Header: React.FC<HeaderProps> = ({
   startTime,
   endTime,
   readinessScore,
-  isWasmActive,
   activeSession,
   tripsCount = 1,
   currentView,
@@ -76,12 +73,6 @@ export const Header: React.FC<HeaderProps> = ({
               <img className="brand-logo" src="/icon.svg" alt="" />
               <span className="brand-name">roammate</span>
             </button>
-            {isWasmActive && (
-              <span className="wasm-badge" title="WebAssembly route engine active">
-                <Cpu size={11} strokeWidth={2} />
-                <span className="btn-label-responsive">WASM</span>
-              </span>
-            )}
           </div>
 
           <div className="header-divider" />

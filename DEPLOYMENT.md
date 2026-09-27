@@ -8,7 +8,7 @@ This guide covers everything required to configure, obtain keys for, and deploy 
 
 roammate consists of three decoupled components orchestrated within a single monorepo:
 
-1. **Frontend (`apps/web`)**: React 18 SPA + Vite + Rust WebAssembly + PWA Service Worker + TerraWay GPX vector map engine. Full stop/day CRUD, TSP route optimizer with undo, expense settlement, packing lists, iCal export, scratchpad, printable travel packet, and schedule conflict detection. 87 Vitest unit tests passing.
+1. **Frontend (`apps/web`)**: React 18 SPA + Vite + TypeScript geospatial/route engine + PWA Service Worker + TerraWay GPX vector map engine. Full stop/day CRUD, TSP route optimizer with undo, expense settlement, packing lists, iCal export, scratchpad, printable travel packet, and schedule conflict detection.
 2. **Backend API (`apps/api`)**: Cloudflare Worker + Hono edge router providing zero-knowledge BIP-39 authentication, itinerary sync, read-only share links, and 90-day auto-pruning.
 3. **Database (Turso libSQL)**: Globally distributed serverless SQLite database.
 
@@ -40,12 +40,6 @@ Make sure your machine or CI/CD environment has the following tools installed:
 node --version
 npm --version
 
-# Verify Rust & Cargo (Required only if recompiling WebAssembly)
-cargo --version
-rustc --version
-
-# Verify wasm32 compilation target
-rustup target add wasm32-unknown-unknown
 ```
 
 ---
@@ -140,16 +134,13 @@ curl https://roammate-api.yoursubdomain.workers.dev/api/auth/register
 
 ### Step 4: Deploy Frontend Web Application (`apps/web`)
 
-The frontend produces static HTML, CSS, JavaScript, and compiled `.wasm` files in `apps/web/dist/`.
+The frontend produces static HTML, CSS, and JavaScript in `apps/web/dist/`. Route calculations and GPX generation are implemented in TypeScript, with no extra compilation toolchain required.
 
 #### Build Command
 ```bash
 # From the repository root:
 
-# 1. Compile Rust to WebAssembly (if changed)
-npm run build:wasm
-
-# 2. Compile React SPA bundle
+# Compile the React SPA bundle
 npm run build
 ```
 Build output directory: `apps/web/dist/`
@@ -184,7 +175,6 @@ FROM node:20-alpine AS builder
 WORKDIR /app
 COPY . .
 RUN npm install
-RUN npm run build:wasm
 RUN npm run build
 
 FROM nginx:alpine
@@ -193,9 +183,6 @@ COPY apps/web/nginx.conf /etc/nginx/conf.d/default.conf
 EXPOSE 80
 CMD ["nginx", "-g", "daemon off;"]
 ```
-> [!IMPORTANT]
-> Ensure your Nginx configuration includes MIME type `application/wasm wasm;` so browsers can instantiate the WebAssembly binary.
-
 ---
 
 ### Step 5: Local Development Setup
@@ -226,7 +213,7 @@ roammate is a Progressive Web App (PWA) with full offline caching:
 2. Open your deployed URL in Chrome/Brave/Edge.
 3. Open DevTools ➔ **Application** ➔ **Service Workers**; verify `sw.js` is active and running.
 4. Toggle **Offline** mode in the Network tab; refresh the page.
-5. All itineraries, boarding passes, expense logs, and Rust WASM TSP route optimization will function seamlessly with zero network connectivity.
+5. All itineraries, boarding passes, expense logs, and TypeScript route optimization will function seamlessly with zero network connectivity.
 
 ---
 

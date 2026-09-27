@@ -1,11 +1,5 @@
 /// <reference types="vite/client" />
 
-declare module '*.wasm?url' {
-  const url: string;
-  export default url;
-}
+// Vite client environment types.
 
-declare module '*.wasm' {
-  const init: (options?: unknown) => Promise<unknown>;
-  export default init;
-}
+// Imported by the web TypeScript project.

@@ -1,19 +1,6 @@
-# ✈️ roammate — Responsive React + Rust/WASM Trip Planner
+# ✈️ roammate — Responsive TypeScript Trip Planner
 
-> A fully offline-capable, privacy-first trip planning web app with a **TerraWay 2D GPX vector map engine**, a native **Rust WebAssembly TSP route optimizer**, and a cryptographic **BIP-39 seed vault**.
-
----
-
-## ⚡ Rust WebAssembly Engine (`rust-core`)
-
-All core math, geospatial, and combinatorial optimization routines are written in **Rust** and compiled to **WebAssembly** via `wasm-pack`:
-
-| Function | Description |
-|---|---|
-| `wasm_haversine_distance_km` | High-precision spherical distance between two coordinates |
-| `wasm_estimate_duration_minutes` | Multi-modal transit modeling (Drive, Walk, Transit with station buffers) |
-| `wasm_optimize_route_tsp` | 2-opt TSP algorithm resequencing stops to minimize total travel distance |
-| `wasm_weather_comfort_label` | Comfort scoring combining temperature, humidity, UV, and precipitation |
+> A fully offline-capable, privacy-first trip planning web app with a **TerraWay 2D GPX vector map engine**, a TypeScript route optimizer, and a cryptographic **BIP-39 seed vault**.
 
 ---
 
@@ -32,7 +19,7 @@ All core math, geospatial, and combinatorial optimization routines are written i
 - **TerraWay GPX Export** — RFC/Topografix GPX 1.1 XML for Garmin, Strava, and offline GPS.
 - **Flight Boarding Passes** — IATA route cards with live FlightRadar24 deep-links.
 - **BIP-39 Seed Vault** — 12-word mnemonic cryptographic auth, zero SMS costs, zero lock-in.
-- **Offline-First PWA** — Service Worker caches app shell, styles, and WASM binary for 100% offline access.
+- **Offline-First PWA** — Service Worker caches the app shell, styles, and route engine for offline access.
 
 ---
 
@@ -41,12 +28,11 @@ All core math, geospatial, and combinatorial optimization routines are written i
 ```
 roammate/
 ├── apps/
-│   ├── web/                    # React 18 + Vite + WASM Frontend SPA
+│   ├── web/                    # React 18 + Vite + TypeScript Frontend SPA
 │   │   ├── src/
 │   │   │   ├── auth/           # BIP-39 mnemonic generation & Web Crypto SHA-256
 │   │   │   ├── components/     # React UI components & modal system
 │   │   │   ├── hooks/          # useVault, useTransitLegs, useTripOptimization
-│   │   │   ├── pkg/            # Compiled WASM binary & JS bindings
 │   │   │   ├── styles/         # 9-layer modular CSS design system
 │   │   │   │   ├── variables.css   # Design tokens (color, spacing, radius, type)
 │   │   │   │   ├── base.css        # Reset & global primitives
@@ -58,9 +44,8 @@ roammate/
 │   │   │   │   ├── responsive.css  # Breakpoints & touch target enforcement
 │   │   │   │   ├── utilities.css   # Utility class layer (spacing, color, layout)
 │   │   │   │   └── print.css       # @media print travel packet styles
-│   │   │   ├── utils/          # GPX exporter, iCal generator, expense settlement
-│   │   │   └── wasm/           # WASM loader & JS fallbacks
-│   │   └── tests/              # Vitest unit tests (87 passing)
+│   │   │   └── utils/          # Route engine, GPX, iCal, and expense settlement
+│   │   └── tests/              # Vitest unit tests
 │   │
 │   └── api/                    # Cloudflare Worker + Hono Edge API
 │       ├── src/index.ts        # Edge auth, sync, share, 90-day auto-pruning
@@ -68,13 +53,10 @@ roammate/
 │       └── wrangler.toml       # Edge deployment config
 │
 ├── packages/
-│   ├── shared/                 # Shared types & constants (@mojolog/shared)
-│   │   └── src/
-│   │       ├── types.ts        # Trip, TripDay, ItineraryStop, Flight, Expense, PackingItem
-│   │       └── constants.ts    # Storage keys, 90-day retention, transit speeds
-│   │
-│   └── rust-core/              # Computational core → WebAssembly
-│       └── src/lib.rs          # TSP 2-opt, Haversine, comfort index
+│   └── shared/                 # Shared types & constants (@mojolog/shared)
+│       └── src/
+│           ├── types.ts        # Trip, TripDay, ItineraryStop, Flight, Expense, PackingItem
+│           └── constants.ts    # Storage keys, 90-day retention, transit speeds
 │
 ├── README.md
 ├── DEPLOYMENT.md
@@ -88,10 +70,9 @@ roammate/
 
 ```bash
 npm run dev          # Start Vite dev server at http://localhost:3000
-npm test             # Run Vitest unit tests (87 tests)
+npm test             # Run Vitest unit tests
 npm run build        # TypeScript check + production bundle → apps/web/dist/
 npm run dev:api      # Start local Cloudflare Worker (Wrangler)
-npm run build:wasm   # Recompile Rust → WebAssembly (wasm-pack)
 ```
 
 ---

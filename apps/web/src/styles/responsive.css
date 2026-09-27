@@ -80,10 +80,6 @@
 
 /* 3. Mid-Tablet Viewport (<= 768px) */
 @media (max-width: 768px) {
-  .wasm-badge {
-    display: none;
-  }
-
   .trips-count-badge {
     display: none;
   }

@@ -4,7 +4,6 @@ import {
   CheckCircle2,
   Clock,
   Compass,
-  Cpu,
   Key,
   Lock,
   MapPin,
@@ -25,7 +24,6 @@ interface TripsListPageProps {
   trips: Trip[];
   activeTripId: string;
   vaultSession: VaultSession | null;
-  isWasmActive: boolean;
   onSelectTrip: (tripId: string) => void;
   onOpenSettings: (tripId: string) => void;
   onShareTrip: (trip: Trip) => void;
@@ -38,7 +36,6 @@ export const TripsListPage: React.FC<TripsListPageProps> = ({
   trips,
   activeTripId,
   vaultSession,
-  isWasmActive,
   onSelectTrip,
   onOpenSettings,
   onShareTrip,
@@ -109,12 +106,6 @@ export const TripsListPage: React.FC<TripsListPageProps> = ({
             <div className="header-brand">
               <span className="brand-logo">✈️</span>
               <span className="brand-name">roammate</span>
-              {isWasmActive && (
-                <span className="wasm-badge" title="Core math & route optimization running on WebAssembly compiled from Rust">
-                  <Cpu size={12} strokeWidth={1.75} />
-                  <span>Rust WASM</span>
-                </span>
-              )}
             </div>
             <div className="trips-hub-tag">
               <Compass size={13} className="text-blue" />

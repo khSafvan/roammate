@@ -83,21 +83,12 @@ dist-ssr/
 apps/api/.wrangler/
 worker/.wrangler/
 
-# ------------------------------------------------------------------------------
-# 5. Rust & WebAssembly Build Artifacts
-# ------------------------------------------------------------------------------
+# Build outputs from local toolchains.
 target/
 **/target/
-rust-core/target/
-packages/rust-core/target/
-pkg/
-**/pkg/
-src/pkg/
-apps/web/src/pkg/
-**/*.rs.bk
 
 # ------------------------------------------------------------------------------
-# 6. Test Reports, Coverage & Scratch Files
+# 5. Test Reports, Coverage & Scratch Files
 # ------------------------------------------------------------------------------
 coverage/
 **/coverage/
@@ -107,7 +98,7 @@ scratch/
 **/*.bak
 
 # ------------------------------------------------------------------------------
-# 7. Operating System & IDE Files
+# 6. Operating System & IDE Files
 # ------------------------------------------------------------------------------
 .DS_Store
 **/.DS_Store

@@ -12,7 +12,7 @@ import {
   Umbrella,
 } from 'lucide-react';
 import { DayWeather, WeatherCondition } from '../types/trip';
-import { getWeatherComfortLabel } from '../wasm/engine';
+import { getWeatherComfortLabel } from '../utils/routeEngine';
 
 interface WeatherBannerProps {
   weather: DayWeather;

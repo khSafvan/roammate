@@ -4,7 +4,7 @@
  * and nautical passage curve generation.
  */
 import { Coordinates, ItineraryStop, TransitMode } from '../types/trip';
-import { computeDistanceKm, estimateDurationMins } from '../wasm/engine';
+import { computeDistanceKm, estimateDurationMins } from './routeEngine';
 
 export type RouteMode = TransitMode | 'flight' | 'boat';
 

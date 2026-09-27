@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { ItineraryStop } from '../src/types/trip';
 import { formatMinutesToTime, parseTimeToMinutes } from '../src/hooks/useTripOptimization';
-import { optimizeRouteTspWasm } from '../src/wasm/engine';
+import { optimizeRouteTsp } from '../src/utils/routeEngine';
 
 describe('Route Optimization Preview, Confirmation Prompt & Undo', () => {
   const originalStops: ItineraryStop[] = [
@@ -41,13 +41,13 @@ describe('Route Optimization Preview, Confirmation Prompt & Undo', () => {
   ];
 
   it('returns valid optimization result with all stop IDs preserved', () => {
-    const stopsForWasm = originalStops.map((s) => ({
+    const routeStops = originalStops.map((s) => ({
       id: s.id,
       latitude: s.coordinates.latitude,
       longitude: s.coordinates.longitude,
     }));
 
-    const result = optimizeRouteTspWasm(stopsForWasm, 'drive');
+    const result = optimizeRouteTsp(routeStops, 'drive');
     expect(result.optimized_ids).toBeDefined();
     expect(result.optimized_ids.length).toBe(3);
     expect(result.optimized_ids).toContain('stop_1');

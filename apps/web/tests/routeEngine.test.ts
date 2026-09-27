@@ -1,14 +1,14 @@
 import { describe, expect, it } from 'vitest';
 import {
   computeDistanceKm,
-  computeExpenseBreakdownWasm,
-  computeTransitLegsWasm,
+  computeExpenseBreakdown,
+  computeTransitLegs,
   estimateDurationMins,
   getWeatherComfortLabel,
-  optimizeRouteTspWasm,
-} from '../src/wasm/engine';
+  optimizeRouteTsp,
+} from '../src/utils/routeEngine';
 
-describe('WASM Engine & JavaScript Fallbacks', () => {
+describe('TypeScript Route and Trip Engine', () => {
   describe('computeDistanceKm (Haversine)', () => {
     it('calculates 0 distance between identical coordinates', () => {
       const dist = computeDistanceKm(35.6895, 139.6917, 35.6895, 139.6917);
@@ -67,13 +67,13 @@ describe('WASM Engine & JavaScript Fallbacks', () => {
     });
   });
 
-  describe('optimizeRouteTspWasm (JS Fallback)', () => {
+  describe('optimizeRouteTsp', () => {
     it('handles trivial route with 0 or 1 stop without error', () => {
-      const emptyResult = optimizeRouteTspWasm([], 'drive');
+      const emptyResult = optimizeRouteTsp([], 'drive');
       expect(emptyResult.optimized_ids).toEqual([]);
       expect(emptyResult.minutes_saved).toBe(0);
 
-      const singleResult = optimizeRouteTspWasm(
+      const singleResult = optimizeRouteTsp(
         [{ id: 's1', latitude: 35.68, longitude: 139.7 }],
         'drive'
       );
@@ -89,14 +89,16 @@ describe('WASM Engine & JavaScript Fallbacks', () => {
         { id: 'end', latitude: 35.85, longitude: 139.85 },
       ];
 
-      const result = optimizeRouteTspWasm(stops, 'drive');
+      const result = optimizeRouteTsp(stops, 'drive');
       expect(result.optimized_ids[0]).toBe('start');
       expect(result.optimized_ids[result.optimized_ids.length - 1]).toBe('end');
       expect(result.optimized_ids).toHaveLength(4);
+      expect(result.optimized_duration_mins).toBeLessThanOrEqual(result.original_duration_mins);
+      expect(result.total_distance_km).toBeGreaterThan(0);
     });
   });
 
-  describe('computeTransitLegsWasm (Batch Transit)', () => {
+  describe('computeTransitLegs', () => {
     it('computes legs array for consecutive stops', () => {
       const stops = [
         {
@@ -123,7 +125,7 @@ describe('WASM Engine & JavaScript Fallbacks', () => {
         },
       ];
 
-      const legs = computeTransitLegsWasm(stops, { 's1->s2': 'walk' });
+      const legs = computeTransitLegs(stops, { 's1->s2': 'walk' });
       expect(legs).toHaveLength(1);
       expect(legs[0].fromStopId).toBe('s1');
       expect(legs[0].toStopId).toBe('s2');
@@ -133,7 +135,7 @@ describe('WASM Engine & JavaScript Fallbacks', () => {
     });
   });
 
-  describe('computeExpenseBreakdownWasm', () => {
+  describe('computeExpenseBreakdown', () => {
     it('accurately groups categories and sums total spending', () => {
       const expenses = [
         { id: 'e1', date: '2026-10-14', category: 'Flights' as const, amount: 800, currency: 'USD', paidBy: 'Me' },
@@ -141,7 +143,7 @@ describe('WASM Engine & JavaScript Fallbacks', () => {
         { id: 'e3', date: '2026-10-15', category: 'Food & Drinks' as const, amount: 150, currency: 'USD', paidBy: 'Me' },
       ];
 
-      const res = computeExpenseBreakdownWasm(expenses);
+      const res = computeExpenseBreakdown(expenses);
       expect(res.totalSpent).toBe(1150);
       expect(res.categoryTotals['Flights']).toBe(1000);
       expect(res.categoryTotals['Food & Drinks']).toBe(150);
