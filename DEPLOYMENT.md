@@ -109,15 +109,10 @@ This guide covers setting up and hosting Roammate completely from scratch:
 
 ---
 
-## 5. Automated CI/CD (GitHub Actions)
+## 5. Deployment Commands
+ 
+Deployments are performed on demand directly via CLI scripts:
+- **Deploy Backend (API Worker)**: `npm run deploy:api`
+- **Deploy Frontend (Pages)**: `npm run deploy:web`
 
-Workflows in `.github/workflows/` automatically deploy updates:
-- `.github/workflows/deploy-web.yml`: Deploys frontend to Pages on push to `main` when `apps/web/**` or `packages/**` change.
-- `.github/workflows/deploy-api.yml`: Deploys backend to Workers on push to `main` when `apps/api/**` or `packages/shared/**` change.
-
-### Required GitHub Repository Secrets
-
-Under your GitHub repository **Settings** ➔ **Secrets and variables** ➔ **Actions**:
-- `CLOUDFLARE_API_TOKEN`: Cloudflare API token with `Cloudflare Pages: Edit` and `Workers Scripts: Edit` permissions.
-- `CLOUDFLARE_ACCOUNT_ID`: Your Cloudflare Account ID (found on the Workers dashboard).
-- `VITE_API_URL`: Deployed Worker URL (e.g. `https://mojolog-api.<your-account>.workers.dev`).
+*(Automated GitHub Actions workflows are disabled by default to avoid unexpected cloud deployments on git push. Deployments run only when you explicitly invoke the deploy commands above).*
