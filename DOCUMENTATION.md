@@ -12,7 +12,7 @@ Developer reference for architecture, packages, API endpoints, synchronization, 
 │   └── api/               # Cloudflare Worker (Hono): auth + outbox sync only (Turso libSQL)
 └── packages/
     ├── core/              # Pure business logic: route engine, TSP, GPX, iCal, time, expenses
-    ├── api-client/        # Reusable typed HTTP client for web and future mobile clients
+    ├── api-client/        # Reusable typed HTTP client for web and external clients (e.g. mobile app)
     ├── sync/              # Storage-agnostic offline outbox & push/pull sync engine
     └── shared/            # Shared TypeScript models and configuration constants
 ```

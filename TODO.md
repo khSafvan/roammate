@@ -4,44 +4,63 @@
 
 ## ✅ Completed Milestones
 
-### Architecture & Refactor
+### Architecture & Monorepo Split
 - [x] Extract all calculation and optimization logic into `@mojolog/core` (pure, zero I/O).
-- [x] Create standalone typed `@mojolog/api-client` for web and future mobile clients.
+- [x] Create standalone typed `@mojolog/api-client` for web client and external clients.
 - [x] Implement storage-agnostic `@mojolog/sync` engine with offline outbox and last-write-wins conflict resolution.
 - [x] Convert `apps/web` into a static SPA with zero database drivers and zero local credential verification.
 - [x] Implement Bearer JWT authentication, `/sync/pull`, `/sync/push`, and origin-restricted CORS on `apps/api`.
 - [x] Configure independent CI/CD deployment pipelines for Cloudflare Pages (`deploy-web.yml`) and Cloudflare Workers (`deploy-api.yml`).
 
-### Core Features
+### Core Features (Phases 1–6)
 - [x] TerraWay 2D vector map engine with MapLibre GL & OpenFreeMap styles.
 - [x] Multi-modal routing (flights, nautical ferry fairways, road routes, walking corridors).
-- [x] Traveling Salesperson (2-opt TSP) route optimizer with meal windows and opening hours.
+- [x] Traveling Salesperson (2-opt TSP) route optimizer with meal windows (lunch/dinner) and attraction opening hours.
 - [x] Multi-traveler group expense tracker with greedy Settle Up debt minimization.
 - [x] Schedule conflict detection between consecutive stops.
 - [x] RFC/Topografix GPX 1.1 XML and RFC 5545 iCalendar (`.ics`) export.
 - [x] Flight boarding pass cards with live FlightRadar24 links.
-- [x] 90-day inactivity retention pruning.
+- [x] Live ECB currency conversion via Frankfurter API.
+- [x] Daylight, sunset & golden hour photography timing via Open-Meteo.
+- [x] Bank and public holiday destination alerts via Nager.Date.
+- [x] Country intelligence database (emergency contacts, electrical plug types, driving sides).
+- [x] Instant POI discovery chips in Places to Visit drawer.
+- [x] Visual consistency: unified voucher and flight card geometry, stable text truncation, category icons.
 
 ---
 
-## 🚀 Active & Upcoming Roadmap
+## 🚀 Active Roadmap: Incomplete Tasks
 
-### Phase 1 — Enhanced Mobile Client
-- [ ] Initialize React Native / Expo mobile app package in monorepo using `@mojolog/api-client` and `@mojolog/core`.
-- [ ] Connect SQLite / AsyncStorage to `@mojolog/sync` storage interface on mobile.
-- [ ] Share types and calculation tests across web and mobile apps.
+### Phase 7 — Authentication & Device Persistence
+- [x] Gate private planner access behind login with bearer JWT token and guest mode fallback.
+- [x] Keep device session active across browser restarts until token expiry or manual logout.
+- [ ] Restore last active page and active trip state automatically after browser reopening or hard reset.
 
-### Phase 2 — Real-Time Collaboration & Trip Sharing
-- [ ] Implement trip collaboration invites with granular permissions (Editor vs. Viewer).
-- [ ] WebSocket / Cloudflare Durable Objects live cursor and update presence.
-- [ ] In-app conflict notifications for concurrent multi-user edits.
+### Phase 8 — Trip Identity & Collaboration
+- [ ] Add unique trip IDs and unique usernames.
+- [ ] Define one trip-code invitation flow for both inviter and invitee.
+- [ ] Let invitees request to join with a username; show request to inviter with accept/decline actions.
+- [ ] Grant shared-trip access only after the inviter approves the request.
 
-### Phase 3 — Onboarding & Trip Templates
-- [ ] Interactive walkthrough for first-time guest users.
-- [ ] Curated trip templates (e.g. 7-Day Japan Golden Route, Amalfi Coast Roadtrip).
-- [ ] 1-click template cloning into active user vault.
+### Phase 9 — First-Run Onboarding
+- [ ] Add an interactive step-by-step tutorial for new users and persist its completion state.
 
-### Phase 4 — Stays & Lodging Intelligence
-- [ ] Support lodging stays spanning multiple days as itinerary anchor points.
-- [ ] Auto-calculate morning departure from hotel and evening return route.
-- [ ] Booking confirmation PDF / email parser for automatic flight and hotel stop creation.
+### Phase 10 — Stay-Aware Itinerary
+- [ ] Treat hotels/stays as itinerary locations.
+- [ ] Use a stay as the trip's start and end location by default until the user changes either point.
+
+### Phase 11 — Map Workspace & Focus
+- [ ] Keep itinerary focus and map focus synchronized for stops and places to visit.
+- [ ] Show focused-place details and notes in a lower map information panel, including user-added places.
+- [ ] Use a half-screen map beside the itinerary on desktop.
+- [ ] Use separate full-screen itinerary and map views on mobile, with a clear back path from place details.
+- [ ] Keep map markers above other map overlays with the highest marker z-index.
+
+---
+
+## 🧪 Verification
+
+```bash
+npm test         # Must maintain 100% pass rate
+npm run build    # Must produce 0 TypeScript errors
+```
