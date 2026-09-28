@@ -252,3 +252,44 @@ export interface SyncResult {
   message?: string;
   lastSyncedAt?: number;
 }
+
+// 5. Outbox & Sync Models
+export type SyncOperation = 'upsert' | 'delete';
+
+export interface OutboxEntry {
+  id: string;
+  entity: string; // e.g. 'trip'
+  op: SyncOperation;
+  payload: any;
+  clientTimestamp: number;
+}
+
+export interface SyncPushResponse {
+  success: boolean;
+  applied: number;
+  serverTimestamp: number;
+}
+
+export interface SyncRecord {
+  id: string;
+  entity: string;
+  op: SyncOperation;
+  data: any;
+  updatedAt: number;
+}
+
+export interface SyncPullResponse {
+  serverTimestamp: number;
+  records: SyncRecord[];
+}
+
+export interface AuthResponse {
+  success?: boolean;
+  token?: string;
+  userId?: string;
+  uuid?: string;
+  expiresAt?: number;
+  lastAccessedAt?: number;
+  error?: string;
+  status?: string;
+}
