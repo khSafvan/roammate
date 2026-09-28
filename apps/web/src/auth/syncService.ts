@@ -143,6 +143,7 @@ export async function saveItineraryToEdge(userId: string, trip: Trip): Promise<S
   const now = Date.now();
   const tripWithAccess: Trip & { lastAccessedAt: number } = {
     ...trip,
+    userId: trip.userId || userId,
     updatedAt: now,
     lastAccessedAt: now,
   };

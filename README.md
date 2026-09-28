@@ -1,120 +1,184 @@
-# ✈️ roammate — Responsive TypeScript Trip Planner
+# ✈️ roammate / mojolog
 
-> A fully offline-capable, privacy-first trip planning web app with a **TerraWay 2D GPX vector map engine**, a TypeScript route optimizer, and a cryptographic **BIP-39 seed vault**.
-
----
-
-## 🌟 Features
-
-- **Dual-Pane Split Screen (Desktop)** — Day selector, weather forecast, 1-click TSP optimizer, and timeline cards on the left; TerraWay vector map with GPX polyline on the right.
-- **Stop & Day CRUD** — Add, edit, delete, and move stops between days. Add or remove trip days with auto-dating.
-- **Route Optimizer with Undo** — 2-opt TSP preview modal showing before/after savings; replace or revert.
-- **Places to Visit Drawer** — Unscheduled ideas bucket with OSM/Nominatim geocoding search and day assignment.
-- **Expense Tracker & Debt Settlement** — Multi-traveler balances, category totals, and greedy Settle Up debt minimization.
-- **Schedule Conflict Detection** — Transit conflict warnings (`⚠️ Late by Xm`) between consecutive stops.
-- **Categorized Packing Lists** — 5-category checklist with progress bar in the Readiness hub.
-- **iCalendar Export** — RFC 5545 compliant `.ics` download for Google/Apple/Outlook calendar sync.
-- **Scratchpad & Notes** — Trip-level emergency contacts, general notes, and per-day notes.
-- **Printable Travel Packet** — Clean `@media print` layout for offline paper backup.
-- **TerraWay GPX Export** — RFC/Topografix GPX 1.1 XML for Garmin, Strava, and offline GPS.
-- **Flight Boarding Passes** — IATA route cards with live FlightRadar24 deep-links.
-- **BIP-39 Seed Vault** — 12-word mnemonic cryptographic auth, zero SMS costs, zero lock-in.
-- **Offline-First PWA** — Service Worker caches the app shell, styles, and route engine for offline access.
+> Privacy-first, offline-capable trip planner with TerraWay 2D GPX vector map engine, TypeScript route optimizer, and edge cloud sync.
 
 ---
 
-## 🛠️ Monorepo Architecture
+## 🛠️ Architecture
+
+Monorepo structured for independent deployments, offline-first calculation, and reusable mobile-ready API client:
 
 ```
-roammate/
 ├── apps/
-│   ├── web/                    # React 18 + Vite + TypeScript Frontend SPA
-│   │   ├── src/
-│   │   │   ├── auth/           # BIP-39 mnemonic generation & Web Crypto SHA-256
-│   │   │   ├── components/     # React UI components & modal system
-│   │   │   ├── hooks/          # useVault, useTransitLegs, useTripOptimization
-│   │   │   ├── styles/         # 9-layer modular CSS design system
-│   │   │   │   ├── variables.css   # Design tokens (color, spacing, radius, type)
-│   │   │   │   ├── base.css        # Reset & global primitives
-│   │   │   │   ├── layout.css      # Header, nav, workspace, map pane
-│   │   │   │   ├── timeline.css    # Day selector, timeline cards, distance pills
-│   │   │   │   ├── map.css         # MapLibre container & floating UI
-│   │   │   │   ├── subviews.css    # Settings, trips list, subview pages
-│   │   │   │   ├── modals.css      # Modal system & form primitives
-│   │   │   │   ├── responsive.css  # Breakpoints & touch target enforcement
-│   │   │   │   ├── utilities.css   # Utility class layer (spacing, color, layout)
-│   │   │   │   └── print.css       # @media print travel packet styles
-│   │   │   └── utils/          # Route engine, GPX, iCal, and expense settlement
-│   │   └── tests/              # Vitest unit tests
-│   │
-│   └── api/                    # Cloudflare Worker + Hono Edge API
-│       ├── src/index.ts        # Edge auth, sync, share, 90-day auto-pruning
-│       ├── schema.sql          # Turso (libSQL) database schema
-│       └── wrangler.toml       # Edge deployment config
-│
-├── packages/
-│   └── shared/                 # Shared types & constants (@mojolog/shared)
-│       └── src/
-│           ├── types.ts        # Trip, TripDay, ItineraryStop, Flight, Expense, PackingItem
-│           └── constants.ts    # Storage keys, 90-day retention, transit speeds
-│
-├── README.md
-├── DEPLOYMENT.md
-├── TODO.md
-└── DESIGN_LAWS.md              # Design system rules & token reference
+│   ├── web/               # Frontend Vite static SPA -> Cloudflare Pages
+│   └── api/               # Backend Worker (Hono): accounts + sync only -> Cloudflare Workers
+└── packages/
+    ├── core/              # Pure logic: calculations, route engine, models, validation (no I/O, no DB, no window)
+    ├── api-client/        # Typed API client for web and future mobile client
+    ├── sync/              # Offline outbox + push/pull sync engine (storage-agnostic)
+    └── shared/            # Shared domain types and configuration constants
 ```
+
+### Key Principles
+
+1. **Clean Split & Independent Deployments**: `apps/web` builds statically to `dist/` and deploys to Cloudflare Pages. `apps/api` deploys as a standalone Cloudflare Worker. CI path filters ensure changes to one app never trigger a deployment for the other.
+2. **Account & Sync Only Backend**: `apps/api` handles accounts, bearer tokens, outbox push/pull, and Turso libSQL persistence.
+3. **Pure Frontend Calculations & Offline Support**:
+   - **Guest / Offline Mode**: All calculations (routing, TSP optimization, schedule conflicts, currency formatting, GPX/iCal generation, expense settlements) run locally from `@mojolog/core` without an account or database. Local mutations queue in `@mojolog/sync`'s outbox.
+   - **Signed-in Mode**: Bearer tokens are issued by `apps/api`. When offline, the cached token maintains session state until expiry; queued changes synchronize when back online. Credentials are never verified locally in the browser.
+   - **Conflict Resolution**: Last-write-wins per record using server timestamps.
 
 ---
 
-## 🚀 Commands
+## 🚀 Quick Start & Local Development
+
+### Prerequisites
+
+- Node.js 20+
+- npm (workspaces)
+
+### 1. Install Dependencies
 
 ```bash
-npm run dev          # Start Vite dev server at http://localhost:3000
-npm test             # Run Vitest unit tests
-npm run build        # TypeScript check + production bundle → apps/web/dist/
-npm run dev:api      # Start local Cloudflare Worker (Wrangler)
+npm install
+```
+
+### 2. Environment Setup
+
+Copy example environment files:
+
+```bash
+# Frontend web environment
+cp apps/web/.env.example apps/web/.env
+
+# API worker local development secrets
+cp apps/api/.dev.vars.example apps/api/.dev.vars
+```
+
+### 3. Run Web & API Together
+
+Run both the backend Worker (`http://localhost:8787`) and the Vite web development server (`http://localhost:5173`):
+
+```bash
+npm run dev:all
+```
+
+Or run them individually in separate terminals:
+
+```bash
+# Terminal 1: Backend API Worker
+npm run dev:api
+
+# Terminal 2: Frontend Web Client
+npm run dev
 ```
 
 ---
 
-## 🎨 Design System
+## 🔐 Environment Variables & Secrets
 
-roammate uses a hand-authored modular CSS design system — no Tailwind, no CSS-in-JS, no UI kit dependencies. All rules are documented in **[DESIGN_LAWS.md](DESIGN_LAWS.md)**.
+### Frontend (`apps/web/.env`)
 
-**Core principles:**
-- **Minimalist** — every element earns its place; whitespace is structure, not filler
-- **Flat design** — shapes and solid color, no gradients, no fake 3D; subtle shadows for elevation only
-- **Rounded, not circular** — 4/8/12/16/20/24px radius scale; `9999px` pill only for chips and tags; `50%` only for avatars/status dots
-- **4px spacing grid** — all padding and margin values are multiples of 4 (`4, 8, 12, 16, 20, 24, 32, 48, 64`)
-- **Responsive & touch-first** — 44px minimum touch targets, 768px + 1024px breakpoints, 16px minimum body font
-
-**Token quick-reference:**
-
-| Token | Value | Use |
+| Variable | Description | Default |
 |---|---|---|
-| `--brand-blue` | `#2563EB` | Primary CTAs, active states, focus rings |
-| `--brand-emerald` | `#10B981` | Success, completion, checked |
-| `--brand-rose` | `#EF4444` | Danger, delete, errors |
-| `--brand-amber` | `#F59E0B` | Warning, conflict alerts |
-| `--bg-canvas` | `#F8F9FA` | App background |
-| `--bg-card` | `#FFFFFF` | Card & modal surfaces |
-| `--bg-subtle` | `#F1F3F5` | Muted backgrounds, inputs |
-| `--text-primary` | `#0F172A` | All primary labels |
-| `--text-secondary` | `#64748B` | Meta-info, subtitles |
-| `--text-tertiary` | `#94A3B8` | Placeholders, hints, labels |
-| `--radius-sm` | `8px` | Inputs, small interactive elements |
-| `--radius-md` | `12px` | Icon nodes, small cards |
-| `--radius-card` | `20px` | Timeline cards, modals |
-| `--radius-pill` | `9999px` | Chips, tags, nav tabs |
-| `--shadow-card` | very subtle multi-layer | Cards at rest |
-| `--shadow-modal` | deeper | Floating modals & drawers |
+| `VITE_API_URL` | Base URL of the `apps/api` Worker backend | `http://localhost:8787` |
+| `VITE_MAP_STYLE_URL` | Vector map tile style JSON URL | `https://tiles.openfreemap.org/styles/liberty` |
+| `VITE_OSRM_ROUTER_URL` | Road routing API endpoint (OSRM) | `https://router.project-osrm.org/route/v1` |
 
-See [DESIGN_LAWS.md](DESIGN_LAWS.md) for the complete rule set, utility class reference, component patterns, and do/don't cheat sheet.
+### Backend Worker (`apps/api/.dev.vars` / Wrangler Secrets)
+
+*Note: In production, database credentials and JWT signing secrets are stored as Cloudflare Worker secrets (`wrangler secret put`), never checked into Git or exposed to the frontend.*
+
+| Variable / Secret | Description | Where to Set |
+|---|---|---|
+| `TURSO_DATABASE_URL` | Turso libSQL connection URL (`libsql://...`) | `.dev.vars` / `wrangler secret put TURSO_DATABASE_URL` |
+| `TURSO_AUTH_TOKEN` | Turso database authentication token | `.dev.vars` / `wrangler secret put TURSO_AUTH_TOKEN` |
+| `JWT_SECRET` | Signing key for Bearer JWT tokens | `.dev.vars` / `wrangler secret put JWT_SECRET` |
+| `ALLOWED_ORIGINS` | Comma-separated list of allowed web origins for CORS | `wrangler.toml` [vars] or `.dev.vars` |
 
 ---
 
-## 📖 Deployment
+## 🗄️ Database Migrations
 
-Full setup guide for Turso database, Cloudflare Workers, and production deployment:
+Migrations are located in `apps/api/migrations/`.
 
-👉 **[DEPLOYMENT.md](DEPLOYMENT.md)**
+Run migrations against Turso database using credentials from `.dev.vars` or environment variables:
+
+```bash
+npm run db:migrate
+```
+
+To create a new migration:
+1. Add a numbered SQL file in `apps/api/migrations/` (e.g. `0002_new_feature.sql`).
+2. Run `npm run db:migrate`.
+
+---
+
+## 🚢 Deployment
+
+### Deploy Web (`apps/web` -> Cloudflare Pages)
+
+```bash
+npm run deploy:web
+```
+
+Builds the static SPA bundle into `apps/web/dist` and deploys it to Cloudflare Pages.
+
+### Deploy API (`apps/api` -> Cloudflare Workers)
+
+```bash
+npm run deploy:api
+```
+
+Deploys the Hono Worker to Cloudflare Workers.
+
+### Production Secrets Setup
+
+Before first API deployment, set the production secrets on Cloudflare:
+
+```bash
+cd apps/api
+npx wrangler secret put TURSO_DATABASE_URL
+npx wrangler secret put TURSO_AUTH_TOKEN
+npx wrangler secret put JWT_SECRET
+```
+
+### Continuous Integration & Deployment (GitHub Actions)
+
+Separate GitHub Action workflows are configured with path filtering:
+- `.github/workflows/deploy-web.yml`: Triggers only on changes to `apps/web/**` or `packages/**`.
+- `.github/workflows/deploy-api.yml`: Triggers only on changes to `apps/api/**` or `packages/shared/**`.
+
+---
+
+## 🧪 Testing
+
+Run test suites across all workspaces:
+
+```bash
+npm test
+```
+
+Or test specific packages:
+
+```bash
+npm run test --workspace=@mojolog/core        # 48 pure calculation & routing tests
+npm run test --workspace=@mojolog/sync        # 6 outbox, offline & conflict tests
+npm run test --workspace=@mojolog/api-client  # 4 typed client tests
+npm run test --workspace=@mojolog/web         # 122 frontend integration tests
+```
+
+---
+
+## 📡 API Reference
+
+| Method | Path | Auth | Description |
+|---|---|---|---|
+| `POST` | `/auth/register` | None | Register account; returns `{ token, userId, expiresAt }` |
+| `POST` | `/auth/login` | None | Verify credentials; returns `{ token, userId, expiresAt }` |
+| `POST` | `/auth/refresh` | Bearer | Refresh active token; returns fresh JWT |
+| `GET` | `/me` | Bearer | Get current user metadata and update activity |
+| `DELETE`| `/auth/account` | Bearer | Delete account and all associated itineraries |
+| `GET` | `/sync/pull?since=...` | Bearer | Pull remote changes updated after `since` timestamp |
+| `POST` | `/sync/push` | Bearer | Push outbox mutation batch with server timestamps |
+| `GET` | `/share/:token` | Guest Key | Read-only shared trip access |
