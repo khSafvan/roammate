@@ -109,10 +109,22 @@ This guide covers setting up and hosting Roammate completely from scratch:
 
 ---
 
-## 5. Deployment Commands
- 
-Deployments are performed on demand directly via CLI scripts:
+## 5. Deployment Pipelines (CI/CD & CLI)
+
+### Automated GitHub Actions
+Workflows in `.github/workflows/` run automatically when code changes on `main` (or via manual `workflow_dispatch` trigger):
+- **`.github/workflows/deploy-web.yml`**: Builds and deploys frontend to Cloudflare Pages when `apps/web/**` or `packages/**` change.
+- **`.github/workflows/deploy-api.yml`**: Deploys backend to Cloudflare Workers when `apps/api/**` or `packages/shared/**` change.
+
+> **Note:** The workflows have a guard check (`if: ${{ secrets.CLOUDFLARE_API_TOKEN != '' }}`) so they cleanly skip until you configure your Cloudflare credentials in GitHub.
+
+#### Required GitHub Secrets
+In GitHub repository **Settings** ➔ **Secrets and variables** ➔ **Actions**:
+- `CLOUDFLARE_API_TOKEN`: Cloudflare API token with Pages and Workers edit permissions.
+- `CLOUDFLARE_ACCOUNT_ID`: Your Cloudflare Account ID.
+- `VITE_API_URL`: Deployed API Worker URL (e.g. `https://mojolog-api.<your-account>.workers.dev`).
+
+### Manual CLI Deployment Commands
+Deployments can also be invoked locally at any time:
 - **Deploy Backend (API Worker)**: `npm run deploy:api`
 - **Deploy Frontend (Pages)**: `npm run deploy:web`
-
-*(Automated GitHub Actions workflows are disabled by default to avoid unexpected cloud deployments on git push. Deployments run only when you explicitly invoke the deploy commands above).*
