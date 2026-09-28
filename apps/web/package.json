@@ -13,7 +13,6 @@
     "@mojolog/api-client": "*",
     "@mojolog/core": "*",
     "@mojolog/shared": "*",
-    "@scure/bip39": "^2.4.0",
     "lucide-react": "^0.453.0",
     "maplibre-gl": "^6.10.0",
     "qrcode": "^1.5.4",

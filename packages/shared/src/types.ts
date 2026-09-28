@@ -241,6 +241,8 @@ export interface AuthCredentials {
 
 export interface VaultSession {
   userId: string;
+  token?: string;
+  expiresAt?: number;
   accountTag?: string; // Short preview e.g. "c7a1...0814"
   phraseSnippet?: string; // Legacy mnemonic snippet
   createdAt: number;
