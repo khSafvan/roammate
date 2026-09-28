@@ -54,31 +54,22 @@ This guide covers setting up and hosting Roammate completely from scratch:
    ```
 
 2. **Set Worker Secrets**:
-   > ⚠️ **Worker Name Requirement**: Because this is a monorepo, always specify the Worker name (`--name mojolog-api`) or configuration path (`--config apps/api/wrangler.toml`) when setting secrets from the repository root to avoid `[ERROR] Required Worker name missing`.
-
-   **From repository root (recommended):**
+   Run directly from the repository root:
    ```bash
    # 1. Database URL from Turso (Step 2)
-   npx wrangler secret put TURSO_DATABASE_URL --name mojolog-api
+   npx wrangler secret put TURSO_DATABASE_URL
 
    # 2. Database Auth Token from Turso (Step 2)
-   npx wrangler secret put TURSO_AUTH_TOKEN --name mojolog-api
+   npx wrangler secret put TURSO_AUTH_TOKEN
 
    # 3. JWT Signing Secret (generate via: openssl rand -hex 32)
-   npx wrangler secret put JWT_SECRET --name mojolog-api
+   npx wrangler secret put JWT_SECRET
    ```
-
-   *Alternatively, use the convenience npm scripts from root:*
-   ```bash
-   npm run secret:put -- TURSO_DATABASE_URL
-   npm run secret:put -- TURSO_AUTH_TOKEN
-   npm run secret:put -- JWT_SECRET
-   ```
+   *(The repository root is pre-configured with `name = "mojolog-api"`, so you can run `wrangler secret put` directly without needing extra flags or switching directories).*
 
    **Verify configured secrets:**
    ```bash
-   npm run secret:list
-   # or: npx wrangler secret list --name mojolog-api
+   npx wrangler secret list
    ```
 
 3. **Deploy the Worker**:
