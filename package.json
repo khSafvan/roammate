@@ -9,10 +9,14 @@
   ],
   "scripts": {
     "dev": "npm run dev --workspace=@mojolog/web",
+    "dev:api": "npm run dev --workspace=@mojolog/api",
+    "dev:all": "npm run dev:api & npm run dev",
     "build": "npm run build --workspace=@mojolog/web",
     "preview": "npm run preview --workspace=@mojolog/web",
-    "test": "npm run test --workspace=@mojolog/web",
-    "dev:api": "npm run dev --workspace=@mojolog/api",
+    "test": "npm run test --workspaces --if-present",
+    "deploy:web": "npm run build --workspace=@mojolog/web && wrangler pages deploy apps/web/dist --project-name=mojolog-web",
+    "deploy:api": "npm run deploy --workspace=@mojolog/api",
+    "db:migrate": "npm run db:migrate --workspace=@mojolog/api",
     "ui-skills": "npx -y ui-skills"
   }
 }
