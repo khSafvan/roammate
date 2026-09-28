@@ -54,20 +54,31 @@ This guide covers setting up and hosting Roammate completely from scratch:
    ```
 
 2. **Set Worker Secrets**:
-   Run from `apps/api`:
+   > ⚠️ **Worker Name Requirement**: Because this is a monorepo, always specify the Worker name (`--name mojolog-api`) or configuration path (`--config apps/api/wrangler.toml`) when setting secrets from the repository root to avoid `[ERROR] Required Worker name missing`.
+
+   **From repository root (recommended):**
    ```bash
-   cd apps/api
+   # 1. Database URL from Turso (Step 2)
+   npx wrangler secret put TURSO_DATABASE_URL --name mojolog-api
 
-   # Set database credentials
-   npx wrangler secret put TURSO_DATABASE_URL
-   # Enter the libsql://... URL from Step 2
+   # 2. Database Auth Token from Turso (Step 2)
+   npx wrangler secret put TURSO_AUTH_TOKEN --name mojolog-api
 
-   npx wrangler secret put TURSO_AUTH_TOKEN
-   # Enter the Turso auth token from Step 2
+   # 3. JWT Signing Secret (generate via: openssl rand -hex 32)
+   npx wrangler secret put JWT_SECRET --name mojolog-api
+   ```
 
-   # Set JWT token signing key
-   npx wrangler secret put JWT_SECRET
-   # Enter a secure random string (e.g. openssl rand -hex 32)
+   *Alternatively, use the convenience npm scripts from root:*
+   ```bash
+   npm run secret:put -- TURSO_DATABASE_URL
+   npm run secret:put -- TURSO_AUTH_TOKEN
+   npm run secret:put -- JWT_SECRET
+   ```
+
+   **Verify configured secrets:**
+   ```bash
+   npm run secret:list
+   # or: npx wrangler secret list --name mojolog-api
    ```
 
 3. **Deploy the Worker**:
@@ -91,7 +102,8 @@ This guide covers setting up and hosting Roammate completely from scratch:
 
 2. **Deploy to Cloudflare Pages**:
    ```bash
-   npx wrangler pages deploy apps/web/dist --project-name=mojolog-web
+   npm run deploy:web
+   # or: npx wrangler pages deploy apps/web/dist --project-name=mojolog-web
    ```
 
 ### Option B: Via Cloudflare Dashboard (Continuous Deployment)
@@ -109,22 +121,57 @@ This guide covers setting up and hosting Roammate completely from scratch:
 
 ---
 
-## 5. Deployment Pipelines (CI/CD & CLI)
+## 5. GitHub Actions Automated Deployment Setup
 
-### Automated GitHub Actions
-Workflows in `.github/workflows/` run automatically when code changes on `main` (or via manual `workflow_dispatch` trigger):
-- **`.github/workflows/deploy-web.yml`**: Builds and deploys frontend to Cloudflare Pages when `apps/web/**` or `packages/**` change.
-- **`.github/workflows/deploy-api.yml`**: Deploys backend to Cloudflare Workers when `apps/api/**` or `packages/shared/**` change.
+The repository includes two independent CI/CD workflows under `.github/workflows/`:
+- **`deploy-api.yml`**: Deploys the API Worker when `apps/api/**` or `packages/shared/**` change.
+- **`deploy-web.yml`**: Builds and deploys the frontend Pages app when `apps/web/**` or `packages/**` change.
 
-> **Note:** The workflows have a guard check (`if: ${{ secrets.CLOUDFLARE_API_TOKEN != '' }}`) so they cleanly skip until you configure your Cloudflare credentials in GitHub.
+> **Safety Guard**: Workflows skip automatically until you configure the secrets below, preventing unwanted failing builds.
 
-#### Required GitHub Secrets
-In GitHub repository **Settings** ➔ **Secrets and variables** ➔ **Actions**:
-- `CLOUDFLARE_API_TOKEN`: Cloudflare API token with Pages and Workers edit permissions.
-- `CLOUDFLARE_ACCOUNT_ID`: Your Cloudflare Account ID.
-- `VITE_API_URL`: Deployed API Worker URL (e.g. `https://mojolog-api.<your-account>.workers.dev`).
+### Step-by-Step GitHub Setup
 
-### Manual CLI Deployment Commands
-Deployments can also be invoked locally at any time:
-- **Deploy Backend (API Worker)**: `npm run deploy:api`
-- **Deploy Frontend (Pages)**: `npm run deploy:web`
+#### Step 1: Create a Cloudflare API Token
+1. Log in to the [Cloudflare Dashboard](https://dash.cloudflare.com/).
+2. Click your user icon (top right) ➔ **My Profile** ➔ **API Tokens**.
+3. Click **Create Token**.
+4. Scroll to **Custom Token** and click **Get started**.
+5. Set token permissions:
+   - **Account** ➔ **Cloudflare Pages** ➔ **Edit**
+   - **Account** ➔ **Workers Scripts** ➔ **Edit**
+6. Under **Account Resources**, select **Include** ➔ **All accounts** (or your specific account).
+7. Click **Continue to summary** ➔ **Create Token**.
+8. **Copy the API Token string immediately** (it is shown only once).
+
+#### Step 2: Get Your Cloudflare Account ID
+1. In Cloudflare Dashboard, click **Workers & Pages** in the left sidebar.
+2. In the right sidebar, look for **Account ID**.
+3. Click to copy the 32-character hexadecimal Account ID.
+
+#### Step 3: Add Secrets to Your GitHub Repository
+1. Open your GitHub repository in your browser.
+2. Go to **Settings** ➔ **Secrets and variables** (left sidebar) ➔ **Actions**.
+3. Under **Repository secrets**, click **New repository secret** for each of the following:
+
+| Secret Name | Value | Purpose |
+| :--- | :--- | :--- |
+| `CLOUDFLARE_API_TOKEN` | *(Token copied from Step 1)* | Authorizes Wrangler to deploy Workers and Pages |
+| `CLOUDFLARE_ACCOUNT_ID`| *(Account ID copied from Step 2)* | Identifies your Cloudflare account |
+| `VITE_API_URL` | `https://mojolog-api.<your-account>.workers.dev` | Injected into the frontend build to connect to your backend |
+
+#### Step 4: Run or Verify Deployment
+- **Automatic on Git Push**: Any push to `main` modifying `apps/api/**` will deploy the Worker; modifying `apps/web/**` will build and deploy the Pages frontend.
+- **Manual Trigger**: In GitHub, open the **Actions** tab ➔ select either **Deploy API to Cloudflare Workers** or **Deploy Web to Cloudflare Pages** ➔ click **Run workflow**.
+
+---
+
+## 6. Local CLI Deployment Commands
+
+Deployments can always be executed on demand from your local machine:
+```bash
+# Deploy Backend API Worker
+npm run deploy:api
+
+# Deploy Frontend Pages App
+npm run deploy:web
+```
