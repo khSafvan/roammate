@@ -36,7 +36,7 @@ import { TripSettingsPage } from './components/trips/TripSettingsPage';
 import { WeatherBanner } from './components/WeatherBanner';
 import { getVaultSession } from './auth/crypto';
 import { BookingDocument, Expense, Flight, ItineraryStop, PackingCategory, PackingItem, StopCategory, Trip, TripDay } from './types/trip';
-import { detectTransitConflict } from './utils/scheduleConflicts';
+import { detectTransitConflict } from '@mojolog/core';
 import { fetchHolidaysForRange } from './utils/holidayService';
 import { fetchWeeklyForecast, geocodeDestination, tripDayToIso } from './utils/weatherService';
 import {

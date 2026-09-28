@@ -5,7 +5,7 @@ import {
   formatEmergencySnippet,
   formatTravelUtilitySnippet,
   getCountryIntelligence,
-} from '../utils/countryIntelligence';
+} from '@mojolog/core';
 
 interface ScratchpadModalProps {
   isOpen: boolean;

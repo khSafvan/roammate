@@ -14,12 +14,12 @@ import {
   X,
 } from 'lucide-react';
 import { Expense, EXPENSE_CATEGORIES, ExpenseCategory } from '../types/trip';
-import { computeExpenseBreakdown } from '../utils/routeEngine';
+import { computeExpenseBreakdown } from '@mojolog/core';
 import {
   computeDebtSettlements,
   computeTravelerBalances,
   createSettlementExpense,
-} from '../utils/expenseSettlement';
+} from '@mojolog/core';
 import { fetchRate, RateResult } from '../utils/currencyService';
 
 interface ExpenseTrackerProps {
