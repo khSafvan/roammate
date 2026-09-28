@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from 'react';
-import QRCode from 'qrcode';
+import React, { useMemo, useState } from 'react';
+import { renderSVG } from 'uqr';
 import { Check, Copy, Download, QrCode, Smartphone, X } from 'lucide-react';
 import { formatAccountId } from '../../auth/crypto';
 
@@ -14,25 +14,26 @@ export const VaultQrCodeModal: React.FC<VaultQrCodeModalProps> = ({
   accountUuid,
   onClose,
 }) => {
-  const [qrDataUrl, setQrDataUrl] = useState<string>('');
   const [copiedUrl, setCopiedUrl] = useState(false);
 
   const loginUrl = typeof window !== 'undefined'
     ? `${window.location.origin}/?account=${encodeURIComponent(accountUuid)}`
     : '';
 
-  useEffect(() => {
-    if (isOpen && accountUuid) {
-      QRCode.toDataURL(loginUrl, {
-        width: 320,
-        margin: 2,
-        color: {
-          dark: '#0F172A',
-          light: '#FFFFFF',
-        },
-      })
-        .then((url) => setQrDataUrl(url))
-        .catch((err) => console.error('Failed to generate QR code:', err));
+  const { qrSvg, qrDataUrl } = useMemo(() => {
+    if (!isOpen || !accountUuid || !loginUrl) return { qrSvg: '', qrDataUrl: '' };
+    try {
+      const svg = renderSVG(loginUrl, {
+        border: 2,
+        ecc: 'M',
+        blackColor: '#0F172A',
+        whiteColor: '#FFFFFF',
+      });
+      const dataUrl = `data:image/svg+xml;utf8,${encodeURIComponent(svg)}`;
+      return { qrSvg: svg, qrDataUrl: dataUrl };
+    } catch (err) {
+      console.error('Failed to generate QR code:', err);
+      return { qrSvg: '', qrDataUrl: '' };
     }
   }, [isOpen, accountUuid, loginUrl]);
 
@@ -45,13 +46,38 @@ export const VaultQrCodeModal: React.FC<VaultQrCodeModalProps> = ({
   };
 
   const handleDownloadQr = () => {
-    if (!qrDataUrl) return;
-    const link = document.createElement('a');
-    link.href = qrDataUrl;
-    link.download = `roammate-vault-${accountUuid.slice(0, 8)}.png`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    if (!qrSvg) return;
+    const blob = new Blob([qrSvg], { type: 'image/svg+xml;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const img = new Image();
+    img.onload = () => {
+      const canvas = document.createElement('canvas');
+      canvas.width = 512;
+      canvas.height = 512;
+      const ctx = canvas.getContext('2d');
+      if (ctx) {
+        ctx.fillStyle = '#FFFFFF';
+        ctx.fillRect(0, 0, 512, 512);
+        ctx.drawImage(img, 0, 0, 512, 512);
+        const link = document.createElement('a');
+        link.href = canvas.toDataURL('image/png');
+        link.download = `roammate-vault-${accountUuid.slice(0, 8)}.png`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      }
+      URL.revokeObjectURL(url);
+    };
+    img.onerror = () => {
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `roammate-vault-${accountUuid.slice(0, 8)}.svg`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+    };
+    img.src = url;
   };
 
   return (
