@@ -54,22 +54,23 @@ This guide covers setting up and hosting Roammate completely from scratch:
    ```
 
 2. **Set Worker Secrets**:
-   Run directly from the repository root:
+   Run from the repository root using the npm shortcut scripts:
    ```bash
    # 1. Database URL from Turso (Step 2)
-   npx wrangler secret put TURSO_DATABASE_URL
+   npm run secret:put -- TURSO_DATABASE_URL
 
    # 2. Database Auth Token from Turso (Step 2)
-   npx wrangler secret put TURSO_AUTH_TOKEN
+   npm run secret:put -- TURSO_AUTH_TOKEN
 
    # 3. JWT Signing Secret (generate via: openssl rand -hex 32)
-   npx wrangler secret put JWT_SECRET
+   npm run secret:put -- JWT_SECRET
    ```
-   *(The repository root is pre-configured with `name = "mojolog-api"`, so you can run `wrangler secret put` directly without needing extra flags or switching directories).*
+   *(Alternatively, run from `apps/api`: `cd apps/api && npx wrangler secret put TURSO_DATABASE_URL`).*
 
    **Verify configured secrets:**
    ```bash
-   npx wrangler secret list
+   npm run secret:list
+   # or from apps/api: cd apps/api && npx wrangler secret list
    ```
 
 3. **Deploy the Worker**:
