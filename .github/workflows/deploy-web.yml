@@ -48,7 +48,7 @@ jobs:
 
       - name: Deploy to Cloudflare Pages
         if: steps.check-secrets.outputs.skip != 'true'
-        run: npx wrangler pages deploy dist --project-name=mojolog-web
+        run: npx wrangler pages deploy dist --project-name=mojolog-web --branch=main
         working-directory: apps/web
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}

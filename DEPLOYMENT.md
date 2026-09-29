@@ -92,11 +92,12 @@ This guide covers setting up and hosting Roammate completely from scratch:
    VITE_API_URL="https://mojolog-api.<your-account>.workers.dev" npm run build --workspace=@mojolog/web
    ```
 
-2. **Deploy to Cloudflare Pages**:
+2. **Deploy to Cloudflare Pages (Production)**:
    ```bash
    npm run deploy:web
-   # or: npx wrangler pages deploy apps/web/dist --project-name=mojolog-web
+   # or: npx wrangler pages deploy apps/web/dist --project-name=mojolog-web --branch=main
    ```
+   *Note: Passing `--branch=main` promotes the build directly to Production (`https://mojolog-web.pages.dev`). Omitting `--branch` creates a temporary preview deployment.*
 
 ### Option B: Via Cloudflare Dashboard (Continuous Deployment)
 
