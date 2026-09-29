@@ -14,7 +14,6 @@ import {
   Sparkles,
   Ticket,
   Trash2,
-  Users,
   LogOut,
 } from 'lucide-react';
 import { Trip } from '../../types/trip';
@@ -174,7 +173,7 @@ export const TripsListPage: React.FC<TripsListPageProps> = ({
             </div>
             <h1 className="trips-hero-title">Where to next?</h1>
             <p className="trips-hero-desc">
-              Organize multi-modal itineraries, companion flight passes, hotel check-ins, and shared expenses in one secure, zero-knowledge vault.
+              Organize multi-modal itineraries, flight passes, hotel check-ins, and expenses in one secure, zero-knowledge vault.
             </p>
 
             <div className="trips-stats-strip">
@@ -253,11 +252,6 @@ export const TripsListPage: React.FC<TripsListPageProps> = ({
               const totalReservations = (t.flights?.length || 0) + (t.documents?.length || 0);
               const isActive = t.id === activeTripId;
 
-              // Extract companion names from flights
-              const companionNames = Array.from(
-                new Set((t.flights || []).map((f) => f.passengerName).filter(Boolean))
-              );
-
               return (
                 <div
                   key={t.id}
@@ -305,26 +299,6 @@ export const TripsListPage: React.FC<TripsListPageProps> = ({
                         </div>
                       )}
                     </div>
-
-                    {/* Companions row if present */}
-                    {companionNames.length > 0 && (
-                      <div className="trip-companions-row">
-                        <Users size={12} className="text-slate" />
-                        <span className="companions-label">Travelers:</span>
-                        <div className="companion-tags-group">
-                          {companionNames.slice(0, 3).map((name) => (
-                            <span key={name} className="companion-tag">
-                              {name}
-                            </span>
-                          ))}
-                          {companionNames.length > 3 && (
-                            <span className="companion-tag-more">
-                              +{companionNames.length - 3}
-                            </span>
-                          )}
-                        </div>
-                      </div>
-                    )}
 
                     {/* Metrics Pills */}
                     <div className="trip-card-metrics-strip">
