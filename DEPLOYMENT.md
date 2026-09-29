@@ -92,8 +92,9 @@ This guide covers setting up and hosting Roammate completely from scratch:
 
 1. **Build the static SPA**:
    ```bash
-   VITE_API_URL="https://mojolog-api.<your-account>.workers.dev" npm run build --workspace=@mojolog/web
+   PASSWORD="your_personal_password" VITE_API_URL="https://mojolog-api.<your-account>.workers.dev" npm run build --workspace=@mojolog/web
    ```
+   *(Note: `PASSWORD` must be provided so the application detects your personal vault is secured and ready to use).*
 
 2. **Deploy to Cloudflare Pages (Production)**:
    ```bash
@@ -113,6 +114,7 @@ This guide covers setting up and hosting Roammate completely from scratch:
    - **Root directory**: `/` (repository root)
 4. Add environment variables under **Production**:
    - `VITE_API_URL`: `https://mojolog-api.<your-account>.workers.dev`
+   - `PASSWORD`: `your_personal_password` *(Required: unlocks your personal vault and prevents the missing password lock screen)*
 5. Click **Save and Deploy**.
 
 ---
@@ -154,6 +156,7 @@ The repository includes two independent CI/CD workflows under `.github/workflows
 | `CLOUDFLARE_API_TOKEN` | *(Token copied from Step 1)* | Authorizes Wrangler to deploy Workers and Pages |
 | `CLOUDFLARE_ACCOUNT_ID`| *(Account ID copied from Step 2)* | Identifies your Cloudflare account |
 | `VITE_API_URL` | `https://mojolog-api.<your-account>.workers.dev` | Injected into the frontend build to connect to your backend |
+| `PASSWORD` | `your_personal_password` | Personal vault password injected into the frontend build to enable access |
 
 #### Step 4: Run or Verify Deployment
 - **Automatic on Git Push**: Any push to `main` modifying `apps/api/**` will deploy the Worker; modifying `apps/web/**` will build and deploy the Pages frontend.

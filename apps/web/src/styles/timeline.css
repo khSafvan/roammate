@@ -806,6 +806,11 @@
   position: relative;
 }
 
+.distance-connector-track.spine-spacer {
+  height: 28px;
+  min-height: 28px;
+}
+
 .track-spine-node {
   width: 36px;
   display: flex;

@@ -1215,15 +1215,23 @@ export function App() {
                           onDrop={(e) => handleDrop(e, index)}
                         />
 
-                        {/* Distance & Transit duration connector */}
-                        {index < transitLegs.length &&
+                        {/* Distance & Transit duration connector or spacer for notes */}
+                        {index < activeDay.stops.length - 1 && (
+                          index < transitLegs.length &&
                           stop.category !== 'note' &&
-                          activeDay.stops[index + 1]?.category !== 'note' && (
-                          <DistancePill
-                            leg={transitLegs[index]}
-                            onToggleMode={handleToggleMode}
-                            conflict={activeDayScheduleConflicts[index]}
-                          />
+                          activeDay.stops[index + 1]?.category !== 'note' ? (
+                            <DistancePill
+                              leg={transitLegs[index]}
+                              onToggleMode={handleToggleMode}
+                              conflict={activeDayScheduleConflicts[index]}
+                            />
+                          ) : (
+                            <div className="distance-connector-track spine-spacer" aria-hidden="true">
+                              <div className="track-spine-node">
+                                <div className="track-spine-dash" />
+                              </div>
+                            </div>
+                          )
                         )}
                       </React.Fragment>
                     ))}
