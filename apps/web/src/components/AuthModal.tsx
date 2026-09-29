@@ -89,11 +89,13 @@ export const AuthModal: React.FC<AuthModalProps> = ({
 
         {activeSession ? (
           <div className="p-5 space-y-4">
-            <div className="flex items-center gap-3 p-3 bg-emerald-50 border border-emerald-200 rounded-lg text-emerald-800 text-sm">
-              <CheckCircle2 size={18} className="text-emerald-600 flex-shrink-0" />
+            <div className="flex items-start gap-3 p-4 bg-emerald-50/70 border border-emerald-200/80 rounded-xl text-emerald-900 text-sm">
+              <CheckCircle2 size={20} className="text-emerald-600 flex-shrink-0 mt-0.5" />
               <div>
-                <strong>Vault Active</strong>
-                <p className="text-xs text-emerald-700">All trip changes sync automatically to your personal store.</p>
+                <strong className="font-semibold text-emerald-950">Vault Active & Secure</strong>
+                <p className="text-xs text-emerald-700 mt-0.5 leading-relaxed">
+                  All trip changes, bookings, and expense settlements synchronize automatically to your encrypted edge database.
+                </p>
               </div>
             </div>
 
@@ -102,7 +104,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                 onLogout();
                 onClose();
               }}
-              className="w-full py-2.5 px-4 border border-rose-300 hover:bg-rose-50 text-rose-700 font-medium rounded-lg text-sm flex items-center justify-center gap-2 transition-colors"
+              className="w-full py-2.5 px-4 border border-rose-200 hover:bg-rose-50 text-rose-600 hover:text-rose-700 font-semibold rounded-xl text-sm flex items-center justify-center gap-2 transition-all shadow-sm"
             >
               <LogOut size={16} />
               <span>Lock Vault & Disconnect Session</span>
@@ -111,21 +113,24 @@ export const AuthModal: React.FC<AuthModalProps> = ({
         ) : (
           <form onSubmit={handleLoginSubmit} className="p-5 space-y-4">
             {errorMessage && (
-              <div className="flex items-center gap-2 p-3 bg-rose-50 border border-rose-200 text-rose-700 rounded-lg text-xs">
-                <AlertCircle size={16} className="flex-shrink-0" />
+              <div className="passcode-error-box" role="alert">
+                <AlertCircle size={16} className="flex-shrink-0 mt-0.5" />
                 <span>{errorMessage}</span>
               </div>
             )}
 
-            <div className="form-group">
-              <label htmlFor="auth-modal-password" className="block text-xs font-semibold text-secondary mb-1.5">Password</label>
-              <div className="relative flex items-center">
-                <Key size={16} className="absolute left-3 text-tertiary" />
+            <div className="passcode-input-group">
+              <label htmlFor="auth-modal-password" className="passcode-label">
+                <Key size={13} className="text-secondary" />
+                Master Password
+              </label>
+              <div className="passcode-input-wrapper">
+                <Key size={16} className="passcode-input-icon" />
                 <input
                   id="auth-modal-password"
                   type="password"
-                  className="w-full pl-9 pr-3 py-2 border border-subtle rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder="Enter PASSWORD"
+                  className="passcode-input"
+                  placeholder="Enter master password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   autoFocus
@@ -136,7 +141,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
             <button
               type="submit"
               disabled={isProcessing || !password.trim()}
-              className="w-full py-2.5 px-4 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg text-sm flex items-center justify-center gap-2 transition-colors disabled:opacity-50"
+              className="passcode-submit-btn"
             >
               <Lock size={16} />
               <span>{isProcessing ? 'Verifying...' : 'Unlock Vault'}</span>

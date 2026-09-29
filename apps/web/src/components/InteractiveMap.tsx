@@ -1,6 +1,9 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { GeoJSONSource, LngLatBounds, Map as MapLibreMap, NavigationControl } from 'maplibre-gl';
+import { GeoJSONSource, LngLatBounds, Map as MapLibreMap, NavigationControl, setWorkerUrl } from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
+if (typeof window !== 'undefined') {
+  setWorkerUrl('/assets/maplibre-gl-worker.mjs');
+}
 import {
   Download,
   Edit2,
@@ -377,6 +380,7 @@ export const InteractiveMap: React.FC<InteractiveMapProps> = ({
       source: 'terraway-waypoints-source',
       layout: {
         'text-field': ['get', 'label'],
+        'text-font': ['Noto Sans Bold'],
         'text-size': 10,
         'text-allow-overlap': true,
         'text-ignore-placement': true,
@@ -394,6 +398,7 @@ export const InteractiveMap: React.FC<InteractiveMapProps> = ({
       source: 'terraway-waypoints-source',
       layout: {
         'text-field': ['get', 'title'],
+        'text-font': ['Noto Sans Regular'],
         'text-size': 11,
         'text-offset': [0, 1.4],
         'text-anchor': 'top',
@@ -540,11 +545,22 @@ export const InteractiveMap: React.FC<InteractiveMapProps> = ({
 
       map.on('load', () => {
         mapRef.current = map;
-        map.resize();
-        updateWaypointLayerRef.current(map);
-        updateRouteLayerRef.current(map);
-        fitToStopsRef.current(true);
+        try {
+          map.resize();
+          updateWaypointLayerRef.current(map);
+          updateRouteLayerRef.current(map);
+          fitToStopsRef.current(true);
+        } catch (e) {
+          console.warn('TerraWay layer init notice:', e);
+        }
       });
+
+      const canvas = map.getCanvas();
+      const onContextLost = (e: Event) => {
+        e.preventDefault();
+        console.warn('TerraWay WebGL context lost; preserving canvas state');
+      };
+      canvas?.addEventListener('webglcontextlost', onContextLost);
 
       map.on('error', (e: any) => {
         console.warn('TerraWay MapLibre notice:', e);
@@ -558,6 +574,7 @@ export const InteractiveMap: React.FC<InteractiveMapProps> = ({
       resizeObserver.observe(mapContainerRef.current);
 
       return () => {
+        canvas?.removeEventListener('webglcontextlost', onContextLost);
         resizeObserver.disconnect();
         map.remove();
         mapRef.current = null;

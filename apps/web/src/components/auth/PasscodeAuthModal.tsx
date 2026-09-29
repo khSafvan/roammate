@@ -1,5 +1,15 @@
 import React, { useEffect, useState } from 'react';
-import { KeyRound, Lock, LogIn, AlertCircle, X } from 'lucide-react';
+import {
+  AlertCircle,
+  ArrowRight,
+  Eye,
+  EyeOff,
+  KeyRound,
+  Loader2,
+  Lock,
+  ShieldCheck,
+  X,
+} from 'lucide-react';
 import { loginAccountOnEdge } from '../../auth/syncService';
 import { VaultSession } from '../../auth/crypto';
 import { useModalA11y } from '../../hooks';
@@ -16,8 +26,10 @@ export const PasscodeAuthModal: React.FC<PasscodeAuthModalProps> = ({
   onClose,
 }) => {
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [isCapsLockOn, setIsCapsLockOn] = useState(false);
 
   useModalA11y(isOpen, onClose);
 
@@ -25,6 +37,8 @@ export const PasscodeAuthModal: React.FC<PasscodeAuthModalProps> = ({
     if (isOpen) {
       setPassword('');
       setError(null);
+      setShowPassword(false);
+      setIsCapsLockOn(false);
     }
   }, [isOpen]);
 
@@ -32,7 +46,7 @@ export const PasscodeAuthModal: React.FC<PasscodeAuthModalProps> = ({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!password.trim()) return;
+    if (!password.trim() || loading) return;
 
     setLoading(true);
     setError(null);
@@ -45,74 +59,157 @@ export const PasscodeAuthModal: React.FC<PasscodeAuthModalProps> = ({
           createdAt: Date.now(),
         });
       } else {
-        setError('Incorrect password. Please verify the PASSWORD in your environment.');
+        setError('Incorrect password. Please verify the PASSWORD set in your environment.');
       }
     } catch {
-      setError('Connection error. Could not verify password.');
+      setError('Connection error. Could not verify password with vault service.');
     } finally {
       setLoading(false);
     }
   };
 
+  const handleKeyModifier = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    setIsCapsLockOn(e.getModifierState('CapsLock'));
+  };
+
+  const cardContent = (
+    <>
+      {onClose && (
+        <button
+          className="modal-close-btn"
+          onClick={onClose}
+          aria-label="Close"
+          style={{ position: 'absolute', top: 20, right: 20 }}
+        >
+          <X size={18} />
+        </button>
+      )}
+
+      {/* Security Emblem */}
+      <div className="passcode-icon-badge" aria-hidden="true">
+        <Lock size={26} strokeWidth={2.2} />
+      </div>
+
+      <h2 id="passcode-auth-title" className="passcode-title">
+        Personal Vault Access
+      </h2>
+      <p className="passcode-desc">
+        Enter your master password to unlock and decrypt your itineraries, flight tickets, and vouchers.
+      </p>
+
+      <form onSubmit={handleSubmit} className="passcode-form">
+        {error && (
+          <div className="passcode-error-box" role="alert">
+            <AlertCircle size={18} className="flex-shrink-0" style={{ marginTop: 1 }} />
+            <span>{error}</span>
+          </div>
+        )}
+
+        <div className="passcode-input-group">
+          <div className="passcode-label-row">
+            <label htmlFor="passcode-password" className="passcode-label">
+              <KeyRound size={13} className="text-secondary" />
+              Master Password
+            </label>
+            {isCapsLockOn && (
+              <span className="passcode-caps-warning" title="Caps Lock is active">
+                Caps Lock is ON
+              </span>
+            )}
+          </div>
+
+          <div className="passcode-input-wrapper">
+            <KeyRound size={17} className="passcode-input-icon" />
+            <input
+              id="passcode-password"
+              type={showPassword ? 'text' : 'password'}
+              className="passcode-input"
+              placeholder="Enter master password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              onKeyDown={handleKeyModifier}
+              onKeyUp={handleKeyModifier}
+              autoFocus
+              autoComplete="current-password"
+              spellCheck={false}
+              disabled={loading}
+            />
+            <button
+              type="button"
+              className="passcode-toggle-btn"
+              onClick={() => setShowPassword((prev) => !prev)}
+              aria-label={showPassword ? 'Hide password' : 'Show password'}
+              tabIndex={-1}
+            >
+              {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+            </button>
+          </div>
+        </div>
+
+        <button
+          type="submit"
+          disabled={loading || !password.trim()}
+          className="passcode-submit-btn"
+        >
+          {loading ? (
+            <>
+              <Loader2 size={18} className="passcode-spinner" />
+              <span>Verifying Password...</span>
+            </>
+          ) : (
+            <>
+              <span>Unlock Vault</span>
+              <ArrowRight size={17} />
+            </>
+          )}
+        </button>
+      </form>
+
+      <div className="passcode-security-footer">
+        <ShieldCheck size={14} className="text-emerald-600" />
+        <span>Pure Zero-Knowledge & Cloudflare Edge Protected</span>
+      </div>
+    </>
+  );
+
+  // If used as full-page barrier (no onClose provided)
+  if (!onClose) {
+    return (
+      <div className="passcode-auth-page">
+        <div className="passcode-auth-ambient-glow" aria-hidden="true" />
+
+        {/* Brand identity badge */}
+        <div className="passcode-brand-row">
+          <div className="passcode-brand-logo">
+            <span role="img" aria-label="Plane">✈️</span>
+            <span>MojoLog</span>
+          </div>
+          <span className="passcode-brand-badge">Travel Vault</span>
+        </div>
+
+        <div
+          className="passcode-auth-card"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="passcode-auth-title"
+        >
+          {cardContent}
+        </div>
+      </div>
+    );
+  }
+
+  // If used as modal dialog inside authenticated shell
   return (
     <div className="modal-backdrop z-modal-top" onClick={onClose}>
       <div
-        className="modal-card auth-modal-card"
+        className="modal-card passcode-modal-card"
         onClick={(e) => e.stopPropagation()}
         role="dialog"
         aria-modal="true"
         aria-labelledby="passcode-auth-title"
       >
-        <div className="modal-header">
-          <div className="modal-header-left">
-            <div className="auth-header-icon bg-blue-subtle">
-              <Lock size={18} className="text-blue" />
-            </div>
-            <div>
-              <h3 id="passcode-auth-title" className="modal-title">Personal Vault Access</h3>
-              <p className="modal-subtitle">Enter your PASSWORD to access your personal itineraries</p>
-            </div>
-          </div>
-          {onClose && (
-            <button className="modal-close-btn" onClick={onClose} aria-label="Close">
-              <X size={18} />
-            </button>
-          )}
-        </div>
-
-        <form onSubmit={handleSubmit} className="auth-form-body p-4 space-y-4">
-          {error && (
-            <div className="auth-warning-box text-rose-500 bg-rose-50 border border-rose-200 p-3 rounded-lg flex items-center gap-2 text-xs">
-              <AlertCircle size={16} className="flex-shrink-0" />
-              <span>{error}</span>
-            </div>
-          )}
-
-          <div className="form-group">
-            <label htmlFor="passcode-password" className="block text-xs font-semibold text-secondary mb-1.5">Password</label>
-            <div className="relative flex items-center">
-              <KeyRound size={16} className="absolute left-3 text-tertiary" />
-              <input
-                id="passcode-password"
-                type="password"
-                className="w-full pl-9 pr-3 py-2 border border-subtle rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                placeholder="Enter personal vault password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                autoFocus
-              />
-            </div>
-          </div>
-
-          <button
-            type="submit"
-            disabled={loading || !password.trim()}
-            className="w-full py-2.5 px-4 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg text-sm flex items-center justify-center gap-2 transition-colors disabled:opacity-50"
-          >
-            <LogIn size={16} />
-            <span>{loading ? 'Verifying...' : 'Unlock Vault'}</span>
-          </button>
-        </form>
+        {cardContent}
       </div>
     </div>
   );
