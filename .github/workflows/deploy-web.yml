@@ -44,7 +44,7 @@ jobs:
         if: steps.check-secrets.outputs.skip != 'true'
         run: npm run build --workspace=@mojolog/web
         env:
-          VITE_API_URL: ${{ secrets.VITE_API_URL }}
+          VITE_API_URL: ${{ secrets.VITE_API_URL || 'https://mojolog-api.plantriproammate.workers.dev' }}
           PASSWORD: ${{ secrets.PASSWORD }}
 
       - name: Deploy to Cloudflare Pages
