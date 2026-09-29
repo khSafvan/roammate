@@ -3,66 +3,30 @@ import { Loader2, MapPin, Search, X } from 'lucide-react';
 import { Coordinates, StopCategory } from '../types/trip';
 import { fuzzySortResults } from '../utils/fuzzySearch';
 
+import { inferPlaceCategory } from '@mojolog/core';
+
 export interface PlaceSearchResult {
   title: string;
   subtitle: string;
   address: string;
   coordinates: Coordinates;
   category: StopCategory;
+  subType?: string;
+  isThemeParkOrAttraction?: boolean;
+  isHotel?: boolean;
+  badgeLabel?: string;
+  emoji?: string;
 }
 
-interface PlaceSearchInputProps {
-  onSelectPlace: (place: PlaceSearchResult) => void;
-  searchContext?: string;
-  placeholder?: string;
-  className?: string;
-  autoFocus?: boolean;
-}
-
-/**
- * Infers a StopCategory from Nominatim OpenStreetMap tags
- */
 export function inferCategoryFromOsm(item: any): StopCategory {
-  const osmClass = (item.class || '').toLowerCase();
-  const osmType = (item.type || '').toLowerCase();
-  const address = item.address || {};
-
-  // Dining
-  if (
-    osmClass === 'amenity' &&
-    ['restaurant', 'cafe', 'fast_food', 'bar', 'pub', 'food_court', 'bistro'].includes(osmType)
-  ) {
-    return 'dining';
-  }
-
-  // Lodging
-  if (
-    osmClass === 'tourism' &&
-    ['hotel', 'motel', 'guest_house', 'hostel', 'apartment', 'resort'].includes(osmType)
-  ) {
-    return 'lodging';
-  }
-
-  // Flight / Airport
-  if (
-    osmClass === 'aeroway' ||
-    ['aerodrome', 'airport', 'terminal'].includes(osmType) ||
-    address.aeroway
-  ) {
-    return 'flight';
-  }
-
-  // Transit
-  if (
-    ['station', 'bus_station', 'ferry_terminal', 'subway_entrance'].includes(osmType) ||
-    osmClass === 'railway' ||
-    osmClass === 'public_transport'
-  ) {
-    return 'transit';
-  }
-
-  // Default to Sight & Attraction
-  return 'sight';
+  const inference = inferPlaceCategory({
+    name: item.name || item.display_name?.split(',')[0],
+    title: item.display_name?.split(',')[0],
+    address: item.display_name,
+    osmClass: item.class,
+    osmType: item.type,
+  });
+  return inference.category;
 }
 
 const CATEGORY_EMOJIS: Record<StopCategory, string> = {
@@ -73,6 +37,14 @@ const CATEGORY_EMOJIS: Record<StopCategory, string> = {
   flight: '✈️',
   note: '📝',
 };
+
+interface PlaceSearchInputProps {
+  onSelectPlace: (place: PlaceSearchResult) => void;
+  searchContext?: string;
+  placeholder?: string;
+  className?: string;
+  autoFocus?: boolean;
+}
 
 export const PlaceSearchInput: React.FC<PlaceSearchInputProps> = ({
   onSelectPlace,
@@ -144,17 +116,28 @@ export const PlaceSearchInput: React.FC<PlaceSearchInputProps> = ({
           const mapped: PlaceSearchResult[] = data.map((item: any) => {
             const rawName = item.name || item.display_name.split(',')[0] || trimmed;
             const fullAddress = item.display_name || '';
-            const category = inferCategoryFromOsm(item);
+            const inference = inferPlaceCategory({
+              name: rawName,
+              title: rawName,
+              address: fullAddress,
+              osmClass: item.class,
+              osmType: item.type,
+            });
 
             return {
               title: rawName,
-              subtitle: `${category.charAt(0).toUpperCase() + category.slice(1)} · ${item.type || 'POI'}`,
+              subtitle: `${inference.label} · ${item.type || 'POI'}`,
               address: fullAddress,
               coordinates: {
                 latitude: parseFloat(item.lat),
                 longitude: parseFloat(item.lon),
               },
-              category,
+              category: inference.category,
+              subType: inference.subType,
+              isThemeParkOrAttraction: inference.isThemeParkOrAttraction,
+              isHotel: inference.isHotel,
+              badgeLabel: inference.label,
+              emoji: inference.emoji,
             };
           });
 
@@ -313,19 +296,37 @@ export const PlaceSearchInput: React.FC<PlaceSearchInputProps> = ({
               }}
               onMouseEnter={() => setSelectedIndex(i)}
             >
-              <span style={{ fontSize: '16px', lineHeight: 1 }}>{CATEGORY_EMOJIS[r.category]}</span>
+              <span style={{ fontSize: '16px', lineHeight: 1 }}>{r.emoji || CATEGORY_EMOJIS[r.category]}</span>
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div
                   style={{
                     fontSize: '13px',
                     fontWeight: 600,
                     color: 'var(--text-primary, #0f172a)',
-                    whiteSpace: 'nowrap',
-                    overflow: 'hidden',
-                    textOverflow: 'ellipsis',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    gap: '8px',
                   }}
                 >
-                  {r.title}
+                  <span style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                    {r.title}
+                  </span>
+                  {r.badgeLabel && (
+                    <span
+                      style={{
+                        fontSize: '10px',
+                        fontWeight: 600,
+                        padding: '1px 6px',
+                        borderRadius: '10px',
+                        backgroundColor: r.isHotel ? 'rgba(59, 130, 246, 0.12)' : r.isThemeParkOrAttraction ? 'rgba(236, 72, 153, 0.12)' : 'rgba(100, 116, 139, 0.12)',
+                        color: r.isHotel ? '#2563eb' : r.isThemeParkOrAttraction ? '#db2777' : 'var(--text-secondary, #475569)',
+                        flexShrink: 0,
+                      }}
+                    >
+                      {r.badgeLabel}
+                    </span>
+                  )}
                 </div>
                 <div
                   style={{

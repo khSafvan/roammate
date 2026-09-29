@@ -185,6 +185,9 @@ export interface BookingDocument {
   attachmentName?: string;
   notes?: string;
   flightData?: Flight;
+  coordinates?: Coordinates;
+  ticketCount?: number;
+  subType?: 'theme_park' | 'water_park' | 'museum' | 'tour' | 'transit' | 'hotel' | 'flight' | 'activity' | string;
 }
 
 // 3. Unified Itinerary Document (Single flexible JSON document)

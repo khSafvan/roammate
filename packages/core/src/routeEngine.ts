@@ -1,5 +1,4 @@
-import { TRANSIT_CONFIG } from '@mojolog/shared';
-import { Expense, ItineraryStop, TransitLeg, TransitMode } from '@mojolog/shared';
+import { BookingDocument, Coordinates, Expense, ItineraryStop, TransitLeg, TransitMode, TRANSIT_CONFIG } from '@mojolog/shared';
 
 export interface OptimizationResult {
   optimized_ids: string[];
@@ -39,26 +38,213 @@ export function estimateDurationMins(distanceKm: number, mode: TransitMode): num
   return Math.max(modeConfig.minMins, Math.round(rawMinutes));
 }
 
+export interface DayHotelAnchor {
+  id: string;
+  title: string;
+  address?: string;
+  coordinates?: Coordinates;
+  confirmationCode?: string;
+  roomType?: string;
+  time?: string;
+  action: 'check_in' | 'depart' | 'return' | 'check_out';
+  label: string;
+  documentId?: string;
+}
+
+export interface DayAnchorsResult {
+  startAnchor: DayHotelAnchor | null;
+  endAnchor: DayHotelAnchor | null;
+  activeHotel: DayHotelAnchor | null;
+  isTransitionDay: boolean;
+}
+
+/**
+ * Resolves starting and ending hotel anchors for an itinerary day following Wanderlog's lifecycle:
+ * - Transition days: Start = Check out of Hotel A, End = Check in to Hotel B
+ * - Intermediate days: Start = Depart Hotel (Base), End = Return to Hotel (Base)
+ * - Check-in day: End = Check in to Hotel
+ * - Check-out day: Start = Check out of Hotel
+ */
+export function getDayAnchors(
+  dayDateStr: string | undefined,
+  documents: BookingDocument[] = [],
+  dayIdx: number = 0,
+  _totalDays: number = 1,
+  fallbackDays?: Array<{ id: string; stops?: Array<{ id: string; category?: string; title: string; address?: string; coordinates?: Coordinates }> }>
+): DayAnchorsResult {
+  const hotels = documents.filter((d) => d.category === 'hotel');
+
+  if (hotels.length > 0 && dayDateStr) {
+    const cleanDate = dayDateStr.includes('T') ? dayDateStr.split('T')[0] : dayDateStr.trim();
+    
+    // Check-out hotel on this day
+    const checkOutHotel = hotels.find((h) => (h.endDate || h.date) === cleanDate);
+    // Check-in hotel on this day
+    const checkInHotel = hotels.find((h) => h.date === cleanDate);
+    // Active staying hotel covering this day
+    const stayingHotel = hotels.find((h) => {
+      const start = h.date;
+      const end = h.endDate || h.date;
+      return start && end && start <= cleanDate && cleanDate <= end;
+    });
+
+    // 1. Hotel Transition Day (Checking out of Hotel A & Checking into Hotel B)
+    if (checkOutHotel && checkInHotel && checkOutHotel.id !== checkInHotel.id) {
+      const startAnchor: DayHotelAnchor = {
+        id: `start_${checkOutHotel.id}`,
+        title: checkOutHotel.title,
+        address: checkOutHotel.location,
+        coordinates: checkOutHotel.coordinates,
+        confirmationCode: checkOutHotel.confirmationCode,
+        roomType: checkOutHotel.cabinOrRoomType,
+        time: checkOutHotel.endTime || '11:00 AM',
+        action: 'check_out',
+        label: `Check out of ${checkOutHotel.title}`,
+        documentId: checkOutHotel.id,
+      };
+      const endAnchor: DayHotelAnchor = {
+        id: `end_${checkInHotel.id}`,
+        title: checkInHotel.title,
+        address: checkInHotel.location,
+        coordinates: checkInHotel.coordinates,
+        confirmationCode: checkInHotel.confirmationCode,
+        roomType: checkInHotel.cabinOrRoomType,
+        time: checkInHotel.time || '03:00 PM',
+        action: 'check_in',
+        label: `Check in to ${checkInHotel.title}`,
+        documentId: checkInHotel.id,
+      };
+      return { startAnchor, endAnchor, activeHotel: endAnchor, isTransitionDay: true };
+    }
+
+    // 2. Normal Stay Day (Within stay date range, not transitioning)
+    if (stayingHotel) {
+      const isFirstDay = stayingHotel.date === cleanDate;
+      const isLastDay = (stayingHotel.endDate || stayingHotel.date) === cleanDate;
+
+      const baseAnchor = (action: 'depart' | 'return' | 'check_in' | 'check_out', label: string, time?: string): DayHotelAnchor => ({
+        id: `${action}_${stayingHotel.id}`,
+        title: stayingHotel.title,
+        address: stayingHotel.location,
+        coordinates: stayingHotel.coordinates,
+        confirmationCode: stayingHotel.confirmationCode,
+        roomType: stayingHotel.cabinOrRoomType,
+        time: time || (action === 'check_in' ? stayingHotel.time || '03:00 PM' : action === 'check_out' ? stayingHotel.endTime || '11:00 AM' : action === 'depart' ? '09:00 AM' : '09:00 PM'),
+        action,
+        label,
+        documentId: stayingHotel.id,
+      });
+
+      if (isFirstDay && !isLastDay) {
+        // Initial Check-in day
+        const endAnchor = baseAnchor('check_in', `Check in to ${stayingHotel.title}`, stayingHotel.time || '03:00 PM');
+        return { startAnchor: null, endAnchor, activeHotel: endAnchor, isTransitionDay: false };
+      }
+
+      if (isLastDay && !isFirstDay) {
+        // Final Check-out day
+        const startAnchor = baseAnchor('check_out', `Check out of ${stayingHotel.title}`, stayingHotel.endTime || '11:00 AM');
+        return { startAnchor, endAnchor: null, activeHotel: startAnchor, isTransitionDay: false };
+      }
+
+      // Intermediate day: both start and return to hotel base
+      const startAnchor = baseAnchor('depart', `Depart from ${stayingHotel.title} (Base)`, '09:00 AM');
+      const endAnchor = baseAnchor('return', `Return to ${stayingHotel.title} (Base)`, '09:00 PM');
+      return { startAnchor, endAnchor, activeHotel: startAnchor, isTransitionDay: false };
+    }
+  }
+
+  // Fallback to legacy manual day lodging stops
+  if (fallbackDays && dayIdx >= 0 && dayIdx < fallbackDays.length) {
+    const currentDayStops = fallbackDays[dayIdx]?.stops || [];
+    const explicitStay = currentDayStops.find((s) => s.category === 'lodging');
+    if (explicitStay) {
+      const anchor: DayHotelAnchor = {
+        id: explicitStay.id,
+        title: explicitStay.title,
+        address: explicitStay.address,
+        coordinates: explicitStay.coordinates,
+        action: 'depart',
+        label: explicitStay.title,
+      };
+      return { startAnchor: anchor, endAnchor: anchor, activeHotel: anchor, isTransitionDay: false };
+    }
+
+    for (let i = dayIdx - 1; i >= 0; i--) {
+      const prevStay = (fallbackDays[i]?.stops || []).find((s) => s.category === 'lodging');
+      if (prevStay) {
+        const anchor: DayHotelAnchor = {
+          id: prevStay.id,
+          title: prevStay.title,
+          address: prevStay.address,
+          coordinates: prevStay.coordinates,
+          action: 'depart',
+          label: `${prevStay.title} (Base)`,
+        };
+        return { startAnchor: anchor, endAnchor: anchor, activeHotel: anchor, isTransitionDay: false };
+      }
+    }
+  }
+
+  return { startAnchor: null, endAnchor: null, activeHotel: null, isTransitionDay: false };
+}
+
 /**
  * Detects hotel / accommodation stay on a day or inherits active stay from previous days.
  */
 export function getEffectiveStayForDay(
-  days: Array<{ id: string; dayNumber: number; stops?: Array<{ id: string; category?: string; title: string; address?: string; coordinates?: { latitude: number; longitude: number } }> }>,
-  dayIdx: number
-): { stay: { id: string; title: string; address?: string; coordinates?: { latitude: number; longitude: number } }; isInherited: boolean } | null {
+  days: Array<{ id: string; dayNumber: number; dateStr?: string; stops?: Array<{ id: string; category?: string; title: string; address?: string; coordinates?: { latitude: number; longitude: number } }> }>,
+  dayIdx: number,
+  documents?: BookingDocument[],
+  tripStartDate?: string
+): { stay: { id: string; title: string; address?: string; coordinates?: { latitude: number; longitude: number }; confirmationCode?: string; roomType?: string }; isInherited: boolean; status?: 'check_in' | 'staying' | 'check_out' } | null {
   if (!days || dayIdx < 0 || dayIdx >= days.length) return null;
 
-  const currentDayStops = days[dayIdx].stops || [];
+  // 1. Explicit lodging stop on current day
+  const currentDayStops = days[dayIdx]?.stops || [];
   const explicitStay = currentDayStops.find((s) => s.category === 'lodging');
   if (explicitStay) {
-    return { stay: explicitStay, isInherited: false };
+    return { stay: explicitStay, isInherited: false, status: 'check_in' };
   }
 
+  // 2. Hotel documents check if documents exist
+  let dayDateStr = days[dayIdx]?.dateStr;
+  if (tripStartDate) {
+    try {
+      const dateObj = new Date(tripStartDate);
+      dateObj.setDate(dateObj.getDate() + dayIdx);
+      dayDateStr = dateObj.toISOString().split('T')[0];
+    } catch {
+      // ignore
+    }
+  }
+
+  if (documents && documents.length > 0) {
+    const anchors = getDayAnchors(dayDateStr, documents, dayIdx, days.length, days);
+    if (anchors.activeHotel) {
+      const isInherited = anchors.startAnchor?.action === 'depart';
+      const status = anchors.endAnchor?.action === 'check_in' ? 'check_in' : anchors.startAnchor?.action === 'check_out' ? 'check_out' : 'staying';
+      return {
+        stay: {
+          id: anchors.activeHotel.id,
+          title: anchors.activeHotel.title,
+          address: anchors.activeHotel.address,
+          coordinates: anchors.activeHotel.coordinates,
+          confirmationCode: anchors.activeHotel.confirmationCode,
+          roomType: anchors.activeHotel.roomType,
+        },
+        isInherited,
+        status,
+      };
+    }
+  }
+
+  // 3. Fallback: inherit previous day's lodging stop
   for (let i = dayIdx - 1; i >= 0; i--) {
-    const prevStops = days[i].stops || [];
+    const prevStops = days[i]?.stops || [];
     const prevStay = prevStops.find((s) => s.category === 'lodging');
     if (prevStay) {
-      return { stay: prevStay, isInherited: true };
+      return { stay: prevStay, isInherited: true, status: 'staying' };
     }
   }
 

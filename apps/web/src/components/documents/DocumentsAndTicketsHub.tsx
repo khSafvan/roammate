@@ -21,7 +21,7 @@ import {
   X,
 } from 'lucide-react';
 import { BookingDocument, Flight, ReservationCategory } from '../../types/trip';
-import { PlaceSearchInput } from '../PlaceSearchInput';
+import { PlaceSearchInput, PlaceSearchResult } from '../PlaceSearchInput';
 import { lookupAirport } from '@mojolog/core';
 
 interface DocumentsAndTicketsHubProps {
@@ -41,13 +41,13 @@ export const DocumentsAndTicketsHub: React.FC<DocumentsAndTicketsHubProps> = ({
   onAddDocument,
   onDeleteDocument,
 }) => {
-  const [activeCategory, setActiveCategory] = useState<ReservationCategory | 'all'>('all');
+  const [activePillar, setActivePillar] = useState<'all' | 'stays' | 'transport' | 'activities'>('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCompanion, setSelectedCompanion] = useState<string>('all');
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   // New Reservation Form State
-  const [formCategory, setFormCategory] = useState<ReservationCategory>('flight');
+  const [formCategory, setFormCategory] = useState<ReservationCategory>('hotel');
   const [title, setTitle] = useState('');
   const [confirmationCode, setConfirmationCode] = useState('');
   const [date, setDate] = useState('');
@@ -104,21 +104,26 @@ export const DocumentsAndTicketsHub: React.FC<DocumentsAndTicketsHubProps> = ({
 
   // Counts by category
   const counts = useMemo(() => {
+    const hotels = documents.filter((d) => d.category === 'hotel').length;
+    const transits = documents.filter((d) => d.category === 'transit' || d.category === 'flight').length;
+    const activities = documents.filter((d) => d.category === 'activity' || d.category === 'doc').length;
     return {
       all: flights.length + documents.length,
-      flight: flights.length,
-      hotel: documents.filter((d) => d.category === 'hotel').length,
-      activity: documents.filter((d) => d.category === 'activity').length,
-      transit: documents.filter((d) => d.category === 'transit').length,
-      doc: documents.filter((d) => d.category === 'doc').length,
+      hotel: hotels,
+      transport: flights.length + transits,
+      activity: activities,
     };
   }, [flights, documents]);
 
   // Filtered documents
   const filteredDocs = useMemo(() => {
     let result = documents;
-    if (activeCategory !== 'all') {
-      result = result.filter((d) => d.category === activeCategory);
+    if (activePillar === 'stays') {
+      result = result.filter((d) => d.category === 'hotel');
+    } else if (activePillar === 'transport') {
+      result = result.filter((d) => d.category === 'transit' || d.category === 'flight');
+    } else if (activePillar === 'activities') {
+      result = result.filter((d) => d.category === 'activity' || d.category === 'doc');
     }
     if (selectedCompanion !== 'all') {
       result = result.filter(
@@ -136,11 +141,11 @@ export const DocumentsAndTicketsHub: React.FC<DocumentsAndTicketsHubProps> = ({
       );
     }
     return result;
-  }, [documents, activeCategory, selectedCompanion, searchQuery]);
+  }, [documents, activePillar, selectedCompanion, searchQuery]);
 
   // Filtered flights
   const filteredFlights = useMemo(() => {
-    if (activeCategory !== 'all' && activeCategory !== 'flight') return [];
+    if (activePillar === 'stays' || activePillar === 'activities') return [];
     let result = flights;
     if (selectedCompanion !== 'all') {
       result = result.filter((f) => f.passengerName === selectedCompanion);
@@ -157,7 +162,7 @@ export const DocumentsAndTicketsHub: React.FC<DocumentsAndTicketsHubProps> = ({
       );
     }
     return result;
-  }, [flights, activeCategory, selectedCompanion, searchQuery]);
+  }, [flights, activePillar, selectedCompanion, searchQuery]);
 
   const handleModalSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -251,59 +256,50 @@ export const DocumentsAndTicketsHub: React.FC<DocumentsAndTicketsHubProps> = ({
         </button>
       </div>
 
-      {/* Category Pills Filter */}
+      {/* Category Pills Filter - Wanderlog 3 Pillars */}
       <div className="category-filter-strip">
         <button
-          className={`category-filter-btn ${activeCategory === 'all' ? 'active' : ''}`}
-          onClick={() => setActiveCategory('all')}
+          className={`category-filter-btn ${activePillar === 'all' ? 'active' : ''}`}
+          onClick={() => setActivePillar('all')}
         >
-          <span>All Items</span>
+          <span>All Bookings</span>
           <span className="count-tag">{counts.all}</span>
         </button>
 
         <button
-          className={`category-filter-btn ${activeCategory === 'flight' ? 'active' : ''}`}
-          onClick={() => setActiveCategory('flight')}
+          className={`category-filter-btn ${activePillar === 'stays' ? 'active' : ''}`}
+          onClick={() => {
+            setActivePillar('stays');
+            setFormCategory('hotel');
+          }}
         >
-          <Plane size={13} />
-          <span>Flights</span>
-          <span className="count-tag">{counts.flight}</span>
-        </button>
-
-        <button
-          className={`category-filter-btn ${activeCategory === 'hotel' ? 'active' : ''}`}
-          onClick={() => setActiveCategory('hotel')}
-        >
-          <Hotel size={13} />
-          <span>Hotels &amp; Stays</span>
+          <Hotel size={14} />
+          <span>Hotels &amp; Places to Stay</span>
           <span className="count-tag">{counts.hotel}</span>
         </button>
 
         <button
-          className={`category-filter-btn ${activeCategory === 'activity' ? 'active' : ''}`}
-          onClick={() => setActiveCategory('activity')}
+          className={`category-filter-btn ${activePillar === 'transport' ? 'active' : ''}`}
+          onClick={() => {
+            setActivePillar('transport');
+            setFormCategory('flight');
+          }}
         >
-          <Ticket size={13} />
-          <span>Activities &amp; Sights</span>
+          <Plane size={14} />
+          <span>Flights &amp; Transport</span>
+          <span className="count-tag">{counts.transport}</span>
+        </button>
+
+        <button
+          className={`category-filter-btn ${activePillar === 'activities' ? 'active' : ''}`}
+          onClick={() => {
+            setActivePillar('activities');
+            setFormCategory('activity');
+          }}
+        >
+          <Ticket size={14} />
+          <span>Activities &amp; Theme Park Passes</span>
           <span className="count-tag">{counts.activity}</span>
-        </button>
-
-        <button
-          className={`category-filter-btn ${activeCategory === 'transit' ? 'active' : ''}`}
-          onClick={() => setActiveCategory('transit')}
-        >
-          <Train size={13} />
-          <span>Transit Passes</span>
-          <span className="count-tag">{counts.transit}</span>
-        </button>
-
-        <button
-          className={`category-filter-btn ${activeCategory === 'doc' ? 'active' : ''}`}
-          onClick={() => setActiveCategory('doc')}
-        >
-          <FileText size={13} />
-          <span>Travel Docs</span>
-          <span className="count-tag">{counts.doc}</span>
         </button>
       </div>
 
@@ -561,6 +557,28 @@ export const DocumentsAndTicketsHub: React.FC<DocumentsAndTicketsHubProps> = ({
                         {doc.seatOrRoomNumber}
                       </span>
                     )}
+                  </div>
+                )}
+
+                {/* Wanderlog Auto-Populated Hotel Stay Indicator */}
+                {isHotel && (
+                  <div
+                    style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '6px',
+                      fontSize: '11px',
+                      color: '#059669',
+                      backgroundColor: 'rgba(16, 185, 129, 0.08)',
+                      border: '1px solid rgba(16, 185, 129, 0.2)',
+                      padding: '4px 10px',
+                      borderRadius: '12px',
+                      fontWeight: 600,
+                      marginTop: '8px',
+                    }}
+                  >
+                    <CheckCircle2 size={13} />
+                    <span>Auto-Populated as Daily Start &amp; End Anchors in Itinerary</span>
                   </div>
                 )}
               </div>
@@ -829,7 +847,7 @@ export const DocumentsAndTicketsHub: React.FC<DocumentsAndTicketsHubProps> = ({
                             ? 'Search hotel e.g. Hilton Tokyo, Park Hyatt, Hotel Gracery...'
                             : 'Search sight or venue e.g. Shibuya Sky, Louvre...'
                         }
-                        onSelectPlace={(place) => {
+                        onSelectPlace={(place: PlaceSearchResult) => {
                           setTitle(place.title);
                           if (place.address) setLocation(place.address);
                         }}
