@@ -2,7 +2,6 @@ import { beforeEach, describe, expect, it } from 'vitest';
 import {
   createDefaultTrip,
   deleteTripOnEdge,
-  fetchItinerariesFromEdge,
   fetchSharedTrip,
   getActiveTripIdLocal,
   loadAllLocalTrips,
@@ -96,20 +95,20 @@ describe('Single-User Personal Vault SyncService', () => {
     });
   });
 
-  describe('Passcode Auth via ApiClient', () => {
-    it('logs in via backend passcode auth and caches token session', async () => {
+  describe('Password Auth via ApiClient', () => {
+    it('logs in via backend password auth and caches token session', async () => {
       const originalFetch = globalThis.fetch;
 
       globalThis.fetch = (async (url: string, init?: RequestInit) => {
         const body = JSON.parse((init?.body as string) || '{}');
         if (url.includes('/auth/login') || url.includes('/api/auth/login')) {
-          if (body.passcode === 'secret123') {
+          if (body.password === 'secret123' || body.passcode === 'secret123') {
             return {
               ok: true,
               headers: new Headers({ 'content-type': 'application/json' }),
               json: async () => ({
                 success: true,
-                token: 'jwt-token-passcode',
+                token: 'jwt-token-password',
                 authenticated: true,
               }),
             };
@@ -118,7 +117,7 @@ describe('Single-User Personal Vault SyncService', () => {
             ok: false,
             status: 401,
             headers: new Headers({ 'content-type': 'application/json' }),
-            json: async () => ({ error: 'Incorrect passcode' }),
+            json: async () => ({ error: 'Incorrect password' }),
           };
         }
         return { ok: false, status: 404 };

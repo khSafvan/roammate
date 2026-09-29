@@ -35,13 +35,13 @@ describe('ApiClient', () => {
       fetchFn: mockFetch as any,
     });
 
-    const res = await client.login({ uuid: 'u-1', passwordHash: 'hash-xyz' });
+    const res = await client.login({ password: 'secret' });
     expect(res.token).toBe('token-abc');
     expect(mockFetch).toHaveBeenCalledWith(
       'http://localhost:8787/auth/login',
       expect.objectContaining({
         method: 'POST',
-        body: JSON.stringify({ uuid: 'u-1', passwordHash: 'hash-xyz' }),
+        body: JSON.stringify({ password: 'secret', passcode: 'secret' }),
       })
     );
   });
@@ -60,7 +60,7 @@ describe('ApiClient', () => {
       fetchFn: mockFetch as any,
     });
 
-    await expect(client.login({ uuid: 'bad', passwordHash: 'bad' })).rejects.toThrow(ApiError);
+    await expect(client.login({ password: 'bad' })).rejects.toThrow(ApiError);
   });
 
   it('handles push and pull sync', async () => {

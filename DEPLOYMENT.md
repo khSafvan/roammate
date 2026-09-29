@@ -64,8 +64,11 @@ This guide covers setting up and hosting Roammate completely from scratch:
 
    # 3. JWT Signing Secret (generate via: openssl rand -hex 32)
    npm run secret:put -- JWT_SECRET
+
+   # 4. Personal Vault Password (your private access password)
+   npm run secret:put -- PASSWORD
    ```
-   *(Alternatively, run from `apps/api`: `cd apps/api && npx wrangler secret put TURSO_DATABASE_URL`).*
+   *(Alternatively, run from `apps/api`: `cd apps/api && npx wrangler secret put PASSWORD`).*
 
    **Verify configured secrets:**
    ```bash

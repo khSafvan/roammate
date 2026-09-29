@@ -14,7 +14,7 @@ export const PasscodeAuthModal: React.FC<PasscodeAuthModalProps> = ({
   onSuccess,
   onClose,
 }) => {
-  const [passcode, setPasscode] = useState('');
+  const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -22,24 +22,23 @@ export const PasscodeAuthModal: React.FC<PasscodeAuthModalProps> = ({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!passcode.trim()) return;
+    if (!password.trim()) return;
 
     setLoading(true);
     setError(null);
 
     try {
-      const ok = await loginAccountOnEdge(passcode.trim());
+      const ok = await loginAccountOnEdge(password.trim());
       if (ok) {
         onSuccess({
           authenticated: true,
-          passcodeProtected: true,
           createdAt: Date.now(),
         });
       } else {
-        setError('Incorrect passcode. Please check your PASSCODE environment variable.');
+        setError('Incorrect password. Please verify the PASSWORD in your environment.');
       }
     } catch {
-      setError('Connection error. Could not verify passcode.');
+      setError('Connection error. Could not verify password.');
     } finally {
       setLoading(false);
     }
@@ -54,8 +53,8 @@ export const PasscodeAuthModal: React.FC<PasscodeAuthModalProps> = ({
               <Lock size={18} className="text-blue" />
             </div>
             <div>
-              <h3 className="modal-title">Personal Vault Passcode</h3>
-              <p className="modal-subtitle">Enter backend PASSCODE to access your itinerary vault</p>
+              <h3 className="modal-title">Personal Vault Access</h3>
+              <p className="modal-subtitle">Enter your PASSWORD to access your personal itineraries</p>
             </div>
           </div>
           {onClose && (
@@ -74,15 +73,15 @@ export const PasscodeAuthModal: React.FC<PasscodeAuthModalProps> = ({
           )}
 
           <div className="form-group">
-            <label className="block text-xs font-semibold text-secondary mb-1.5">Passcode</label>
+            <label className="block text-xs font-semibold text-secondary mb-1.5">Password</label>
             <div className="relative flex items-center">
               <KeyRound size={16} className="absolute left-3 text-tertiary" />
               <input
                 type="password"
                 className="w-full pl-9 pr-3 py-2 border border-subtle rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                placeholder="Enter access passcode"
-                value={passcode}
-                onChange={(e) => setPasscode(e.target.value)}
+                placeholder="Enter personal vault password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
                 autoFocus
               />
             </div>
@@ -90,7 +89,7 @@ export const PasscodeAuthModal: React.FC<PasscodeAuthModalProps> = ({
 
           <button
             type="submit"
-            disabled={loading || !passcode.trim()}
+            disabled={loading || !password.trim()}
             className="w-full py-2.5 px-4 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg text-sm flex items-center justify-center gap-2 transition-colors disabled:opacity-50"
           >
             <LogIn size={16} />

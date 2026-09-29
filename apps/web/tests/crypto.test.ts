@@ -2,7 +2,6 @@ import { beforeEach, describe, expect, it } from 'vitest';
 import {
   clearVaultSession,
   deleteLocalAccount,
-  formatAccountId,
   getVaultSession,
   saveVaultSession,
 } from '../src/auth/crypto';
@@ -38,20 +37,22 @@ describe('Single-User Personal Vault Session', () => {
   });
 
   it('persists and retrieves a single-user vault session correctly', () => {
-    const now = Date.now();
-    saveVaultSession('test-token-123', undefined, now);
+    saveVaultSession('test-token-123');
 
     const session = getVaultSession();
     expect(session).not.toBeNull();
     expect(session?.authenticated).toBe(true);
+    expect(session?.token).toBe('test-token-123');
 
     clearVaultSession();
     expect(getVaultSession()).toBeNull();
   });
 
-  it('formats account id badges correctly', () => {
-    expect(formatAccountId()).toBe('Personal Vault');
-    expect(formatAccountId('token_1234567890')).toBe('toke...7890');
+  it('expires session when expiresAt is in the past', () => {
+    const past = Date.now() - 1000;
+    saveVaultSession('expired-token', past);
+
+    expect(getVaultSession()).toBeNull();
   });
 
   it('clears session on deleteLocalAccount', () => {

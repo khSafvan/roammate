@@ -74,94 +74,33 @@ export class ApiClient {
 
   // --- Auth Endpoints ---
 
-  async register(body: {
-    uuid?: string;
-    passwordHash?: string;
-    mnemonic?: string;
-    userId?: string;
-    passcode?: string;
-  }): Promise<AuthResponse> {
-    try {
-      return await this.request<AuthResponse>('/auth/register', {
-        method: 'POST',
-        body: JSON.stringify(body),
-      });
-    } catch (err) {
-      if (err instanceof ApiError && err.status === 404) {
-        return await this.request<AuthResponse>('/api/auth/register', {
-          method: 'POST',
-          body: JSON.stringify(body),
-        });
-      }
-      throw err;
-    }
-  }
-
-  async login(body: {
-    passcode?: string;
-    password?: string;
-    uuid?: string;
-    passwordHash?: string;
-    phrase?: string;
-  }): Promise<AuthResponse> {
+  async login(body: { password?: string; passcode?: string }): Promise<AuthResponse> {
+    const payload = {
+      password: body.password || body.passcode,
+      passcode: body.password || body.passcode,
+    };
     try {
       return await this.request<AuthResponse>('/auth/login', {
         method: 'POST',
-        body: JSON.stringify(body),
+        body: JSON.stringify(payload),
       });
     } catch (err) {
       if (err instanceof ApiError && err.status === 404) {
         return await this.request<AuthResponse>('/api/auth/login', {
           method: 'POST',
-          body: JSON.stringify(body),
+          body: JSON.stringify(payload),
         });
       }
       throw err;
     }
   }
 
-  async refresh(): Promise<AuthResponse> {
+  async getMe(): Promise<{ authenticated: boolean; passwordProtected?: boolean }> {
     try {
-      return await this.request<AuthResponse>('/auth/refresh', {
-        method: 'POST',
-      });
+      return await this.request<{ authenticated: boolean; passwordProtected?: boolean }>('/me');
     } catch (err) {
       if (err instanceof ApiError && err.status === 404) {
-        return await this.request<AuthResponse>('/api/auth/refresh', {
-          method: 'POST',
-        });
-      }
-      throw err;
-    }
-  }
-
-  async getMe(): Promise<{ authenticated: boolean; passcodeProtected?: boolean; userId?: string }> {
-    try {
-      return await this.request<{ authenticated: boolean; passcodeProtected?: boolean; userId?: string }>('/me');
-    } catch (err) {
-      if (err instanceof ApiError && err.status === 404) {
-        return await this.request<{ authenticated: boolean; passcodeProtected?: boolean; userId?: string }>('/api/me');
-      }
-      throw err;
-    }
-  }
-
-  async deleteAccount(body?: {
-    userId?: string;
-    phrase?: string;
-    passwordHash?: string;
-  }): Promise<{ success: boolean; message?: string }> {
-    try {
-      return await this.request<{ success: boolean; message?: string }>('/auth/account', {
-        method: 'DELETE',
-        body: JSON.stringify(body || {}),
-      });
-    } catch (err) {
-      if (err instanceof ApiError && err.status === 404) {
-        return await this.request<{ success: boolean; message?: string }>('/api/auth/account', {
-          method: 'DELETE',
-          body: JSON.stringify(body || {}),
-        });
+        return await this.request<{ authenticated: boolean; passwordProtected?: boolean }>('/api/me');
       }
       throw err;
     }
