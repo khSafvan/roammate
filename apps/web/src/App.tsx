@@ -1287,6 +1287,7 @@ export function App() {
                       transitModes={transitModes}
                       selectedStopId={selectedStopId}
                       tripTitle={trip.title}
+                      onBackToTimeline={() => setMobileView('timeline')}
                     />
                   </Suspense>
                 </section>
