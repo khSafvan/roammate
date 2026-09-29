@@ -1,5 +1,6 @@
 import React, { Suspense, lazy, useCallback, useEffect, useMemo, useState } from 'react';
 import {
+  AlertTriangle,
   FileText,
   Hotel,
   ListFilter,
@@ -37,6 +38,7 @@ import { detectTransitConflict, getEffectiveStayForDay } from '@mojolog/core';
 import { getNextSuggestedStartTime, recalculateStopTimes } from './utils/timeSchedule';
 import { fetchHolidaysForRange } from './utils/holidayService';
 import { fetchWeeklyForecast, geocodeDestination, tripDayToIso } from './utils/weatherService';
+import { isPasswordConfigured } from './auth/syncService';
 import {
   useTransitLegs,
   useTripOptimization,
@@ -94,6 +96,23 @@ export function App() {
   const [holidaysByDate, setHolidaysByDate] = useState<Record<string, string>>({});
   const [draggedStopIdx, setDraggedStopIdx] = useState<number | null>(null);
   const [dragOverStopIdx, setDragOverStopIdx] = useState<number | null>(null);
+
+  // Guard against missing PASSWORD environment configuration
+  const [isPasswordChecked, setIsPasswordChecked] = useState(false);
+  const [isPasswordMissing, setIsPasswordMissing] = useState(false);
+
+  useEffect(() => {
+    let mounted = true;
+    isPasswordConfigured().then((configured) => {
+      if (mounted) {
+        setIsPasswordMissing(!configured);
+        setIsPasswordChecked(true);
+      }
+    });
+    return () => {
+      mounted = false;
+    };
+  }, []);
 
   // Multi-trip vault hook managing sessions, multiple trips, switching, and guest access
   const {
@@ -783,6 +802,37 @@ export function App() {
     },
     [setTrip]
   );
+
+  // 0. Hard Block: Missing PASSWORD in .env renders site completely unusable
+  if (isPasswordChecked && isPasswordMissing) {
+    return (
+      <div className="env-error-screen">
+        <div className="env-error-card">
+          <div className="env-error-icon-box">
+            <AlertTriangle size={32} className="text-rose-500" />
+          </div>
+          <h1 className="env-error-title">PASSWORD Not Found in Environment</h1>
+          <p className="env-error-desc">
+            The application cannot start because no <strong>PASSWORD</strong> was configured in your <code>.env</code> file.
+            This personal vault is completely locked and disabled until a password is set.
+          </p>
+          <div className="env-error-code-box">
+            <p className="env-error-code-label">Add this to your .env file:</p>
+            <pre className="env-error-code">PASSWORD=your_secure_password_here</pre>
+          </div>
+          <p className="env-error-hint">
+            Set the password in <code>.env</code> and restart the application or refresh.
+          </p>
+          <button
+            className="env-error-retry-btn"
+            onClick={() => window.location.reload()}
+          >
+            Check Again
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   // Passcode Auth Gate
   if (!vaultSession && !isReadOnly) {

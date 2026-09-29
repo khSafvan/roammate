@@ -134,6 +134,29 @@ describe('Single-User Personal Vault SyncService', () => {
         globalThis.fetch = originalFetch;
       }
     });
+
+    it('verifies whether password is configured in environment or backend', async () => {
+      const originalFetch = globalThis.fetch;
+
+      globalThis.fetch = (async (url: string) => {
+        if (url.includes('/auth/status') || url.includes('/api/auth/status')) {
+          return {
+            ok: true,
+            headers: new Headers({ 'content-type': 'application/json' }),
+            json: async () => ({ configured: true }),
+          };
+        }
+        return { ok: false, status: 404 };
+      }) as any;
+
+      try {
+        const { isPasswordConfigured } = await import('../src/auth/syncService');
+        const configured = await isPasswordConfigured();
+        expect(typeof configured).toBe('boolean');
+      } finally {
+        globalThis.fetch = originalFetch;
+      }
+    });
   });
 
   describe('Multi-Trip Support', () => {

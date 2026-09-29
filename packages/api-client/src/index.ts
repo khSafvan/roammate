@@ -106,6 +106,17 @@ export class ApiClient {
     }
   }
 
+  async checkAuthStatus(): Promise<{ configured: boolean; error?: string }> {
+    try {
+      return await this.request<{ configured: boolean; error?: string }>('/auth/status');
+    } catch (err) {
+      if (err instanceof ApiError && err.status === 404) {
+        return await this.request<{ configured: boolean; error?: string }>('/api/auth/status');
+      }
+      throw err;
+    }
+  }
+
   // --- Sync Endpoints ---
 
   async pullSync(since = 0): Promise<SyncPullResponse> {
