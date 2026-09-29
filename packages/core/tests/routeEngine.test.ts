@@ -4,6 +4,7 @@ import {
   computeExpenseBreakdown,
   computeTransitLegs,
   estimateDurationMins,
+  getEffectiveStayForDay,
   getWeatherComfortLabel,
   optimizeRouteTsp,
 } from '@mojolog/core';
@@ -64,6 +65,46 @@ describe('TypeScript Route and Trip Engine', () => {
     it('identifies cold conditions', () => {
       const label = getWeatherComfortLabel(5, 40, 0);
       expect(label).toBe('Crisp & cool · Warm layers recommended');
+    });
+  });
+
+  describe('getEffectiveStayForDay (Stay-Aware Itinerary)', () => {
+    it('detects explicit lodging stop on current day', () => {
+      const days = [
+        {
+          id: 'd1',
+          dayNumber: 1,
+          stops: [
+            { id: 'h1', category: 'lodging', title: 'Park Hyatt Tokyo' },
+            { id: 's1', category: 'sight', title: 'Shibuya Crossing' },
+          ],
+        },
+      ];
+
+      const res = getEffectiveStayForDay(days, 0);
+      expect(res).not.toBeNull();
+      expect(res?.stay.title).toBe('Park Hyatt Tokyo');
+      expect(res?.isInherited).toBe(false);
+    });
+
+    it('inherits active stay from previous days when current day has no explicit lodging stop', () => {
+      const days = [
+        {
+          id: 'd1',
+          dayNumber: 1,
+          stops: [{ id: 'h1', category: 'lodging', title: 'Hotel Gracery Shinjuku' }],
+        },
+        {
+          id: 'd2',
+          dayNumber: 2,
+          stops: [{ id: 's2', category: 'sight', title: 'Senso-ji Temple' }],
+        },
+      ];
+
+      const resDay2 = getEffectiveStayForDay(days, 1);
+      expect(resDay2).not.toBeNull();
+      expect(resDay2?.stay.title).toBe('Hotel Gracery Shinjuku');
+      expect(resDay2?.isInherited).toBe(true);
     });
   });
 
