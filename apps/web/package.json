@@ -10,6 +10,7 @@
     "test": "vitest run"
   },
   "dependencies": {
+    "@imgly/background-removal": "^1.7.0",
     "@mojolog/api-client": "*",
     "@mojolog/core": "*",
     "@mojolog/shared": "*",

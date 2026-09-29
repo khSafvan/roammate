@@ -214,12 +214,32 @@ export interface Trip {
   days: TripDay[];
   placesToVisit?: ItineraryStop[]; // Unscheduled Ideas / Places to Visit bucket
   expenses: Expense[];
+  looks?: Look[]; // Couple outfit planner coordinated looks attached to events/stops
   readinessChecklist: ReadinessItem[];
   packingList?: PackingItem[]; // Categorized Packing Checklist
   generalNotes?: string; // Scratchpad & general trip notes
   emergencyContacts?: string; // Emergency numbers, embassy contacts, door codes
   createdAt?: number;
   updatedAt?: number;
+}
+
+export interface Look {
+  id: string;
+  tripId: string;
+  eventId: string; // references ItineraryStop.id or day anchor
+  position: number;
+  person1Original?: string;
+  person1Cutout?: string;
+  person1Label?: string;
+  person1UseCutout: boolean; // default true
+  person2Original?: string;
+  person2Cutout?: string;
+  person2Label?: string;
+  person2UseCutout: boolean; // default true
+  notes?: string;
+  packed?: boolean;
+  createdAt: number;
+  updatedAt: number;
 }
 
 export interface TripSummary {

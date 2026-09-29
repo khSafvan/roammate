@@ -32,7 +32,9 @@ import { TripManagerModal } from './components/TripManagerModal';
 import { TripsListPage } from './components/trips/TripsListPage';
 import { TripSettingsPage } from './components/trips/TripSettingsPage';
 import { WeatherBanner } from './components/WeatherBanner';
-import { BookingDocument, Expense, Flight, ItineraryStop, PackingCategory, PackingItem, StopCategory, TransitLeg, Trip, TripDay } from './types/trip';
+import { PackingView } from './components/outfits/PackingView';
+import { apiClient } from './auth/syncService';
+import { BookingDocument, Expense, Flight, ItineraryStop, Look, PackingCategory, PackingItem, StopCategory, TransitLeg, Trip, TripDay } from './types/trip';
 import {
   computeDistanceKm,
   detectTransitConflict,
@@ -66,7 +68,7 @@ export function App() {
     }
     return 'trips_list';
   });
-  const [activeTab, setActiveTab] = useState<'timeline' | 'flights' | 'expenses'>('timeline');
+  const [activeTab, setActiveTab] = useState<'timeline' | 'flights' | 'expenses' | 'outfits'>('timeline');
   const [activeDayIdx, setActiveDayIdx] = useState<number>(0); // Day 1 by default
   const [isPlacesToVisitActive, setIsPlacesToVisitActive] = useState<boolean>(false);
   const [selectedStopId, setSelectedStopId] = useState<string | null>(null);
@@ -357,6 +359,15 @@ export function App() {
     });
   }, [trip?.flights, trip?.documents, trip?.startDate, activeDay.dateStr, activeDayIdx]);
 
+  // Couple outfit looks indexed by event ID
+  const looksByEvent = useMemo(() => {
+    const map = new Map<string, Look>();
+    (trip?.looks || []).forEach((l) => {
+      map.set(l.eventId, l);
+    });
+    return map;
+  }, [trip?.looks]);
+
 
 
   const activeDayHoliday = useMemo(() => {
@@ -567,12 +578,52 @@ export function App() {
           ...currentDay,
           stops: remainingStops,
         };
-        return { ...prev, days: updatedDays };
+        // Cascade delete looks attached to this stop
+        const updatedLooks = (prev.looks || []).filter((l) => l.eventId !== stopId);
+        return { ...prev, days: updatedDays, looks: updatedLooks };
       });
       setEditingStop((prev) => (prev?.id === stopId ? null : prev));
       setSelectedStopId((prev) => (prev === stopId ? null : prev));
     },
     [activeDayIdx, setTrip]
+  );
+
+  // Couple Outfit Look Handlers
+  const handleSaveLook = useCallback(
+    (savedLook: Look) => {
+      setTrip((prev) => {
+        const existing = prev.looks || [];
+        const idx = existing.findIndex((l) => l.id === savedLook.id);
+        const updatedLooks =
+          idx >= 0
+            ? [...existing.slice(0, idx), savedLook, ...existing.slice(idx + 1)]
+            : [...existing, savedLook];
+        return {
+          ...prev,
+          looks: updatedLooks,
+        };
+      });
+
+      if (apiClient) {
+        apiClient.patchLook(savedLook.id, savedLook).catch(() => {
+          apiClient.createLook(savedLook.tripId, savedLook.eventId, savedLook).catch(() => {});
+        });
+      }
+    },
+    [setTrip]
+  );
+
+  const handleDeleteLook = useCallback(
+    (lookId: string) => {
+      setTrip((prev) => ({
+        ...prev,
+        looks: (prev.looks || []).filter((l) => l.id !== lookId),
+      }));
+      if (apiClient) {
+        apiClient.deleteLook(lookId).catch(() => {});
+      }
+    },
+    [setTrip]
   );
 
   const handleReorderStops = useCallback(
@@ -1045,6 +1096,7 @@ export function App() {
             activeTab={activeTab}
             flightsCount={(trip?.flights?.length || 0) + (trip?.documents?.length || 0)}
             expensesCount={trip?.expenses?.length || 0}
+            looksCount={(trip?.looks || []).length}
             onSelectTab={setActiveTab}
             onNavigateView={setCurrentView}
             onOpenTripManager={() => setIsTripManagerOpen(true)}
@@ -1401,6 +1453,14 @@ export function App() {
                           totalStops={activeDay.stops.length}
                           themeColor={activeDay.themeColor}
                           isSelected={stop.id === selectedStopId}
+                          look={looksByEvent.get(stop.id)}
+                          tripId={trip?.id || ''}
+                          person1Name={trip?.travelers?.[0] || 'Person 1'}
+                          person2Name={trip?.travelers?.[1] || 'Person 2'}
+                          weather={activeDay.weather}
+                          apiClient={apiClient}
+                          onSaveLook={handleSaveLook}
+                          onDeleteLook={handleDeleteLook}
                           onSelect={() => setSelectedStopId(stop.id)}
                           onEdit={(s) => setEditingStop(s)}
                           onMoveUp={() => handleReorderStops(index, index - 1)}
@@ -1625,6 +1685,21 @@ export function App() {
                 homeCurrency={trip.homeCurrency}
                 onAddExpense={handleAddExpense}
                 onDeleteExpense={handleDeleteExpense}
+              />
+            </main>
+          )}
+
+          {/* TAB 4: COUPLE OUTFIT PLANNER & PACKING HUB */}
+          {activeTab === 'outfits' && (
+            <main className="subview-workspace">
+              <PackingView
+                trip={trip}
+                looks={trip.looks || []}
+                onUpdateLook={handleSaveLook}
+                onNavigateToDay={(dayNum) => {
+                  setActiveDayIdx(dayNum - 1);
+                  setActiveTab('timeline');
+                }}
               />
             </main>
           )}

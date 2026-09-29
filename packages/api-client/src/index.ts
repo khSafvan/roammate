@@ -1,5 +1,6 @@
 import {
   AuthResponse,
+  Look,
   OutboxEntry,
   SyncPullResponse,
   SyncPushResponse,
@@ -188,6 +189,75 @@ export class ApiClient {
       `/api/share/${encodeURIComponent(token)}${query}`
     );
     return res.trip || null;
+  }
+
+  // --- Couple Outfit Planner Looks & Uploads Endpoints ---
+
+  async getEventLooks(tripId: string, eventId: string): Promise<Look[]> {
+    const res = await this.request<{ looks: Look[] }>(
+      `/api/trips/${encodeURIComponent(tripId)}/events/${encodeURIComponent(eventId)}/looks`
+    );
+    return res.looks || [];
+  }
+
+  async createLook(tripId: string, eventId: string, lookData: Partial<Look>): Promise<Look> {
+    const res = await this.request<{ look: Look }>(
+      `/api/trips/${encodeURIComponent(tripId)}/events/${encodeURIComponent(eventId)}/looks`,
+      {
+        method: 'POST',
+        body: JSON.stringify(lookData),
+      }
+    );
+    return res.look;
+  }
+
+  async patchLook(lookId: string, updates: Partial<Look>): Promise<Look> {
+    const res = await this.request<{ look: Look }>(
+      `/api/looks/${encodeURIComponent(lookId)}`,
+      {
+        method: 'PATCH',
+        body: JSON.stringify(updates),
+      }
+    );
+    return res.look;
+  }
+
+  async deleteLook(lookId: string): Promise<void> {
+    await this.request<{ success: boolean }>(
+      `/api/looks/${encodeURIComponent(lookId)}`,
+      {
+        method: 'DELETE',
+      }
+    );
+  }
+
+  async getTripLooks(tripId: string): Promise<Look[]> {
+    const res = await this.request<{ looks: Look[] }>(
+      `/api/trips/${encodeURIComponent(tripId)}/looks`
+    );
+    return res.looks || [];
+  }
+
+  async signUpload(
+    filename: string,
+    contentType: string = 'image/webp'
+  ): Promise<{
+    uploadUrl: string;
+    publicUrl: string;
+    key: string;
+    method?: string;
+    headers?: Record<string, string>;
+  }> {
+    return await this.request<{
+      uploadUrl: string;
+      publicUrl: string;
+      key: string;
+      method?: string;
+      headers?: Record<string, string>;
+    }>('/api/uploads/sign', {
+      method: 'POST',
+      body: JSON.stringify({ filename, contentType }),
+    });
   }
 }
 

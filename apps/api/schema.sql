@@ -13,3 +13,26 @@ CREATE TABLE IF NOT EXISTS trips (
 );
 
 CREATE INDEX IF NOT EXISTS idx_trips_updated ON trips(updated_at);
+
+CREATE TABLE IF NOT EXISTS looks (
+    id TEXT PRIMARY KEY,
+    trip_id TEXT NOT NULL,
+    event_id TEXT NOT NULL,
+    position INTEGER NOT NULL DEFAULT 0,
+    person1_original TEXT,
+    person1_cutout TEXT,
+    person1_label TEXT,
+    person1_use_cutout INTEGER NOT NULL DEFAULT 1,
+    person2_original TEXT,
+    person2_cutout TEXT,
+    person2_label TEXT,
+    person2_use_cutout INTEGER NOT NULL DEFAULT 1,
+    notes TEXT,
+    packed INTEGER NOT NULL DEFAULT 0,
+    created_at INTEGER NOT NULL,
+    updated_at INTEGER NOT NULL,
+    FOREIGN KEY (trip_id) REFERENCES trips(id) ON DELETE CASCADE
+);
+
+CREATE INDEX IF NOT EXISTS idx_looks_trip_event ON looks(trip_id, event_id);
+CREATE INDEX IF NOT EXISTS idx_looks_trip ON looks(trip_id);
