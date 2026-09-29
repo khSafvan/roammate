@@ -229,6 +229,7 @@ export const PlacesToVisitDrawer: React.FC<PlacesToVisitDrawerProps> = ({
         </div>
         <PlaceSearchInput
           onSelectPlace={handleQuickAddFromSearch}
+          searchContext={destination}
           placeholder="Type any landmark, museum, or eatery (e.g. Miracle Garden, Time Out Market, Tokyo Skytree)..."
         />
 

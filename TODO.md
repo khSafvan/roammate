@@ -9,7 +9,7 @@
 - [x] Create standalone typed `@mojolog/api-client` for web client and external clients.
 - [x] Implement storage-agnostic `@mojolog/sync` engine with offline outbox and last-write-wins conflict resolution.
 - [x] Convert `apps/web` into a static SPA with zero database drivers and zero local credential verification.
-- [x] Implement Bearer JWT authentication, `/sync/pull`, `/sync/push`, and origin-restricted CORS on `apps/api`.
+- [x] Implement Single-User PASSCODE authentication (`PASSCODE` / `AUTH_PASSCODE` Worker secret), `/sync/pull`, `/sync/push`, and origin-restricted CORS on `apps/api`.
 - [x] Configure independent CI/CD pipelines (`deploy-web.yml`, `deploy-api.yml`) and deploy scripts (`npm run deploy:web`, `npm run deploy:api`).
 
 ### Core Features (Phases 1–6)
@@ -25,31 +25,27 @@
 - [x] Bank and public holiday destination alerts via Nager.Date.
 - [x] Country intelligence database (emergency contacts, electrical plug types, driving sides).
 - [x] Instant POI discovery chips in Places to Visit drawer.
+- [x] Context-aware & Fuzzy Place Search (destination-biased Nominatim querying + Levenshtein fuzzy ranking).
+- [x] Automatic Schedule & Time Recalculation (sequential start/end time updates on drag-and-drop, stop additions, and idea bucket assignments).
 - [x] Visual consistency: unified voucher and flight card geometry, stable text truncation, category icons.
 
 ---
 
 ## 🚀 Active Roadmap: Incomplete Tasks
 
-### Phase 7 — Authentication & Device Persistence
-- [x] Gate private planner access behind login with bearer JWT token and guest mode fallback.
-- [x] Keep device session active across browser restarts until token expiry or manual logout.
-- [ ] Restore last active page and active trip state automatically after browser reopening or hard reset.
+### Phase 7 — Authentication & Personal Vault Storage
+- [x] Gate private planner access behind PASSCODE verification with guest mode fallback.
+- [x] Keep personal vault session active across browser restarts until manual lock.
+- [x] Single-user personal storage model: all trips sync directly to the user's edge database.
 
-### Phase 8 — Trip Identity & Collaboration
-- [ ] Add unique trip IDs and unique usernames.
-- [ ] Define one trip-code invitation flow for both inviter and invitee.
-- [ ] Let invitees request to join with a username; show request to inviter with accept/decline actions.
-- [ ] Grant shared-trip access only after the inviter approves the request.
-
-### Phase 9 — First-Run Onboarding
+### Phase 8 — First-Run Onboarding
 - [ ] Add an interactive step-by-step tutorial for new users and persist its completion state.
 
-### Phase 10 — Stay-Aware Itinerary
+### Phase 9 — Stay-Aware Itinerary
 - [ ] Treat hotels/stays as itinerary locations.
 - [ ] Use a stay as the trip's start and end location by default until the user changes either point.
 
-### Phase 11 — Map Workspace & Focus
+### Phase 10 — Map Workspace & Focus
 - [ ] Keep itinerary focus and map focus synchronized for stops and places to visit.
 - [ ] Show focused-place details and notes in a lower map information panel, including user-added places.
 - [ ] Use a half-screen map beside the itinerary on desktop.
