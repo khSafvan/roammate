@@ -106,6 +106,8 @@ async function ensureTables(turso: Client): Promise<void> {
         trip_id TEXT NOT NULL,
         event_id TEXT NOT NULL,
         position INTEGER NOT NULL DEFAULT 0,
+        day_number INTEGER,
+        title TEXT,
         person1_original TEXT,
         person1_cutout TEXT,
         person1_label TEXT,
@@ -120,6 +122,12 @@ async function ensureTables(turso: Client): Promise<void> {
         updated_at INTEGER NOT NULL
       )
     `);
+    try {
+      await turso.execute('ALTER TABLE looks ADD COLUMN day_number INTEGER');
+    } catch {}
+    try {
+      await turso.execute('ALTER TABLE looks ADD COLUMN title TEXT');
+    } catch {}
     try {
       await turso.execute('CREATE INDEX IF NOT EXISTS idx_looks_trip_event ON looks(trip_id, event_id)');
       await turso.execute('CREATE INDEX IF NOT EXISTS idx_looks_trip ON looks(trip_id)');
@@ -453,6 +461,8 @@ function formatLookRow(row: any): Look {
     tripId: row.trip_id as string,
     eventId: row.event_id as string,
     position: Number(row.position) || 0,
+    dayNumber: row.day_number !== null && row.day_number !== undefined ? Number(row.day_number) : undefined,
+    title: (row.title as string) || undefined,
     person1Original: (row.person1_original as string) || undefined,
     person1Cutout: (row.person1_cutout as string) || undefined,
     person1Label: (row.person1_label as string) || undefined,
@@ -513,6 +523,8 @@ const handleCreateLook = async (c: any) => {
     tripId,
     eventId,
     position,
+    dayNumber: typeof body.dayNumber === 'number' ? body.dayNumber : undefined,
+    title: body.title || undefined,
     person1Original: body.person1Original || undefined,
     person1Cutout: body.person1Cutout || undefined,
     person1Label: body.person1Label || undefined,
@@ -539,16 +551,18 @@ const handleCreateLook = async (c: any) => {
 
   await turso.execute({
     sql: `INSERT INTO looks (
-      id, trip_id, event_id, position,
+      id, trip_id, event_id, position, day_number, title,
       person1_original, person1_cutout, person1_label, person1_use_cutout,
       person2_original, person2_cutout, person2_label, person2_use_cutout,
       notes, packed, created_at, updated_at
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     args: [
       id,
       tripId,
       eventId,
       position,
+      newLook.dayNumber ?? null,
+      newLook.title || null,
       newLook.person1Original || null,
       newLook.person1Cutout || null,
       newLook.person1Label || null,
@@ -604,17 +618,19 @@ const handlePatchLook = async (c: any) => {
   const p2Use = body.person2UseCutout !== undefined ? (body.person2UseCutout ? 1 : 0) : current.person2_use_cutout;
 
   const pos = body.position !== undefined ? body.position : current.position;
+  const dayNumber = body.dayNumber !== undefined ? (typeof body.dayNumber === 'number' ? body.dayNumber : null) : current.day_number;
+  const title = body.title !== undefined ? (body.title || null) : current.title;
   const notes = body.notes !== undefined ? body.notes : current.notes;
   const packed = body.packed !== undefined ? (body.packed ? 1 : 0) : current.packed;
 
   await turso.execute({
     sql: `UPDATE looks SET
-      position = ?,
+      position = ?, day_number = ?, title = ?,
       person1_original = ?, person1_cutout = ?, person1_label = ?, person1_use_cutout = ?,
       person2_original = ?, person2_cutout = ?, person2_label = ?, person2_use_cutout = ?,
       notes = ?, packed = ?, updated_at = ?
       WHERE id = ?`,
-    args: [pos, p1Orig, p1Cut, p1Lbl, p1Use, p2Orig, p2Cut, p2Lbl, p2Use, notes, packed, now, id],
+    args: [pos, dayNumber, title, p1Orig, p1Cut, p1Lbl, p1Use, p2Orig, p2Cut, p2Lbl, p2Use, notes, packed, now, id],
   });
 
   const updated = await turso.execute({ sql: 'SELECT * FROM looks WHERE id = ?', args: [id] });

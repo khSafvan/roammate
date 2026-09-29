@@ -19,6 +19,8 @@ CREATE TABLE IF NOT EXISTS looks (
     trip_id TEXT NOT NULL,
     event_id TEXT NOT NULL,
     position INTEGER NOT NULL DEFAULT 0,
+    day_number INTEGER,
+    title TEXT,
     person1_original TEXT,
     person1_cutout TEXT,
     person1_label TEXT,
