@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 import { ItineraryStop, StopCategory, TripDay } from '../types/trip';
 import { MarkdownText } from './MarkdownText';
+import { useModalA11y } from '../hooks';
 
 interface StopDetailModalProps {
   stop: ItineraryStop | null;
@@ -48,6 +49,8 @@ export const StopDetailModal: React.FC<StopDetailModalProps> = ({
   onMoveStopToDay,
   onMoveStopToIdeas,
 }) => {
+  useModalA11y(Boolean(stop), onClose);
+
   const [isEditing, setIsEditing] = useState(false);
   const [isDeleteConfirming, setIsDeleteConfirming] = useState(false);
 
@@ -124,7 +127,13 @@ export const StopDetailModal: React.FC<StopDetailModalProps> = ({
 
   return (
     <div className="modal-backdrop" onClick={onClose}>
-      <div className="modal-card" onClick={(e) => e.stopPropagation()}>
+      <div
+        className="modal-card"
+        onClick={(e) => e.stopPropagation()}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="stop-detail-modal-title"
+      >
         {/* Header */}
         <div className="modal-header">
           <div className="modal-header-left">
@@ -135,21 +144,23 @@ export const StopDetailModal: React.FC<StopDetailModalProps> = ({
               {stop.orderIndex}
             </div>
             <div>
-              <h2 className="modal-title">{isEditing ? 'Edit Stop' : stop.title}</h2>
+              <h2 id="stop-detail-modal-title" className="modal-title">{isEditing ? 'Edit Stop' : stop.title}</h2>
               <p className="modal-subtitle">{isEditing ? 'Update stop information' : stop.subtitle}</p>
             </div>
           </div>
           <div className="flex items-center gap-1.5">
             {!isEditing && onUpdateStop && (
               <button
+                type="button"
                 className="modal-close-btn"
                 onClick={() => setIsEditing(true)}
                 title="Edit Stop Details"
+                aria-label="Edit Stop Details"
               >
                 <Edit3 size={15} />
               </button>
             )}
-            <button className="modal-close-btn" onClick={onClose} aria-label="Close">
+            <button type="button" className="modal-close-btn" onClick={onClose} aria-label="Close">
               <X size={18} />
             </button>
           </div>

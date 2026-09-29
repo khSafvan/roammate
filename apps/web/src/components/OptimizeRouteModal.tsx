@@ -7,6 +7,7 @@ import {
   Zap,
 } from 'lucide-react';
 import { RouteOptimizationPreview } from '../hooks/useTripOptimization';
+import { useModalA11y } from '../hooks';
 
 interface OptimizeRouteModalProps {
   preview: RouteOptimizationPreview | null;
@@ -21,6 +22,8 @@ export const OptimizeRouteModal: React.FC<OptimizeRouteModalProps> = ({
   onApply,
   onClose,
 }) => {
+  useModalA11y(Boolean(preview), onClose);
+
   if (!preview) return null;
 
   const pctSaved =
@@ -34,6 +37,9 @@ export const OptimizeRouteModal: React.FC<OptimizeRouteModalProps> = ({
         className="modal-card"
         onClick={(e) => e.stopPropagation()}
         style={{ maxWidth: '580px', maxHeight: '88vh' }}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="optimize-route-modal-title"
       >
         {/* Header */}
         <div className="modal-header">
@@ -45,9 +51,9 @@ export const OptimizeRouteModal: React.FC<OptimizeRouteModalProps> = ({
               <Zap size={18} />
             </div>
             <div>
-              <h2 className="modal-title">Route Optimization (Day {preview.dayNumber})</h2>
+              <h2 id="optimize-route-modal-title" className="modal-title">Route Optimization (Day {preview.dayNumber})</h2>
               <p className="modal-subtitle">
-                Time-window aware 2-opt TSP — respects meal times, opening hours &amp; fixed slots
+                Time-window aware 2-opt TSP — respects meal times, opening hours & fixed slots
               </p>
             </div>
           </div>

@@ -10,6 +10,7 @@ import {
   X,
 } from 'lucide-react';
 import { PackingCategory, PackingItem, ReadinessItem } from '../types/trip';
+import { useModalA11y } from '../hooks';
 
 interface ReadinessModalProps {
   isOpen: boolean;
@@ -46,6 +47,8 @@ export const ReadinessModal: React.FC<ReadinessModalProps> = ({
   const [newItemName, setNewItemName] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<PackingCategory>('Clothes');
 
+  useModalA11y(isOpen, onClose);
+
   if (!isOpen) return null;
 
   const totalPacked = packingList.filter((item) => item.packed).length;
@@ -65,16 +68,19 @@ export const ReadinessModal: React.FC<ReadinessModalProps> = ({
         className="modal-card"
         onClick={(e) => e.stopPropagation()}
         style={{ maxWidth: '580px', maxHeight: '90vh' }}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="readiness-modal-title"
       >
         {/* Header */}
         <div className="modal-header">
           <div>
-            <h2 className="modal-title">Trip Readiness &amp; Packing</h2>
+            <h2 id="readiness-modal-title" className="modal-title">Trip Readiness & Packing</h2>
             <p className="modal-subtitle">
-              roammate travel hub: flight prerequisites and categorized packing lists
+              MojoLog travel hub: flight prerequisites and categorized packing lists
             </p>
           </div>
-          <button className="modal-close-btn" onClick={onClose}>
+          <button className="modal-close-btn" onClick={onClose} aria-label="Close">
             <X size={18} />
           </button>
         </div>

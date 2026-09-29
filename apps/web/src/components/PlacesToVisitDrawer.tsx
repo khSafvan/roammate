@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import { ItineraryStop, StopCategory, TripDay } from '../types/trip';
 import { PlaceSearchInput, PlaceSearchResult } from './PlaceSearchInput';
+import { useModalA11y } from '../hooks';
 
 interface PlacesToVisitDrawerProps {
   places: ItineraryStop[];
@@ -63,6 +64,9 @@ export const PlacesToVisitDrawer: React.FC<PlacesToVisitDrawerProps> = ({
 }) => {
   const [selectedCategory, setSelectedCategory] = useState<StopCategory | 'all'>('all');
   const [editingPlace, setEditingPlace] = useState<ItineraryStop | null>(null);
+
+  useModalA11y(Boolean(editingPlace), () => setEditingPlace(null));
+
   const [isManualAddOpen, setIsManualAddOpen] = useState(false);
   const [discoveryResults, setDiscoveryResults] = useState<PlaceSearchResult[]>([]);
   const [isDiscovering, setIsDiscovering] = useState(false);
@@ -626,10 +630,21 @@ export const PlacesToVisitDrawer: React.FC<PlacesToVisitDrawerProps> = ({
       {/* Edit Idea Modal */}
       {editingPlace && (
         <div className="modal-backdrop" onClick={() => setEditingPlace(null)}>
-          <div className="modal-card" onClick={(e) => e.stopPropagation()}>
+          <div
+            className="modal-card"
+            onClick={(e) => e.stopPropagation()}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="edit-idea-title"
+          >
             <div className="modal-header">
-              <h3 className="modal-title">Edit Idea</h3>
-              <button className="modal-close-btn" onClick={() => setEditingPlace(null)}>
+              <h3 id="edit-idea-title" className="modal-title">Edit Idea</h3>
+              <button
+                type="button"
+                className="modal-close-btn"
+                onClick={() => setEditingPlace(null)}
+                aria-label="Close"
+              >
                 <X size={16} />
               </button>
             </div>

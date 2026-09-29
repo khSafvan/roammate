@@ -3,6 +3,7 @@ import { Bold, Clock, Code, Eye, EyeOff, Italic, Link2, List, ListOrdered, MapPi
 import { Coordinates, ItineraryStop, StopCategory } from '../types/trip';
 import { PlaceSearchInput, PlaceSearchResult } from './PlaceSearchInput';
 import { MarkdownText } from './MarkdownText';
+import { useModalA11y } from '../hooks';
 
 interface AddStopModalProps {
   isOpen: boolean;
@@ -48,6 +49,8 @@ export const AddStopModal: React.FC<AddStopModalProps> = ({
   const [longitude, setLongitude] = useState(fallbackCoordinates.longitude.toString());
   const [isPreviewingNotes, setIsPreviewingNotes] = useState(false);
 
+  useModalA11y(isOpen, onClose);
+
   useEffect(() => {
     if (isOpen) {
       setCategory(defaultCategory);
@@ -59,8 +62,10 @@ export const AddStopModal: React.FC<AddStopModalProps> = ({
       setNotes('');
       setDurationMinutes(defaultCategory === 'note' ? 0 : 60);
       setIsPreviewingNotes(false);
+      setLatitude(fallbackCoordinates.latitude.toString());
+      setLongitude(fallbackCoordinates.longitude.toString());
     }
-  }, [isOpen, defaultCategory, defaultStartTime]);
+  }, [isOpen, defaultCategory, defaultStartTime, fallbackCoordinates.latitude, fallbackCoordinates.longitude]);
 
   if (!isOpen) return null;
 
@@ -133,6 +138,9 @@ export const AddStopModal: React.FC<AddStopModalProps> = ({
         className="modal-card"
         onClick={(e) => e.stopPropagation()}
         style={{ maxWidth: '580px', width: '100%' }}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="add-stop-modal-title"
       >
         <div className="modal-header">
           <div className="modal-header-left">
@@ -145,7 +153,7 @@ export const AddStopModal: React.FC<AddStopModalProps> = ({
               {isNote ? '📝' : isHotel ? '🏨' : isFlight ? '✈️' : '+'}
             </div>
             <div>
-              <h2 className="modal-title">
+              <h2 id="add-stop-modal-title" className="modal-title">
                 {isNote
                   ? `Add Note to Day ${dayNumber}`
                   : isHotel
@@ -367,6 +375,7 @@ export const AddStopModal: React.FC<AddStopModalProps> = ({
                   style={{ width: '24px', height: '24px', padding: 0 }}
                   onClick={() => insertMarkdown('bold')}
                   title="Bold (**text**)"
+                  aria-label="Format Bold"
                 >
                   <Bold size={12} />
                 </button>
@@ -376,6 +385,7 @@ export const AddStopModal: React.FC<AddStopModalProps> = ({
                   style={{ width: '24px', height: '24px', padding: 0 }}
                   onClick={() => insertMarkdown('italic')}
                   title="Italic (*text*)"
+                  aria-label="Format Italic"
                 >
                   <Italic size={12} />
                 </button>
@@ -385,6 +395,7 @@ export const AddStopModal: React.FC<AddStopModalProps> = ({
                   style={{ width: '24px', height: '24px', padding: 0 }}
                   onClick={() => insertMarkdown('bullet')}
                   title="Bullet list (- item)"
+                  aria-label="Insert Bullet List"
                 >
                   <List size={12} />
                 </button>
@@ -394,6 +405,7 @@ export const AddStopModal: React.FC<AddStopModalProps> = ({
                   style={{ width: '24px', height: '24px', padding: 0 }}
                   onClick={() => insertMarkdown('ordered')}
                   title="Numbered list (1. item)"
+                  aria-label="Insert Numbered List"
                 >
                   <ListOrdered size={12} />
                 </button>
@@ -403,6 +415,7 @@ export const AddStopModal: React.FC<AddStopModalProps> = ({
                   style={{ width: '24px', height: '24px', padding: 0 }}
                   onClick={() => insertMarkdown('code')}
                   title="Inline code (`code`)"
+                  aria-label="Format Inline Code"
                 >
                   <Code size={12} />
                 </button>
@@ -412,6 +425,7 @@ export const AddStopModal: React.FC<AddStopModalProps> = ({
                   style={{ width: '24px', height: '24px', padding: 0 }}
                   onClick={() => insertMarkdown('link')}
                   title="Link ([title](url))"
+                  aria-label="Insert Markdown Link"
                 >
                   <Link2 size={12} />
                 </button>

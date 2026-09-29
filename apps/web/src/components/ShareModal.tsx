@@ -13,6 +13,7 @@ import {
   importItineraryFile,
 } from '../utils/exportImport';
 import { downloadIcsCalendar } from '@mojolog/core';
+import { useModalA11y } from '../hooks';
 
 interface ShareModalProps {
   isOpen: boolean;
@@ -31,6 +32,8 @@ export const ShareModal: React.FC<ShareModalProps> = ({
   const [importError, setImportError] = useState('');
   const [isImporting, setIsImporting] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  useModalA11y(isOpen, onClose);
 
   if (!isOpen) return null;
 
@@ -64,6 +67,9 @@ export const ShareModal: React.FC<ShareModalProps> = ({
         className="modal-card"
         onClick={(e) => e.stopPropagation()}
         style={{ maxWidth: '540px' }}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="share-modal-title"
       >
         {/* Header */}
         <div className="modal-header">
@@ -72,7 +78,7 @@ export const ShareModal: React.FC<ShareModalProps> = ({
               <Download size={18} className="text-blue" />
             </div>
             <div>
-              <h3 className="modal-title">Export &amp; Travel Packet</h3>
+              <h3 id="share-modal-title" className="modal-title">Export & Travel Packet</h3>
               <p className="modal-subtitle">
                 Backup your itinerary, sync to calendar, or print paper passes
               </p>

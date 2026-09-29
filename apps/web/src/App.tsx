@@ -149,6 +149,7 @@ export function App() {
 
   // Safely clamp activeDayIdx whenever the trip or its days length changes
   useEffect(() => {
+    setIsDeleteDayConfirming(false);
     if (trip?.days && trip.days.length > 0) {
       if (activeDayIdx >= trip.days.length) {
         setActiveDayIdx(Math.max(0, trip.days.length - 1));
@@ -981,7 +982,7 @@ export function App() {
                   onClick={() => setMobileView('timeline')}
                 >
                   <ListFilter size={16} />
-                  <span>Timeline &amp; Weather</span>
+                  <span>Timeline & Weather</span>
                 </button>
                 <button
                   className={`mobile-tab-btn ${mobileView === 'map' ? 'active' : ''}`}

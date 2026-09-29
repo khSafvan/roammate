@@ -20,6 +20,7 @@ import {
 import { Trip } from '../../types/trip';
 import { VaultSession } from '../../auth/crypto';
 import { CreateTripParams } from '../../hooks/useVault';
+import { useModalA11y } from '../../hooks';
 
 interface TripsListPageProps {
   trips: Trip[];
@@ -49,6 +50,8 @@ export const TripsListPage: React.FC<TripsListPageProps> = ({
   const [filter, setFilter] = useState<'all' | 'upcoming' | 'completed'>('all');
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
+
+  useModalA11y(isCreateModalOpen, () => setIsCreateModalOpen(false));
 
   // Form states for creating a new trip
   const [title, setTitle] = useState('');
@@ -97,6 +100,8 @@ export const TripsListPage: React.FC<TripsListPageProps> = ({
     setDestination('');
     setStartDate('');
     setEndDate('');
+    setStartTime('09:00 AM');
+    setEndTime('09:00 PM');
     setIsCreateModalOpen(false);
   };
 
@@ -108,7 +113,7 @@ export const TripsListPage: React.FC<TripsListPageProps> = ({
           <div className="header-left">
             <div className="header-brand">
               <span className="brand-logo">✈️</span>
-              <span className="brand-name">roammate</span>
+              <span className="brand-name">MojoLog</span>
             </div>
             <div className="trips-hub-tag">
               <Compass size={13} className="text-blue" />
@@ -286,7 +291,7 @@ export const TripsListPage: React.FC<TripsListPageProps> = ({
                       <div className="trip-meta-item">
                         <Calendar size={13} className="text-slate" />
                         <span>{t.dates || 'Dates not set'}</span>
-                        {t.days?.length > 0 && (
+                        {(t.days?.length || 0) > 0 && (
                           <span className="days-count-pill">{t.days.length}d</span>
                         )}
                       </div>
@@ -328,9 +333,9 @@ export const TripsListPage: React.FC<TripsListPageProps> = ({
                       </span>
                       <span className="metric-tag">
                         <Plane size={11} />
-                        <strong>{t.flights.length}</strong> flights
+                        <strong>{t.flights?.length || 0}</strong> flights
                       </span>
-                      {totalReservations > t.flights.length && (
+                      {totalReservations > (t.flights?.length || 0) && (
                         <span className="metric-tag">
                           <Ticket size={11} />
                           <strong>{totalReservations}</strong> vouchers
@@ -421,6 +426,9 @@ export const TripsListPage: React.FC<TripsListPageProps> = ({
             className="modal-card"
             onClick={(e) => e.stopPropagation()}
             style={{ maxWidth: '540px' }}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="create-trip-modal-title"
           >
             <div className="modal-header">
               <div className="modal-header-left">
@@ -428,15 +436,17 @@ export const TripsListPage: React.FC<TripsListPageProps> = ({
                   <Compass size={18} className="text-blue" />
                 </div>
                 <div>
-                  <h3 className="modal-title">Plan a New Journey</h3>
+                  <h3 id="create-trip-modal-title" className="modal-title">Plan a New Journey</h3>
                   <p className="modal-subtitle">
                     Create a customized multi-modal itinerary vault
                   </p>
                 </div>
               </div>
               <button
+                type="button"
                 className="modal-close-btn"
                 onClick={() => setIsCreateModalOpen(false)}
+                aria-label="Close"
               >
                 ✕
               </button>

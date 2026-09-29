@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import { Trip } from '../types/trip';
 import { CreateTripParams } from '../hooks/useVault';
+import { useModalA11y } from '../hooks';
 
 interface TripManagerModalProps {
   isOpen: boolean;
@@ -37,6 +38,8 @@ export const TripManagerModal: React.FC<TripManagerModalProps> = ({
 }) => {
   const [viewMode, setViewMode] = useState<'list' | 'create' | 'edit'>('list');
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
+
+  useModalA11y(isOpen, onClose);
 
   // Create form state
   const [newTitle, setNewTitle] = useState('');
@@ -111,6 +114,9 @@ export const TripManagerModal: React.FC<TripManagerModalProps> = ({
         className="modal-card trip-manager-card"
         onClick={(e) => e.stopPropagation()}
         style={{ maxWidth: '580px' }}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="trip-manager-modal-title"
       >
         {/* Modal Header */}
         <div className="modal-header">
@@ -119,7 +125,7 @@ export const TripManagerModal: React.FC<TripManagerModalProps> = ({
               <Compass size={18} className="text-blue" />
             </div>
             <div>
-              <h3 className="modal-title">
+              <h3 id="trip-manager-modal-title" className="modal-title">
                 {viewMode === 'list' && 'Your Travel Vault Trips'}
                 {viewMode === 'create' && 'Plan a New Trip'}
                 {viewMode === 'edit' && 'Edit Trip Details & Schedule'}
@@ -180,7 +186,7 @@ export const TripManagerModal: React.FC<TripManagerModalProps> = ({
           <div className="trip-list-container">
             {trips.map((t) => {
               const isActive = t.id === activeTrip.id;
-              const totalStops = t.days.reduce((acc, d) => acc + (d.stops?.length || 0), 0);
+              const totalStops = (t.days ?? []).reduce((acc, d) => acc + (d.stops?.length || 0), 0);
 
               return (
                 <div
@@ -228,11 +234,11 @@ export const TripManagerModal: React.FC<TripManagerModalProps> = ({
                     </div>
 
                     <div className="trip-item-metrics">
-                      <span>{t.days.length} Days</span>
+                      <span>{(t.days?.length || 0)} Days</span>
                       <span>·</span>
                       <span>{totalStops} Stops</span>
                       <span>·</span>
-                      <span>{t.flights.length} Flights</span>
+                      <span>{(t.flights?.length || 0)} Flights</span>
                     </div>
                   </div>
 
