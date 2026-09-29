@@ -1,162 +1,49 @@
-import React, { useEffect, useState } from 'react';
-import { AlertTriangle, Check, Key, Sparkles, X } from 'lucide-react';
-import {
-  formatAccountId,
-  generateAccountUuid,
-  hashCredentials,
-  hashPhrase,
-  saveVaultSession,
-  VaultSession,
-} from '../auth/crypto';
-import { deleteAccountOnEdge, loginAccountOnEdge, registerAccountOnEdge } from '../auth/syncService';
-import { ActiveSessionView, CreateAccountView, RestoreAccountView } from './auth';
+import React, { useState } from 'react';
+import { Key, Lock, LogOut, X, AlertCircle, CheckCircle2 } from 'lucide-react';
+import { VaultSession } from '../auth/crypto';
+import { loginAccountOnEdge } from '../auth/syncService';
 
 interface AuthModalProps {
   isOpen: boolean;
   activeSession: VaultSession | null;
-  prefilledUuid?: string;
   onLoginSuccess: (session: VaultSession) => void;
   onLogout: () => void;
-  onDeleteAccount: () => void;
   onClose: () => void;
 }
 
 export const AuthModal: React.FC<AuthModalProps> = ({
   isOpen,
   activeSession,
-  prefilledUuid,
   onLoginSuccess,
   onLogout,
-  onDeleteAccount,
   onClose,
 }) => {
-  const [activeTab, setActiveTab] = useState<'create' | 'restore'>('create');
-  const [accountUuid, setAccountUuid] = useState('');
+  const [passcode, setPasscode] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
-  const [successMessage, setSuccessMessage] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
-
-  useEffect(() => {
-    if (prefilledUuid) {
-      setActiveTab('restore');
-    }
-  }, [prefilledUuid]);
-
-  // Generate a fresh UUID when opening create tab
-  useEffect(() => {
-    if (isOpen && !activeSession && !accountUuid) {
-      setAccountUuid(generateAccountUuid());
-    }
-  }, [isOpen, activeSession, accountUuid]);
 
   if (!isOpen) return null;
 
-  const handleRegenerate = () => {
-    setAccountUuid(generateAccountUuid());
+  const handleLoginSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
     setErrorMessage('');
-    setSuccessMessage('');
-  };
-
-  // 1. Generate New Account Flow (AIOStreams UUID + Password)
-  const handleConfirmCreate = async (password: string, backedUpChecked: boolean) => {
-    if (!backedUpChecked) {
-      setErrorMessage('Please confirm you have saved your Account UUID and Password.');
-      return;
-    }
-
-    setIsProcessing(true);
-    setErrorMessage('');
-    try {
-      const passwordHash = await hashCredentials(accountUuid, password);
-      await registerAccountOnEdge(accountUuid, passwordHash);
-      const now = Date.now();
-      saveVaultSession(accountUuid, undefined, now);
-
-      const session: VaultSession = {
-        userId: accountUuid,
-        accountTag: formatAccountId(accountUuid),
-        createdAt: now,
-        lastAccessedAt: now,
-      };
-
-      onLoginSuccess(session);
-      onClose();
-    } catch {
-      setErrorMessage('Failed to initialize account vault. Please try again.');
-    } finally {
-      setIsProcessing(false);
-    }
-  };
-
-  // 2. Use UUID + Password / Restore Flow
-  const handleRestoreSubmit = async (identifier: string, password?: string) => {
-    setErrorMessage('');
-    setSuccessMessage('');
     setIsProcessing(true);
 
     try {
-      if (password) {
-        // AIOStreams UUID + Password
-        const cleanUuid = identifier.trim().toLowerCase();
-        const passwordHash = await hashCredentials(cleanUuid, password);
-        const ok = await loginAccountOnEdge(cleanUuid, passwordHash);
-        if (!ok) {
-          setErrorMessage('Invalid Account UUID or incorrect password.');
-          setIsProcessing(false);
-          return;
-        }
-
-        const now = Date.now();
-        saveVaultSession(cleanUuid, undefined, now);
-
+      const ok = await loginAccountOnEdge(passcode.trim());
+      if (ok) {
         const session: VaultSession = {
-          userId: cleanUuid,
-          accountTag: formatAccountId(cleanUuid),
-          createdAt: now,
-          lastAccessedAt: now,
+          userId: 'personal_vault',
+          authenticated: true,
+          createdAt: Date.now(),
         };
-
         onLoginSuccess(session);
         onClose();
       } else {
-        // Legacy 12-word mnemonic
-        const clean = identifier.trim().toLowerCase().replace(/\s+/g, ' ');
-        const userId = await hashPhrase(clean);
-        await loginAccountOnEdge(clean);
-        const now = Date.now();
-        saveVaultSession(userId, clean, now);
-
-        const words = clean.split(' ');
-        const session: VaultSession = {
-          userId,
-          accountTag: formatAccountId(userId),
-          phraseSnippet: `${words[0]} ... ${words[11]}`,
-          createdAt: now,
-          lastAccessedAt: now,
-        };
-
-        onLoginSuccess(session);
-        onClose();
+        setErrorMessage('Incorrect passcode.');
       }
     } catch {
-      setErrorMessage('Authentication verification failed.');
-    } finally {
-      setIsProcessing(false);
-    }
-  };
-
-  // 3. Delete Current Account Flow
-  const handleExecuteDelete = async () => {
-    if (!activeSession) return;
-    setIsProcessing(true);
-    setErrorMessage('');
-
-    try {
-      await deleteAccountOnEdge(activeSession.userId);
-      onDeleteAccount();
-      onClose();
-    } catch {
-      setErrorMessage('Failed to delete account from edge. Local storage was cleared.');
+      setErrorMessage('Connection error while verifying passcode.');
     } finally {
       setIsProcessing(false);
     }
@@ -168,17 +55,15 @@ export const AuthModal: React.FC<AuthModalProps> = ({
         {/* Header */}
         <div className="modal-header">
           <div className="modal-header-left">
-            <div className="auth-header-icon">
-              <Key size={18} className="text-amber" />
+            <div className="auth-header-icon bg-blue-subtle">
+              <Lock size={18} className="text-blue" />
             </div>
             <div>
-              <h2 className="modal-title">
-                {activeSession ? 'Account & Security Vault' : 'Private Travel Vault'}
-              </h2>
+              <h2 className="modal-title">Personal Itinerary Vault</h2>
               <p className="modal-subtitle">
                 {activeSession
-                  ? 'Manage your account credentials, retention policy, or erase data'
-                  : 'Zero emails, zero tracking · Secured by UUID & Password'}
+                  ? 'Your vault is connected and synced'
+                  : 'Enter your backend PASSCODE to connect'}
               </p>
             </div>
           </div>
@@ -187,75 +72,60 @@ export const AuthModal: React.FC<AuthModalProps> = ({
           </button>
         </div>
 
-        {/* Active Session View */}
         {activeSession ? (
-          <ActiveSessionView
-            activeSession={activeSession}
-            errorMessage={errorMessage}
-            isProcessing={isProcessing}
-            onLogout={onLogout}
-            onDeleteAccount={handleExecuteDelete}
-          />
-        ) : (
-          /* Unauthenticated User Flow */
-          <>
-            {/* Flow Selector Segmented Tabs */}
-            <div className="auth-tabs">
-              <button
-                className={`auth-tab-pill ${activeTab === 'create' ? 'active' : ''}`}
-                onClick={() => {
-                  setActiveTab('create');
-                  setErrorMessage('');
-                  setSuccessMessage('');
-                }}
-              >
-                <Sparkles size={14} />
-                <span>Create Account</span>
-              </button>
-              <button
-                className={`auth-tab-pill ${activeTab === 'restore' ? 'active' : ''}`}
-                onClick={() => {
-                  setActiveTab('restore');
-                  setErrorMessage('');
-                  setSuccessMessage('');
-                }}
-              >
-                <Key size={14} />
-                <span>Log In / Restore</span>
-              </button>
+          <div className="p-5 space-y-4">
+            <div className="flex items-center gap-3 p-3 bg-emerald-50 border border-emerald-200 rounded-lg text-emerald-800 text-sm">
+              <CheckCircle2 size={18} className="text-emerald-600 flex-shrink-0" />
+              <div>
+                <strong>Vault Active</strong>
+                <p className="text-xs text-emerald-700">All trip changes sync automatically to your personal store.</p>
+              </div>
             </div>
 
+            <button
+              onClick={() => {
+                onLogout();
+                onClose();
+              }}
+              className="w-full py-2.5 px-4 border border-gray-300 hover:bg-gray-50 text-gray-700 font-medium rounded-lg text-sm flex items-center justify-center gap-2 transition-colors"
+            >
+              <LogOut size={16} />
+              <span>Lock / Disconnect Session</span>
+            </button>
+          </div>
+        ) : (
+          <form onSubmit={handleLoginSubmit} className="p-5 space-y-4">
             {errorMessage && (
-              <div className="auth-error-banner">
-                <AlertTriangle size={15} />
+              <div className="flex items-center gap-2 p-3 bg-rose-50 border border-rose-200 text-rose-700 rounded-lg text-xs">
+                <AlertCircle size={16} className="flex-shrink-0" />
                 <span>{errorMessage}</span>
               </div>
             )}
 
-            {successMessage && (
-              <div className="auth-success-banner">
-                <Check size={15} />
-                <span>{successMessage}</span>
+            <div className="form-group">
+              <label className="block text-xs font-semibold text-secondary mb-1.5">Passcode</label>
+              <div className="relative flex items-center">
+                <Key size={16} className="absolute left-3 text-tertiary" />
+                <input
+                  type="password"
+                  className="w-full pl-9 pr-3 py-2 border border-subtle rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder="Enter backend PASSCODE"
+                  value={passcode}
+                  onChange={(e) => setPasscode(e.target.value)}
+                  autoFocus
+                />
               </div>
-            )}
+            </div>
 
-            {activeTab === 'create' && (
-              <CreateAccountView
-                accountUuid={accountUuid}
-                isProcessing={isProcessing}
-                onRegenerateUuid={handleRegenerate}
-                onSubmit={handleConfirmCreate}
-              />
-            )}
-
-            {activeTab === 'restore' && (
-              <RestoreAccountView
-                isProcessing={isProcessing}
-                prefilledUuid={prefilledUuid}
-                onSubmit={handleRestoreSubmit}
-              />
-            )}
-          </>
+            <button
+              type="submit"
+              disabled={isProcessing || !passcode.trim()}
+              className="w-full py-2.5 px-4 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg text-sm flex items-center justify-center gap-2 transition-colors disabled:opacity-50"
+            >
+              <Lock size={16} />
+              <span>{isProcessing ? 'Verifying...' : 'Connect Vault'}</span>
+            </button>
+          </form>
         )}
       </div>
     </div>
