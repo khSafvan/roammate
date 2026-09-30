@@ -1510,7 +1510,6 @@ export function App() {
                       />
                     )}
 
-                    {/* Topbar Itinerary Anchors (Explicit Start/End Points) */}
                   {topbarAnchors.map((anchorStop) => (
                     <TimelineCard
                       key={anchorStop.id}
@@ -1654,7 +1653,6 @@ export function App() {
         </>
       )}
 
-          {/* TAB 2: BOOKINGS, TICKETS, HOTEL VOUCHERS & TRAVEL DOCUMENTS */}
           {activeTab === 'bookings' && (
             <main className="subview-workspace">
               <DocumentsAndTicketsHub
