@@ -28,11 +28,11 @@ export interface HeaderProps {
   activeSession: VaultSession | null;
   tripsCount?: number;
   currentView?: 'trips_list' | 'trip_detail' | 'trip_settings';
-  activeTab?: 'timeline' | 'flights' | 'expenses' | 'outfits';
+  activeTab?: 'timeline' | 'bookings' | 'expenses' | 'outfits';
   flightsCount?: number;
   expensesCount?: number;
   looksCount?: number;
-  onSelectTab?: (tab: 'timeline' | 'flights' | 'expenses' | 'outfits') => void;
+  onSelectTab?: (tab: 'timeline' | 'bookings' | 'expenses' | 'outfits') => void;
   onNavigateView?: (view: 'trips_list' | 'trip_detail' | 'trip_settings') => void;
   onOpenTripManager?: () => void;
   onOpenReadiness?: () => void;
@@ -180,12 +180,12 @@ export const Header: React.FC<HeaderProps> = ({
               <button
                 type="button"
                 role="tab"
-                aria-selected={activeTab === 'flights'}
-                className={`header-tab-btn ${activeTab === 'flights' ? 'active' : ''}`}
-                onClick={() => onSelectTab('flights')}
+                aria-selected={activeTab === 'bookings'}
+                className={`header-tab-btn ${activeTab === 'bookings' ? 'active' : ''}`}
+                onClick={() => onSelectTab('bookings')}
               >
                 <Ticket size={14} />
-                <span>Bookings &amp; Tickets</span>
+                <span>Bookings</span>
                 {flightsCount > 0 && (
                   <span className="nav-counter-pill">{flightsCount}</span>
                 )}

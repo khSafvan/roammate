@@ -99,7 +99,7 @@ export const TimelineCard = React.memo<TimelineCardProps>(function TimelineCard(
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [isMenuOpen]);
 
-  const isFixedAnchor = Boolean(stop.isAnchor);
+  const isFixedAnchor = Boolean(stop.isAnchor) || index === 0 || index === (totalStops || 0) - 1;
 
   const reorderControls = !isFixedAnchor && totalStops && totalStops > 1 ? (
     <div className="card-reorder-actions" onClick={(e) => e.stopPropagation()}>

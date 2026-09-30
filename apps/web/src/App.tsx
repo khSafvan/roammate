@@ -71,7 +71,7 @@ export function App() {
     }
     return 'trips_list';
   });
-  const [activeTab, setActiveTab] = useState<'timeline' | 'flights' | 'expenses' | 'outfits'>(() => {
+  const [activeTab, setActiveTab] = useState<'timeline' | 'bookings' | 'expenses' | 'outfits'>(() => {
     const params = new URLSearchParams(window.location.search);
     return (params.get('tab') as any) || 'timeline';
   });
@@ -809,11 +809,15 @@ export function App() {
     e.preventDefault();
     const sourceIndex = parseInt(e.dataTransfer.getData('text/plain'), 10);
     const currentDay = trip?.days?.[activeDayIdx];
+    
+    const isSourceAnchor = currentDay?.stops?.[sourceIndex]?.isAnchor || sourceIndex === 0 || sourceIndex === (currentDay?.stops?.length || 0) - 1;
+    const isTargetAnchor = currentDay?.stops?.[targetIndex]?.isAnchor || targetIndex === 0 || targetIndex === (currentDay?.stops?.length || 0) - 1;
+
     if (
       !isNaN(sourceIndex) &&
       sourceIndex !== targetIndex &&
-      !currentDay?.stops?.[sourceIndex]?.isAnchor &&
-      !currentDay?.stops?.[targetIndex]?.isAnchor
+      !isSourceAnchor &&
+      !isTargetAnchor
     ) {
       handleReorderStops(sourceIndex, targetIndex);
     }
@@ -1466,7 +1470,7 @@ export function App() {
                     startAnchor={dayAnchors.startAnchor}
                     endAnchor={dayAnchors.endAnchor}
                     effectiveStay={effectiveStay}
-                    onNavigateToStay={() => setActiveTab('flights')}
+                    onNavigateToStay={() => setActiveTab('bookings')}
                     onOpenAddLodging={() => handleOpenAddStop('lodging')}
                   />
 
@@ -1475,7 +1479,7 @@ export function App() {
                     <TimelineFlightCard
                       flights={dayFlights}
                       themeColor={activeDay.themeColor}
-                      onViewFlightsTab={() => setActiveTab('flights')}
+                      onViewFlightsTab={() => setActiveTab('bookings')}
                     />
                   )}
 
@@ -1630,7 +1634,7 @@ export function App() {
       )}
 
           {/* TAB 2: BOOKINGS, TICKETS, HOTEL VOUCHERS & TRAVEL DOCUMENTS */}
-          {activeTab === 'flights' && (
+          {activeTab === 'bookings' && (
             <main className="subview-workspace">
               <DocumentsAndTicketsHub
                 flights={trip.flights}
