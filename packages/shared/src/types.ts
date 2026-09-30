@@ -35,6 +35,7 @@ export interface ItineraryStop {
   phoneNumber?: string;
   photos?: string[];
   imageUrl?: string;
+  tags?: string[];
 }
 
 export interface TransitLeg {

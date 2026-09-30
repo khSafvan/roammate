@@ -16,6 +16,7 @@ import {
   MoreVertical,
   Pin,
   Plane,
+  QrCode,
   Shirt,
   Star,
   Trash2,
@@ -35,6 +36,7 @@ interface TimelineCardProps {
   onSelect: (stop: ItineraryStop) => void;
   onEdit?: (stop: ItineraryStop) => void;
   onDeleteStop?: (stopId: string) => void;
+  onContextMenu?: (e: React.MouseEvent, stop: ItineraryStop) => void;
   onMoveUp?: () => void;
   onMoveDown?: () => void;
   onDragStart?: (e: React.DragEvent) => void;
@@ -72,6 +74,7 @@ export const TimelineCard = React.memo<TimelineCardProps>(function TimelineCard(
   onSelect,
   onEdit,
   onDeleteStop,
+  onContextMenu,
   onMoveUp,
   onMoveDown,
   onDragStart,
@@ -142,6 +145,12 @@ export const TimelineCard = React.memo<TimelineCardProps>(function TimelineCard(
         <div
           className={`timeline-card is-note-card ${isSelected ? 'is-selected' : ''}`}
           onClick={() => onSelect(stop)}
+          onContextMenu={(e) => {
+            if (onContextMenu) {
+              e.preventDefault();
+              onContextMenu(e, stop);
+            }
+          }}
           role="button"
           tabIndex={0}
           onKeyDown={(e) => {
@@ -204,6 +213,12 @@ export const TimelineCard = React.memo<TimelineCardProps>(function TimelineCard(
       <div
         className={`timeline-card ${isSelected ? 'is-selected' : ''}`}
         onClick={() => onSelect(stop)}
+        onContextMenu={(e) => {
+          if (onContextMenu) {
+            e.preventDefault();
+            onContextMenu(e, stop);
+          }
+        }}
         role="button"
         tabIndex={0}
         onKeyDown={(e) => {
@@ -376,6 +391,16 @@ export const TimelineCard = React.memo<TimelineCardProps>(function TimelineCard(
             <h3 className="card-title">{stop.title}</h3>
             {stop.subtitle && <p className="card-subtitle">{stop.subtitle}</p>}
 
+            {/* Note Snippet on Card */}
+            {stop.notes && (
+              <div className="card-note-snippet" title={stop.notes}>
+                <span className="card-note-snippet-prefix">💡 Note:</span>
+                <span className="card-note-snippet-text">
+                  {stop.notes.length > 85 ? `${stop.notes.slice(0, 85)}...` : stop.notes}
+                </span>
+              </div>
+            )}
+
             {/* Secondary Footer Metadata & Details Cue */}
             <div className="card-footer-line">
               <div className="card-address">
@@ -383,8 +408,19 @@ export const TimelineCard = React.memo<TimelineCardProps>(function TimelineCard(
                 <span>{(stop.address || '').split(',')[0] || 'Location pending'}</span>
               </div>
 
-              {stop.bookingRef && (
-                <span className="card-ref-badge">REF: {stop.bookingRef}</span>
+              {/* Stable Slot Pair: Scannable + Ticket/Ref (ticket horizontal position never shifts) */}
+              {(stop.bookingRef || stop.hasTicket) && (
+                <div className="card-stable-ticket-slot-group">
+                  <span
+                    className={`card-slot-scannable ${stop.hasTicket ? 'has-item' : 'is-empty'}`}
+                    title={stop.hasTicket ? 'Scannable barcode / QR ticket available' : undefined}
+                  >
+                    {stop.hasTicket ? <QrCode size={13} className="scannable-icon" /> : null}
+                  </span>
+                  <span className={`card-slot-ticket-num ${stop.bookingRef ? 'has-item' : 'is-empty'}`}>
+                    {stop.bookingRef ? `Ticket #${stop.bookingRef}` : ''}
+                  </span>
+                </div>
               )}
 
               <span className="card-view-detail-hint">

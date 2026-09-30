@@ -1,9 +1,10 @@
-import React, { useRef, useState } from 'react';
+import React, { useMemo, useRef, useState } from 'react';
 import {
   Check,
   CloudSun,
   Eye,
   EyeOff,
+  FolderHeart,
   Loader2,
   RefreshCw,
   Sparkles,
@@ -15,8 +16,8 @@ import {
 import { DayWeather, Look } from '@mojolog/shared';
 import { ApiClient } from '@mojolog/api-client';
 import { downscaleAndStripExif, validateImageFile } from '../../utils/imagePipeline';
-import { removeBackground } from '../../utils/backgroundRemoval';
 import { uploadOutfitImage } from '../../utils/storageUpload';
+import { WardrobeItem, WardrobePickerModal } from './WardrobePickerModal';
 
 interface LookCardProps {
   look?: Look;
@@ -26,6 +27,7 @@ interface LookCardProps {
   person2Name?: string;
   weather?: DayWeather;
   apiClient?: ApiClient | null;
+  existingLooks?: Look[];
   onSaveLook: (look: Look) => void;
   onDeleteLook?: (lookId: string) => void;
   onClose?: () => void;
@@ -35,10 +37,11 @@ export const LookCard: React.FC<LookCardProps> = ({
   look,
   tripId,
   eventId,
-  person1Name = 'Person 1',
-  person2Name = 'Person 2',
+  person1Name = 'John (Husband)',
+  person2Name = 'Jane (Wife)',
   weather,
   apiClient,
+  existingLooks = [],
   onSaveLook,
   onDeleteLook,
   onClose,
@@ -52,6 +55,8 @@ export const LookCard: React.FC<LookCardProps> = ({
   const [slot2Status, setSlot2Status] = useState<string>('');
   const [slot2Error, setSlot2Error] = useState<string>('');
 
+  const [wardrobePickerSlot, setWardrobePickerSlot] = useState<1 | 2 | null>(null);
+
   const p1FileInputRef = useRef<HTMLInputElement>(null);
   const p2FileInputRef = useRef<HTMLInputElement>(null);
 
@@ -61,11 +66,65 @@ export const LookCard: React.FC<LookCardProps> = ({
     tripId,
     eventId,
     position: 0,
-    person1UseCutout: true,
-    person2UseCutout: true,
+    person1UseCutout: false,
+    person2UseCutout: false,
     packed: false,
     createdAt: Date.now(),
     updatedAt: Date.now(),
+  };
+
+  // Memoized Wardrobe looks for Slot 1 and Slot 2
+  const slot1WardrobeItems = useMemo(() => {
+    if (!existingLooks) return [];
+    const map = new Map<string, WardrobeItem>();
+    for (const l of existingLooks) {
+      const img = l.person1Original || l.person1Cutout;
+      if (img && !map.has(img)) {
+        map.set(img, {
+          imageUrl: img,
+          label: l.person1Label,
+          sourceEventId: l.eventId,
+        });
+      }
+    }
+    return Array.from(map.values());
+  }, [existingLooks]);
+
+  const slot2WardrobeItems = useMemo(() => {
+    if (!existingLooks) return [];
+    const map = new Map<string, WardrobeItem>();
+    for (const l of existingLooks) {
+      const img = l.person2Original || l.person2Cutout;
+      if (img && !map.has(img)) {
+        map.set(img, {
+          imageUrl: img,
+          label: l.person2Label,
+          sourceEventId: l.eventId,
+        });
+      }
+    }
+    return Array.from(map.values());
+  }, [existingLooks]);
+
+  const handleSelectFromWardrobe = (slot: 1 | 2, item: WardrobeItem) => {
+    const updatedLook: Look = {
+      ...currentLook,
+      updatedAt: Date.now(),
+      ...(slot === 1
+        ? {
+            person1Original: item.imageUrl,
+            person1Cutout: item.imageUrl,
+            person1UseCutout: false,
+            person1Label: item.label || currentLook.person1Label,
+          }
+        : {
+            person2Original: item.imageUrl,
+            person2Cutout: item.imageUrl,
+            person2UseCutout: false,
+            person2Label: item.label || currentLook.person2Label,
+          }),
+    };
+    onSaveLook(updatedLook);
   };
 
   const handleProcessUpload = async (slot: 1 | 2, file: File) => {
@@ -83,62 +142,44 @@ export const LookCard: React.FC<LookCardProps> = ({
     try {
       // Step 1: Downscale and strip EXIF
       setStatus('Optimizing photo...');
-      setProgress(0.15);
+      setProgress(0.3);
       const { blob: compressedBlob } = await downscaleAndStripExif(file, 1200);
 
-      // Step 2: Background removal
-      setStatus('Removing background...');
-      setProgress(0.35);
-      let cutoutBlob: Blob | null = null;
-      try {
-        cutoutBlob = await removeBackground(compressedBlob, (ratio) => {
-          setProgress(0.35 + ratio * 0.45);
-        });
-      } catch (bgErr) {
-        console.warn('Background removal failed, falling back to original photo:', bgErr);
-        setError('Background removal failed — using original photo.');
-      }
-
-      // Step 3: Upload both original and cutout
+      // Step 2: Upload high-quality photo to vault
       setStatus('Saving to vault...');
-      setProgress(0.85);
+      setProgress(0.7);
 
-      const [origRes, cutRes] = await Promise.all([
-        uploadOutfitImage(compressedBlob, `orig_${file.name}`, 'image/webp', apiClient),
-        cutoutBlob
-          ? uploadOutfitImage(cutoutBlob, `cutout_${file.name}`, 'image/webp', apiClient)
-          : Promise.resolve(null),
-      ]);
+      const origRes = await uploadOutfitImage(compressedBlob, `outfit_${file.name}`, 'image/webp', apiClient);
 
       setProgress(1.0);
       setStatus('Complete!');
 
-      // Step 4: Patch look data and notify parent
+      // Step 3: Patch look data and notify parent
       const updatedLook: Look = {
         ...currentLook,
         updatedAt: Date.now(),
         ...(slot === 1
           ? {
               person1Original: origRes.publicUrl,
-              person1Cutout: cutRes?.publicUrl || undefined,
-              person1UseCutout: Boolean(cutRes),
+              person1Cutout: origRes.publicUrl,
+              person1UseCutout: false,
             }
           : {
               person2Original: origRes.publicUrl,
-              person2Cutout: cutRes?.publicUrl || undefined,
-              person2UseCutout: Boolean(cutRes),
+              person2Cutout: origRes.publicUrl,
+              person2UseCutout: false,
             }),
       };
 
       onSaveLook(updatedLook);
     } catch (err: any) {
-      console.error('Photo upload pipeline failed:', err);
+      console.error('Photo upload failed:', err);
       setError(err?.message || 'Upload failed. Please try again.');
     } finally {
       setTimeout(() => {
         setProgress(null);
         setStatus('');
-      }, 700);
+      }, 500);
     }
   };
 
@@ -318,17 +359,29 @@ export const LookCard: React.FC<LookCardProps> = ({
               />
             </div>
           ) : (
-            <div
-              className="slot-empty-dropzone"
-              onClick={() => p1FileInputRef.current?.click()}
-              role="button"
-              tabIndex={0}
-            >
-              <div className="dropzone-icon">
-                <Upload size={16} />
+            <div className="slot-empty-container">
+              <div
+                className="slot-empty-dropzone"
+                onClick={() => p1FileInputRef.current?.click()}
+                role="button"
+                tabIndex={0}
+              >
+                <div className="dropzone-icon">
+                  <Upload size={16} />
+                </div>
+                <span className="dropzone-text">Upload {person1Name}&apos;s Outfit</span>
+                <span className="dropzone-subtext">JPG, PNG, WEBP, or HEIC</span>
               </div>
-              <span className="dropzone-text">Add {person1Name}&apos;s Outfit</span>
-              <span className="dropzone-subtext">JPG, PNG, WEBP, or HEIC &bull; Auto-Cutout</span>
+              {slot1WardrobeItems.length > 0 && (
+                <button
+                  type="button"
+                  className="wardrobe-picker-trigger-btn"
+                  onClick={() => setWardrobePickerSlot(1)}
+                >
+                  <FolderHeart size={13} />
+                  <span>Choose from Saved Looks ({slot1WardrobeItems.length})</span>
+                </button>
+              )}
             </div>
           )}
 
@@ -355,6 +408,17 @@ export const LookCard: React.FC<LookCardProps> = ({
                 <RefreshCw size={11} />
                 <span>Replace</span>
               </button>
+              {slot1WardrobeItems.length > 0 && (
+                <button
+                  type="button"
+                  className="slot-action-btn"
+                  onClick={() => setWardrobePickerSlot(1)}
+                  title="Pick from saved looks"
+                >
+                  <FolderHeart size={11} />
+                  <span>Wardrobe</span>
+                </button>
+              )}
               <button
                 type="button"
                 className="slot-action-btn btn-danger"
@@ -410,17 +474,29 @@ export const LookCard: React.FC<LookCardProps> = ({
               />
             </div>
           ) : (
-            <div
-              className="slot-empty-dropzone"
-              onClick={() => p2FileInputRef.current?.click()}
-              role="button"
-              tabIndex={0}
-            >
-              <div className="dropzone-icon">
-                <Upload size={16} />
+            <div className="slot-empty-container">
+              <div
+                className="slot-empty-dropzone"
+                onClick={() => p2FileInputRef.current?.click()}
+                role="button"
+                tabIndex={0}
+              >
+                <div className="dropzone-icon">
+                  <Upload size={16} />
+                </div>
+                <span className="dropzone-text">Upload {person2Name}&apos;s Outfit</span>
+                <span className="dropzone-subtext">JPG, PNG, WEBP, or HEIC</span>
               </div>
-              <span className="dropzone-text">Add {person2Name}&apos;s Outfit</span>
-              <span className="dropzone-subtext">JPG, PNG, WEBP, or HEIC &bull; Auto-Cutout</span>
+              {slot2WardrobeItems.length > 0 && (
+                <button
+                  type="button"
+                  className="wardrobe-picker-trigger-btn"
+                  onClick={() => setWardrobePickerSlot(2)}
+                >
+                  <FolderHeart size={13} />
+                  <span>Choose from Saved Looks ({slot2WardrobeItems.length})</span>
+                </button>
+              )}
             </div>
           )}
 
@@ -447,6 +523,17 @@ export const LookCard: React.FC<LookCardProps> = ({
                 <RefreshCw size={11} />
                 <span>Replace</span>
               </button>
+              {slot2WardrobeItems.length > 0 && (
+                <button
+                  type="button"
+                  className="slot-action-btn"
+                  onClick={() => setWardrobePickerSlot(2)}
+                  title="Pick from saved looks"
+                >
+                  <FolderHeart size={11} />
+                  <span>Wardrobe</span>
+                </button>
+              )}
               <button
                 type="button"
                 className="slot-action-btn btn-danger"
@@ -480,6 +567,17 @@ export const LookCard: React.FC<LookCardProps> = ({
           </span>
         )}
       </div>
+
+      {/* Wardrobe Picker Modal */}
+      {wardrobePickerSlot !== null && (
+        <WardrobePickerModal
+          isOpen={true}
+          travelerName={wardrobePickerSlot === 1 ? person1Name : person2Name}
+          items={wardrobePickerSlot === 1 ? slot1WardrobeItems : slot2WardrobeItems}
+          onSelect={(item) => handleSelectFromWardrobe(wardrobePickerSlot, item)}
+          onClose={() => setWardrobePickerSlot(null)}
+        />
+      )}
     </div>
   );
 };

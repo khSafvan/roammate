@@ -30,6 +30,7 @@ import { StopDetailModal } from './components/StopDetailModal';
 import { TimelineCard } from './components/TimelineCard';
 import { TimelineFlightCard } from './components/TimelineFlightCard';
 import { PlaceDetailView } from './components/places/PlaceDetailView';
+import { PlaceContextMenu } from './components/places/PlaceContextMenu';
 import { TripManagerModal } from './components/TripManagerModal';
 import { TripsListPage } from './components/trips/TripsListPage';
 import { TripSettingsPage } from './components/trips/TripSettingsPage';
@@ -83,6 +84,16 @@ export function App() {
   const [isTripManagerOpen, setIsTripManagerOpen] = useState(false);
   const [isAddStopModalOpen, setIsAddStopModalOpen] = useState(false);
   const [addStopCategory, setAddStopCategory] = useState<StopCategory>('sight');
+  const [contextMenu, setContextMenu] = useState<{
+    x: number;
+    y: number;
+    stop: ItineraryStop;
+  } | null>(null);
+
+  const handleContextMenu = useCallback((e: React.MouseEvent, stop: ItineraryStop) => {
+    e.preventDefault();
+    setContextMenu({ x: e.clientX, y: e.clientY, stop });
+  }, []);
 
   const handleOpenAddStop = useCallback((cat: StopCategory = 'sight') => {
     setAddStopCategory(cat);
@@ -1253,26 +1264,17 @@ export function App() {
                       stop={activeDetailStop}
                       dayNumber={activeDay.dayNumber}
                       themeColor={activeDay.themeColor}
-                      days={trip.days}
-                      currentDayId={activeDay.id}
                       weather={activeDay.weather}
                       look={looksByEvent.get(activeDetailStop.id)}
                       tripId={trip.id}
                       person1Name={trip.travelers?.[0] || 'John (Husband)'}
                       person2Name={trip.travelers?.[1] || 'Jane (Wife)'}
                       apiClient={apiClient}
+                      existingLooks={trip.looks || []}
                       onBack={() => setActiveDetailStopId(null)}
                       onUpdateStop={handleUpdateStop}
                       onDeleteStop={(stopId) => {
                         handleDeleteStop(stopId);
-                        setActiveDetailStopId(null);
-                      }}
-                      onMoveStopToDay={(stopId, targetDayId) => {
-                        handleMoveStopToDay(stopId, targetDayId);
-                        setActiveDetailStopId(null);
-                      }}
-                      onMoveStopToIdeas={(stop) => {
-                        handleMoveStopToIdeas(stop);
                         setActiveDetailStopId(null);
                       }}
                       onSaveLook={handleSaveLook}
@@ -1453,6 +1455,7 @@ export function App() {
                           }}
                           onEdit={(s) => setEditingStop(s)}
                           onDeleteStop={handleDeleteStop}
+                          onContextMenu={handleContextMenu}
                           onMoveUp={() => handleReorderStops(index, index - 1)}
                           onMoveDown={() => handleReorderStops(index, index + 1)}
                           isDragging={draggedStopIdx === index}
@@ -1711,6 +1714,38 @@ export function App() {
         onImportSuccess={handleImportSuccess}
         onClose={() => setIsShareModalOpen(false)}
       />
+
+      {contextMenu && (
+        <PlaceContextMenu
+          x={contextMenu.x}
+          y={contextMenu.y}
+          stop={contextMenu.stop}
+          currentDayId={activeDay.id}
+          days={trip.days}
+          onClose={() => setContextMenu(null)}
+          onViewDetails={(s) => {
+            setSelectedStopId(s.id);
+            setActiveDetailStopId(s.id);
+          }}
+          onPlanOutfits={(s) => {
+            setSelectedStopId(s.id);
+            setActiveDetailStopId(s.id);
+          }}
+          onEditNote={(s) => {
+            setSelectedStopId(s.id);
+            setActiveDetailStopId(s.id);
+          }}
+          onMoveToDay={(stopId, targetDayId) => {
+            handleMoveStopToDay(stopId, targetDayId);
+          }}
+          onMoveToIdeas={(s) => {
+            handleMoveStopToIdeas(s);
+          }}
+          onDeleteStop={(stopId) => {
+            handleDeleteStop(stopId);
+          }}
+        />
+      )}
 
     </div>
   );

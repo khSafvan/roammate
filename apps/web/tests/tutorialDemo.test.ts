@@ -7,7 +7,7 @@ describe('Canonical tutorial demo itinerary', () => {
   it('seeds exactly one sample trip', () => {
     expect(INITIAL_TRIPS_CATALOG).toHaveLength(1);
     expect(INITIAL_TRIPS_CATALOG[0].id).toBe(mockTripData.id);
-    expect(mockTripData.travelers).toEqual(['Alex Chen', 'Jordan Taylor']);
+    expect(mockTripData.travelers).toEqual(['John (Husband)', 'Jane (Wife)']);
     expect(mockTripData.flights.every((flight) => flight.date === '2027-01-07')).toBe(true);
   });
 
