@@ -21,14 +21,12 @@ export const TimelineActivityTicketCard: React.FC<TimelineActivityTicketCardProp
         <div
           className="timeline-card"
           style={{
-            borderLeft: '4px solid #EC4899',
             backgroundColor: 'var(--bg-card, #ffffff)',
-            borderRadius: 'var(--radius-card, 12px)',
-            boxShadow: '0 2px 8px rgba(0, 0, 0, 0.04)',
-            padding: '14px 16px',
-            border: '1px solid var(--border-light, #e2e8f0)',
-            borderLeftWidth: '4px',
-            borderLeftColor: '#EC4899',
+            borderRadius: 'var(--radius-card, 16px)',
+            boxShadow: 'var(--shadow-card)',
+            padding: '16px 18px',
+            border: '1px solid var(--border-light, rgba(15, 23, 42, 0.08))',
+            borderTop: '3px solid var(--cat-dining, #EA580C)',
           }}
         >
           <div style={{ display: 'flex', alignItems: 'flex-start', gap: '12px' }}>
@@ -37,11 +35,11 @@ export const TimelineActivityTicketCard: React.FC<TimelineActivityTicketCardProp
                 width: '36px',
                 height: '36px',
                 borderRadius: '8px',
-                backgroundColor: 'rgba(236, 72, 153, 0.12)',
+                backgroundColor: 'rgba(234, 88, 12, 0.10)',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                color: '#db2777',
+                color: 'var(--cat-dining, #EA580C)',
                 flexShrink: 0,
               }}
             >
@@ -59,8 +57,8 @@ export const TimelineActivityTicketCard: React.FC<TimelineActivityTicketCardProp
                       letterSpacing: '0.05em',
                       padding: '2px 8px',
                       borderRadius: '12px',
-                      backgroundColor: 'rgba(236, 72, 153, 0.12)',
-                      color: '#db2777',
+                      backgroundColor: 'rgba(234, 88, 12, 0.10)',
+                      color: 'var(--cat-dining, #EA580C)',
                     }}
                   >
                     🎟️ Booked Activity / Passes ({tickets.length})

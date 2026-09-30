@@ -37,11 +37,7 @@ export const DistancePill = React.memo<DistancePillProps>(function DistancePill(
 
   return (
     <div className="distance-connector-track">
-      <div className="track-spine-node">
-        <div className="track-spine-dash" />
-      </div>
-
-      <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+      <div className="distance-connector-bridge">
         <button
           className={`distance-pill-btn ${isOutlier || conflict ? 'outlier' : ''}`}
           onClick={() => onToggleMode(leg)}

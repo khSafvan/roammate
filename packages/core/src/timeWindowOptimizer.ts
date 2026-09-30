@@ -280,15 +280,19 @@ export function optimizeTimeWindowRoute(
   const baseline = evaluateSequencePenalty(stops, startMinutes, mode);
 
   // Identify anchor stops (e.g. hotel start/end or morning flight)
-  const isStartFixed = stops[0]?.isAnchor || stops[0]?.isFixedTime || stops[0]?.category === 'flight';
+  const isStartFixed = Boolean(stops[0]?.isAnchor || stops[0]?.isFixedTime || stops[0]?.category === 'flight');
+  const lastIdx = stops.length - 1;
+  const isEndFixed = stops.length > 1 && Boolean(stops[lastIdx]?.isAnchor || stops[lastIdx]?.isFixedTime || stops[lastIdx]?.category === 'flight');
 
   let bestSequence = [...stops];
   let bestScore = baseline.score;
   let bestMetrics = baseline;
 
   // Search strategy: 2-opt neighborhood search with meal & time-window constraints
+  const startIndex = isStartFixed ? 1 : 0;
+  const endIndex = isEndFixed ? lastIdx : stops.length;
   const flexibleIndices: number[] = [];
-  for (let i = isStartFixed ? 1 : 0; i < stops.length; i++) {
+  for (let i = startIndex; i < endIndex; i++) {
     if (stops[i].category !== 'note') {
       flexibleIndices.push(i);
     }
@@ -327,10 +331,14 @@ export function optimizeTimeWindowRoute(
   // Meal relocation heuristic: explicitly test inserting lunch into the midday slot (~12:00–1:30 PM)
   const diningIndices = bestSequence
     .map((s, idx) => ({ stop: s, idx }))
-    .filter(({ stop }) => stop.category === 'dining' || stop.mealType === 'lunch');
+    .filter(({ stop, idx }) => {
+      if (idx === 0 && isStartFixed) return false;
+      if (idx === lastIdx && isEndFixed) return false;
+      return stop.category === 'dining' || stop.mealType === 'lunch';
+    });
 
   for (const { idx: dIdx } of diningIndices) {
-    for (let targetIdx = 0; targetIdx < bestSequence.length; targetIdx++) {
+    for (let targetIdx = startIndex; targetIdx < endIndex; targetIdx++) {
       if (targetIdx === dIdx) continue;
       const candidate = [...bestSequence];
       const [diningStop] = candidate.splice(dIdx, 1);

@@ -12,6 +12,7 @@ import {
   Landmark,
   Lock,
   MapPin,
+  Pin,
   Plane,
   Shirt,
   UtensilsCrossed,
@@ -95,7 +96,9 @@ export const TimelineCard = React.memo<TimelineCardProps>(function TimelineCard(
 }) {
   const [isLookbookOpen, setIsLookbookOpen] = useState(false);
 
-  const reorderControls = totalStops && totalStops > 1 ? (
+  const isFixedAnchor = Boolean(stop.isAnchor);
+
+  const reorderControls = !isFixedAnchor && totalStops && totalStops > 1 ? (
     <div className="card-reorder-actions" onClick={(e) => e.stopPropagation()}>
       <span className="card-drag-grip" title="Drag to reorder" aria-label="Drag handle">
         <GripVertical size={13} />
@@ -129,7 +132,7 @@ export const TimelineCard = React.memo<TimelineCardProps>(function TimelineCard(
     return (
       <div
         className={`timeline-item-wrapper timeline-note-wrapper ${isDragging ? 'is-dragging' : ''} ${isDragOver ? 'is-drag-over' : ''}`}
-        draggable={Boolean(totalStops && totalStops > 1)}
+        draggable={!isFixedAnchor && Boolean(totalStops && totalStops > 1)}
         onDragStart={onDragStart}
         onDragOver={onDragOver}
         onDragLeave={onDragLeave}
@@ -149,15 +152,19 @@ export const TimelineCard = React.memo<TimelineCardProps>(function TimelineCard(
           }}
         >
           <div className="timeline-card-content">
-            <div className="category-node node-note" title="NOTE">
+            <div className="category-node node-note" title="TRAVEL NOTE & ADVISORY">
               <FileText size={15} strokeWidth={1.75} />
             </div>
             <div className="card-body">
               <div className="card-meta-line">
-                <span className="card-order-pill">#{String(stop.orderIndex).padStart(2, '0')}</span>
                 {reorderControls}
-                <span className="card-time">{stop.startTime}</span>
-                <span className="card-category-sublabel note-label">Note &amp; Tips</span>
+                <span className="card-category-sublabel note-label">💡 Note &amp; Travel Tip</span>
+                {isFixedAnchor && (
+                  <span className="card-fixed-pill" title="Immovable Boundary Location">
+                    <Pin size={10} strokeWidth={2} />
+                    <span>Fixed Pin</span>
+                  </span>
+                )}
                 {onEdit && (
                   <button
                     type="button"
@@ -186,7 +193,7 @@ export const TimelineCard = React.memo<TimelineCardProps>(function TimelineCard(
   return (
     <div
       className={`timeline-item-wrapper ${isDragging ? 'is-dragging' : ''} ${isDragOver ? 'is-drag-over' : ''}`}
-      draggable={Boolean(totalStops && totalStops > 1)}
+      draggable={!isFixedAnchor && Boolean(totalStops && totalStops > 1)}
       onDragStart={onDragStart}
       onDragOver={onDragOver}
       onDragLeave={onDragLeave}
@@ -222,6 +229,13 @@ export const TimelineCard = React.memo<TimelineCardProps>(function TimelineCard(
               <span className="card-category-sublabel">
                 {stop.category}
               </span>
+
+              {isFixedAnchor && (
+                <span className="card-fixed-pill" title="Fixed Boundary Location (Non-draggable)">
+                  <Pin size={10} strokeWidth={2} />
+                  <span>Fixed Base</span>
+                </span>
+              )}
 
               {stop.durationMinutes > 0 && (
                 <span className="card-duration-pill">
