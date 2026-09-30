@@ -137,6 +137,26 @@ async function ensureTables(turso: Client): Promise<void> {
   }
 }
 
+// --- Health / Root Endpoints ---
+app.get('/', (c) => {
+  return c.json({
+    status: 'ok',
+    name: 'Roammate API',
+    version: '0.1.0',
+    endpoints: {
+      health: '/health',
+      authStatus: '/auth/status',
+      login: '/auth/login',
+      syncPull: '/sync/pull',
+      syncPush: '/sync/push',
+    },
+  });
+});
+
+app.get('/health', (c) => {
+  return c.json({ status: 'ok', timestamp: new Date().toISOString() });
+});
+
 // --- Auth Endpoints ---
 
 // 1. Password Login (POST /auth/login)
