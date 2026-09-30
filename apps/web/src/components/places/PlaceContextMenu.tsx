@@ -150,12 +150,14 @@ export const PlaceContextMenu: React.FC<PlaceContextMenuProps> = ({
       )}
 
       {/* Move To Submenu Trigger */}
-      <div
-        className="context-menu-item-with-submenu"
-        onMouseEnter={() => setShowMoveSubmenu(true)}
-        onMouseLeave={() => setShowMoveSubmenu(false)}
-      >
-        <div className="context-menu-item">
+      <div className="context-menu-item-with-submenu">
+        <div 
+          className="context-menu-item"
+          onClick={(e) => {
+            e.stopPropagation();
+            setShowMoveSubmenu(!showMoveSubmenu);
+          }}
+        >
           <Calendar size={14} className="context-item-icon" />
           <span style={{ flex: 1 }}>Move Place To...</span>
           <ChevronRight size={13} className="context-item-arrow" />

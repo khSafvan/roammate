@@ -17,12 +17,12 @@ import { PasscodeAuthModal } from './components/auth';
 import { AuthModal } from './components/AuthModal';
 import { DaySelector } from './components/DaySelector';
 import { DistancePill } from './components/DistancePill';
-import { DocumentsAndTicketsHub } from './components/documents/DocumentsAndTicketsHub';
-import { ExpenseTracker } from './components/ExpenseTracker';
+const DocumentsAndTicketsHub = lazy(() => import('./components/documents/DocumentsAndTicketsHub').then(m => ({ default: m.DocumentsAndTicketsHub })));
+const ExpenseTracker = lazy(() => import('./components/ExpenseTracker').then(m => ({ default: m.ExpenseTracker })));
 import { Header } from './components/Header';
 import { OptimizeRouteModal } from './components/OptimizeRouteModal';
-import { PlacesToVisitDrawer } from './components/PlacesToVisitDrawer';
-import { PrintTravelPacket } from './components/PrintTravelPacket';
+const PlacesToVisitDrawer = lazy(() => import('./components/PlacesToVisitDrawer').then(m => ({ default: m.PlacesToVisitDrawer })));
+const PrintTravelPacket = lazy(() => import('./components/PrintTravelPacket').then(m => ({ default: m.PrintTravelPacket })));
 import { ReadinessModal } from './components/ReadinessModal';
 import { ScratchpadModal } from './components/ScratchpadModal';
 import { ShareModal } from './components/ShareModal';
@@ -32,10 +32,10 @@ import { TimelineFlightCard } from './components/TimelineFlightCard';
 import { PlaceDetailView } from './components/places/PlaceDetailView';
 import { PlaceContextMenu } from './components/places/PlaceContextMenu';
 import { TripManagerModal } from './components/TripManagerModal';
-import { TripsListPage } from './components/trips/TripsListPage';
-import { TripSettingsPage } from './components/trips/TripSettingsPage';
+const TripsListPage = lazy(() => import('./components/trips/TripsListPage').then(m => ({ default: m.TripsListPage })));
+const TripSettingsPage = lazy(() => import('./components/trips/TripSettingsPage').then(m => ({ default: m.TripSettingsPage })));
 import { WeatherBanner } from './components/WeatherBanner';
-import { PackingView } from './components/outfits/PackingView';
+const PackingView = lazy(() => import('./components/outfits/PackingView').then(m => ({ default: m.PackingView })));
 import { apiClient } from './auth/syncService';
 import { BookingDocument, Expense, Flight, ItineraryStop, Look, PackingCategory, PackingItem, StopCategory, TransitLeg, Trip, TripDay } from './types/trip';
 import {
@@ -71,8 +71,14 @@ export function App() {
     }
     return 'trips_list';
   });
-  const [activeTab, setActiveTab] = useState<'timeline' | 'flights' | 'expenses' | 'outfits'>('timeline');
-  const [activeDayIdx, setActiveDayIdx] = useState<number>(0); // Day 1 by default
+  const [activeTab, setActiveTab] = useState<'timeline' | 'flights' | 'expenses' | 'outfits'>(() => {
+    const params = new URLSearchParams(window.location.search);
+    return (params.get('tab') as any) || 'timeline';
+  });
+  const [activeDayIdx, setActiveDayIdx] = useState<number>(() => {
+    const params = new URLSearchParams(window.location.search);
+    return parseInt(params.get('day') || '0', 10);
+  });
   const [isPlacesToVisitActive, setIsPlacesToVisitActive] = useState<boolean>(false);
   const [selectedStopId, setSelectedStopId] = useState<string | null>(null);
   const [activeDetailStopId, setActiveDetailStopId] = useState<string | null>(null);
@@ -150,6 +156,46 @@ export function App() {
       window.history.replaceState({}, '', `${window.location.pathname}${newSearch}`);
     }
   }, []);
+  // Sync URL with React State
+  useEffect(() => {
+    const handlePopState = () => {
+      const params = new URLSearchParams(window.location.search);
+      const view = params.get('view') as any;
+      if (view) setCurrentView(view);
+      else if (params.get('trip')) setCurrentView('trip_detail');
+      else setCurrentView('trips_list');
+      
+      const tab = params.get('tab') as any;
+      if (tab) setActiveTab(tab);
+      
+      const day = parseInt(params.get('day') || '0', 10);
+      if (!isNaN(day)) setActiveDayIdx(day);
+    };
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, []);
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const currView = params.get('view');
+    const currTab = params.get('tab');
+    const currDay = params.get('day');
+    
+    // Only push if different to avoid looping
+    if (currView !== currentView || currTab !== activeTab || currDay !== activeDayIdx.toString()) {
+      const url = new URL(window.location.href);
+      if (currentView === 'trip_detail') {
+        url.searchParams.delete('view'); // detail is default if trip is present
+      } else {
+        url.searchParams.set('view', currentView);
+      }
+      url.searchParams.set('tab', activeTab);
+      url.searchParams.set('day', activeDayIdx.toString());
+      if (trip?.id) url.searchParams.set('trip', trip.id);
+      
+      window.history.pushState({}, '', url.toString());
+    }
+  }, [currentView, activeTab, activeDayIdx, trip?.id]);
 
   // Safely clamp activeDayIdx whenever the trip or its days length changes
   useEffect(() => {
@@ -731,7 +777,7 @@ export function App() {
     [activeDayIdx, setTrip]
   );
 
-  const handleDragStart = (e: React.DragEvent, index: number) => {
+  const handleDragStart = useCallback((e: React.DragEvent, index: number) => {
     const currentDay = trip?.days?.[activeDayIdx];
     if (currentDay?.stops?.[index]?.isAnchor) {
       e.preventDefault();
@@ -740,26 +786,26 @@ export function App() {
     setDraggedStopIdx(index);
     e.dataTransfer.setData('text/plain', String(index));
     e.dataTransfer.effectAllowed = 'move';
-  };
+  }, [trip, activeDayIdx]);
 
-  const handleDragOver = (e: React.DragEvent, index: number) => {
+  const handleDragOver = useCallback((e: React.DragEvent, index: number) => {
     e.preventDefault();
     e.dataTransfer.dropEffect = 'move';
     if (dragOverStopIdx !== index) {
       setDragOverStopIdx(index);
     }
-  };
+  }, [dragOverStopIdx]);
 
-  const handleDragLeave = () => {
+  const handleDragLeave = useCallback(() => {
     setDragOverStopIdx(null);
-  };
+  }, []);
 
-  const handleDragEnd = () => {
+  const handleDragEnd = useCallback(() => {
     setDraggedStopIdx(null);
     setDragOverStopIdx(null);
-  };
+  }, []);
 
-  const handleDrop = (e: React.DragEvent, targetIndex: number) => {
+  const handleDrop = useCallback((e: React.DragEvent, targetIndex: number) => {
     e.preventDefault();
     const sourceIndex = parseInt(e.dataTransfer.getData('text/plain'), 10);
     const currentDay = trip?.days?.[activeDayIdx];
@@ -773,7 +819,24 @@ export function App() {
     }
     setDraggedStopIdx(null);
     setDragOverStopIdx(null);
-  };
+  }, [trip, activeDayIdx, handleReorderStops]);
+
+  const handleSelectStopMemoized = useCallback((stop: ItineraryStop) => {
+    setSelectedStopId(stop.id);
+    setActiveDetailStopId(stop.id);
+  }, []);
+
+  const handleEditStopMemoized = useCallback((stop: ItineraryStop) => {
+    setEditingStop(stop);
+  }, []);
+
+  const handleMoveUpMemoized = useCallback((index: number) => {
+    handleReorderStops(index, index - 1);
+  }, [handleReorderStops]);
+
+  const handleMoveDownMemoized = useCallback((index: number) => {
+    handleReorderStops(index, index + 1);
+  }, [handleReorderStops]);
 
   const handleMoveStopToDay = useCallback(
     (stopId: string, targetDayId: string) => {
@@ -1111,6 +1174,7 @@ export function App() {
 
   return (
     <div className={`app-shell ${isViewportLocked ? 'viewport-locked' : ''}`}>
+      <Suspense fallback={<div className="loading-spinner">Loading...</div>}>
       {/* 1. TRIPS LIST LANDING VIEW */}
       {currentView === 'trips_list' && (
         <TripsListPage
@@ -1449,22 +1513,19 @@ export function App() {
                           themeColor={activeDay.themeColor}
                           isSelected={stop.id === selectedStopId}
                           look={looksByEvent.get(stop.id)}
-                          onSelect={() => {
-                            setSelectedStopId(stop.id);
-                            setActiveDetailStopId(stop.id);
-                          }}
-                          onEdit={(s) => setEditingStop(s)}
+                          onSelect={handleSelectStopMemoized}
+                          onEdit={handleEditStopMemoized}
                           onDeleteStop={handleDeleteStop}
                           onContextMenu={handleContextMenu}
-                          onMoveUp={() => handleReorderStops(index, index - 1)}
-                          onMoveDown={() => handleReorderStops(index, index + 1)}
+                          onMoveUp={handleMoveUpMemoized}
+                          onMoveDown={handleMoveDownMemoized}
                           isDragging={draggedStopIdx === index}
                           isDragOver={dragOverStopIdx === index}
-                          onDragStart={(e) => handleDragStart(e, index)}
-                          onDragOver={(e) => handleDragOver(e, index)}
+                          onDragStart={handleDragStart}
+                          onDragOver={handleDragOver}
                           onDragLeave={handleDragLeave}
                           onDragEnd={handleDragEnd}
-                          onDrop={(e) => handleDrop(e, index)}
+                          onDrop={handleDrop}
                         />
 
                         {/* Distance & Transit duration connector */}
@@ -1747,6 +1808,7 @@ export function App() {
         />
       )}
 
+      </Suspense>
     </div>
   );
 }

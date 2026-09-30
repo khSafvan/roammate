@@ -584,17 +584,24 @@ export const InteractiveMap: React.FC<InteractiveMapProps> = ({
     }
   }, []);
 
-  // Update WebGL waypoints, polyline and bounds when day stops, color, transit modes, or selected stop changes
+  // Update WebGL route and bounds when day stops, color, or transit modes change
   useEffect(() => {
     const map = mapRef.current;
     if (!map) return;
-
     if (map.isStyleLoaded()) {
-      updateWaypointLayer(map);
       updateRouteLayer(map);
       fitToStops(false);
     }
-  }, [geographicStops, day.themeColor, transitModes, selectedStopId, updateWaypointLayer, updateRouteLayer, fitToStops]);
+  }, [geographicStops, day.themeColor, transitModes, updateRouteLayer, fitToStops]);
+
+  // Update WebGL waypoints (to reflect selection styles) when selection changes
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map) return;
+    if (map.isStyleLoaded()) {
+      updateWaypointLayer(map);
+    }
+  }, [geographicStops, day.themeColor, selectedStopId, updateWaypointLayer]);
 
   // Synchronize map camera when selectedStopId changes from timeline card click
   useEffect(() => {

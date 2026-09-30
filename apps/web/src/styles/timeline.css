@@ -50,9 +50,6 @@
   -webkit-overflow-scrolling: touch;
 }
 
-.day-selector-scroll::-webkit-scrollbar {
-  display: none;
-}
 
 /* Permanent, uniform container sizing for day pills */
 .day-tab-pill {
@@ -326,9 +323,6 @@
   scrollbar-width: none;
 }
 
-.hourly-forecast-row::-webkit-scrollbar {
-  display: none;
-}
 
 .hourly-chip {
   background-color: var(--bg-subtle);
@@ -809,50 +803,53 @@
   position: relative;
 }
 
+.distance-connector-track::before {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background-color: var(--border-light);
+  z-index: 0;
+}
+
 .distance-connector-bridge {
   position: relative;
-  z-index: 1;
+  z-index: 2;
   display: inline-flex;
   align-items: center;
   gap: 8px;
+  background-color: var(--bg-primary);
+  padding: 0 8px;
 }
 
 .distance-pill-btn {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  background-color: var(--bg-card);
-  border: 1px solid var(--border-light);
-  border-radius: var(--radius-pill);
-  padding: 4px 12px;
+  background-color: transparent;
+  border: none;
+  padding: 4px;
   cursor: pointer;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
-  transition: all 0.15s ease;
+  box-shadow: none;
   color: var(--text-secondary);
 }
 
-.distance-pill-btn:hover {
-  background-color: var(--bg-subtle);
-  border-color: var(--border-strong);
-  color: var(--text-primary);
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
-}
-
 .distance-pill-btn.outlier {
-  background-color: #FFFDF5;
-  border-color: rgba(245, 158, 11, 0.4);
+  color: #d97706; /* amber */
 }
 
 .mode-icon {
   display: flex;
   align-items: center;
-  color: var(--text-secondary);
+  color: inherit;
 }
 
 .distance-text {
   font-size: 11.5px;
   font-weight: 500;
-  color: var(--text-secondary);
+  color: inherit;
 }
 
 .outlier-alert {
@@ -1287,18 +1284,6 @@
   scrollbar-color: rgba(148, 163, 184, 0.4) transparent;
 }
 
-.place-detail-content::-webkit-scrollbar {
-  width: 6px;
-}
-
-.place-detail-content::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-.place-detail-content::-webkit-scrollbar-thumb {
-  background-color: rgba(148, 163, 184, 0.4);
-  border-radius: 9999px;
-}
 
 .place-detail-hero {
   border-radius: var(--radius-card, 12px);
