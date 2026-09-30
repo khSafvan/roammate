@@ -209,7 +209,7 @@
 }
 
 .slot-cutout-img:hover {
-  transform: scale(1.03);
+  opacity: 0.95;
 }
 
 /* Empty Placeholder Dropzone */

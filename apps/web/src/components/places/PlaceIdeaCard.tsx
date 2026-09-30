@@ -50,7 +50,6 @@ export const PlaceIdeaCard: React.FC<PlaceIdeaCardProps> = ({
         justifyContent: 'space-between',
         gap: '12px',
         boxShadow: 'var(--shadow-sm, 0 1px 3px rgba(0,0,0,0.04))',
-        transition: 'transform 0.15s ease, box-shadow 0.15s ease',
       }}
     >
       <div>

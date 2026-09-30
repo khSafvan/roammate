@@ -16,6 +16,13 @@ export interface PlaceSearchResult {
   isHotel?: boolean;
   badgeLabel?: string;
   emoji?: string;
+  rating?: number;
+  userRatingsTotal?: number;
+  priceLevel?: number;
+  website?: string;
+  phoneNumber?: string;
+  photos?: string[];
+  imageUrl?: string;
 }
 
 export function inferCategoryFromOsm(item: any): StopCategory {

@@ -24,12 +24,6 @@ export const AnchorLocationCard: React.FC<AnchorLocationCardProps> = ({
     ? '#059669' // Alpine Emerald for check-in
     : '#2563EB'; // Cobalt Blue for standard start/end base
 
-  const bgTint = isCheckOut
-    ? 'rgba(234, 88, 12, 0.05)'
-    : isCheckIn
-    ? 'rgba(5, 150, 105, 0.05)'
-    : 'rgba(37, 99, 235, 0.05)';
-
   const borderStroke = isCheckOut
     ? 'rgba(234, 88, 12, 0.20)'
     : isCheckIn
@@ -51,13 +45,14 @@ export const AnchorLocationCard: React.FC<AnchorLocationCardProps> = ({
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
-        backgroundColor: bgTint,
-        border: `1px solid ${borderStroke}`,
-        borderRadius: 'var(--radius-xl, 16px)',
-        padding: '14px 18px',
-        marginTop: isStart ? '12px' : '16px',
-        marginBottom: '16px',
+        backgroundColor: 'var(--bg-card, #ffffff)',
+        border: '1px solid var(--border-light, #e2e8f0)',
+        borderRadius: 'var(--radius-card, 16px)',
+        padding: '12px 16px',
+        marginTop: isStart ? '8px' : '12px',
+        marginBottom: '12px',
         gap: '12px',
+        boxShadow: 'var(--shadow-card)',
         userSelect: 'none',
       }}
     >

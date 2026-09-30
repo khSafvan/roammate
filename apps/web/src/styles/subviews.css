@@ -813,15 +813,14 @@
 }
 
 .trip-card-root:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.08);
-  border-color: rgba(37, 99, 235, 0.3);
+  box-shadow: 0 4px 16px rgba(15, 23, 42, 0.06);
+  border-color: var(--border-strong);
 }
 
 .trip-card-root.active-trip-card,
 .trip-card-root.is-active-trip {
-  border-color: var(--brand-blue);
-  box-shadow: 0 4px 16px rgba(37, 99, 235, 0.12);
+  border-color: var(--border-medium, #cbd5e1);
+  box-shadow: var(--shadow-sm);
 }
 
 .trip-card-banner {
@@ -877,7 +876,6 @@
 .card-icon-action-btn:hover {
   background-color: #FFFFFF;
   color: var(--text-primary);
-  transform: scale(1.05);
 }
 
 .card-icon-action-btn.danger-action:hover {
@@ -1510,12 +1508,10 @@
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  transition: transform 0.15s ease, box-shadow 0.15s ease;
 }
 
 .booking-voucher-card:hover {
-  transform: translateY(-1.5px);
-  box-shadow: 0 6px 18px rgba(15, 23, 42, 0.06);
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.05);
 }
 
 .voucher-left-stub {
@@ -1937,8 +1933,7 @@
 }
 
 .trip-card-cover-bar {
-  height: 6px;
-  width: 100%;
+  display: none;
 }
 
 .trip-card-header {
@@ -2383,7 +2378,7 @@
   justify-content: space-between;
   padding: var(--sp-3, 12px) var(--sp-4, 16px);
   border-bottom: 1px solid var(--border-light);
-  background-color: var(--bg-subtle);
+  background-color: transparent;
 }
 
 .voucher-type-row {
@@ -2464,30 +2459,14 @@
   margin-top: auto;
 }
 
-.boarding-pass-card {
-  border-top: 3px solid #0284C7;
-}
-
-.booking-voucher-card.color-hotel {
-  border-top: 3px solid #8B5CF6;
-}
 .booking-voucher-card.color-hotel .voucher-type-row {
   color: #7C3AED;
-}
-.booking-voucher-card.color-activity {
-  border-top: 3px solid #3B82F6;
 }
 .booking-voucher-card.color-activity .voucher-type-row {
   color: #2563EB;
 }
-.booking-voucher-card.color-transit {
-  border-top: 3px solid #10B981;
-}
 .booking-voucher-card.color-transit .voucher-type-row {
   color: #059669;
-}
-.booking-voucher-card.color-doc {
-  border-top: 3px solid #F59E0B;
 }
 .booking-voucher-card.color-doc .voucher-type-row {
   color: #D97706;

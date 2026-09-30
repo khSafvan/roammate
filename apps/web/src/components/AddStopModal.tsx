@@ -25,7 +25,6 @@ const CATEGORIES: { label: string; value: StopCategory; icon: string }[] = [
   { label: 'Hotel & Stay', value: 'lodging', icon: '🏨' },
   { label: 'Transit & Transfer', value: 'transit', icon: '🚆' },
   { label: 'Flight', value: 'flight', icon: '✈️' },
-  { label: 'Note & Tip', value: 'note', icon: '📝' },
 ];
 
 const getNextDateStr = (dateStr?: string) => {
@@ -69,6 +68,8 @@ export const AddStopModal: React.FC<AddStopModalProps> = ({
 
   useModalA11y(isOpen, onClose);
 
+  const [selectedPlaceMeta, setSelectedPlaceMeta] = useState<Partial<PlaceSearchResult> | null>(null);
+
   useEffect(() => {
     if (isOpen) {
       setCategory(defaultCategory);
@@ -78,6 +79,7 @@ export const AddStopModal: React.FC<AddStopModalProps> = ({
       setAddress('');
       setBookingRef('');
       setNotes('');
+      setSelectedPlaceMeta(null);
       setDurationMinutes(defaultCategory === 'note' ? 0 : 60);
       setIsPreviewingNotes(false);
       setLatitude(fallbackCoordinates.latitude.toString());
@@ -91,6 +93,7 @@ export const AddStopModal: React.FC<AddStopModalProps> = ({
 
   const handlePlaceSelect = (place: PlaceSearchResult) => {
     setTitle(place.title);
+    setSelectedPlaceMeta(place);
     if (place.subtitle) setSubtitle(place.subtitle);
     if (place.address) setAddress(place.address);
     if (place.coordinates) {
@@ -166,6 +169,13 @@ export const AddStopModal: React.FC<AddStopModalProps> = ({
       address: address.trim() || (category === 'note' ? 'Itinerary Note' : 'Address to be confirmed'),
       bookingRef: bookingRef.trim() || undefined,
       notes: notes.trim() || undefined,
+      rating: selectedPlaceMeta?.rating,
+      userRatingsTotal: selectedPlaceMeta?.userRatingsTotal,
+      priceLevel: selectedPlaceMeta?.priceLevel,
+      website: selectedPlaceMeta?.website,
+      phoneNumber: selectedPlaceMeta?.phoneNumber,
+      photos: selectedPlaceMeta?.photos,
+      imageUrl: selectedPlaceMeta?.imageUrl,
     });
 
     onClose();

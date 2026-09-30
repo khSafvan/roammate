@@ -6,13 +6,13 @@ import {
   Map as MapIcon,
   Plus,
   RotateCcw,
-  Shirt,
   Sparkles,
   Trash2,
   Zap,
 } from 'lucide-react';
 import { AddStopModal } from './components/AddStopModal';
-import { AnchorLocationCard } from './components/AnchorLocationCard';
+import { DayBaseAnchors } from './components/DayBaseAnchors';
+import { DayNotesCard } from './components/DayNotesCard';
 import { PasscodeAuthModal } from './components/auth';
 import { AuthModal } from './components/AuthModal';
 import { DaySelector } from './components/DaySelector';
@@ -29,11 +29,11 @@ import { ShareModal } from './components/ShareModal';
 import { StopDetailModal } from './components/StopDetailModal';
 import { TimelineCard } from './components/TimelineCard';
 import { TimelineFlightCard } from './components/TimelineFlightCard';
+import { PlaceDetailView } from './components/places/PlaceDetailView';
 import { TripManagerModal } from './components/TripManagerModal';
 import { TripsListPage } from './components/trips/TripsListPage';
 import { TripSettingsPage } from './components/trips/TripSettingsPage';
 import { WeatherBanner } from './components/WeatherBanner';
-import { OutfitModal } from './components/outfits/OutfitModal';
 import { PackingView } from './components/outfits/PackingView';
 import { apiClient } from './auth/syncService';
 import { BookingDocument, Expense, Flight, ItineraryStop, Look, PackingCategory, PackingItem, StopCategory, TransitLeg, Trip, TripDay } from './types/trip';
@@ -74,6 +74,7 @@ export function App() {
   const [activeDayIdx, setActiveDayIdx] = useState<number>(0); // Day 1 by default
   const [isPlacesToVisitActive, setIsPlacesToVisitActive] = useState<boolean>(false);
   const [selectedStopId, setSelectedStopId] = useState<string | null>(null);
+  const [activeDetailStopId, setActiveDetailStopId] = useState<string | null>(null);
   const [editingStop, setEditingStop] = useState<ItineraryStop | null>(null);
   const [isReadinessOpen, setIsReadinessOpen] = useState(false);
   const [isScratchpadOpen, setIsScratchpadOpen] = useState(false);
@@ -88,20 +89,6 @@ export function App() {
     setIsAddStopModalOpen(true);
   }, []);
 
-  const [isOutfitModalOpen, setIsOutfitModalOpen] = useState(false);
-  const [outfitModalDay, setOutfitModalDay] = useState(1);
-  const [outfitModalEventId, setOutfitModalEventId] = useState<string | undefined>(undefined);
-  const [outfitModalEditingLook, setOutfitModalEditingLook] = useState<Look | null>(null);
-
-  const handleOpenOutfitModal = useCallback(
-    (dayNum?: number, eventId?: string, look?: Look | null) => {
-      setOutfitModalDay(dayNum || activeDayIdx + 1);
-      setOutfitModalEventId(eventId);
-      setOutfitModalEditingLook(look || null);
-      setIsOutfitModalOpen(true);
-    },
-    [activeDayIdx]
-  );
   const [isDeleteDayConfirming, setIsDeleteDayConfirming] = useState(false);
   const [mobileView, setMobileView] = useState<'timeline' | 'map'>('timeline');
   const [holidaysByDate, setHolidaysByDate] = useState<Record<string, string>>({});
@@ -268,40 +255,79 @@ export function App() {
     [trip?.days, activeDayIdx, trip?.documents, trip?.startDate]
   );
 
+  // Only place locations to visit inside the day's itinerary stream
+  const placeStops = useMemo(
+    () => activeDay.stops.filter((s) => s.category !== 'note' && !s.isAnchor),
+    [activeDay.stops]
+  );
+
+  // Active detail place selected for LHS deep view
+  const activeDetailStop = useMemo(() => {
+    if (!activeDetailStopId || !trip) return null;
+    for (const day of trip.days) {
+      const found = day.stops.find((s) => s.id === activeDetailStopId);
+      if (found) return found;
+    }
+    return null;
+  }, [activeDetailStopId, trip]);
+
+  // Reset detail view back to day stream when switching days
+  useEffect(() => {
+    setActiveDetailStopId(null);
+  }, [activeDayIdx]);
+
+  // Consolidated day notes (from activeDay.notes or legacy note stops)
+  const activeDayNotes = useMemo(() => {
+    if (activeDay.notes) return activeDay.notes;
+    const legacyNoteStops = activeDay.stops.filter((s) => s.category === 'note');
+    if (legacyNoteStops.length > 0) {
+      return legacyNoteStops
+        .map((n) =>
+          n.title && n.title !== 'Note'
+            ? `**${n.title}**\n${n.notes || n.subtitle || ''}`
+            : n.notes || n.subtitle || ''
+        )
+        .join('\n\n');
+    }
+    return '';
+  }, [activeDay.notes, activeDay.stops]);
+
   // Distance & Travel Time from Starting Hotel Anchor to First Place Stop
   const startAnchorLeg: TransitLeg | null = useMemo(() => {
-    if (!dayAnchors.startAnchor?.coordinates) return null;
-    const firstPlaceStop = activeDay.stops.find(
-      (s) => s.category !== 'note' && s.coordinates?.latitude && s.coordinates?.longitude
+    const startCoord = dayAnchors.startAnchor?.coordinates || effectiveStay?.stay?.coordinates;
+    const startId = dayAnchors.startAnchor?.id || effectiveStay?.stay?.id;
+    if (!startCoord || !startId) return null;
+    const firstPlaceStop = placeStops.find(
+      (s) => s.coordinates?.latitude && s.coordinates?.longitude
     );
     if (!firstPlaceStop || !firstPlaceStop.coordinates) return null;
 
-    const fromLat = dayAnchors.startAnchor.coordinates.latitude;
-    const fromLng = dayAnchors.startAnchor.coordinates.longitude;
+    const fromLat = startCoord.latitude;
+    const fromLng = startCoord.longitude;
     const toLat = firstPlaceStop.coordinates.latitude;
     const toLng = firstPlaceStop.coordinates.longitude;
 
     const distanceKm = computeDistanceKm(fromLat, fromLng, toLat, toLng);
-    const key = `${dayAnchors.startAnchor.id}->${firstPlaceStop.id}`;
+    const key = `${startId}->${firstPlaceStop.id}`;
     const mode = transitModes[key] || 'drive';
     const durationMinutes = estimateDurationMins(distanceKm, mode);
 
     return {
-      fromStopId: dayAnchors.startAnchor.id,
+      fromStopId: startId,
       toStopId: firstPlaceStop.id,
       mode,
       distanceKm,
       durationMinutes,
       isOutlier: durationMinutes > 45 || distanceKm > 20,
     };
-  }, [dayAnchors.startAnchor, activeDay.stops, transitModes]);
+  }, [dayAnchors.startAnchor, effectiveStay, placeStops, transitModes]);
 
   // Distance & Travel Time from Last Place Stop to Ending Hotel Anchor
   const endAnchorLeg: TransitLeg | null = useMemo(() => {
     if (!dayAnchors.endAnchor?.coordinates) return null;
-    const lastPlaceStop = [...activeDay.stops]
+    const lastPlaceStop = [...placeStops]
       .reverse()
-      .find((s) => s.category !== 'note' && s.coordinates?.latitude && s.coordinates?.longitude);
+      .find((s) => s.coordinates?.latitude && s.coordinates?.longitude);
     if (!lastPlaceStop || !lastPlaceStop.coordinates) return null;
 
     const fromLat = lastPlaceStop.coordinates.latitude;
@@ -322,11 +348,11 @@ export function App() {
       durationMinutes,
       isOutlier: durationMinutes > 45 || distanceKm > 20,
     };
-  }, [dayAnchors.endAnchor, activeDay.stops, transitModes]);
+  }, [dayAnchors.endAnchor, placeStops, transitModes]);
 
   // Distance & Travel Time between Start and End Hotel Anchors (empty day transition)
   const directTransitionLeg: TransitLeg | null = useMemo(() => {
-    if (activeDay.stops.length > 0) return null;
+    if (placeStops.length > 0) return null;
     if (!dayAnchors.startAnchor?.coordinates || !dayAnchors.endAnchor?.coordinates) return null;
 
     const fromLat = dayAnchors.startAnchor.coordinates.latitude;
@@ -347,7 +373,7 @@ export function App() {
       durationMinutes,
       isOutlier: durationMinutes > 45 || distanceKm > 20,
     };
-  }, [dayAnchors.startAnchor, dayAnchors.endAnchor, activeDay.stops.length, transitModes]);
+  }, [dayAnchors.startAnchor, dayAnchors.endAnchor, placeStops.length, transitModes]);
 
   // Filter flights scheduled on the active itinerary day (from both trip.flights and documents)
   const dayFlights = useMemo(() => {
@@ -601,6 +627,22 @@ export function App() {
       });
       setEditingStop((prev) => (prev?.id === stopId ? null : prev));
       setSelectedStopId((prev) => (prev === stopId ? null : prev));
+    },
+    [activeDayIdx, setTrip]
+  );
+
+  const handleSaveDayNote = useCallback(
+    (notes: string) => {
+      setTrip((prev) => {
+        const updatedDays = [...prev.days];
+        const currentDay = updatedDays[activeDayIdx];
+        if (!currentDay) return prev;
+        updatedDays[activeDayIdx] = {
+          ...currentDay,
+          notes,
+        };
+        return { ...prev, days: updatedDays };
+      });
     },
     [activeDayIdx, setTrip]
   );
@@ -1206,10 +1248,42 @@ export function App() {
                 <section
                   className={`timeline-pane ${mobileView === 'map' ? 'mobile-hidden' : ''}`}
                 >
-                  {/* Day Section Header */}
-                  <div className="day-summary-banner">
-                    <div>
-                      <h2 className="day-heading">{activeDay.title}</h2>
+                  {activeDetailStop ? (
+                    <PlaceDetailView
+                      stop={activeDetailStop}
+                      dayNumber={activeDay.dayNumber}
+                      themeColor={activeDay.themeColor}
+                      days={trip.days}
+                      currentDayId={activeDay.id}
+                      weather={activeDay.weather}
+                      look={looksByEvent.get(activeDetailStop.id)}
+                      tripId={trip.id}
+                      person1Name={trip.travelers?.[0] || 'John (Husband)'}
+                      person2Name={trip.travelers?.[1] || 'Jane (Wife)'}
+                      apiClient={apiClient}
+                      onBack={() => setActiveDetailStopId(null)}
+                      onUpdateStop={handleUpdateStop}
+                      onDeleteStop={(stopId) => {
+                        handleDeleteStop(stopId);
+                        setActiveDetailStopId(null);
+                      }}
+                      onMoveStopToDay={(stopId, targetDayId) => {
+                        handleMoveStopToDay(stopId, targetDayId);
+                        setActiveDetailStopId(null);
+                      }}
+                      onMoveStopToIdeas={(stop) => {
+                        handleMoveStopToIdeas(stop);
+                        setActiveDetailStopId(null);
+                      }}
+                      onSaveLook={handleSaveLook}
+                      onDeleteLook={handleDeleteLook}
+                    />
+                  ) : (
+                    <>
+                      {/* Day Section Header */}
+                      <div className="day-summary-banner">
+                        <div>
+                          <h2 className="day-heading">{activeDay.title}</h2>
                       <p className="day-subheading">
                         {activeDay.stops.length} destinations scheduled · {activeDay.dateStr}
                         {trip.startTime && trip.endTime ? ` (${trip.startTime} – ${trip.endTime})` : ''}
@@ -1321,29 +1395,32 @@ export function App() {
                     themeColor={activeDay.themeColor}
                   />
 
-                  {/* Wanderlog Daily Starting Point Anchor */}
-                  {dayAnchors.startAnchor ? (
-                    <AnchorLocationCard
-                      anchor={dayAnchors.startAnchor}
-                      type="start"
-                      onNavigateToStay={() => setActiveTab('flights')}
-                    />
-                  ) : effectiveStay ? (
-                    <AnchorLocationCard
-                      anchor={{
-                        id: effectiveStay.stay.id,
-                        title: effectiveStay.stay.title,
-                        address: effectiveStay.stay.address,
-                        time: undefined,
-                        action: effectiveStay.isInherited ? 'depart' : 'check_in',
-                        label: effectiveStay.stay.title,
-                      }}
-                      type="start"
-                      onNavigateToStay={() => handleOpenAddStop('lodging')}
-                    />
-                  ) : null}
+                  {/* Fixed Daily Base Anchors (Non-draggable Starting & Ending Points) */}
+                  <DayBaseAnchors
+                    startAnchor={dayAnchors.startAnchor}
+                    endAnchor={dayAnchors.endAnchor}
+                    effectiveStay={effectiveStay}
+                    onNavigateToStay={() => setActiveTab('flights')}
+                    onOpenAddLodging={() => handleOpenAddStop('lodging')}
+                  />
 
-                  {/* Itinerary Stream with Distance Connectors, Inbound Flights */}
+                  {/* Scheduled Flights for Today (Placed at top of day before itinerary) */}
+                  {dayFlights.length > 0 && (
+                    <TimelineFlightCard
+                      flights={dayFlights}
+                      themeColor={activeDay.themeColor}
+                      onViewFlightsTab={() => setActiveTab('flights')}
+                    />
+                  )}
+
+                  {/* Day Notes & Tips */}
+                  <DayNotesCard
+                    dayNumber={activeDay.dayNumber}
+                    notes={activeDayNotes}
+                    onSaveNotes={handleSaveDayNote}
+                  />
+
+                  {/* Itinerary Stream with Distance Connectors (Places Only) */}
                   <div className="itinerary-stream">
                     {/* Distance from Starting Hotel Anchor to First Location */}
                     {startAnchorLeg && (
@@ -1361,40 +1438,21 @@ export function App() {
                       />
                     )}
 
-                    {/* Airplane / Flight Ticket Integration in Itinerary */}
-                    {dayFlights.length > 0 && (
-                      <TimelineFlightCard
-                        flights={dayFlights}
-                        themeColor={activeDay.themeColor}
-                        onViewFlightsTab={() => setActiveTab('flights')}
-                      />
-                    )}
-
-                    {activeDay.stops.map((stop, index) => (
+                    {placeStops.map((stop, index) => (
                       <React.Fragment key={stop.id}>
                         <TimelineCard
                           stop={stop}
                           index={index}
-                          totalStops={activeDay.stops.length}
+                          totalStops={placeStops.length}
                           themeColor={activeDay.themeColor}
                           isSelected={stop.id === selectedStopId}
                           look={looksByEvent.get(stop.id)}
-                          tripId={trip?.id || ''}
-                          person1Name={trip?.travelers?.[0] || 'Person 1'}
-                          person2Name={trip?.travelers?.[1] || 'Person 2'}
-                          weather={activeDay.weather}
-                          apiClient={apiClient}
-                          onSaveLook={handleSaveLook}
-                          onDeleteLook={handleDeleteLook}
-                          onOpenOutfitModal={() =>
-                            handleOpenOutfitModal(
-                              activeDay.dayNumber,
-                              stop.id,
-                              looksByEvent.get(stop.id)
-                            )
-                          }
-                          onSelect={() => setSelectedStopId(stop.id)}
+                          onSelect={() => {
+                            setSelectedStopId(stop.id);
+                            setActiveDetailStopId(stop.id);
+                          }}
                           onEdit={(s) => setEditingStop(s)}
+                          onDeleteStop={handleDeleteStop}
                           onMoveUp={() => handleReorderStops(index, index - 1)}
                           onMoveDown={() => handleReorderStops(index, index + 1)}
                           isDragging={draggedStopIdx === index}
@@ -1407,10 +1465,8 @@ export function App() {
                         />
 
                         {/* Distance & Transit duration connector */}
-                        {index < activeDay.stops.length - 1 &&
-                          index < transitLegs.length &&
-                          stop.category !== 'note' &&
-                          activeDay.stops[index + 1]?.category !== 'note' && (
+                        {index < placeStops.length - 1 &&
+                          index < transitLegs.length && (
                             <DistancePill
                               leg={transitLegs[index]}
                               onToggleMode={handleToggleMode}
@@ -1421,7 +1477,7 @@ export function App() {
                     ))}
 
                     {/* Empty Day State */}
-                    {activeDay.stops.length === 0 && (
+                    {placeStops.length === 0 && (
                       <div
                         className="empty-day-card"
                         style={{
@@ -1438,30 +1494,16 @@ export function App() {
                           Day {activeDay.dayNumber} is wide open
                         </h3>
                         <p style={{ fontSize: '13px', color: 'var(--text-secondary)', maxWidth: '380px', margin: '0 auto 20px', lineHeight: '1.5' }}>
-                          Start building your day by adding places with Google Places/OSM search, hotels, flights, or quick notes and tips.
+                          Start building your day by adding places, sights, or restaurants with Google Places / OSM.
                         </p>
-                        <div className="flex flex-center gap-2" style={{ flexWrap: 'wrap' }}>
+                        <div className="flex flex-center">
                           <button
                             className="timeline-action-primary"
+                            style={{ width: 'auto', minWidth: '160px' }}
                             onClick={() => handleOpenAddStop('sight')}
                           >
                             <Plus size={15} />
                             <span>Add Place</span>
-                          </button>
-                          <button
-                            className="timeline-action-pill"
-                            onClick={() => handleOpenAddStop('note')}
-                          >
-                            <FileText size={14} className="text-amber" />
-                            <span>+ Note</span>
-                          </button>
-                          <button
-                            className="timeline-action-pill"
-                            onClick={() => handleOpenOutfitModal(activeDay.dayNumber)}
-                            title="Attach coordinated couple outfit look for this day"
-                          >
-                            <Shirt size={14} className="text-primary" />
-                            <span>+ Outfit</span>
                           </button>
                         </div>
                       </div>
@@ -1475,17 +1517,8 @@ export function App() {
                       />
                     )}
 
-                    {/* Wanderlog Daily Ending Point Anchor */}
-                    {dayAnchors.endAnchor && (
-                      <AnchorLocationCard
-                        anchor={dayAnchors.endAnchor}
-                        type="end"
-                        onNavigateToStay={() => setActiveTab('flights')}
-                      />
-                    )}
-
-                    {/* + Add Place / Note Actions Bar */}
-                    {activeDay.stops.length > 0 && (
+                    {/* + Add Place Action Bar */}
+                    {placeStops.length > 0 && (
                       <div className="timeline-actions-bar">
                         <button
                           className="timeline-action-primary"
@@ -1495,37 +1528,25 @@ export function App() {
                           <Plus size={15} />
                           <span>Add Place</span>
                         </button>
-
-                        <button
-                          className="timeline-action-pill"
-                          onClick={() => handleOpenAddStop('note')}
-                          title="Add traveler notes, tips, bullet lists, or packing reminders"
-                        >
-                          <FileText size={14} className="text-amber" />
-                          <span>+ Note</span>
-                        </button>
-
-                        <button
-                          className="timeline-action-pill"
-                          onClick={() => handleOpenOutfitModal(activeDay.dayNumber)}
-                          title="Attach coordinated couple outfit look for this day"
-                        >
-                          <Shirt size={14} className="text-primary" />
-                          <span>+ Outfit</span>
-                        </button>
                       </div>
                     )}
                   </div>
-                </section>
+                </>
+              )}
+            </section>
 
-                {/* RIGHT PANE: Interactive Route Map */}
-                <section
-                  className={`map-pane ${mobileView === 'timeline' ? 'mobile-hidden' : ''}`}
-                >
-                  <Suspense fallback={<div className="map-loading-state" aria-label="Loading map" />}>
-                    <InteractiveMap
-                      day={activeDay}
-                      onSelectStop={(s) => setSelectedStopId(s.id)}
+            {/* RIGHT PANE: Interactive Route Map */}
+            <section
+              className={`map-pane ${mobileView === 'timeline' ? 'mobile-hidden' : ''}`}
+            >
+              <Suspense fallback={<div className="map-loading-state" aria-label="Loading map" />}>
+                <InteractiveMap
+                  day={activeDay}
+                  onSelectStop={(s) => {
+                    setSelectedStopId(s.id);
+                    setActiveDetailStopId(s.id);
+                    setMobileView('timeline');
+                  }}
                       onEditStop={(s) => setEditingStop(s)}
                       onOptimizeDay={handleOptimizeDay}
                       isOptimized={isDayOptimized}
@@ -1691,19 +1712,6 @@ export function App() {
         onClose={() => setIsShareModalOpen(false)}
       />
 
-      {isOutfitModalOpen && (
-        <OutfitModal
-          isOpen={isOutfitModalOpen}
-          onClose={() => setIsOutfitModalOpen(false)}
-          trip={trip}
-          initialLook={outfitModalEditingLook}
-          initialDayNumber={outfitModalDay}
-          initialEventId={outfitModalEventId}
-          apiClient={apiClient}
-          onSaveLook={handleSaveLook}
-          onDeleteLook={handleDeleteLook}
-        />
-      )}
     </div>
   );
 }
