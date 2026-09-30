@@ -2238,8 +2238,8 @@
   display: inline-flex;
   align-items: center;
   gap: var(--sp-2, 8px);
-  padding: var(--sp-2, 8px) var(--sp-3, 12px);
-  min-height: 38px;
+  padding: 6px 14px;
+  min-height: 36px;
   background-color: var(--bg-card);
   border: 1px solid var(--border-light);
   border-radius: var(--radius-pill);
@@ -2251,15 +2251,21 @@
 }
 
 .category-filter-btn:hover {
+  background-color: var(--bg-subtle);
   border-color: var(--border-strong);
   color: var(--text-primary);
 }
 
 .category-filter-btn.active {
-  background-color: var(--brand-blue-subtle, rgba(37, 99, 235, 0.08));
+  background-color: var(--brand-blue);
   border-color: var(--brand-blue);
-  color: var(--brand-blue);
+  color: #FFFFFF;
   font-weight: var(--fw-semibold, 600);
+}
+
+.category-filter-btn.active .count-tag {
+  background-color: rgba(255, 255, 255, 0.25);
+  color: #FFFFFF;
 }
 
 .search-and-travelers-bar {
@@ -2269,11 +2275,10 @@
   justify-content: space-between;
   gap: var(--sp-3, 12px);
   margin-bottom: var(--sp-5, 20px);
-  padding: var(--sp-3, 12px) var(--sp-4, 16px);
-  background-color: var(--bg-card);
-  border: 1px solid var(--border-light);
-  border-radius: var(--radius-lg, 16px);
-  box-shadow: var(--shadow-sm);
+  padding: 0;
+  background: transparent;
+  border: none;
+  box-shadow: none;
 }
 
 .search-input-box {
@@ -2282,11 +2287,17 @@
   gap: var(--sp-2, 8px);
   flex: 1;
   min-width: 240px;
-  background-color: var(--bg-subtle);
+  background-color: var(--bg-card);
   border: 1px solid var(--border-light);
-  border-radius: var(--radius-sm, 8px);
+  border-radius: var(--radius-md, 12px);
   padding: 0 var(--sp-3, 12px);
   min-height: var(--tap-min, 44px);
+  transition: border-color var(--t-fast) ease, box-shadow var(--t-fast) ease;
+}
+
+.search-input-box:focus-within {
+  border-color: var(--brand-blue);
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.08);
 }
 
 .search-field {
@@ -2445,41 +2456,48 @@
   color: var(--brand-emerald);
 }
 
-.voucher-notes-strip {
-  padding: var(--sp-2, 8px) var(--sp-4, 16px);
+.voucher-notes-strip,
+.pass-notes-strip {
+  padding: 8px 14px;
   background-color: var(--bg-subtle);
-  border-top: 1px dashed var(--border-light);
+  border-top: 1px solid var(--border-subtle);
+  border-radius: 0 0 calc(var(--radius-lg, 16px) - 1px) calc(var(--radius-lg, 16px) - 1px);
   font-size: var(--font-xs, 11.5px);
   color: var(--text-secondary);
-  font-style: italic;
+  line-height: 1.4;
+  margin-top: auto;
+}
+
+.boarding-pass-card {
+  border-top: 3px solid #0284C7;
 }
 
 .booking-voucher-card.color-hotel {
   border-top: 3px solid #8B5CF6;
 }
 .booking-voucher-card.color-hotel .voucher-type-row {
-  color: #8B5CF6;
+  color: #7C3AED;
 }
 .booking-voucher-card.color-activity {
   border-top: 3px solid #3B82F6;
 }
 .booking-voucher-card.color-activity .voucher-type-row {
-  color: #3B82F6;
+  color: #2563EB;
 }
 .booking-voucher-card.color-transit {
   border-top: 3px solid #10B981;
 }
 .booking-voucher-card.color-transit .voucher-type-row {
-  color: #10B981;
+  color: #059669;
 }
 .booking-voucher-card.color-doc {
   border-top: 3px solid #F59E0B;
 }
 .booking-voucher-card.color-doc .voucher-type-row {
-  color: #F59E0B;
+  color: #D97706;
 }
 
-/* Keep flight passes and vouchers aligned as one reservation-card family. */
+/* Keep flight passes and vouchers aligned as one flat reservation-card family. */
 .bookings-grid {
   grid-template-columns: repeat(auto-fill, minmax(min(100%, 340px), 1fr));
   gap: var(--sp-4, 16px);
@@ -2489,25 +2507,29 @@
 .bookings-grid > .boarding-pass-card,
 .bookings-grid > .booking-voucher-card {
   box-sizing: border-box;
-  height: 320px;
+  min-height: 290px;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
   min-width: 0;
   border: 1px solid var(--border-light);
-  border-radius: var(--radius-card);
+  border-radius: var(--radius-lg, 16px);
   background-color: var(--bg-card);
-  box-shadow: var(--shadow-card);
+  box-shadow: none;
+  overflow: hidden;
+  transition: border-color var(--t-fast) ease, box-shadow var(--t-fast) ease;
+}
+
+.bookings-grid > .boarding-pass-card:hover,
+.bookings-grid > .booking-voucher-card:hover {
+  border-color: var(--border-strong);
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.05);
 }
 
 .bookings-grid > .boarding-pass-card {
   padding: var(--sp-4, 16px);
   gap: var(--sp-3, 12px);
-}
-
-.bookings-grid > .booking-voucher-card {
-  border-top-width: 1px;
-}
-
-.bookings-grid > .booking-voucher-card[class*='color-'] {
-  border-top-color: var(--border-light);
 }
 
 .pass-header,
@@ -2544,13 +2566,13 @@
 
 .voucher-title {
   display: -webkit-box;
-  height: 40px;
   margin: 0;
-  line-height: 20px;
+  line-height: 1.35;
   white-space: normal;
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 2;
   line-clamp: 2;
+  overflow: hidden;
 }
 
 .voucher-subtitle {
@@ -2565,11 +2587,15 @@
 }
 
 .voucher-footer {
-  min-height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 16px;
+  border-top: 1px solid var(--border-subtle);
+  background-color: var(--bg-card);
+  min-height: 38px;
   margin-top: auto;
   gap: var(--sp-2, 8px);
-  overflow: hidden;
-  white-space: nowrap;
 }
 
 .voucher-code-pill,
@@ -2583,20 +2609,6 @@
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
-}
-
-.voucher-notes-strip,
-.pass-notes-strip {
-  display: -webkit-box;
-  height: 34px;
-  max-height: 34px;
-  margin: 0;
-  overflow: hidden;
-  line-height: 16px;
-  text-overflow: ellipsis;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 2;
-  line-clamp: 2;
 }
 
 .pass-route-row {
