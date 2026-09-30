@@ -5,6 +5,7 @@
  */
 import { Coordinates, ItineraryStop, TransitMode } from '@mojolog/shared';
 import { computeDistanceKm, estimateDurationMins } from './routeEngine';
+import { idbGet, idbSet } from './idbCache';
 
 export type RouteMode = TransitMode | 'flight' | 'boat';
 
@@ -190,10 +191,17 @@ export async function fetchLegRouteGeometry(
   if (routeCache.has(cacheKey)) {
     return { coordinates: routeCache.get(cacheKey)! };
   }
+  
+  // Try IDB cache
+  const idbCached = await idbGet<[number, number][]>(cacheKey);
+  if (idbCached) {
+    routeCache.set(cacheKey, idbCached); // Warm memory cache
+    return { coordinates: idbCached };
+  }
 
   // 3. Real Road / Walking / Transit corridor via OSRM
   const profile = mode === 'walk' ? 'walking' : 'driving';
-  const osrmBase = (import.meta.env?.VITE_OSRM_ROUTER_URL as string) || 'https://router.project-osrm.org';
+  const osrmBase = 'https://router.project-osrm.org';
   const url = `${osrmBase}/route/v1/${profile}/${from.coordinates.longitude},${from.coordinates.latitude};${to.coordinates.longitude},${to.coordinates.latitude}?overview=full&geometries=geojson`;
 
   try {
@@ -208,6 +216,7 @@ export async function fetchLegRouteGeometry(
       if (data?.routes?.[0]?.geometry?.coordinates && data.routes[0].geometry.coordinates.length >= 2) {
         const coords = data.routes[0].geometry.coordinates as [number, number][];
         routeCache.set(cacheKey, coords);
+        idbSet(cacheKey, coords);
         const distKm = Number((data.routes[0].distance / 1000).toFixed(1));
         const durMins = Math.round(data.routes[0].duration / 60);
         return { coordinates: coords, distanceKm: distKm, durationMinutes: durMins };
@@ -219,6 +228,7 @@ export async function fetchLegRouteGeometry(
 
   const fallback = generateCorridorFallback(from.coordinates, to.coordinates);
   routeCache.set(cacheKey, fallback);
+  idbSet(cacheKey, fallback);
   return { coordinates: fallback };
 }
 
