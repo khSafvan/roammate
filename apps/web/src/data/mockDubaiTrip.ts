@@ -3,7 +3,7 @@ import { Trip } from '../types/trip';
 /**
  * Mocked Dubai & Abu Dhabi Itinerary
  * Derived from testtrips/Dubai Itinerary - Google Docs.pdf
- * All personal data stripped, placeholder names used ("Alex Chen", "Jordan Taylor").
+ * All personal data stripped, placeholder names used ("Safvan", "Riyana").
  */
 export const mockDubaiTripData: Trip = {
   id: 'dubai-2027',
@@ -32,7 +32,7 @@ export const mockDubaiTripData: Trip = {
       endDate: '2027-01-13',
       endTime: '12:00',
       location: 'Sheikh Mohammed bin Rashid Blvd, Downtown Dubai',
-      passengerOrGuestName: 'Alex Chen, Jordan Taylor',
+      passengerOrGuestName: 'Safvan & Riyana',
       cabinOrRoomType: 'Fountain View Suite',
       seatOrRoomNumber: 'Suite 408',
       notes: 'Arrive approx 5:00 PM on Jan 7. Direct views of Burj Khalifa and Dubai Fountain.',
@@ -46,7 +46,7 @@ export const mockDubaiTripData: Trip = {
       date: '2027-01-08',
       time: '14:30',
       location: 'Lahbab Red Dunes Desert, Dubai',
-      passengerOrGuestName: 'Alex Chen, Jordan Taylor',
+      passengerOrGuestName: 'Safvan & Riyana',
       notes: '4WD pick-up from hotel lobby. Includes dune bashing, camel ride, stargazing & BBQ.',
     },
     {
@@ -58,7 +58,7 @@ export const mockDubaiTripData: Trip = {
       date: '2027-01-09',
       time: '10:30',
       location: 'Saadiyat Island Cultural District, Abu Dhabi',
-      passengerOrGuestName: 'Alex Chen, Jordan Taylor',
+      passengerOrGuestName: 'Safvan & Riyana',
       notes: 'Private chauffeur transfer to Abu Dhabi. Dress code required for Grand Mosque.',
     },
     {
@@ -70,7 +70,7 @@ export const mockDubaiTripData: Trip = {
       date: '2027-01-10',
       time: '09:30',
       location: '1 Sheikh Mohammed bin Rashid Blvd, Downtown Dubai',
-      passengerOrGuestName: 'Alex Chen, Jordan Taylor',
+      passengerOrGuestName: 'Safvan & Riyana',
       qrCodeData: 'BURJ-KHALIFA-TOP-2027',
       notes: 'Entry via lower ground floor of Dubai Mall before Jummah prayer.',
     },
@@ -83,7 +83,7 @@ export const mockDubaiTripData: Trip = {
       date: '2027-01-11',
       time: '10:00',
       location: 'Sheikh Zayed Rd, Trade Centre, Dubai',
-      passengerOrGuestName: 'Alex Chen, Jordan Taylor',
+      passengerOrGuestName: 'Safvan & Riyana',
       notes: 'Booked via official website as noted in itinerary plan. Show barcode on phone.',
     },
     {
@@ -95,7 +95,7 @@ export const mockDubaiTripData: Trip = {
       date: '2027-01-12',
       time: '15:00',
       location: 'The Palm Tower 50th Floor, Palm Jumeirah',
-      passengerOrGuestName: 'Alex Chen, Jordan Taylor',
+      passengerOrGuestName: 'Safvan & Riyana',
       notes: '3:00 PM session booked. 200m above sea level with 360-degree panoramic skyline views.',
     },
     {
@@ -107,7 +107,7 @@ export const mockDubaiTripData: Trip = {
       date: '2027-01-13',
       time: '10:00',
       location: 'Atlantis The Palm, Crescent Rd, Dubai',
-      passengerOrGuestName: 'Alex Chen, Jordan Taylor',
+      passengerOrGuestName: 'Safvan & Riyana',
       notes: 'World’s largest waterpark pass. Lockers and towel rentals available inside.',
     },
     {
@@ -118,7 +118,7 @@ export const mockDubaiTripData: Trip = {
       confirmationCode: 'UAE-TOURIST-2027-OK',
       date: '2027-01-07',
       location: 'Dubai International Airport Terminal 3',
-      passengerOrGuestName: 'Alex Chen & Jordan Taylor',
+      passengerOrGuestName: 'Safvan & Riyana',
       qrCodeData: 'UAE-SMART-GDRFA-APPROVED',
       notes: 'Smart Gate automated passport control active for pre-registered tourist passports.',
     },
@@ -663,7 +663,7 @@ export const mockDubaiTripData: Trip = {
       flightNumber: 'EK202',
       carrier: 'Emirates',
       date: '2027-01-07',
-      passengerName: 'Alex Chen',
+      passengerName: 'Safvan',
       originCountry: 'United States',
       originCity: 'New York',
       cabinClass: 'Business',
@@ -692,7 +692,7 @@ export const mockDubaiTripData: Trip = {
       flightNumber: 'EK002',
       carrier: 'Emirates',
       date: '2027-01-07',
-      passengerName: 'Jordan Taylor',
+      passengerName: 'Riyana',
       originCountry: 'United Kingdom',
       originCity: 'London',
       cabinClass: 'Economy',
@@ -722,7 +722,7 @@ export const mockDubaiTripData: Trip = {
       category: 'Activities',
       amount: 680.0,
       currency: 'AED',
-      paidBy: 'Alex Chen',
+      paidBy: 'Safvan',
       notes: 'Lahbab Red Dunes Desert Safari for two',
     },
     {
@@ -731,7 +731,7 @@ export const mockDubaiTripData: Trip = {
       category: 'Activities',
       amount: 300.0,
       currency: 'AED',
-      paidBy: 'Jordan Taylor',
+      paidBy: 'Riyana',
       notes: 'Museum of the Future entry passes',
     },
     {
@@ -740,7 +740,7 @@ export const mockDubaiTripData: Trip = {
       category: 'Activities',
       amount: 550.0,
       currency: 'AED',
-      paidBy: 'Alex Chen',
+      paidBy: 'Safvan',
       notes: 'AURA SKYPOOL afternoon session',
     },
     {
@@ -749,8 +749,8 @@ export const mockDubaiTripData: Trip = {
       category: 'Activities',
       amount: 790.0,
       currency: 'AED',
-      paidBy: 'Jordan Taylor',
-      splitWith: ['Alex Chen', 'Jordan Taylor'],
+      paidBy: 'Riyana',
+      splitWith: ['Safvan', 'Riyana'],
       notes: 'Atlantis Aquaventure & Lost Chambers passes',
     },
   ],

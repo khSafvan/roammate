@@ -317,6 +317,11 @@ export function App() {
     () => activeDay.stops.filter((s) => s.category !== 'note' && !s.isAnchor),
     [activeDay.stops]
   );
+  
+  const topbarAnchors = useMemo(
+    () => activeDay.stops.filter(s => s.isAnchor),
+    [activeDay.stops]
+  );
 
   // Active detail place selected for LHS deep view
   const activeDetailStop = useMemo(() => {
@@ -810,14 +815,11 @@ export function App() {
     const sourceIndex = parseInt(e.dataTransfer.getData('text/plain'), 10);
     const currentDay = trip?.days?.[activeDayIdx];
     
-    const isSourceAnchor = currentDay?.stops?.[sourceIndex]?.isAnchor || sourceIndex === 0 || sourceIndex === (currentDay?.stops?.length || 0) - 1;
-    const isTargetAnchor = currentDay?.stops?.[targetIndex]?.isAnchor || targetIndex === 0 || targetIndex === (currentDay?.stops?.length || 0) - 1;
-
     if (
       !isNaN(sourceIndex) &&
       sourceIndex !== targetIndex &&
-      !isSourceAnchor &&
-      !isTargetAnchor
+      !currentDay?.stops?.[sourceIndex]?.isAnchor &&
+      !currentDay?.stops?.[targetIndex]?.isAnchor
     ) {
       handleReorderStops(sourceIndex, targetIndex);
     }
@@ -1508,7 +1510,26 @@ export function App() {
                       />
                     )}
 
-                    {placeStops.map((stop, index) => (
+                    {/* Topbar Itinerary Anchors (Explicit Start/End Points) */}
+                  {topbarAnchors.map((anchorStop) => (
+                    <TimelineCard
+                      key={anchorStop.id}
+                      stop={anchorStop}
+                      index={0}
+                      totalStops={1}
+                      themeColor={activeDay.themeColor}
+                      isSelected={anchorStop.id === selectedStopId}
+                      look={looksByEvent.get(anchorStop.id)}
+                      onSelect={handleSelectStopMemoized}
+                      onEdit={handleEditStopMemoized}
+                      onDeleteStop={handleDeleteStop}
+                      onContextMenu={handleContextMenu}
+                      isDragging={false}
+                      isDragOver={false}
+                    />
+                  ))}
+                  
+                  {placeStops.map((stop, index) => (
                       <React.Fragment key={stop.id}>
                         <TimelineCard
                           stop={stop}
