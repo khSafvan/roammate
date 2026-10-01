@@ -1,1 +1,1 @@
-export * from '@mojolog/shared';
+export * from '@roammate/shared';

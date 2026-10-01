@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { Look, LookOccasion } from '@mojolog/shared';
+import { Look, LookOccasion } from '@roammate/shared';
 
 describe('Outfit & Digital Wardrobe Features', () => {
   it('supports unassigned looks in digital wardrobe closet', () => {

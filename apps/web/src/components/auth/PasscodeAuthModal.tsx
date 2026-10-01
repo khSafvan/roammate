@@ -182,7 +182,7 @@ export const PasscodeAuthModal: React.FC<PasscodeAuthModalProps> = ({
         <div className="passcode-brand-row">
           <div className="passcode-brand-logo">
             <span role="img" aria-label="Plane">✈️</span>
-            <span>MojoLog</span>
+            <span>Roammate</span>
           </div>
           <span className="passcode-brand-badge">Travel Vault</span>
         </div>

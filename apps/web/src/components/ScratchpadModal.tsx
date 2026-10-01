@@ -5,7 +5,7 @@ import {
   formatEmergencySnippet,
   formatTravelUtilitySnippet,
   getCountryIntelligence,
-} from '@mojolog/core';
+} from '@roammate/core';
 import { useModalA11y } from '../hooks';
 
 interface ScratchpadModalProps {

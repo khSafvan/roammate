@@ -22,7 +22,7 @@ import {
   Trash2,
   UtensilsCrossed,
 } from 'lucide-react';
-import { Look } from '@mojolog/shared';
+import { Look } from '@roammate/shared';
 import { ItineraryStop, StopCategory } from '../types/trip';
 import { MarkdownText } from './MarkdownText';
 

@@ -6,8 +6,8 @@ export default defineConfig({
   },
   resolve: {
     alias: {
-      '@mojolog/shared': new URL('../../packages/shared/src/index.ts', import.meta.url).pathname,
-      '@mojolog/api-client': new URL('./src/index.ts', import.meta.url).pathname,
+      '@roammate/shared': new URL('../../packages/shared/src/index.ts', import.meta.url).pathname,
+      '@roammate/api-client': new URL('./src/index.ts', import.meta.url).pathname,
     },
   },
 });

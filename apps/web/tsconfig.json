@@ -17,7 +17,7 @@
     "noFallthroughCasesInSwitch": true,
     "baseUrl": ".",
     "paths": {
-      "@mojolog/shared": ["../../packages/shared/src/index.ts"]
+      "@roammate/shared": ["../../packages/shared/src/index.ts"]
     }
   },
   "include": ["src"]

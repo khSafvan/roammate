@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { Look, Trip } from '@mojolog/shared';
+import { Look, Trip } from '@roammate/shared';
 
 describe('Couple Outfit Planner Data Model & State', () => {
   const sampleTrip: Trip = {
@@ -51,12 +51,12 @@ describe('Couple Outfit Planner Data Model & State', () => {
         tripId: 'trip_101',
         eventId: 'stop_eiffel',
         position: 0,
-        person1Original: 'https://r2.mojolog.com/outfits/orig_elena.webp',
-        person1Cutout: 'https://r2.mojolog.com/outfits/cut_elena.webp',
+        person1Original: 'https://r2.roammate.com/outfits/orig_elena.webp',
+        person1Cutout: 'https://r2.roammate.com/outfits/cut_elena.webp',
         person1Label: 'Burgundy Trench & Scarf',
         person1UseCutout: true,
-        person2Original: 'https://r2.mojolog.com/outfits/orig_marco.webp',
-        person2Cutout: 'https://r2.mojolog.com/outfits/cut_marco.webp',
+        person2Original: 'https://r2.roammate.com/outfits/orig_marco.webp',
+        person2Cutout: 'https://r2.roammate.com/outfits/cut_marco.webp',
         person2Label: 'Charcoal Overcoat',
         person2UseCutout: true,
         packed: false,
@@ -68,12 +68,12 @@ describe('Couple Outfit Planner Data Model & State', () => {
         tripId: 'trip_101',
         eventId: 'stop_bistro',
         position: 1,
-        person1Original: 'https://r2.mojolog.com/outfits/orig_dress.webp',
-        person1Cutout: 'https://r2.mojolog.com/outfits/cut_dress.webp',
+        person1Original: 'https://r2.roammate.com/outfits/orig_dress.webp',
+        person1Cutout: 'https://r2.roammate.com/outfits/cut_dress.webp',
         person1Label: 'Silk Evening Gown',
         person1UseCutout: true,
-        person2Original: 'https://r2.mojolog.com/outfits/orig_tux.webp',
-        person2Cutout: 'https://r2.mojolog.com/outfits/cut_tux.webp',
+        person2Original: 'https://r2.roammate.com/outfits/orig_tux.webp',
+        person2Cutout: 'https://r2.roammate.com/outfits/cut_tux.webp',
         person2Label: 'Black Tuxedo',
         person2UseCutout: true,
         packed: true,
@@ -133,10 +133,10 @@ describe('Couple Outfit Planner Data Model & State', () => {
       dayNumber: 1,
       title: 'Casual Parisian Stroll',
       position: 2,
-      person1Original: 'https://r2.mojolog.com/outfits/p1_casual.webp',
+      person1Original: 'https://r2.roammate.com/outfits/p1_casual.webp',
       person1Label: 'Beige Trench & Sneakers',
       person1UseCutout: true,
-      person2Original: 'https://r2.mojolog.com/outfits/p2_casual.webp',
+      person2Original: 'https://r2.roammate.com/outfits/p2_casual.webp',
       person2Label: 'Denim Jacket & Chinos',
       person2UseCutout: true,
       packed: false,

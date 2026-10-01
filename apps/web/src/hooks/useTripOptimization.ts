@@ -1,9 +1,9 @@
 import { useCallback, useState } from 'react';
 import { ItineraryStop, Trip, TripDay } from '../types/trip';
-import { computeTransitLegs } from '@mojolog/core';
-import { optimizeTimeWindowRoute } from '@mojolog/core';
+import { computeTransitLegs } from '@roammate/core';
+import { optimizeTimeWindowRoute } from '@roammate/core';
 // Re-export pure helpers so existing imports from this hook keep working
-export { parseTimeToMinutes, formatMinutesToTime } from '@mojolog/core';
+export { parseTimeToMinutes, formatMinutesToTime } from '@roammate/core';
 
 export interface ConstraintsRespected {
   mealsAligned: string[];

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { Trip } from '@mojolog/shared';
-import { generateIcalendarFeed } from '@mojolog/core';
+import { Trip } from '@roammate/shared';
+import { generateIcalendarFeed } from '@roammate/core';
 
 const mockSampleTrip: Trip = {
   id: 'trip_ical_test',

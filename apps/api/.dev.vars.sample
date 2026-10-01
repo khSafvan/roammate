@@ -4,5 +4,5 @@
 # Never commit actual credentials to Git!
 # ==============================================================================
 
-TURSO_DATABASE_URL=libsql://mojolog-db-sample.turso.io
+TURSO_DATABASE_URL=libsql://roammate-db-sample.turso.io
 TURSO_AUTH_TOKEN=your_turso_auth_token_here

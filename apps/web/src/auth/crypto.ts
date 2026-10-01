@@ -1,10 +1,10 @@
 import { RETENTION_POLICY, STORAGE_KEYS } from '../config/constants';
-import { VaultSession } from '@mojolog/shared';
+import { VaultSession } from '@roammate/shared';
 
 const SESSION_KEY = STORAGE_KEYS.VAULT_SESSION;
 
 export const INACTIVITY_PRUNE_MS = RETENTION_POLICY.INACTIVITY_PRUNE_MS;
-export type { VaultSession } from '@mojolog/shared';
+export type { VaultSession } from '@roammate/shared';
 
 export function saveVaultSession(token?: string, expiresAt?: number): void {
   const now = Date.now();

@@ -104,7 +104,7 @@ export const Header: React.FC<HeaderProps> = ({
               <div className="header-brand">
                 <div className="brand-logo-btn" style={{ cursor: 'default' }}>
                   <img className="brand-logo" src="/icon.svg" alt="" />
-                  <span className="brand-name">MojoLog</span>
+                  <span className="brand-name">Roammate</span>
                 </div>
               </div>
               <div className="trips-hub-tag">
@@ -120,10 +120,10 @@ export const Header: React.FC<HeaderProps> = ({
                   className="brand-logo-btn"
                   onClick={() => onNavigateView && onNavigateView('trips_list')}
                   title="Return to All Trips"
-                  aria-label="MojoLog – Return to All Trips"
+                  aria-label="Roammate – Return to All Trips"
                 >
                   <img className="brand-logo" src="/icon.svg" alt="" />
-                  <span className="brand-name">MojoLog</span>
+                  <span className="brand-name">Roammate</span>
                 </button>
               </div>
 

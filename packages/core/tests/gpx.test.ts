@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { formatGpxCoordinate, generateDayGpx } from '@mojolog/core';
-import { TripDay } from '@mojolog/shared';
+import { formatGpxCoordinate, generateDayGpx } from '@roammate/core';
+import { TripDay } from '@roammate/shared';
 
 describe('GPX Utilities', () => {
   describe('formatGpxCoordinate', () => {

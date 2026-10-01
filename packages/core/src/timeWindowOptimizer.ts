@@ -1,4 +1,4 @@
-import { ItineraryStop, TransitMode } from '@mojolog/shared';
+import { ItineraryStop, TransitMode } from '@roammate/shared';
 import { computeDistanceKm } from './routeEngine';
 import { parseTimeToMinutes, formatMinutesToTime } from './time';
 

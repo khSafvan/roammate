@@ -25,8 +25,8 @@ import {
   Tag,
   Trash2,
 } from 'lucide-react';
-import { DayWeather, ItineraryStop, Look, StopCategory } from '@mojolog/shared';
-import { ApiClient } from '@mojolog/api-client';
+import { DayWeather, ItineraryStop, Look, StopCategory } from '@roammate/shared';
+import { ApiClient } from '@roammate/api-client';
 import { MarkdownText } from '../MarkdownText';
 import { LookCard } from '../outfits/LookCard';
 import { SelectFromWardrobeModal } from '../outfits/SelectFromWardrobeModal';

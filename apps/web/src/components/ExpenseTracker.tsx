@@ -7,7 +7,7 @@ import {
   X,
 } from 'lucide-react';
 import { Expense, EXPENSE_CATEGORIES, ExpenseCategory } from '../types/trip';
-import { computeExpenseBreakdown } from '@mojolog/core';
+import { computeExpenseBreakdown } from '@roammate/core';
 import { fetchRate, RateResult } from '../utils/currencyService';
 
 interface ExpenseTrackerProps {

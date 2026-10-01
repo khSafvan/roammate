@@ -1,4 +1,4 @@
-# Mojolog — Product & Design System Specification
+# Roammate — Product & Design System Specification
 
 > **Design Reference Archive**  
 > All component screenshots are categorized in the sibling directories of `docs/design-reference/`.  
@@ -8,7 +8,7 @@
 
 ## 1. Executive Summary & Product Vision
 
-**Mojolog** is an offline-first, high-performance travel workspace and itinerary engine built for couples and modern explorers. Unlike bloated social travel apps, Mojolog operates as a **secure personal travel vault**:
+**Roammate** is an offline-first, high-performance travel workspace and itinerary engine built for couples and modern explorers. Unlike bloated social travel apps, Roammate operates as a **secure personal travel vault**:
 - **Zero-knowledge & Local-first:** All trip data is stored in the traveler's encrypted local vault and seamlessly syncs to edge storage.
 - **Physical Analog Metaphors:** Digital bookings are elevated through tactile metaphors — flights render as authentic **16:9 boarding passes**, hotel reservations present as **4:3 smart key cards**, and activities sit as **ticket stubs**.
 - **Dense, Calm Utility:** Designed for travelers on the move in bright sunlight with poor connectivity — low cognitive load, legible typography, precise transit buffers, and offline GPS route planning.
@@ -201,7 +201,7 @@ App Shell (Header & Vault Status)
 
 ## 4. Key Design Considerations for the New Redesign
 
-When constructing the new design for Mojolog, leverage these principles and opportunities:
+When constructing the new design for Roammate, leverage these principles and opportunities:
 
 1. **Card Hierarchy & Proportions:**
    - Maintain the distinctive aspect ratios: **16:9 for flight passes**, **4:3 for hotel key cards**, and **horizontal strips for activities**.

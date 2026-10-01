@@ -1,6 +1,6 @@
 import React from 'react';
 import { Hotel, Lock, Pin } from 'lucide-react';
-import { DayHotelAnchor } from '@mojolog/core';
+import { DayHotelAnchor } from '@roammate/core';
 
 export interface AnchorLocationCardProps {
   anchor: DayHotelAnchor;

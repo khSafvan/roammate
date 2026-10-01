@@ -1,6 +1,6 @@
 import { useCallback, useMemo, useState } from 'react';
 import { ItineraryStop, TransitLeg, TransitMode } from '../types/trip';
-import { computeTransitLegs } from '@mojolog/core';
+import { computeTransitLegs } from '@roammate/core';
 
 export interface UseTransitLegsReturn {
   transitLegs: TransitLeg[];

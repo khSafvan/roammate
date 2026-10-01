@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
-import { ApiClient } from '@mojolog/api-client';
+import { ApiClient } from '@roammate/api-client';
 import { MemorySyncStorage, SyncEngine } from '../src/index';
-import { SyncRecord } from '@mojolog/shared';
+import { SyncRecord } from '@roammate/shared';
 
 describe('SyncEngine (packages/sync)', () => {
   it('enqueues outbox entries and coalesces updates for the same entity id', async () => {

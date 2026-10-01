@@ -12,7 +12,7 @@ import {
   exportItinerary,
   importItineraryFile,
 } from '../utils/exportImport';
-import { downloadIcsCalendar } from '@mojolog/core';
+import { downloadIcsCalendar } from '@roammate/core';
 import { useModalA11y } from '../hooks';
 
 interface ShareModalProps {

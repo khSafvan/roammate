@@ -5,8 +5,8 @@ import {
   generateCorridorFallback,
   generateGeodesicArc,
   generateNauticalPassage,
-} from '@mojolog/core';
-import { ItineraryStop } from '@mojolog/shared';
+} from '@roammate/core';
+import { ItineraryStop } from '@roammate/shared';
 
 describe('Multi-Modal Routing Engine', () => {
   const airportHND: ItineraryStop = {

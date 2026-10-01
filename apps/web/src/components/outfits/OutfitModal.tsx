@@ -14,8 +14,8 @@ import {
   User,
   X,
 } from 'lucide-react';
-import { Look, LookOccasion, Trip } from '@mojolog/shared';
-import { ApiClient } from '@mojolog/api-client';
+import { Look, LookOccasion, Trip } from '@roammate/shared';
+import { ApiClient } from '@roammate/api-client';
 import { useModalA11y } from '../../hooks';
 import { downscaleAndStripExif, validateImageFile } from '../../utils/imagePipeline';
 import { uploadOutfitImage } from '../../utils/storageUpload';

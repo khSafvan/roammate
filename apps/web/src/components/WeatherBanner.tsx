@@ -12,7 +12,7 @@ import {
   Umbrella,
 } from 'lucide-react';
 import { DayWeather, WeatherCondition } from '../types/trip';
-import { getWeatherComfortLabel } from '@mojolog/core';
+import { getWeatherComfortLabel } from '@roammate/core';
 
 interface WeatherBannerProps {
   weather: DayWeather;

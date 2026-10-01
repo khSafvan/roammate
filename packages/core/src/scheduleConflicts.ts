@@ -1,4 +1,4 @@
-import { ItineraryStop } from '@mojolog/shared';
+import { ItineraryStop } from '@roammate/shared';
 import { formatMinutesToTime, parseTimeToMinutes } from './time';
 
 export interface ScheduleConflict {

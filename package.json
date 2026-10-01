@@ -1,5 +1,5 @@
 {
-  "name": "mojolog",
+  "name": "roammate",
   "private": true,
   "version": "0.1.0",
   "type": "module",
@@ -8,14 +8,14 @@
     "packages/*"
   ],
   "scripts": {
-    "dev": "npm run dev --workspace=@mojolog/web",
-    "dev:api": "npm run dev --workspace=@mojolog/api",
+    "dev": "npm run dev --workspace=@roammate/web",
+    "dev:api": "npm run dev --workspace=@roammate/api",
     "dev:all": "npm run dev:api & npm run dev",
-    "build": "npm run build --workspace=@mojolog/web",
-    "preview": "npm run preview --workspace=@mojolog/web",
+    "build": "npm run build --workspace=@roammate/web",
+    "preview": "npm run preview --workspace=@roammate/web",
     "test": "npm run test --workspaces --if-present",
-    "deploy:web": "npm run build --workspace=@mojolog/web && wrangler pages deploy apps/web/dist --project-name=mojolog-web --branch=main",
-    "deploy:api": "npm run deploy --workspace=@mojolog/api",
+    "deploy:web": "npm run build --workspace=@roammate/web && wrangler pages deploy apps/web/dist --project-name=mojolog-web --branch=main",
+    "deploy:api": "npm run deploy --workspace=@roammate/api",
     "secret:put": "wrangler secret put --config apps/api/wrangler.toml",
     "secret:list": "wrangler secret list --config apps/api/wrangler.toml",
     "ui-skills": "npx -y ui-skills"

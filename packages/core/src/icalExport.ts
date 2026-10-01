@@ -1,5 +1,5 @@
 import { parseTimeToMinutes } from './time';
-import { Trip } from '@mojolog/shared';
+import { Trip } from '@roammate/shared';
 
 /**
  * Formats a Date object into iCalendar UTC timestamp string: YYYYMMDDTHHMMSSZ

@@ -11,7 +11,7 @@ import {
   ChevronDown,
   X,
 } from 'lucide-react';
-import { Look, LookOccasion, Trip } from '@mojolog/shared';
+import { Look, LookOccasion, Trip } from '@roammate/shared';
 
 export interface WardrobeClosetViewProps {
   trip: Trip;

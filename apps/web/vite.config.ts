@@ -18,7 +18,7 @@ export default defineConfig(({ mode }) => {
     },
     resolve: {
       alias: {
-        '@mojolog/shared': path.resolve(__dirname, '../../packages/shared/src/index.ts'),
+        '@roammate/shared': path.resolve(__dirname, '../../packages/shared/src/index.ts'),
       },
     },
     server: {

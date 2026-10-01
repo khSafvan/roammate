@@ -1,6 +1,6 @@
-# Mojolog Design Reference Archive
+# Roammate Design Reference Archive
 
-This directory contains high-resolution component captures and the full design specification for **Mojolog**.
+This directory contains high-resolution component captures and the full design specification for **Roammate**.
 
 ## Project Design Specification
 📖 **[Read the complete Project & Component Design Specification](./PROJECT_DESIGN_SPEC.md)**
