@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Hotel, X } from 'lucide-react';
-import { BookingDocument, Coordinates } from '../../types/trip';
+import { BookingDocument } from '../../types/trip';
 import { PlaceSearchInput, PlaceSearchResult } from '../PlaceSearchInput';
 
 interface HotelModalProps {
@@ -12,7 +12,13 @@ interface HotelModalProps {
 }
 
 export const HotelModal: React.FC<HotelModalProps> = ({ isOpen, onClose, onSave, initialHotel, travelers = [] }) => {
-  const [docData, setDocData] = useState<Partial<BookingDocument>>(initialHotel || {});
+  const [docData, setDocData] = useState<Partial<BookingDocument>>({});
+
+  useEffect(() => {
+    if (isOpen) {
+      setDocData(initialHotel || {});
+    }
+  }, [isOpen, initialHotel]);
 
   if (!isOpen) return null;
 
@@ -33,16 +39,27 @@ export const HotelModal: React.FC<HotelModalProps> = ({ isOpen, onClose, onSave,
 
   const handleSave = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    const formData = new FormData(e.currentTarget);
+    
+    // Auto-calculate nights for subtitle
+    let nights = undefined;
+    if (docData.date && docData.endDate) {
+      const ms = new Date(docData.endDate).getTime() - new Date(docData.date).getTime();
+      nights = Math.max(1, Math.round(ms / 86400000));
+    }
+    
+    const subtitle = [nights ? `${nights} Night${nights > 1 ? 's' : ''}` : '', docData.cabinOrRoomType].filter(Boolean).join(' · ');
+
     onSave({
-      id: initialHotel?.id || 'doc_' + Math.random().toString(36).substr(2, 9),
+      id: docData.id || 'doc_' + Math.random().toString(36).substr(2, 9),
       category: 'hotel',
-      title: formData.get('title') as string || docData.title || '',
-      confirmationCode: formData.get('confirmationCode') as string || docData.confirmationCode || '',
-      date: formData.get('date') as string || docData.date || '',
-      endDate: formData.get('endDate') as string || docData.endDate || '',
-      location: formData.get('location') as string || docData.location || '',
-      passengerOrGuestName: formData.get('guestName') as string || docData.passengerOrGuestName || '',
+      title: docData.title || '',
+      subtitle: subtitle || docData.subtitle,
+      cabinOrRoomType: docData.cabinOrRoomType || '',
+      confirmationCode: docData.confirmationCode || '',
+      date: docData.date || '',
+      endDate: docData.endDate || '',
+      location: docData.location || '',
+      passengerOrGuestName: docData.passengerOrGuestName || '',
       coordinates: docData.coordinates,
       rating: docData.rating,
       website: docData.website,
@@ -50,8 +67,13 @@ export const HotelModal: React.FC<HotelModalProps> = ({ isOpen, onClose, onSave,
       placeId: docData.placeId,
       time: docData.time,
       endTime: docData.endTime,
+      notes: docData.notes || '',
     });
     onClose();
+  };
+
+  const updateField = (field: string, value: string) => {
+    setDocData(prev => ({ ...prev, [field]: value }));
   };
 
   return (
@@ -70,38 +92,54 @@ export const HotelModal: React.FC<HotelModalProps> = ({ isOpen, onClose, onSave,
         </div>
         <form onSubmit={handleSave} className="modal-body form-grid" style={{ overflow: 'visible' }}>
           <div className="form-group full-span" style={{ zIndex: 50 }}>
-            <label>Search Hotel</label>
+            <label>Search Hotel (Google Places / TripAdvisor)</label>
             <PlaceSearchInput
               onSelectPlace={handleSelectPlace}
               placeholder="Search hotel name or location..."
-              searchContext="hotel"
             />
           </div>
+          
           <div className="form-group full-span">
             <label>Hotel Name</label>
-            <input type="text" name="title" className="form-input" value={docData.title || ''} onChange={e => setDocData({ ...docData, title: e.target.value })} required />
+            <input type="text" className="form-input" value={docData.title || ''} onChange={e => updateField('title', e.target.value)} required />
           </div>
+          
           <div className="form-group">
             <label>Check-in Date</label>
-            <input type="date" name="date" className="form-input" value={docData.date || ''} onChange={e => setDocData({ ...docData, date: e.target.value })} required />
+            <input type="date" className="form-input" value={docData.date || ''} onChange={e => updateField('date', e.target.value)} required />
           </div>
           <div className="form-group">
             <label>Check-out Date</label>
-            <input type="date" name="endDate" className="form-input" value={docData.endDate || ''} onChange={e => setDocData({ ...docData, endDate: e.target.value })} />
+            <input type="date" className="form-input" value={docData.endDate || ''} onChange={e => updateField('endDate', e.target.value)} required />
           </div>
+
+          <div className="form-group">
+            <label>Check-in Time</label>
+            <input type="time" className="form-input" value={docData.time || ''} onChange={e => updateField('time', e.target.value)} />
+          </div>
+          <div className="form-group">
+            <label>Check-out Time</label>
+            <input type="time" className="form-input" value={docData.endTime || ''} onChange={e => updateField('endTime', e.target.value)} />
+          </div>
+
+          <div className="form-group full-span">
+            <label>Room Type</label>
+            <input type="text" className="form-input" value={docData.cabinOrRoomType || ''} onChange={e => updateField('cabinOrRoomType', e.target.value)} placeholder="e.g. Fountain View Deluxe Suite" />
+          </div>
+          
           <div className="form-group full-span">
             <label>Location / Address</label>
-            <input type="text" name="location" className="form-input" value={docData.location || ''} onChange={e => setDocData({ ...docData, location: e.target.value })} />
+            <input type="text" className="form-input" value={docData.location || ''} onChange={e => updateField('location', e.target.value)} />
           </div>
+          
           <div className="form-group full-span">
             <label>Traveler / Guest</label>
             <input
               type="text"
-              name="guestName"
               className="form-input"
               list="hotel-travelers-list"
-              value={docData.passengerOrGuestName || (travelers.length > 1 ? travelers.join(' & ') : (travelers[0] || 'John & Jane'))}
-              onChange={e => setDocData({ ...docData, passengerOrGuestName: e.target.value })}
+              value={docData.passengerOrGuestName || ''}
+              onChange={e => updateField('passengerOrGuestName', e.target.value)}
               placeholder="e.g. John, Jane, or John & Jane"
             />
             <datalist id="hotel-travelers-list">
@@ -109,10 +147,17 @@ export const HotelModal: React.FC<HotelModalProps> = ({ isOpen, onClose, onSave,
               {travelers.length > 1 && <option value={travelers.join(' & ')} />}
             </datalist>
           </div>
+          
           <div className="form-group full-span">
             <label>Confirmation Code</label>
-            <input type="text" name="confirmationCode" className="form-input" value={docData.confirmationCode || ''} onChange={e => setDocData({ ...docData, confirmationCode: e.target.value })} />
+            <input type="text" className="form-input" value={docData.confirmationCode || ''} onChange={e => updateField('confirmationCode', e.target.value)} />
           </div>
+
+          <div className="form-group full-span">
+            <label>Notes</label>
+            <textarea className="form-input" value={docData.notes || ''} onChange={e => updateField('notes', e.target.value)} placeholder="Any special requests or instructions..." rows={2} />
+          </div>
+          
           <div className="form-group full-span" style={{ marginTop: '16px' }}>
             <button type="submit" className="primary-action-btn" style={{ width: '100%' }}>Save Hotel</button>
           </div>
