@@ -63,18 +63,11 @@ interface PlaceSearchInputProps {
 
 
 const searchCache = new Map<string, PlaceSearchResult[]>();
-const POPULAR_DUBAI_PLACES = [
-  { title: "Burj Khalifa", address: "1 Sheikh Mohammed bin Rashid Blvd, Downtown Dubai", coordinates: { latitude: 25.1972, longitude: 55.2744 }, category: "sight" },
-  { title: "Dubai Mall", address: "Downtown Dubai", coordinates: { latitude: 25.1972, longitude: 55.2798 }, category: "sight" },
-  { title: "Dubai International Airport (DXB)", address: "Dubai", coordinates: { latitude: 25.2532, longitude: 55.3657 }, category: "transit" },
-  { title: "Palace Downtown Dubai", address: "Sheikh Mohammed bin Rashid Blvd", coordinates: { latitude: 25.1932, longitude: 55.2797 }, category: "lodging" },
-];
 
 export const PlaceSearchInput: React.FC<PlaceSearchInputProps> = ({
-
   onSelectPlace,
   searchContext,
-  placeholder = 'Search places, attractions, restaurants (OSM)...',
+  placeholder = 'Search places...',
   className = '',
   autoFocus = false,
 }) => {
@@ -111,12 +104,6 @@ export const PlaceSearchInput: React.FC<PlaceSearchInputProps> = ({
     }
     
     const qLower = trimmed.toLowerCase();
-    const localMatches = POPULAR_DUBAI_PLACES.filter(p => p.title.toLowerCase().includes(qLower));
-    if (localMatches.length > 0) {
-      setResults(localMatches as any[]);
-      return;
-    }
-
     setIsLoading(true);
     
     const fetchPlacesAPI = async () => {

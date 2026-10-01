@@ -18,6 +18,7 @@
     "deploy:api": "npm run deploy --workspace=@roammate/api",
     "secret:put": "wrangler secret put --config apps/api/wrangler.toml",
     "secret:list": "wrangler secret list --config apps/api/wrangler.toml",
-    "ui-skills": "npx -y ui-skills"
+    "ui-skills": "npx -y ui-skills",
+    "trip:create": "node scripts/agent-create-trip.js"
   }
 }
