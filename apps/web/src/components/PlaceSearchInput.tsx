@@ -296,13 +296,13 @@ export const PlaceSearchInput: React.FC<PlaceSearchInputProps> = ({
             left: 0,
             right: 0,
             backgroundColor: 'var(--bg-card, #ffffff)',
-            borderRadius: 'var(--radius-lg, 12px)',
-            border: '1px solid var(--border-light, #e2e8f0)',
-            boxShadow: 'var(--shadow-modal, 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1))',
+            borderRadius: '8px',
+            border: '1px solid rgba(0, 0, 0, 0.08)',
+            boxShadow: '0 4px 12px rgba(0, 0, 0, 0.05)',
             zIndex: 120,
             maxHeight: '260px',
             overflowY: 'auto',
-            padding: '6px',
+            padding: '4px',
           }}
         >
           {results.map((r, i) => (
@@ -315,19 +315,19 @@ export const PlaceSearchInput: React.FC<PlaceSearchInputProps> = ({
                 display: 'flex',
                 alignItems: 'flex-start',
                 gap: '10px',
-                padding: '8px 10px',
-                borderRadius: 'var(--radius-md, 8px)',
+                padding: '10px 12px',
+                borderRadius: '6px',
                 cursor: 'pointer',
-                backgroundColor: selectedIndex === i ? 'var(--bg-subtle, #f1f5f9)' : 'transparent',
-                transition: 'background-color 0.15s ease',
+                backgroundColor: selectedIndex === i ? 'var(--bg-subtle, #f8fafc)' : 'transparent',
+                transition: 'background-color 0.1s ease',
               }}
               onMouseEnter={() => setSelectedIndex(i)}
             >
-              <span style={{ fontSize: '16px', lineHeight: 1 }}>{r.emoji || CATEGORY_EMOJIS[r.category]}</span>
+              <span style={{ fontSize: '18px', lineHeight: 1, marginTop: '2px' }}>{r.emoji || CATEGORY_EMOJIS[r.category]}</span>
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div
                   style={{
-                    fontSize: '13px',
+                    fontSize: '14px',
                     fontWeight: 600,
                     color: 'var(--text-primary, #0f172a)',
                     display: 'flex',
@@ -344,9 +344,9 @@ export const PlaceSearchInput: React.FC<PlaceSearchInputProps> = ({
                       style={{
                         fontSize: '10px',
                         fontWeight: 600,
-                        padding: '1px 6px',
-                        borderRadius: '10px',
-                        backgroundColor: r.isHotel ? 'rgba(59, 130, 246, 0.12)' : r.isThemeParkOrAttraction ? 'rgba(236, 72, 153, 0.12)' : 'rgba(100, 116, 139, 0.12)',
+                        padding: '2px 6px',
+                        borderRadius: '4px',
+                        backgroundColor: r.isHotel ? 'rgba(59, 130, 246, 0.08)' : r.isThemeParkOrAttraction ? 'rgba(236, 72, 153, 0.08)' : 'rgba(100, 116, 139, 0.08)',
                         color: r.isHotel ? '#2563eb' : r.isThemeParkOrAttraction ? '#db2777' : 'var(--text-secondary, #475569)',
                         flexShrink: 0,
                       }}
@@ -357,15 +357,15 @@ export const PlaceSearchInput: React.FC<PlaceSearchInputProps> = ({
                 </div>
                 <div
                   style={{
-                    fontSize: '11px',
-                    color: 'var(--text-tertiary, #64748b)',
+                    fontSize: '12px',
+                    color: 'var(--text-tertiary, #94a3b8)', // Super light text for address
                     whiteSpace: 'nowrap',
                     overflow: 'hidden',
                     textOverflow: 'ellipsis',
                     marginTop: '2px',
                   }}
                 >
-                  <MapPin size={10} style={{ display: 'inline', marginRight: '3px' }} />
+                  <MapPin size={10} style={{ display: 'inline', marginRight: '4px', opacity: 0.7 }} />
                   {r.address}
                 </div>
               </div>

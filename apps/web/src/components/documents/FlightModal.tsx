@@ -58,7 +58,7 @@ export const FlightModal: React.FC<FlightModalProps> = ({ isOpen, onClose, onSav
       date: flightData.date || '',
       bookingRef: flightData.bookingRef || '',
       passengerName: flightData.passengerName || '',
-      cabinClass: flightData.cabinClass || 'ECONOMY',
+      cabinClass: flightData.cabinClass || 'Economy',
       seat: flightData.seat || '',
       durationMinutes: flightData.durationMinutes,
       airplaneType: flightData.airplaneType,

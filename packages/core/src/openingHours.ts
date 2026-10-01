@@ -16,7 +16,7 @@ export function to12Hour(time24: string): string {
   return `${hours.toString().padStart(2, '0')}:${minutes} ${ampm}`;
 }
 
-export function parseOpeningHours(raw: string, dayOfWeek?: number): ParsedHours {
+export function parseOpeningHours(raw: string): ParsedHours {
   if (!raw) return {};
   if (raw.toLowerCase() === '24/7' || raw === '00:00-24:00') {
     return { is24h: true, rawText: raw };

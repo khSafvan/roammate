@@ -13,7 +13,6 @@ interface AddStopModalProps {
   defaultStartTime?: string;
   defaultCategory?: StopCategory;
   fallbackCoordinates?: Coordinates;
-  dayDateStr?: string;
   onClose: () => void;
   onAddStop: (stopData: Omit<ItineraryStop, 'id' | 'orderIndex'>) => void;
   onAddDocument?: (doc: BookingDocument) => void;
@@ -34,7 +33,6 @@ export const AddStopModal: React.FC<AddStopModalProps> = ({
   defaultStartTime = '10:00 AM',
   defaultCategory = 'sight',
   fallbackCoordinates = { latitude: 35.6762, longitude: 139.6503 },
-  dayDateStr,
   onClose,
   onAddStop,
 }) => {
@@ -49,6 +47,7 @@ export const AddStopModal: React.FC<AddStopModalProps> = ({
   const [latitude, setLatitude] = useState(fallbackCoordinates.latitude.toString());
   const [longitude, setLongitude] = useState(fallbackCoordinates.longitude.toString());
   const [isPreviewingNotes, setIsPreviewingNotes] = useState(false);
+  const [showAdvanced, setShowAdvanced] = useState(false);
 
   useModalA11y(isOpen, onClose);
 
@@ -66,6 +65,7 @@ export const AddStopModal: React.FC<AddStopModalProps> = ({
       setSelectedPlaceMeta(null);
       setDurationMinutes(defaultCategory === 'note' ? 0 : 60);
       setIsPreviewingNotes(false);
+      setShowAdvanced(false);
       setLatitude(fallbackCoordinates.latitude.toString());
       setLongitude(fallbackCoordinates.longitude.toString());
     }
@@ -85,6 +85,7 @@ export const AddStopModal: React.FC<AddStopModalProps> = ({
     if (place.category && place.category !== 'lodging' && place.category !== 'flight') {
       setCategory(place.category);
     }
+    setShowAdvanced(false);
   };
 
   const insertMarkdown = (syntax: 'bold' | 'italic' | 'bullet' | 'ordered' | 'code' | 'link') => {
@@ -178,8 +179,8 @@ export const AddStopModal: React.FC<AddStopModalProps> = ({
               </p>
             </div>
           </div>
-          <button className="modal-close-btn" onClick={onClose} aria-label="Close">
-            <X size={18} />
+          <button className="modal-close-btn" onClick={onClose} aria-label="Close" style={{ minWidth: '44px', minHeight: '44px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <X size={20} />
           </button>
         </div>
 
@@ -195,6 +196,7 @@ export const AddStopModal: React.FC<AddStopModalProps> = ({
                   borderColor: category === cat.value ? (cat.value === 'note' ? 'var(--brand-amber)' : themeColor) : undefined,
                   backgroundColor: category === cat.value ? (cat.value === 'note' ? 'rgba(245, 158, 11, 0.12)' : `${themeColor}15`) : undefined,
                   color: category === cat.value ? (cat.value === 'note' ? '#B45309' : themeColor) : undefined,
+                  padding: '12px 16px', // Expand hit area for mobile
                 }}
                 onClick={() => setCategory(cat.value)}
               >
@@ -220,160 +222,205 @@ export const AddStopModal: React.FC<AddStopModalProps> = ({
           )}
 
           {/* Title & Subtitle */}
-          <div>
-            <label className="form-label">
-              {isNote ? 'Note Topic / Heading (Optional)' : 'Place / Activity Title *'}
-            </label>
-            <input
-              type="text"
-              required={!isNote}
-              placeholder={isNote ? 'e.g. Metro Transfer Tips' : 'e.g. Senso-ji Temple'}
-              className="form-input font-medium"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-            />
-          </div>
-
-          {!isNote && (
-            <div>
-              <label className="form-label">Subtitle / Brief Description</label>
-              <input
-                type="text"
-                placeholder="e.g. Historic Buddhist temple with lively market street"
-                className="form-input"
-                value={subtitle}
-                onChange={(e) => setSubtitle(e.target.value)}
-              />
+          {!isNote && selectedPlaceMeta && !showAdvanced ? (
+            <div 
+              style={{ 
+                padding: '16px', 
+                backgroundColor: 'var(--bg-subtle)', 
+                borderRadius: '12px',
+                border: '1px solid rgba(0,0,0,0.04)',
+                boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
+                marginTop: '8px'
+              }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                  <span style={{ fontSize: '24px' }}>
+                    {CATEGORIES.find(c => c.value === category)?.icon || '📍'}
+                  </span>
+                  <div>
+                    <h4 style={{ fontSize: '15px', fontWeight: 600, margin: 0, color: 'var(--text-primary)' }}>{title}</h4>
+                    <p style={{ fontSize: '13px', color: 'var(--text-secondary)', margin: '2px 0 0 0' }}>
+                      {address || subtitle}
+                    </p>
+                  </div>
+                </div>
+                <button 
+                  type="button" 
+                  onClick={() => setShowAdvanced(true)}
+                  style={{ 
+                    background: 'none', 
+                    border: 'none', 
+                    color: themeColor, 
+                    fontSize: '13px', 
+                    fontWeight: 600,
+                    cursor: 'pointer',
+                    padding: '8px',
+                    minHeight: '44px' // Better touch target
+                  }}
+                >
+                  Edit Details
+                </button>
+              </div>
             </div>
-          )}
-
-          {/* Time & Duration */}
-          <div className="form-row-2">
-            <div>
-              <label className="form-label">
-                <Clock size={12} className="inline mr-1" />
-                Scheduled Start Time
-              </label>
-              <input
-                type="text"
-                placeholder="10:00 AM or 10:00"
-                className="form-input"
-                value={startTime}
-                onChange={(e) => setStartTime(e.target.value)}
-              />
-            </div>
-            {!isNote && (
+          ) : (
+            <>
               <div>
-                <label className="form-label">Duration (Minutes)</label>
+                <label className="form-label">
+                  {isNote ? 'Note Topic / Heading (Optional)' : 'Place / Activity Title *'}
+                </label>
                 <input
-                  type="number"
-                  min="5"
-                  step="5"
-                  className="form-input"
-                  value={durationMinutes}
-                  onChange={(e) => setDurationMinutes(parseInt(e.target.value, 10) || 60)}
+                  type="text"
+                  required={!isNote}
+                  placeholder={isNote ? 'e.g. Metro Transfer Tips' : 'e.g. Senso-ji Temple'}
+                  className="form-input font-medium"
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
                 />
               </div>
-            )}
-          </div>
 
-          {!isNote && (
-            <div>
-              <label className="form-label">
-                <MapPin size={12} className="inline mr-1" />
-                Address or Area
-              </label>
-              <input
-                type="text"
-                placeholder="e.g. 1-19-1 Kabukicho, Shinjuku City, Tokyo"
-                className="form-input"
-                value={address}
-                onChange={(e) => setAddress(e.target.value)}
-              />
-            </div>
-          )}
+              {!isNote && (
+                <div>
+                  <label className="form-label">Subtitle / Brief Description</label>
+                  <input
+                    type="text"
+                    placeholder="e.g. Historic Buddhist temple with lively market street"
+                    className="form-input"
+                    value={subtitle}
+                    onChange={(e) => setSubtitle(e.target.value)}
+                  />
+                </div>
+              )}
 
-          {/* Booking Ref */}
-          <div>
-            <label className="form-label">Booking Confirmation (Optional)</label>
-            <input
-              type="text"
-              placeholder="e.g. RES-9982"
-              className="form-input font-mono"
-              value={bookingRef}
-              onChange={(e) => setBookingRef(e.target.value)}
-            />
-          </div>
-
-          {/* Traveler Notes / Rich Markdown Editor */}
-          <div>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '4px' }}>
-              <label className="form-label" style={{ marginBottom: 0 }}>
-                {isNote ? 'Note & Details *' : 'Traveler Notes & Tips'}
-              </label>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                <button type="button" className="icon-btn" style={{ width: '24px', height: '24px', padding: 0 }} onClick={() => insertMarkdown('bold')} title="Bold">
-                  <Bold size={12} />
-                </button>
-                <button type="button" className="icon-btn" style={{ width: '24px', height: '24px', padding: 0 }} onClick={() => insertMarkdown('italic')} title="Italic">
-                  <Italic size={12} />
-                </button>
-                <button type="button" className="icon-btn" style={{ width: '24px', height: '24px', padding: 0 }} onClick={() => insertMarkdown('bullet')} title="Bullet list">
-                  <List size={12} />
-                </button>
-                <button type="button" className="icon-btn" style={{ width: '24px', height: '24px', padding: 0 }} onClick={() => insertMarkdown('ordered')} title="Numbered list">
-                  <ListOrdered size={12} />
-                </button>
-                <button type="button" className="icon-btn" style={{ width: '24px', height: '24px', padding: 0 }} onClick={() => insertMarkdown('code')} title="Code">
-                  <Code size={12} />
-                </button>
-                <button type="button" className="icon-btn" style={{ width: '24px', height: '24px', padding: 0 }} onClick={() => insertMarkdown('link')} title="Link">
-                  <Link2 size={12} />
-                </button>
-                <button
-                  type="button"
-                  className={`all-trips-nav-btn ${isPreviewingNotes ? 'active' : ''}`}
-                  style={{ padding: '2px 8px', fontSize: '11px', height: '24px' }}
-                  onClick={() => setIsPreviewingNotes(!isPreviewingNotes)}
-                >
-                  {isPreviewingNotes ? <EyeOff size={11} /> : <Eye size={11} />}
-                  <span>{isPreviewingNotes ? 'Edit' : 'Preview'}</span>
-                </button>
-              </div>
-            </div>
-
-            {isPreviewingNotes ? (
-              <div
-                className="form-input"
-                style={{
-                  minHeight: isNote ? '130px' : '90px',
-                  backgroundColor: 'var(--bg-subtle)',
-                  padding: '10px 14px',
-                  lineHeight: '1.6',
-                }}
-              >
-                {notes.trim() ? (
-                  <MarkdownText text={notes} />
-                ) : (
-                  <span style={{ color: 'var(--text-tertiary)', fontStyle: 'italic', fontSize: '12px' }}>
-                    Type your notes above to see live formatted preview...
-                  </span>
+              {/* Time & Duration */}
+              <div className="form-row-2">
+                <div>
+                  <label className="form-label">
+                    <Clock size={12} className="inline mr-1" />
+                    Scheduled Start Time
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="10:00 AM or 10:00"
+                    className="form-input"
+                    value={startTime}
+                    onChange={(e) => setStartTime(e.target.value)}
+                  />
+                </div>
+                {!isNote && (
+                  <div>
+                    <label className="form-label">Duration (Minutes)</label>
+                    <input
+                      type="number"
+                      min="5"
+                      step="5"
+                      className="form-input"
+                      value={durationMinutes}
+                      onChange={(e) => setDurationMinutes(parseInt(e.target.value, 10) || 60)}
+                    />
+                  </div>
                 )}
               </div>
-            ) : (
-              <textarea
-                rows={isNote ? 5 : 3}
-                placeholder={
-                  isNote
-                    ? 'Write your notes with **bold**, *italic*, - bullet lists, or links...\ne.g. - Buy Metro 24h pass at station\n- Pre-booked Shibuya Sky voucher on phone\n- Recommended dinner: Uobei Sushi'
-                    : 'e.g. **Dress code**: Smart casual. - Try the matcha latte - Pre-booked tickets required'
-                }
-                className="form-input text-xs"
-                value={notes}
-                onChange={(e) => setNotes(e.target.value)}
-              />
-            )}
-          </div>
+
+              {!isNote && (
+                <div>
+                  <label className="form-label">
+                    <MapPin size={12} className="inline mr-1" />
+                    Address or Area
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="e.g. 1-19-1 Kabukicho, Shinjuku City, Tokyo"
+                    className="form-input"
+                    value={address}
+                    onChange={(e) => setAddress(e.target.value)}
+                  />
+                </div>
+              )}
+
+              {/* Booking Ref */}
+              <div>
+                <label className="form-label">Booking Confirmation (Optional)</label>
+                <input
+                  type="text"
+                  placeholder="e.g. RES-9982"
+                  className="form-input font-mono"
+                  value={bookingRef}
+                  onChange={(e) => setBookingRef(e.target.value)}
+                />
+              </div>
+
+              {/* Traveler Notes / Rich Markdown Editor */}
+              <div>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '4px' }}>
+                  <label className="form-label" style={{ marginBottom: 0 }}>
+                    {isNote ? 'Note & Details *' : 'Traveler Notes & Tips'}
+                  </label>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                    <button type="button" className="icon-btn" style={{ width: '32px', height: '32px', padding: 0 }} onClick={() => insertMarkdown('bold')} title="Bold">
+                      <Bold size={14} />
+                    </button>
+                    <button type="button" className="icon-btn" style={{ width: '32px', height: '32px', padding: 0 }} onClick={() => insertMarkdown('italic')} title="Italic">
+                      <Italic size={14} />
+                    </button>
+                    <button type="button" className="icon-btn" style={{ width: '32px', height: '32px', padding: 0 }} onClick={() => insertMarkdown('bullet')} title="Bullet list">
+                      <List size={14} />
+                    </button>
+                    <button type="button" className="icon-btn" style={{ width: '32px', height: '32px', padding: 0 }} onClick={() => insertMarkdown('ordered')} title="Numbered list">
+                      <ListOrdered size={14} />
+                    </button>
+                    <button type="button" className="icon-btn" style={{ width: '32px', height: '32px', padding: 0 }} onClick={() => insertMarkdown('code')} title="Code">
+                      <Code size={14} />
+                    </button>
+                    <button type="button" className="icon-btn" style={{ width: '32px', height: '32px', padding: 0 }} onClick={() => insertMarkdown('link')} title="Link">
+                      <Link2 size={14} />
+                    </button>
+                    <button
+                      type="button"
+                      className={`all-trips-nav-btn ${isPreviewingNotes ? 'active' : ''}`}
+                      style={{ padding: '4px 12px', fontSize: '12px', height: '32px', marginLeft: '4px' }}
+                      onClick={() => setIsPreviewingNotes(!isPreviewingNotes)}
+                    >
+                      {isPreviewingNotes ? <EyeOff size={13} /> : <Eye size={13} />}
+                      <span style={{ marginLeft: '4px' }}>{isPreviewingNotes ? 'Edit' : 'Preview'}</span>
+                    </button>
+                  </div>
+                </div>
+
+                {isPreviewingNotes ? (
+                  <div
+                    className="form-input"
+                    style={{
+                      minHeight: isNote ? '130px' : '90px',
+                      backgroundColor: 'var(--bg-subtle)',
+                      padding: '10px 14px',
+                      lineHeight: '1.6',
+                    }}
+                  >
+                    {notes.trim() ? (
+                      <MarkdownText text={notes} />
+                    ) : (
+                      <span style={{ color: 'var(--text-tertiary)', fontStyle: 'italic', fontSize: '12px' }}>
+                        Type your notes above to see live formatted preview...
+                      </span>
+                    )}
+                  </div>
+                ) : (
+                  <textarea
+                    rows={isNote ? 5 : 3}
+                    placeholder={
+                      isNote
+                        ? 'Write your notes with **bold**, *italic*, - bullet lists, or links...\ne.g. - Buy Metro 24h pass at station\n- Pre-booked Shibuya Sky voucher on phone\n- Recommended dinner: Uobei Sushi'
+                        : 'e.g. **Dress code**: Smart casual. - Try the matcha latte - Pre-booked tickets required'
+                    }
+                    className="form-input text-xs"
+                    value={notes}
+                    onChange={(e) => setNotes(e.target.value)}
+                  />
+                )}
+              </div>
+            </>
+          )}
 
           <div className="modal-actions-row mt-3">
             <button

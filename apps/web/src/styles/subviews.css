@@ -2229,22 +2229,21 @@
   display: inline-flex;
   align-items: center;
   gap: var(--sp-2, 8px);
-  padding: 6px 14px;
-  min-height: 36px;
-  background-color: var(--bg-card);
-  border: 1px solid var(--border-light);
+  padding: 10px 16px;
+  min-height: 44px; /* Mobile tap target size */
+  background-color: transparent;
+  border: 1px solid transparent;
   border-radius: var(--radius-pill);
-  font-size: var(--font-sm, 13px);
+  font-size: var(--font-sm, 14px);
   font-weight: var(--fw-medium, 500);
-  color: var(--text-secondary);
+  color: var(--text-tertiary);
   cursor: pointer;
   transition: all var(--t-fast) ease;
 }
 
 .category-filter-btn:hover {
-  background-color: var(--bg-subtle);
-  border-color: var(--border-strong);
   color: var(--text-primary);
+  background-color: var(--bg-subtle);
 }
 
 .category-filter-btn.active {
