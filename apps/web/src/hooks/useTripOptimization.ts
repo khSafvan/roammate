@@ -46,7 +46,7 @@ export interface UseTripOptimizationReturn {
 export function useTripOptimization(
   activeDay: TripDay,
   activeDayIdx: number,
-  setTrip: React.Dispatch<React.SetStateAction<Trip>>
+  setTrip: React.Dispatch<React.SetStateAction<Trip | null>>
 ): UseTripOptimizationReturn {
   const [optimizedDays, setOptimizedDays] = useState<Record<string, boolean>>({});
   const [dayHistory, setDayHistory] = useState<Record<string, ItineraryStop[]>>({});
@@ -118,7 +118,7 @@ export function useTripOptimization(
       [activeDay.id]: [...activeDay.stops],
     }));
 
-    setTrip((prev) => {
+    setTrip((prev) => { if (!prev) return null;
       const updatedDays = [...prev.days];
       updatedDays[activeDayIdx] = {
         ...updatedDays[activeDayIdx],
@@ -148,7 +148,7 @@ export function useTripOptimization(
     const previousStops = dayHistory[activeDay.id];
     if (!previousStops) return;
 
-    setTrip((prev) => {
+    setTrip((prev) => { if (!prev) return null;
       const updatedDays = [...prev.days];
       updatedDays[activeDayIdx] = {
         ...updatedDays[activeDayIdx],

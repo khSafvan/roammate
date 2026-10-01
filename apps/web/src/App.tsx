@@ -173,6 +173,12 @@ export function App() {
   }, []);
 
   useEffect(() => {
+    if (!trip && currentView !== 'trips_list') {
+      setCurrentView('trips_list');
+    }
+  }, [trip, currentView]);
+
+  useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const currView = params.get('view');
     const currTab = params.get('tab');
@@ -197,9 +203,9 @@ export function App() {
   // Safely clamp activeDayIdx whenever the trip or its days length changes
   useEffect(() => {
     setIsDeleteDayConfirming(false);
-    if (trip?.days && trip.days.length > 0) {
-      if (activeDayIdx >= trip.days.length) {
-        setActiveDayIdx(Math.max(0, trip.days.length - 1));
+    if (trip?.days && (trip?.days?.length || 0) > 0) {
+      if (activeDayIdx >= (trip?.days?.length || 0)) {
+        setActiveDayIdx(Math.max(0, (trip?.days?.length || 0) - 1));
       }
     }
   }, [trip?.id, trip?.days?.length, activeDayIdx]);
@@ -221,18 +227,18 @@ export function App() {
         lat = geo.lat; lng = geo.lng;
       }
 
-      const endDate = tripDayToIso(trip.startDate!, trip.days.length - 1);
+      const endDate = tripDayToIso(trip.startDate!, (trip?.days?.length || 0) - 1);
       const result = await fetchWeeklyForecast(lat, lng, trip.startDate!, endDate);
       if (cancelled || Object.keys(result.byDate).length === 0) return;
 
-      setTrip((prev) => ({
+      setTrip((prev) => !prev ? null : {
         ...prev,
         days: prev.days.map((day, i) => {
           const iso = tripDayToIso(trip.startDate!, i);
           const fetched = result.byDate[iso];
           return fetched ? { ...day, weather: fetched } : day;
         }),
-      }));
+      });
     })();
 
     return () => { cancelled = true; };
@@ -422,7 +428,7 @@ export function App() {
       if (!f.date) return activeDayIdx === 0;
       const normalizedFlightDate = f.date.trim();
       const normalizedDayDate = activeDay.dateStr.replace(/^[A-Za-z]+,\s*/, '').trim();
-      const normalizedStartDate = (trip.startDate || '').trim();
+      const normalizedStartDate = (trip?.startDate || '').trim();
       return (
         normalizedFlightDate === activeDay.dateStr ||
         normalizedFlightDate === normalizedDayDate ||
@@ -450,22 +456,22 @@ export function App() {
 
   // Flight Handlers
   const handleAddFlight = useCallback((flight: Flight) => {
-    setTrip((prev) => ({
+    setTrip((prev) => !prev ? null : {
       ...prev,
       flights: [flight, ...prev.flights],
-    }));
+    });
   }, [setTrip]);
 
   const handleDeleteFlight = useCallback((id: string) => {
-    setTrip((prev) => ({
+    setTrip((prev) => !prev ? null : {
       ...prev,
       flights: prev.flights.filter((f) => f.id !== id),
-    }));
+    });
   }, [setTrip]);
 
   // Document & Hotel/Activity Voucher Handlers
   const handleAddDocument = useCallback((doc: BookingDocument) => {
-    setTrip((prev) => {
+    setTrip((prev) => { if (!prev) return null;
       const newDocs = [doc, ...(prev.documents || [])];
 
       // Auto-placement logic for events and activities:
@@ -564,43 +570,43 @@ export function App() {
   }, [setTrip]);
 
   const handleDeleteDocument = useCallback((id: string) => {
-    setTrip((prev) => ({
+    setTrip((prev) => !prev ? null : {
       ...prev,
       documents: (prev.documents || []).filter((d) => d.id !== id),
       days: prev.days.map((day) => ({
         ...day,
         stops: (day.stops || []).filter((s) => s.documentId !== id),
       })),
-    }));
+    });
   }, [setTrip]);
 
   // General Trip Settings Update Handler
   const handleUpdateTrip = useCallback((updated: Partial<Trip>) => {
-    setTrip((prev) => ({
+    setTrip((prev) => !prev ? null : {
       ...prev,
       ...updated,
-    }));
+    });
   }, [setTrip]);
 
   // Expense Handlers
   const handleAddExpense = useCallback((expense: Expense) => {
-    setTrip((prev) => ({
+    setTrip((prev) => !prev ? null : {
       ...prev,
       expenses: [expense, ...prev.expenses],
-    }));
+    });
   }, [setTrip]);
 
   const handleDeleteExpense = useCallback((id: string) => {
-    setTrip((prev) => ({
+    setTrip((prev) => !prev ? null : {
       ...prev,
       expenses: prev.expenses.filter((e) => e.id !== id),
-    }));
+    });
   }, [setTrip]);
 
   // Stop CRUD Handlers (Feature F4, Bug 4 & 5)
   const handleAddStop = useCallback(
     (stopData: Omit<ItineraryStop, 'id' | 'orderIndex'>) => {
-      setTrip((prev) => {
+      setTrip((prev) => { if (!prev) return null;
         const updatedDays = [...prev.days];
         const currentDay = updatedDays[activeDayIdx];
         if (!currentDay) return prev;
@@ -622,7 +628,7 @@ export function App() {
 
   const handleUpdateStop = useCallback(
     (stopId: string, updated: Partial<ItineraryStop>) => {
-      setTrip((prev) => {
+      setTrip((prev) => { if (!prev) return null;
         const updatedDays = [...prev.days];
         const currentDay = updatedDays[activeDayIdx];
         if (!currentDay) return prev;
@@ -639,7 +645,7 @@ export function App() {
 
   const handleDeleteStop = useCallback(
     (stopId: string) => {
-      setTrip((prev) => {
+      setTrip((prev) => { if (!prev) return null;
         const updatedDays = [...prev.days];
         const currentDay = updatedDays[activeDayIdx];
         if (!currentDay) return prev;
@@ -662,7 +668,7 @@ export function App() {
 
   const handleSaveDayNote = useCallback(
     (notes: string) => {
-      setTrip((prev) => {
+      setTrip((prev) => { if (!prev) return null;
         const updatedDays = [...prev.days];
         const currentDay = updatedDays[activeDayIdx];
         if (!currentDay) return prev;
@@ -679,7 +685,7 @@ export function App() {
   // Couple Outfit Look Handlers
   const handleSaveLook = useCallback(
     (savedLook: Look) => {
-      setTrip((prev) => {
+      setTrip((prev) => { if (!prev) return null;
         const existing = prev.looks || [];
         const idx = existing.findIndex((l) => l.id === savedLook.id);
         const updatedLooks =
@@ -703,10 +709,10 @@ export function App() {
 
   const handleDeleteLook = useCallback(
     (lookId: string) => {
-      setTrip((prev) => ({
+      setTrip((prev) => !prev ? null : {
         ...prev,
         looks: (prev.looks || []).filter((l) => l.id !== lookId),
-      }));
+      });
       if (apiClient) {
         apiClient.deleteLook(lookId).catch(() => {});
       }
@@ -717,7 +723,7 @@ export function App() {
   const handleReorderStops = useCallback(
     (sourceIndex: number, destinationIndex: number) => {
       if (sourceIndex === destinationIndex) return;
-      setTrip((prev) => {
+      setTrip((prev) => { if (!prev) return null;
         const updatedDays = [...prev.days];
         const currentDay = updatedDays[activeDayIdx];
         if (!currentDay || !currentDay.stops) return prev;
@@ -813,7 +819,7 @@ export function App() {
 
   const handleMoveStopToDay = useCallback(
     (stopId: string, targetDayId: string) => {
-      setTrip((prev) => {
+      setTrip((prev) => { if (!prev) return null;
         const updatedDays = [...prev.days];
         const sourceDayIdx = updatedDays.findIndex((d) => d.id === activeDay.id);
         const targetDayIdx = updatedDays.findIndex((d) => d.id === targetDayId);
@@ -847,7 +853,7 @@ export function App() {
   // Places to Visit / Ideas Bucket Handlers (Feature F1)
   const handleAddPlaceToVisit = useCallback(
     (placeData: Omit<ItineraryStop, 'id' | 'orderIndex'>) => {
-      setTrip((prev) => {
+      setTrip((prev) => { if (!prev) return null;
         const currentPlaces = prev.placesToVisit || [];
         const newPlace: ItineraryStop = {
           ...placeData,
@@ -865,29 +871,29 @@ export function App() {
 
   const handleDeletePlaceToVisit = useCallback(
     (placeId: string) => {
-      setTrip((prev) => ({
+      setTrip((prev) => !prev ? null : {
         ...prev,
         placesToVisit: (prev.placesToVisit || []).filter((p) => p.id !== placeId),
-      }));
+      });
     },
     [setTrip]
   );
 
   const handleUpdatePlaceToVisit = useCallback(
     (updatedPlace: ItineraryStop) => {
-      setTrip((prev) => ({
+      setTrip((prev) => !prev ? null : {
         ...prev,
         placesToVisit: (prev.placesToVisit || []).map((p) =>
           p.id === updatedPlace.id ? updatedPlace : p
         ),
-      }));
+      });
     },
     [setTrip]
   );
 
   const handleAssignPlaceToDay = useCallback(
     (placeId: string, dayIndex: number) => {
-      setTrip((prev) => {
+      setTrip((prev) => { if (!prev) return null;
         const place = (prev.placesToVisit || []).find((p) => p.id === placeId);
         if (!place) return prev;
 
@@ -922,7 +928,7 @@ export function App() {
 
   const handleMoveStopToIdeas = useCallback(
     (stop: ItineraryStop) => {
-      setTrip((prev) => {
+      setTrip((prev) => { if (!prev) return null;
         const updatedDays = [...prev.days];
         const dayIdx = updatedDays.findIndex((d) => d.stops?.some((s) => s.id === stop.id));
         if (dayIdx === -1) return prev;
@@ -957,8 +963,8 @@ export function App() {
 
   // Day CRUD Handlers (Feature F5, Bug 6)
   const handleAddDay = useCallback(() => {
-    const nextIdx = trip.days.length;
-    setTrip((prev) => {
+    const nextIdx = (trip?.days?.length || 0);
+    setTrip((prev) => { if (!prev) return null;
       const nextDayNum = prev.days.length + 1;
       const lastDay = prev.days[prev.days.length - 1];
       let nextDateStr = `Day ${nextDayNum}`;
@@ -1004,12 +1010,12 @@ export function App() {
 
     setIsPlacesToVisitActive(false);
     setActiveDayIdx(nextIdx);
-  }, [trip.days.length, setTrip, setActiveDayIdx]);
+  }, [(trip?.days?.length || 0), setTrip, setActiveDayIdx]);
 
   const handleDeleteDay = useCallback(
     (dayIdxToDelete: number) => {
-      if (trip.days.length <= 1) return;
-      setTrip((prev) => {
+      if ((trip?.days?.length || 0) <= 1) return;
+      setTrip((prev) => { if (!prev) return null;
         const filteredDays = prev.days.filter((_, idx) => idx !== dayIdxToDelete);
         const renumberedDays = filteredDays.map((d, idx) => ({
           ...d,
@@ -1020,10 +1026,10 @@ export function App() {
           days: renumberedDays,
         };
       });
-      setActiveDayIdx((prevIdx) => Math.max(0, Math.min(prevIdx, trip.days.length - 2)));
+      setActiveDayIdx((prevIdx) => Math.max(0, Math.min(prevIdx, (trip?.days?.length || 0) - 2)));
       setIsDeleteDayConfirming(false);
     },
-    [trip.days.length, setTrip, setActiveDayIdx]
+    [(trip?.days?.length || 0), setTrip, setActiveDayIdx]
   );
 
   // Import Handler
@@ -1033,7 +1039,7 @@ export function App() {
 
   // Toggle readiness item
   const handleToggleReadinessItem = useCallback((id: string) => {
-    setTrip((prev) => {
+    setTrip((prev) => { if (!prev) return null;
       const updatedList = prev.readinessChecklist.map((item) =>
         item.id === id ? { ...item, completed: !item.completed } : item
       );
@@ -1051,7 +1057,7 @@ export function App() {
   // Packing List Handlers (Feature F7)
   const handleTogglePackingItem = useCallback(
     (id: string) => {
-      setTrip((prev) => {
+      setTrip((prev) => { if (!prev) return null;
         const currentList = prev.packingList || [];
         const updatedList = currentList.map((item) =>
           item.id === id ? { ...item, packed: !item.packed } : item
@@ -1067,7 +1073,7 @@ export function App() {
 
   const handleAddPackingItem = useCallback(
     (category: PackingCategory, name: string) => {
-      setTrip((prev) => {
+      setTrip((prev) => { if (!prev) return null;
         const currentList = prev.packingList || [];
         const newItem: PackingItem = {
           id: `pack_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
@@ -1086,7 +1092,7 @@ export function App() {
 
   const handleDeletePackingItem = useCallback(
     (id: string) => {
-      setTrip((prev) => {
+      setTrip((prev) => { if (!prev) return null;
         const currentList = prev.packingList || [];
         return {
           ...prev,
@@ -1152,7 +1158,7 @@ export function App() {
       {currentView === 'trips_list' && (
         <TripsListPage
           trips={trips}
-          activeTripId={trip.id}
+          activeTripId={trip?.id || ''}
           vaultSession={vaultSession}
           onSelectTrip={(id) => {
             switchTrip(id);
@@ -1183,7 +1189,7 @@ export function App() {
       )}
 
       {/* 2. DEDICATED TRIP SETTINGS VIEW */}
-      {currentView === 'trip_settings' && (
+      {currentView === 'trip_settings' && trip && (
         <TripSettingsPage
           trip={trip}
           activeSession={vaultSession}
@@ -1199,7 +1205,7 @@ export function App() {
       )}
 
       {/* 3. TRIP WORKSPACE DETAIL VIEW */}
-      {currentView === 'trip_detail' && (
+      {currentView === 'trip_detail' && trip && (
         <>
           {/* Read-Only Notice Banner */}
           {isReadOnly && (
@@ -1330,7 +1336,7 @@ export function App() {
                     </div>
 
                     <div className="flex items-center gap-2">
-                      {trip.days.length > 1 && (
+                      {(trip?.days?.length || 0) > 1 && (
                         isDeleteDayConfirming ? (
                           <div className="flex items-center gap-1.5">
                             <button
@@ -1615,38 +1621,40 @@ export function App() {
       )}
 
       {/* 4. Modals & Drawers */}
-      <TripManagerModal
-        isOpen={isTripManagerOpen}
-        onClose={() => setIsTripManagerOpen(false)}
-        trips={trips}
-        activeTrip={trip}
-        onSwitchTrip={(id) => {
-          switchTrip(id);
-          setActiveDayIdx(0);
-          setIsPlacesToVisitActive(false);
-          setCurrentView('trip_detail');
-        }}
-        onCreateTrip={(params) => {
-          createTrip(params);
-          setActiveDayIdx(0);
-          setIsPlacesToVisitActive(false);
-          setCurrentView('trip_detail');
-        }}
-        onUpdateTrip={handleUpdateTrip}
-        onDeleteTrip={deleteTrip}
-      />
+      {trip && (
+        <>
+          <TripManagerModal
+            isOpen={isTripManagerOpen}
+            onClose={() => setIsTripManagerOpen(false)}
+            trips={trips}
+            activeTrip={trip}
+            onSwitchTrip={(id) => {
+              switchTrip(id);
+              setActiveDayIdx(0);
+              setIsPlacesToVisitActive(false);
+              setCurrentView('trip_detail');
+            }}
+            onCreateTrip={(params) => {
+              createTrip(params);
+              setActiveDayIdx(0);
+              setIsPlacesToVisitActive(false);
+              setCurrentView('trip_detail');
+            }}
+            onUpdateTrip={handleUpdateTrip}
+            onDeleteTrip={deleteTrip}
+          />
 
-      <ReadinessModal
-        isOpen={isReadinessOpen}
-        score={trip.readinessScore}
-        items={trip.readinessChecklist}
-        packingList={trip.packingList || []}
-        onToggleItem={handleToggleReadinessItem}
-        onTogglePackingItem={handleTogglePackingItem}
-        onAddPackingItem={handleAddPackingItem}
-        onDeletePackingItem={handleDeletePackingItem}
-        onClose={() => setIsReadinessOpen(false)}
-      />
+          <ReadinessModal
+            isOpen={isReadinessOpen}
+            score={trip.readinessScore}
+            items={trip.readinessChecklist}
+            packingList={trip.packingList || []}
+            onToggleItem={handleToggleReadinessItem}
+            onTogglePackingItem={handleTogglePackingItem}
+            onAddPackingItem={handleAddPackingItem}
+            onDeletePackingItem={handleDeletePackingItem}
+            onClose={() => setIsReadinessOpen(false)}
+          />
 
       <ScratchpadModal
         isOpen={isScratchpadOpen}
@@ -1710,7 +1718,7 @@ export function App() {
       <ShareModal
         isOpen={isShareModalOpen}
         trip={trip}
-        onUpdateTrip={(updated) => setTrip((prev) => ({ ...prev, ...updated }))}
+        onUpdateTrip={(updated) => setTrip((prev) => !prev ? null : { ...prev, ...updated })}
         onImportSuccess={handleImportSuccess}
         onClose={() => setIsShareModalOpen(false)}
       />
@@ -1745,6 +1753,8 @@ export function App() {
             handleDeleteStop(stopId);
           }}
         />
+      )}
+      </>
       )}
 
       </Suspense>

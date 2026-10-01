@@ -1,7 +1,6 @@
 import { Trip, TripDay } from '../types/trip';
 import { deleteLocalAccount, pruneInactiveLocalData, saveVaultSession } from './crypto';
 import { STORAGE_KEYS } from '../config/constants';
-import { INITIAL_TRIPS_CATALOG, mockTripData } from '../data/mockTrip';
 import { createApiClient } from '@mojolog/api-client';
 import { createSyncEngine, LocalStorageSyncStorage } from '@mojolog/sync';
 
@@ -231,17 +230,10 @@ export function loadAllLocalTrips(): Trip[] {
       }
     }
 
-    if (trips.length === 0) {
-      for (const trip of INITIAL_TRIPS_CATALOG) {
-        const sanitized = sanitizeTrip(trip);
-        localStorage.setItem(`${STORAGE_KEYS.TRIP_PREFIX}${sanitized.id}`, JSON.stringify(sanitized));
-        trips.push(sanitized);
-      }
-      setActiveTripIdLocal(INITIAL_TRIPS_CATALOG[0].id);
-    }
+    // No mock trip injection
   } catch (err) {
     console.warn('Failed to load local trips list:', err);
-    return [mockTripData];
+    return [];
   }
   return trips;
 }
@@ -270,7 +262,7 @@ export function loadLocalTrip(tripId?: string): Trip | null {
     }
 
     const all = loadAllLocalTrips();
-    return all.length > 0 ? sanitizeTrip(all[0]) : sanitizeTrip(mockTripData);
+    return all.length > 0 ? sanitizeTrip(all[0]) : null;
   } catch (err) {
     console.warn('Failed to load local trip:', err);
     return null;

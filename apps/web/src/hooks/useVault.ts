@@ -14,7 +14,6 @@ import {
 } from '../auth/syncService';
 import { Trip } from '../types/trip';
 import { STORAGE_KEYS } from '../config/constants';
-import { mockTripData } from '../data/mockTrip';
 
 export interface CreateTripParams {
   title: string;
@@ -29,8 +28,8 @@ export interface UseVaultReturn {
   vaultSession: VaultSession | null;
   setVaultSession: React.Dispatch<React.SetStateAction<VaultSession | null>>;
   trips: Trip[];
-  activeTrip: Trip;
-  setTrip: React.Dispatch<React.SetStateAction<Trip>>;
+  activeTrip: Trip | null;
+  setTrip: React.Dispatch<React.SetStateAction<Trip | null>>;
   isReadOnly: boolean;
   switchTrip: (tripId: string) => void;
   createTrip: (params: CreateTripParams) => Trip;
@@ -43,10 +42,10 @@ export interface UseVaultReturn {
 export function useVault(): UseVaultReturn {
   const [vaultSession, setVaultSession] = useState<VaultSession | null>(getVaultSession());
   const [trips, setTrips] = useState<Trip[]>(() => loadAllLocalTrips());
-  const [activeTrip, setActiveTrip] = useState<Trip>(() => {
+  const [activeTrip, setActiveTrip] = useState<Trip | null>(() => {
     const userTrips = loadAllLocalTrips();
     const preferred = getActiveTripIdLocal();
-    return userTrips.find((t) => t.id === preferred) || userTrips[0] || mockTripData;
+    return userTrips.find((t) => t.id === preferred) || userTrips[0] || null;
   });
   const [isReadOnly, setIsReadOnly] = useState(false);
   const isHydratedRef = useRef(false);
@@ -93,7 +92,7 @@ export function useVault(): UseVaultReturn {
   }, []);
 
   useEffect(() => {
-    if (!isHydratedRef.current || isReadOnly) return;
+    if (!isHydratedRef.current || isReadOnly || !activeTrip) return;
 
     setTrips((prevTrips) => {
       const exists = prevTrips.some((t) => t.id === activeTrip.id);
@@ -149,13 +148,17 @@ export function useVault(): UseVaultReturn {
       const remaining = trips.filter((t) => t.id !== tripId);
       setTrips(remaining);
 
-      if (activeTrip.id === tripId) {
-        const nextActive = remaining.length > 0 ? remaining[0] : mockTripData;
+      if (activeTrip?.id === tripId) {
+        const nextActive = remaining.length > 0 ? remaining[0] : null;
         setActiveTrip(nextActive);
-        setActiveTripIdLocal(nextActive.id);
+        if (nextActive) {
+          setActiveTripIdLocal(nextActive.id);
+        } else {
+          localStorage.removeItem(STORAGE_KEYS.ACTIVE_TRIP_ID);
+        }
       }
     },
-    [trips, activeTrip.id]
+    [trips, activeTrip?.id]
   );
 
   const handleLogout = useCallback(() => {
