@@ -458,7 +458,7 @@ export function App() {
   const handleAddFlight = useCallback((flight: Flight) => {
     setTrip((prev) => !prev ? null : {
       ...prev,
-      flights: [flight, ...prev.flights],
+      flights: [flight, ...(prev.flights || []).filter(f => f.id !== flight.id)],
     });
   }, [setTrip]);
 
@@ -472,7 +472,8 @@ export function App() {
   // Document & Hotel/Activity Voucher Handlers
   const handleAddDocument = useCallback((doc: BookingDocument) => {
     setTrip((prev) => { if (!prev) return null;
-      const newDocs = [doc, ...(prev.documents || [])];
+      const existingDocs = (prev.documents || []).filter(d => d.id !== doc.id);
+      const newDocs = [doc, ...existingDocs];
 
       // Auto-placement logic for events and activities:
       // "and also event that dosent have place fixed dont add it in itinary or add it if there is place and time both on appropriate place and if no time add last on the day before hotel but can be movable"

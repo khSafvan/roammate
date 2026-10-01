@@ -28,6 +28,7 @@ export interface ItineraryStop {
   isFixedTime?: boolean; // Locked reservation or timed ticket slot
   mealType?: 'breakfast' | 'lunch' | 'dinner' | 'snack';
   // Google Places Metadata
+  placeId?: string;
   rating?: number;
   userRatingsTotal?: number;
   priceLevel?: number; // 1-4 ($ to $$$$)
@@ -116,6 +117,8 @@ export interface Flight {
   originCity?: string;    // e.g. "New York", "London"
   cabinClass?: 'Economy' | 'Premium Economy' | 'Business' | 'First';
   eTicketNumber?: string;
+  durationMinutes?: number;
+  airplaneType?: string;
   departure: {
     airport: string;
     city: string;
@@ -199,6 +202,13 @@ export interface BookingDocument {
   coordinates?: Coordinates;
   ticketCount?: number;
   subType?: 'theme_park' | 'water_park' | 'museum' | 'tour' | 'transit' | 'hotel' | 'flight' | 'activity' | string;
+  placeId?: string;
+  rating?: number;
+  openTime?: string;
+  closeTime?: string;
+  website?: string;
+  phoneNumber?: string;
+  imageUrl?: string;
 }
 
 // 3. Unified Itinerary Document (Single flexible JSON document)

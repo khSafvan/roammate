@@ -38,3 +38,22 @@ CREATE TABLE IF NOT EXISTS looks (
 
 CREATE INDEX IF NOT EXISTS idx_looks_trip_event ON looks(trip_id, event_id);
 CREATE INDEX IF NOT EXISTS idx_looks_trip ON looks(trip_id);
+
+CREATE TABLE IF NOT EXISTS places (
+    id TEXT PRIMARY KEY,
+    name TEXT NOT NULL,
+    lat REAL NOT NULL,
+    lon REAL NOT NULL,
+    address TEXT,
+    type TEXT,
+    rating REAL,
+    open_time TEXT,
+    close_time TEXT,
+    website TEXT,
+    phone TEXT,
+    data TEXT,
+    updated_at INTEGER NOT NULL
+);
+
+CREATE INDEX IF NOT EXISTS idx_places_name ON places(name);
+CREATE INDEX IF NOT EXISTS idx_places_updated ON places(updated_at);
