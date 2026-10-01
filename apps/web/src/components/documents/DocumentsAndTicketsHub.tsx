@@ -1,8 +1,9 @@
 import React, { useState, useMemo } from 'react';
-import { Plane, Hotel, Ticket, Train, Trash2, FileText, Plus, Search } from 'lucide-react';
+import { Plane, Ticket, Train, Trash2, FileText, Plus, Search } from 'lucide-react';
 import { BookingDocument, Flight } from '../../types/trip';
 import { FlightModal } from './FlightModal';
 import { HotelModal } from './HotelModal';
+import "./DocumentsAndTicketsHub.css";
 
 interface DocumentsAndTicketsHubProps {
   flights: Flight[];
@@ -114,14 +115,17 @@ export const DocumentsAndTicketsHub: React.FC<DocumentsAndTicketsHubProps> = ({
         </button>
       </div>
 
-      <div className="hub-search-bar">
-        <Search size={16} className="text-secondary" />
-        <input
-          type="text"
-          placeholder="Search reservations by name, ref, or location..."
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-        />
+      <div className="search-and-travelers-bar" style={{ marginTop: '16px' }}>
+        <div className="search-input-box">
+          <Search size={16} className="text-secondary" />
+          <input
+            className="search-field"
+            type="text"
+            placeholder="Search reservations by name, ref, or location..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+          />
+        </div>
       </div>
 
       <div className="hub-content-area">
@@ -133,152 +137,137 @@ export const DocumentsAndTicketsHub: React.FC<DocumentsAndTicketsHubProps> = ({
           </div>
         )}
 
-        {filteredFlights.map((fl) => (
-          <div key={fl.id} className="boarding-pass-card">
-            <div className="pass-header">
-              <div className="pass-carrier-row">
-                <Plane size={16} className="text-blue" />
-                <span className="pass-carrier">{fl.carrier}</span>
-                <span className="pass-flight-num">{fl.flightNumber}</span>
-                {fl.bookingRef && <span className="stub-ref">{fl.bookingRef}</span>}
+        <div className="flights-ticket-grid">
+          {filteredFlights.map((fl) => (
+            <div key={fl.id} className="airline-ticket-card">
+              <div className="ticket-main-section">
+                <div className="pass-header">
+                  <div className="pass-carrier-row">
+                    <Plane size={16} className="text-blue" />
+                    <span className="pass-carrier">{fl.carrier}</span>
+                  </div>
+                  <div className="pass-header-actions">
+                    <button className="pass-delete-btn" onClick={() => { setEditingFlight(fl); setIsFlightModalOpen(true); }} title="Edit Flight"><FileText size={13} /></button>
+                    <button className="pass-delete-btn" onClick={() => onDeleteFlight(fl.id)} title="Delete Flight"><Trash2 size={13} /></button>
+                  </div>
+                </div>
+
+                <div className="pass-route-row" style={{ marginTop: 'auto', marginBottom: 'auto' }}>
+                  <div className="airport-block">
+                    <div className="airport-code-row"><span className="airport-code">{fl.departure?.airport || '???'}</span></div>
+                    <div className="airport-time">{fl.departure?.time || '00:00'}</div>
+                  </div>
+                  <div className="route-graphic">
+                    <div className="route-line-decor" />
+                    <div className="plane-icon-wrap"><Plane size={16} className="plane-graphic-icon" strokeWidth={2.5} /></div>
+                    <div className="route-line-decor" />
+                  </div>
+                  <div className="airport-block text-right">
+                    <div className="airport-code-row" style={{ justifyContent: 'flex-end' }}>
+                      <span className="airport-code">{fl.arrival?.airport || '???'}</span>
+                      {fl.arrival?.nextDay && <span className="next-day-sup">+1</span>}
+                    </div>
+                    <div className="airport-time">{fl.arrival?.time || '00:00'}</div>
+                  </div>
+                </div>
+                
+                {fl.passengerName && (
+                  <div className="pass-footer" style={{ borderTop: 'none', paddingTop: 0 }}>
+                    <span style={{ fontSize: '11px', fontWeight: 600, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>PASSENGER: {fl.passengerName}</span>
+                  </div>
+                )}
               </div>
-              <div className="pass-header-actions">
-                <button
-                  className="pass-delete-btn"
-                  onClick={() => { setEditingFlight(fl); setIsFlightModalOpen(true); }}
-                  title="Edit Flight"
-                  style={{ marginRight: '8px' }}
-                >
-                  <FileText size={13} />
-                </button>
-                <button
-                  className="pass-delete-btn"
-                  onClick={() => onDeleteFlight(fl.id)}
-                  title="Delete Flight"
-                >
-                  <Trash2 size={13} />
-                </button>
+              
+              <div className="ticket-stub-section">
+                <div style={{ textAlign: 'center', width: '100%' }}>
+                  <div style={{ fontSize: '10px', color: 'var(--text-tertiary)', textTransform: 'uppercase', fontWeight: 600 }}>FLIGHT</div>
+                  <div className="pass-flight-num" style={{ marginTop: '4px', fontSize: '14px', background: 'transparent', border: 'none', padding: 0 }}>{fl.flightNumber}</div>
+                </div>
+                
+                {fl.bookingRef && (
+                  <div style={{ textAlign: 'center', marginTop: '16px', width: '100%' }}>
+                    <div style={{ fontSize: '10px', color: 'var(--text-tertiary)', textTransform: 'uppercase', fontWeight: 600 }}>PNR</div>
+                    <div className="stub-ref" style={{ fontSize: '13px', marginTop: '2px' }}>{fl.bookingRef}</div>
+                  </div>
+                )}
+                
+                <div style={{ textAlign: 'center', marginTop: 'auto', width: '100%' }}>
+                  <div style={{ fontSize: '10px', color: 'var(--text-tertiary)', textTransform: 'uppercase', fontWeight: 600 }}>CLASS</div>
+                  <div style={{ fontSize: '12px', fontWeight: 700, marginTop: '2px' }}>ECONOMY</div>
+                </div>
               </div>
             </div>
-            <div className="pass-body">
-              <div className="pass-route-row">
-                <div className="route-node">
-                  <span className="airport-code">{fl.departure?.airport || '???'}</span>
-                  <span className="route-time">{fl.departure?.time || '00:00'}</span>
+          ))}
+        </div>
+
+        {filteredDocs.filter(d => d.category === 'hotel').length > 0 && (
+          <div className="hotels-key-grid" style={{ marginTop: filteredFlights.length > 0 ? '24px' : '0' }}>
+            {filteredDocs.filter(d => d.category === 'hotel').map((doc) => (
+              <div key={doc.id} className="hotel-key-card">
+                <div className="key-card-strip" />
+                <div>
+                  <div className="key-card-chip" />
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                    <h3 style={{ fontSize: '16px', fontWeight: 600, margin: 0, paddingRight: '20px' }}>{doc.title}</h3>
+                    <div style={{ display: 'flex', gap: '8px', zIndex: 1 }}>
+                      <button className="pass-delete-btn" style={{ color: 'rgba(255,255,255,0.7)' }} onClick={() => { setEditingHotel(doc); setIsHotelModalOpen(true); }}><FileText size={13} /></button>
+                      <button className="pass-delete-btn" style={{ color: 'rgba(255,255,255,0.7)' }} onClick={() => onDeleteDocument(doc.id)}><Trash2 size={13} /></button>
+                    </div>
+                  </div>
+                  {doc.subtitle && <p style={{ fontSize: '13px', opacity: 0.8, marginTop: '4px' }}>{doc.subtitle}</p>}
                 </div>
-                <div className="route-divider" />
-                <div className="route-node text-right">
-                  <span className="airport-code">{fl.arrival?.airport || '???'}</span>
-                  <span className="route-time">{fl.arrival?.time || '00:00'}</span>
+                
+                <div style={{ marginTop: 'auto' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', opacity: 0.9, marginBottom: '8px' }}>
+                    <span>{doc.date}</span>
+                    {doc.endDate && <span>→ {doc.endDate}</span>}
+                  </div>
+                  {(doc.passengerOrGuestName || doc.confirmationCode) && (
+                    <div style={{ fontSize: '13px', fontFamily: 'monospace', letterSpacing: '1px', opacity: 0.9 }}>
+                      {doc.passengerOrGuestName && <span>{doc.passengerOrGuestName}</span>}
+                      {doc.passengerOrGuestName && doc.confirmationCode && <span> • </span>}
+                      {doc.confirmationCode && <span>{doc.confirmationCode}</span>}
+                    </div>
+                  )}
                 </div>
               </div>
-              {fl.passengerName && (
-                <div className="pass-footer" style={{ marginTop: '12px', fontSize: '12px', color: 'var(--text-secondary)' }}>
-                  Passenger: {fl.passengerName}
-                </div>
-              )}
-            </div>
+            ))}
           </div>
-        ))}
+        )}
 
-        {filteredDocs.map((doc) => {
-          const isHotel = doc.category === 'hotel';
-          const isActivity = doc.category === 'activity';
-          const isTransit = doc.category === 'transit';
-          
-          const CategoryIcon = isHotel
-            ? Hotel
-            : isActivity
-            ? Ticket
-            : isTransit
-            ? Train
-            : FileText;
-
-          const categoryColorClass = isHotel
-            ? 'color-hotel'
-            : isActivity
-            ? 'color-activity'
-            : isTransit
-            ? 'color-transit'
-            : 'color-doc';
-
-          return (
-            <div key={doc.id} className={`booking-voucher-card ${categoryColorClass}`}>
-              <div className="voucher-card-top">
-                <div className="voucher-type-row">
-                  <CategoryIcon size={16} />
-                  <span className="voucher-type-name">
-                    {isHotel && 'Hotel Reservation'}
-                    {isActivity && 'Activity / Sight Booking'}
-                    {isTransit && 'Transit Pass'}
-                    {doc.category === 'doc' && 'Travel Document'}
-                  </span>
-                </div>
-
-                <div style={{ display: 'flex' }}>
-                  {isHotel && (
-                    <button
-                      className="pass-delete-btn"
-                      onClick={() => { setEditingHotel(doc); setIsHotelModalOpen(true); }}
-                      title="Edit Hotel"
-                      style={{ marginRight: '8px' }}
-                    >
-                      <FileText size={13} />
-                    </button>
-                  )}
-                  <button
-                    className="pass-delete-btn"
-                    onClick={() => onDeleteDocument(doc.id)}
-                    title="Delete Document"
-                  >
-                    <Trash2 size={13} />
-                  </button>
-                </div>
-              </div>
-
-              <div className="voucher-main-body">
-                <h3 className="voucher-title">{doc.title}</h3>
-                {doc.subtitle && <p className="voucher-subtitle">{doc.subtitle}</p>}
-
-                {doc.location && (
-                  <div className="voucher-info-item mt-1">
-                    <span>{doc.location}</span>
+        {filteredDocs.filter(d => d.category !== 'hotel').length > 0 && (
+          <div className="other-bookings-grid" style={{ marginTop: (filteredFlights.length > 0 || filteredDocs.filter(d => d.category === 'hotel').length > 0) ? '24px' : '0' }}>
+            {filteredDocs.filter(d => d.category !== 'hotel').map((doc) => {
+              const isActivity = doc.category === 'activity';
+              const isTransit = doc.category === 'transit';
+              const CategoryIcon = isActivity ? Ticket : isTransit ? Train : FileText;
+              
+              return (
+                <div key={doc.id} className="horizontal-booking-card">
+                  <div className="horizontal-booking-card-icon">
+                    <CategoryIcon size={20} className={isActivity ? 'text-purple' : isTransit ? 'text-green' : 'text-slate'} />
                   </div>
-                )}
-
-                <div className="voucher-dates-row" style={{ marginTop: '12px', display: 'flex', gap: '16px' }}>
-                  {doc.date && (
-                    <div className="voucher-info-item text-slate text-sm">
-                      <span>
-                        {isHotel ? 'Check-in: ' : ''}
-                        {doc.date} {doc.time ? `(${doc.time})` : ''}
-                      </span>
+                  
+                  <div className="horizontal-booking-card-content">
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <h3 style={{ fontSize: '15px', fontWeight: 600, margin: 0 }}>{doc.title}</h3>
+                      <div style={{ display: 'flex', gap: '8px' }}>
+                        <button className="pass-delete-btn" onClick={() => onDeleteDocument(doc.id)}><Trash2 size={13} /></button>
+                      </div>
                     </div>
-                  )}
-
-                  {doc.endDate && (
-                    <div className="voucher-info-item text-slate text-sm">
-                      <span>
-                        Check-out: {doc.endDate} {doc.endTime ? `(${doc.endTime})` : ''}
-                      </span>
+                    
+                    {doc.subtitle && <p style={{ fontSize: '13px', color: 'var(--text-secondary)', marginTop: '2px' }}>{doc.subtitle}</p>}
+                    
+                    <div style={{ display: 'flex', gap: '16px', marginTop: '8px', fontSize: '12px', color: 'var(--text-secondary)' }}>
+                      {doc.date && <span>{doc.date} {doc.time ? doc.time : ''}</span>}
+                      {doc.location && <span>{doc.location}</span>}
                     </div>
-                  )}
-                </div>
-
-                {(doc.passengerOrGuestName || doc.confirmationCode) && (
-                  <div className="voucher-guest-strip" style={{ marginTop: '16px', padding: '12px', background: 'var(--bg-canvas)', borderRadius: '6px' }}>
-                    {doc.passengerOrGuestName && (
-                      <div className="text-sm">Guest: <strong>{doc.passengerOrGuestName}</strong></div>
-                    )}
-                    {doc.confirmationCode && (
-                      <div className="text-sm mt-1">Ref: <strong>{doc.confirmationCode}</strong></div>
-                    )}
                   </div>
-                )}
-              </div>
-            </div>
-          );
-        })}
+                </div>
+              );
+            })}
+          </div>
+        )}
       </div>
 
       <FlightModal
