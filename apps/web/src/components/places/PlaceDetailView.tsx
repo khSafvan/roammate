@@ -49,15 +49,6 @@ export interface PlaceDetailViewProps {
   onDeleteLook: (lookId: string) => void;
 }
 
-const CATEGORIES: { label: string; value: StopCategory; icon: string }[] = [
-  { label: 'Sight', value: 'sight', icon: '🏛️' },
-  { label: 'Dining', value: 'dining', icon: '🍜' },
-  { label: 'Lodging', value: 'lodging', icon: '🏨' },
-  { label: 'Transit', value: 'transit', icon: '🚆' },
-  { label: 'Flight', value: 'flight', icon: '✈️' },
-  { label: 'Note & Tip', value: 'note', icon: '📝' },
-];
-
 export const PlaceDetailView: React.FC<PlaceDetailViewProps> = ({
   stop,
   dayNumber,
@@ -322,22 +313,7 @@ export const PlaceDetailView: React.FC<PlaceDetailViewProps> = ({
           <form onSubmit={handleSaveDetails} className="place-edit-form">
             <h3 className="form-section-title">Edit Place Properties</h3>
 
-            <div className="form-field">
-              <label className="form-label">Category</label>
-              <div className="category-chips-select">
-                {CATEGORIES.map((cat) => (
-                  <button
-                    key={cat.value}
-                    type="button"
-                    className={`cat-chip-btn ${editCategory === cat.value ? 'selected' : ''}`}
-                    onClick={() => setEditCategory(cat.value)}
-                  >
-                    <span>{cat.icon}</span>
-                    <span>{cat.label}</span>
-                  </button>
-                ))}
-              </div>
-            </div>
+
 
             <div className="form-field">
               <label className="form-label">Title *</label>

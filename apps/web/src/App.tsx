@@ -601,7 +601,7 @@ export function App() {
   const handleDeleteExpense = useCallback((id: string) => {
     setTrip((prev) => !prev ? null : {
       ...prev,
-      expense...(prev.expenses || []).filter((e) => e.id !== id),
+      expenses: (prev.expenses || []).filter((e) => e.id !== id),
     });
   }, [setTrip]);
 

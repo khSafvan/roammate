@@ -185,26 +185,6 @@ export const AddStopModal: React.FC<AddStopModalProps> = ({
         </div>
 
         <form onSubmit={handleSubmit} className="auth-content-col">
-          {/* Category Chips */}
-          <div className="category-chips-select">
-            {CATEGORIES.map((cat) => (
-              <button
-                key={cat.value}
-                type="button"
-                className={`cat-chip-btn ${category === cat.value ? 'selected' : ''}`}
-                style={{
-                  borderColor: category === cat.value ? (cat.value === 'note' ? 'var(--brand-amber)' : themeColor) : undefined,
-                  backgroundColor: category === cat.value ? (cat.value === 'note' ? 'rgba(245, 158, 11, 0.12)' : `${themeColor}15`) : undefined,
-                  color: category === cat.value ? (cat.value === 'note' ? '#B45309' : themeColor) : undefined,
-                  padding: '12px 16px', // Expand hit area for mobile
-                }}
-                onClick={() => setCategory(cat.value)}
-              >
-                <span>{cat.icon}</span>
-                <span>{cat.label}</span>
-              </button>
-            ))}
-          </div>
 
           {/* Quick Search & Autocomplete */}
           {!isNote && (
@@ -222,47 +202,62 @@ export const AddStopModal: React.FC<AddStopModalProps> = ({
           )}
 
           {/* Title & Subtitle */}
-          {!isNote && selectedPlaceMeta && !showAdvanced ? (
-            <div 
-              style={{ 
-                padding: '16px', 
-                backgroundColor: 'var(--bg-subtle)', 
-                borderRadius: '12px',
-                border: '1px solid rgba(0,0,0,0.04)',
-                boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
-                marginTop: '8px'
-              }}
-            >
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                  <span style={{ fontSize: '24px' }}>
-                    {CATEGORIES.find(c => c.value === category)?.icon || '📍'}
-                  </span>
-                  <div>
-                    <h4 style={{ fontSize: '15px', fontWeight: 600, margin: 0, color: 'var(--text-primary)' }}>{title}</h4>
-                    <p style={{ fontSize: '13px', color: 'var(--text-secondary)', margin: '2px 0 0 0' }}>
-                      {address || subtitle}
-                    </p>
-                  </div>
-                </div>
-                <button 
-                  type="button" 
-                  onClick={() => setShowAdvanced(true)}
+          {!isNote && !showAdvanced ? (
+            <>
+              {selectedPlaceMeta && (
+                <div 
                   style={{ 
-                    background: 'none', 
-                    border: 'none', 
-                    color: themeColor, 
-                    fontSize: '13px', 
-                    fontWeight: 600,
-                    cursor: 'pointer',
-                    padding: '8px',
-                    minHeight: '44px' // Better touch target
+                    padding: '16px', 
+                    backgroundColor: 'var(--bg-subtle)', 
+                    borderRadius: '12px',
+                    border: '1px solid rgba(0,0,0,0.04)',
+                    boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
+                    marginTop: '8px'
                   }}
                 >
-                  Edit Details
-                </button>
-              </div>
-            </div>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                      <span style={{ fontSize: '24px' }}>
+                        {CATEGORIES.find(c => c.value === category)?.icon || '📍'}
+                      </span>
+                      <div>
+                        <h4 style={{ fontSize: '15px', fontWeight: 600, margin: 0, color: 'var(--text-primary)' }}>{title}</h4>
+                        <p style={{ fontSize: '13px', color: 'var(--text-secondary)', margin: '2px 0 0 0' }}>
+                          {address || subtitle}
+                        </p>
+                      </div>
+                    </div>
+                    <button 
+                      type="button" 
+                      onClick={() => setShowAdvanced(true)}
+                      style={{ 
+                        background: 'none', 
+                        border: 'none', 
+                        color: themeColor, 
+                        fontSize: '13px', 
+                        fontWeight: 600,
+                        cursor: 'pointer',
+                        padding: '8px',
+                        minHeight: '44px' // Better touch target
+                      }}
+                    >
+                      Edit Details
+                    </button>
+                  </div>
+                </div>
+              )}
+              {!selectedPlaceMeta && (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', alignItems: 'center', margin: '20px 0 10px 0' }}>
+                  <button type="button" onClick={() => setShowAdvanced(true)} style={{ background: 'none', border: 'none', color: 'var(--text-secondary)', fontSize: '13px', fontWeight: 500, cursor: 'pointer' }}>
+                    + Enter place details manually
+                  </button>
+                  <button type="button" onClick={() => { setCategory('note'); setShowAdvanced(true); }} style={{ background: 'none', border: 'none', color: 'var(--brand-amber, #F59E0B)', fontSize: '13px', fontWeight: 500, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <span style={{ fontSize: '15px' }}>📝</span>
+                    Just add a text note instead
+                  </button>
+                </div>
+              )}
+            </>
           ) : (
             <>
               <div>
