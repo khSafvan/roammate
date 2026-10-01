@@ -251,8 +251,8 @@ export function App() {
       .then(setHolidaysByDate);
   }, [trip?.id, trip?.countryCode, trip?.startDate, trip?.endDate]);
 
-  const activeDay: TripDay =
-    trip?.days?.[activeDayIdx] || trip?.days?.[0] || {
+  const activeDay: TripDay = useMemo(() => {
+    return trip?.days?.[activeDayIdx] || trip?.days?.[0] || {
       id: 'default_day',
       dayNumber: 1,
       dateStr: trip?.startDate || 'Day 1',
@@ -272,6 +272,7 @@ export function App() {
       },
       stops: [],
     };
+  }, [trip?.days, activeDayIdx, trip?.startDate]);
 
   const dayAnchors = useMemo(
     () =>
@@ -465,7 +466,7 @@ export function App() {
   const handleDeleteFlight = useCallback((id: string) => {
     setTrip((prev) => !prev ? null : {
       ...prev,
-      flights: prev.flights.filter((f) => f.id !== id),
+      flights: (prev.flights || []).filter((f) => f.id !== id),
     });
   }, [setTrip]);
 
@@ -593,14 +594,14 @@ export function App() {
   const handleAddExpense = useCallback((expense: Expense) => {
     setTrip((prev) => !prev ? null : {
       ...prev,
-      expenses: [expense, ...prev.expenses],
+      expenses: [expense, ...(prev.expenses || [])],
     });
   }, [setTrip]);
 
   const handleDeleteExpense = useCallback((id: string) => {
     setTrip((prev) => !prev ? null : {
       ...prev,
-      expenses: prev.expenses.filter((e) => e.id !== id),
+      expense...(prev.expenses || []).filter((e) => e.id !== id),
     });
   }, [setTrip]);
 
@@ -1041,7 +1042,7 @@ export function App() {
   // Toggle readiness item
   const handleToggleReadinessItem = useCallback((id: string) => {
     setTrip((prev) => { if (!prev) return null;
-      const updatedList = prev.readinessChecklist.map((item) =>
+      const updatedList = (prev.readinessChecklist || []).map((item) =>
         item.id === id ? { ...item, completed: !item.completed } : item
       );
       const completedCount = updatedList.filter((i) => i.completed).length;

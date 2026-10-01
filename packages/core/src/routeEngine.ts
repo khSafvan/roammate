@@ -135,6 +135,13 @@ export function getDayAnchors(
         documentId: stayingHotel.id,
       });
 
+      if (isFirstDay && isLastDay) {
+        // 1-night stay: check-in and check-out on the same day
+        const startAnchor = baseAnchor('check_in', `Check in to ${stayingHotel.title}`, stayingHotel.time || '03:00 PM');
+        const endAnchor = baseAnchor('check_out', `Check out of ${stayingHotel.title}`, stayingHotel.endTime || '11:00 AM');
+        return { startAnchor, endAnchor, activeHotel: startAnchor, isTransitionDay: true };
+      }
+
       if (isFirstDay && !isLastDay) {
         // Initial Check-in day
         const endAnchor = baseAnchor('check_in', `Check in to ${stayingHotel.title}`, stayingHotel.time || '03:00 PM');

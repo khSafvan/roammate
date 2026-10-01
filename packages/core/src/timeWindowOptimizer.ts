@@ -149,6 +149,10 @@ export function evaluateSequencePenalty(
         // Heavy penalty for violating locked appointments
         penalty += diff * 15;
       }
+      
+      // FIX: Snap the timeline to the fixed appointment time so subsequent stops
+      // are calculated correctly, regardless of early/late arrival.
+      currentTime = originalTime;
     }
 
     // 2. Meal window evaluation
@@ -231,8 +235,8 @@ export function reflowTimestamps(
       currentTime += prevDuration + transit.durationMinutes;
     }
 
-    // If stop has a fixed time, anchor strictly to it
-    if (stop.isFixedTime) {
+    // If stop has a fixed time or is a flight, anchor strictly to it
+    if (stop.isFixedTime || stop.category === 'flight') {
       currentTime = parseTimeToMinutes(stop.startTime);
     }
 
@@ -337,11 +341,13 @@ export function optimizeTimeWindowRoute(
       return stop.category === 'dining' || stop.mealType === 'lunch';
     });
 
-  for (const { idx: dIdx } of diningIndices) {
+  for (const { stop: mealStop } of diningIndices) {
     for (let targetIdx = startIndex; targetIdx < endIndex; targetIdx++) {
-      if (targetIdx === dIdx) continue;
+      const currentIdx = bestSequence.findIndex((s) => s.id === mealStop.id);
+      if (currentIdx === -1 || targetIdx === currentIdx) continue;
+      
       const candidate = [...bestSequence];
-      const [diningStop] = candidate.splice(dIdx, 1);
+      const [diningStop] = candidate.splice(currentIdx, 1);
       candidate.splice(targetIdx, 0, diningStop);
 
       const evalResult = evaluateSequencePenalty(candidate, startMinutes, mode);

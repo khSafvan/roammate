@@ -66,7 +66,7 @@ export const TimelineFlightCard: React.FC<TimelineFlightCardProps> = ({
                           <Globe size={11} style={{ flexShrink: 0 }} />
                           <span>
                             From {fl.originCity ? `${fl.originCity}, ` : ''}
-                            {fl.originCountry || fl.departure.city}
+                            {fl.originCountry || fl.departure?.city}
                           </span>
                         </span>
                       )}
@@ -75,19 +75,19 @@ export const TimelineFlightCard: React.FC<TimelineFlightCardProps> = ({
                     <div className="companion-route-col">
                       <div className="route-endpoints">
                         <span className="dep-airport">
-                          <strong>{fl.departure.airport}</strong> ({fl.departure.time})
+                          <strong>{fl.departure?.airport || 'Unknown'}</strong> {fl.departure?.time ? `(${fl.departure.time})` : ''}
                         </span>
                         <span className="route-arrow">→</span>
                         <span className="arr-airport">
-                          <strong>{fl.arrival.airport}</strong> ({fl.arrival.time})
+                          <strong>{fl.arrival?.airport || 'Unknown'}</strong> {fl.arrival?.time ? `(${fl.arrival.time})` : ''}
                         </span>
                       </div>
 
                       <div className="companion-sub-meta">
-                        {fl.departure.terminal && (
+                        {fl.departure?.terminal && (
                           <span className="meta-info-pill dep-term">Dep: {fl.departure.terminal}</span>
                         )}
-                        {fl.arrival.terminal && (
+                        {fl.arrival?.terminal && (
                           <span className="meta-info-pill arr-term">Arr: {fl.arrival.terminal}</span>
                         )}
                         {fl.seat && <span className="meta-info-pill">Seat {fl.seat}</span>}

@@ -4,8 +4,19 @@ import { Trip } from '@roammate/shared';
 /**
  * Formats a Date object into iCalendar UTC timestamp string: YYYYMMDDTHHMMSSZ
  */
-function formatIcsDateTime(date: Date): string {
+function formatIcsDateTime(date: Date, isFloating: boolean = true): string {
   const pad = (n: number) => n.toString().padStart(2, '0');
+  
+  if (isFloating) {
+    const year = date.getFullYear();
+    const month = pad(date.getMonth() + 1);
+    const day = pad(date.getDate());
+    const hours = pad(date.getHours());
+    const mins = pad(date.getMinutes());
+    const secs = pad(date.getSeconds());
+    return `${year}${month}${day}T${hours}${mins}${secs}`;
+  }
+  
   const year = date.getUTCFullYear();
   const month = pad(date.getUTCMonth() + 1);
   const day = pad(date.getUTCDate());

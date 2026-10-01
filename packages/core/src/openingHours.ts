@@ -10,7 +10,7 @@ export function to12Hour(time24: string): string {
   const [h, m] = time24.split(':');
   let hours = parseInt(h, 10);
   const minutes = m || '00';
-  const ampm = hours >= 12 ? 'PM' : 'AM';
+  const ampm = (hours >= 12 && hours < 24) ? 'PM' : 'AM';
   hours = hours % 12;
   hours = hours ? hours : 12; // the hour '0' should be '12'
   return `${hours.toString().padStart(2, '0')}:${minutes} ${ampm}`;

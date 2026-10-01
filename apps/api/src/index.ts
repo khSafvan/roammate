@@ -42,7 +42,10 @@ function getPassword(c: any): string | null {
 
 // Helper: JWT Secret
 function getJwtSecret(c: any): string {
-  return c.env.JWT_SECRET || 'roammate-edge-default-secret-key';
+  if (!c.env.JWT_SECRET) {
+    throw new Error('JWT_SECRET environment variable is missing');
+  }
+  return c.env.JWT_SECRET;
 }
 
 // Helper: Bearer / Password Auth Guard
@@ -52,9 +55,8 @@ async function verifyAuth(c: any): Promise<boolean> {
 
   const authHeader = c.req.header('Authorization');
   const customHeader = c.req.header('X-Password') || c.req.header('X-Passcode');
-  const queryPassword = c.req.query('password') || c.req.query('passcode');
 
-  if (customHeader === required || queryPassword === required) {
+  if (customHeader === required) {
     return true;
   }
 
@@ -311,45 +313,54 @@ const handleSyncPush = async (c: any) => {
 
   await ensureTables(turso);
 
-  for (const mut of mutations) {
-    if (mut.entity === 'trip' || mut.entity === 'itinerary') {
-      if (mut.op === 'delete') {
-        await turso.execute({
-          sql: `UPDATE trips 
-                SET deleted_at = ?, updated_at = ? 
-                WHERE id = ?`,
-          args: [serverTimestamp, serverTimestamp, mut.id],
-        });
-      } else {
-        const payload = mut.payload || {};
-        const title = payload.title || 'My Trip';
-        const destination = payload.destination || '';
-        await turso.execute({
-          sql: `INSERT INTO trips (id, title, destination, start_date, end_date, data, updated_at, deleted_at) 
-                VALUES (?, ?, ?, ?, ?, ?, ?, NULL)
-                ON CONFLICT(id) DO UPDATE SET 
-                  title = excluded.title, 
-                  destination = excluded.destination,
-                  start_date = excluded.start_date,
-                  end_date = excluded.end_date,
-                  data = excluded.data, 
-                  updated_at = excluded.updated_at,
-                  deleted_at = NULL`,
-          args: [
-            mut.id,
-            title,
-            destination,
-            payload.startDate || null,
-            payload.endDate || null,
-            JSON.stringify(payload),
-            serverTimestamp,
-          ],
-        });
+  try {
+    const stmts = [];
+    for (const mut of mutations) {
+      if (mut.entity === 'trip' || mut.entity === 'itinerary') {
+        if (mut.op === 'delete') {
+          stmts.push({
+            sql: `UPDATE trips 
+                  SET deleted_at = ?, updated_at = ? 
+                  WHERE id = ?`,
+            args: [serverTimestamp, serverTimestamp, mut.id],
+          });
+        } else {
+          const payload = mut.payload || {};
+          const title = payload.title || 'My Trip';
+          const destination = payload.destination || '';
+          stmts.push({
+            sql: `INSERT INTO trips (id, title, destination, start_date, end_date, data, updated_at, deleted_at) 
+                  VALUES (?, ?, ?, ?, ?, ?, ?, NULL)
+                  ON CONFLICT(id) DO UPDATE SET 
+                    title = excluded.title, 
+                    destination = excluded.destination,
+                    start_date = excluded.start_date,
+                    end_date = excluded.end_date,
+                    data = excluded.data, 
+                    updated_at = excluded.updated_at,
+                    deleted_at = NULL`,
+            args: [
+              mut.id,
+              title,
+              destination,
+              payload.startDate || null,
+              payload.endDate || null,
+              JSON.stringify(payload),
+              serverTimestamp,
+            ],
+          });
+        }
       }
     }
+    
+    if (stmts.length > 0) {
+      await turso.batch(stmts, "write");
+    }
+    return c.json({ success: true, applied: mutations.length, serverTimestamp });
+  } catch (err) {
+    console.error('Sync push failed:', err);
+    return c.json({ error: 'Failed to process sync batch', details: (err as Error).message }, 500);
   }
-
-  return c.json({ success: true, applied: mutations.length, serverTimestamp });
 };
 
 app.post('/sync/push', handleSyncPush);
@@ -833,17 +844,22 @@ app.get('/api/places/search', async (c) => {
     // --- 1. Google Places API (Primary for Places & Hotels) ---
     if (googleApiKey) {
       const googleUrl = 'https://places.googleapis.com/v1/places:searchText';
-      const googleRes = await fetch(googleUrl, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-Goog-Api-Key': googleApiKey,
-          'X-Goog-FieldMask': 'places.id,places.displayName,places.formattedAddress,places.location,places.rating,places.regularOpeningHours,places.websiteUri,places.nationalPhoneNumber,places.primaryType'
-        },
-        body: JSON.stringify({ textQuery: q })
-      });
+      let googleRes;
+      try {
+        googleRes = await fetch(googleUrl, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-Goog-Api-Key': googleApiKey,
+            'X-Goog-FieldMask': 'places.id,places.displayName,places.formattedAddress,places.location,places.rating,places.regularOpeningHours,places.websiteUri,places.nationalPhoneNumber,places.primaryType'
+          },
+          body: JSON.stringify({ textQuery: q })
+        });
+      } catch (err) {
+        console.warn('Google Places API network error, falling back:', err);
+      }
       
-      if (googleRes.ok) {
+      if (googleRes && googleRes.ok) {
         const googleData: any = await googleRes.json();
         if (googleData.places && googleData.places.length > 0) {
           results = googleData.places.map((place: any) => {
@@ -877,17 +893,22 @@ app.get('/api/places/search', async (c) => {
     else if (tripAdvisorKey) {
        // Placeholder for TripAdvisor location search if Google key isn't provided but TripAdvisor is
        const taUrl = `https://api.content.tripadvisor.com/api/v1/location/search?searchQuery=${encodeURIComponent(q)}&key=${tripAdvisorKey}`;
-       const taRes = await fetch(taUrl, { headers: { 'Accept': 'application/json' } });
-       if (taRes.ok) {
+       let taRes;
+       try {
+         taRes = await fetch(taUrl, { headers: { 'Accept': 'application/json' } });
+       } catch (err) {
+         console.warn('TripAdvisor API network error, falling back:', err);
+       }
+       if (taRes && taRes.ok) {
          const taData: any = await taRes.json();
          if (taData.data && taData.data.length > 0) {
            results = taData.data.slice(0, 5).map((item: any) => ({
               placeId: `ta_${item.location_id}`,
               title: item.name,
               address: item.address_obj?.address_string,
-              coordinates: { latitude: 0, longitude: 0 }, // Would require a second API call to get details
+              coordinates: { latitude: 0, longitude: 0 },
               osmClass: 'tripadvisor',
-              rating: 4.0 // Mock rating until detail call is made
+              rating: 4.0 
            }));
          }
        }
@@ -896,9 +917,14 @@ app.get('/api/places/search', async (c) => {
     // --- 3. Nominatim Fallback (If no keys or no results) ---
     if (results.length === 0) {
       const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(q)}&addressdetails=1&extratags=1&limit=5`;
-      const res = await fetch(url, { headers: { 'Accept-Language': 'en', 'User-Agent': 'roammate/1.0' } });
+      let res;
+      try {
+        res = await fetch(url, { headers: { 'Accept-Language': 'en', 'User-Agent': 'roammate/1.0' } });
+      } catch (err) {
+        console.warn('Nominatim API network error:', err);
+      }
 
-      if (res.ok) {
+      if (res && res.ok) {
         const data: any[] = await res.json();
         results = await Promise.all(data.map(async (item: any) => {
           const extratags = item.extratags || {};
