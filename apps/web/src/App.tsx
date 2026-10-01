@@ -1580,6 +1580,7 @@ export function App() {
               <DocumentsAndTicketsHub
                 flights={trip.flights}
                 documents={trip.documents || []}
+                travelers={trip.travelers || ['John', 'Jane']}
                 onAddFlight={handleAddFlight}
                 onDeleteFlight={handleDeleteFlight}
                 onAddDocument={handleAddDocument}

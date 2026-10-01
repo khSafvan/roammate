@@ -62,11 +62,18 @@ export const HotelModal: React.FC<HotelModalProps> = ({ isOpen, onClose, onSave,
           </div>
           <div className="form-group full-span">
             <label>Traveler / Guest</label>
-            <select name="guestName" className="form-input" defaultValue={initialHotel?.passengerOrGuestName}>
-              <option value="">Select Guest...</option>
-              {travelers.map(t => <option key={t} value={t}>{t}</option>)}
-              <option value={travelers.join(' & ')}>Both ({travelers.join(' & ')})</option>
-            </select>
+            <input
+              type="text"
+              name="guestName"
+              className="form-input"
+              list="hotel-travelers-list"
+              defaultValue={initialHotel?.passengerOrGuestName || (travelers.length > 1 ? travelers.join(' & ') : (travelers[0] || 'John & Jane'))}
+              placeholder="e.g. John, Jane, or John & Jane"
+            />
+            <datalist id="hotel-travelers-list">
+              {travelers.map(t => <option key={t} value={t} />)}
+              {travelers.length > 1 && <option value={travelers.join(' & ')} />}
+            </datalist>
           </div>
           <div className="form-group full-span">
             <label>Confirmation Code</label>

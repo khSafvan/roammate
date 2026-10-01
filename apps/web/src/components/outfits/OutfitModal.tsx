@@ -14,12 +14,21 @@ import {
   User,
   X,
 } from 'lucide-react';
-import { Look, Trip } from '@mojolog/shared';
+import { Look, LookOccasion, Trip } from '@mojolog/shared';
 import { ApiClient } from '@mojolog/api-client';
 import { useModalA11y } from '../../hooks';
 import { downscaleAndStripExif, validateImageFile } from '../../utils/imagePipeline';
 import { uploadOutfitImage } from '../../utils/storageUpload';
 import { ImagePreviewModal } from './ImagePreviewModal';
+
+const OCCASIONS: { label: string; value: LookOccasion; emoji: string }[] = [
+  { label: 'Casual', value: 'casual', emoji: '☀️' },
+  { label: 'Dining', value: 'dining', emoji: '🍷' },
+  { label: 'Beach', value: 'beach', emoji: '🏖️' },
+  { label: 'Cultural', value: 'cultural', emoji: '🕌' },
+  { label: 'Active', value: 'active', emoji: '👟' },
+  { label: 'Formal', value: 'formal', emoji: '✨' },
+];
 
 interface OutfitModalProps {
   isOpen: boolean;
@@ -46,12 +55,16 @@ export const OutfitModal: React.FC<OutfitModalProps> = ({
 }) => {
   useModalA11y(isOpen, onClose);
 
-  const person1Name = trip.travelers?.[0] || 'Person 1';
-  const person2Name = trip.travelers?.[1] || 'Person 2';
+  const person1Name = trip.travelers?.[0] || 'John';
+  const person2Name = trip.travelers?.[1] || 'Jane';
 
   // Form states
   const [dayNumber, setDayNumber] = useState<number>(initialDayNumber);
   const [eventId, setEventId] = useState<string>(initialEventId || `day_${initialDayNumber}`);
+  const [assignToItinerary, setAssignToItinerary] = useState<boolean>(
+    initialLook ? Boolean(initialLook.dayNumber && initialLook.eventId !== 'unassigned') : true
+  );
+  const [occasion, setOccasion] = useState<LookOccasion>(initialLook?.occasion || 'casual');
   const [title, setTitle] = useState<string>('');
   const [notes, setNotes] = useState<string>('');
   const [packed, setPacked] = useState<boolean>(false);
@@ -91,8 +104,11 @@ export const OutfitModal: React.FC<OutfitModalProps> = ({
     if (!isOpen) return;
 
     if (initialLook) {
+      const isAssigned = Boolean(initialLook.dayNumber && initialLook.eventId !== 'unassigned');
+      setAssignToItinerary(isAssigned);
       setDayNumber(initialLook.dayNumber || initialDayNumber);
       setEventId(initialLook.eventId || initialEventId || `day_${initialDayNumber}`);
+      setOccasion(initialLook.occasion || 'casual');
       setTitle(initialLook.title || '');
       setNotes(initialLook.notes || '');
       setPacked(Boolean(initialLook.packed));
@@ -107,8 +123,10 @@ export const OutfitModal: React.FC<OutfitModalProps> = ({
       setP2Label(initialLook.person2Label || '');
       setP2UseCutout(initialLook.person2UseCutout ?? true);
     } else {
+      setAssignToItinerary(Boolean(initialDayNumber));
       setDayNumber(initialDayNumber);
       setEventId(initialEventId || `day_${initialDayNumber}`);
+      setOccasion('casual');
       setTitle('');
       setNotes('');
       setPacked(false);
@@ -250,16 +268,19 @@ export const OutfitModal: React.FC<OutfitModalProps> = ({
     // Default title if empty
     const finalTitle =
       title.trim() ||
-      (eventId.startsWith('day_')
+      (!assignToItinerary
+        ? `${OCCASIONS.find((o) => o.value === occasion)?.label || 'Wardrobe'} Outfit`
+        : eventId.startsWith('day_')
         ? `Day ${dayNumber} Look`
         : dayStops.find((s) => s.id === eventId)?.title || `Day ${dayNumber} Outfit`);
 
     const lookToSave: Look = {
       id: initialLook?.id || `look_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
       tripId: trip.id,
-      dayNumber,
-      eventId,
+      dayNumber: assignToItinerary ? dayNumber : undefined,
+      eventId: assignToItinerary ? eventId : 'unassigned',
       title: finalTitle,
+      occasion,
       position: initialLook?.position || 0,
       person1Original: p1Original,
       person1Cutout: p1Cutout,
@@ -350,54 +371,107 @@ export const OutfitModal: React.FC<OutfitModalProps> = ({
               }}
             />
 
-            {/* Row 1: Itinerary Day & Event Assignment */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '12px' }}>
-              <div className="form-group">
-                <label className="form-label" htmlFor="outfit-day-select">
-                  Itinerary Day
-                </label>
-                <select
-                  id="outfit-day-select"
-                  className="form-input"
-                  value={dayNumber}
-                  onChange={(e) => {
-                    const newDay = Number(e.target.value);
-                    setDayNumber(newDay);
-                    setEventId(`day_${newDay}`);
-                  }}
-                >
-                  {trip.days.map((d) => (
-                    <option key={d.id} value={d.dayNumber}>
-                      Day {d.dayNumber} {d.dateStr ? `(${d.dateStr.replace(/^[A-Za-z]+,\s*/, '')})` : ''} - {d.title || 'Day Plan'}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div className="form-group">
-                <label className="form-label" htmlFor="outfit-event-select">
-                  Event / Activity
-                </label>
-                <select
-                  id="outfit-event-select"
-                  className="form-input"
-                  value={eventId}
-                  onChange={(e) => setEventId(e.target.value)}
-                >
-                  <option value={`day_${dayNumber}`}>🌟 General Day Look / Free Time</option>
-                  {dayStops
-                    .filter((s) => s.category !== 'note')
-                    .map((s) => (
-                      <option key={s.id} value={s.id}>
-                        📍 #{s.orderIndex} {s.title} ({s.startTime})
-                      </option>
-                    ))}
-                </select>
+            {/* Occasion Selector */}
+            <div className="form-group">
+              <label className="form-label">Occasion / Vibe</label>
+              <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                {OCCASIONS.map((occ) => (
+                  <button
+                    key={occ.value}
+                    type="button"
+                    className={`category-filter-btn ${occasion === occ.value ? 'active' : ''}`}
+                    onClick={() => setOccasion(occ.value)}
+                    style={{ fontSize: '13px', padding: '5px 12px', minHeight: '32px' }}
+                  >
+                    <span>{occ.emoji}</span>
+                    <span>{occ.label}</span>
+                  </button>
+                ))}
               </div>
             </div>
 
+            {/* Assignment Mode: Itinerary vs Wardrobe Only */}
+            <div className="form-group">
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+                <label className="form-label" style={{ margin: 0 }}>Trip Assignment</label>
+                <div
+                  style={{
+                    display: 'inline-flex',
+                    background: 'var(--bg-subtle)',
+                    padding: '2px',
+                    borderRadius: '8px',
+                    border: '1px solid var(--border-light)',
+                  }}
+                >
+                  <button
+                    type="button"
+                    className={`slot-action-btn ${assignToItinerary ? 'active-toggle' : ''}`}
+                    onClick={() => setAssignToItinerary(true)}
+                    style={{ fontSize: '11px', padding: '3px 8px', border: 'none', background: assignToItinerary ? 'var(--bg-card)' : 'transparent' }}
+                  >
+                    📅 Assign to Day / Place
+                  </button>
+                  <button
+                    type="button"
+                    className={`slot-action-btn ${!assignToItinerary ? 'active-toggle' : ''}`}
+                    onClick={() => setAssignToItinerary(false)}
+                    style={{ fontSize: '11px', padding: '3px 8px', border: 'none', background: !assignToItinerary ? 'var(--bg-card)' : 'transparent' }}
+                  >
+                    🧥 Save to Wardrobe (Unassigned)
+                  </button>
+                </div>
+              </div>
+
+              {assignToItinerary && (
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '12px', marginTop: '6px' }}>
+                  <div className="form-group">
+                    <label className="form-label" htmlFor="outfit-day-select">
+                      Itinerary Day
+                    </label>
+                    <select
+                      id="outfit-day-select"
+                      className="form-input"
+                      value={dayNumber}
+                      onChange={(e) => {
+                        const newDay = Number(e.target.value);
+                        setDayNumber(newDay);
+                        setEventId(`day_${newDay}`);
+                      }}
+                    >
+                      {trip.days.map((d) => (
+                        <option key={d.id} value={d.dayNumber}>
+                          Day {d.dayNumber} {d.dateStr ? `(${d.dateStr.replace(/^[A-Za-z]+,\s*/, '')})` : ''} - {d.title || 'Day Plan'}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div className="form-group">
+                    <label className="form-label" htmlFor="outfit-event-select">
+                      Event / Activity
+                    </label>
+                    <select
+                      id="outfit-event-select"
+                      className="form-input"
+                      value={eventId}
+                      onChange={(e) => setEventId(e.target.value)}
+                    >
+                      <option value={`day_${dayNumber}`}>🌟 General Day Look / Free Time</option>
+                      {dayStops
+                        .filter((s) => s.category !== 'note')
+                        .map((s) => (
+                          <option key={s.id} value={s.id}>
+                            📍 #{s.orderIndex} {s.title} ({s.startTime})
+                          </option>
+                        ))}
+                    </select>
+                  </div>
+                </div>
+              )}
+            </div>
+
             {/* Weather Tip for Selected Day */}
-            {weather && (
+            {assignToItinerary && weather && (
               <div className="lookbook-weather-chip" style={{ width: 'fit-content' }}>
                 <CloudSun size={13} />
                 <span>

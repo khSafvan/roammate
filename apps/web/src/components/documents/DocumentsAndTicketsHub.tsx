@@ -8,6 +8,7 @@ import "./DocumentsAndTicketsHub.css";
 interface DocumentsAndTicketsHubProps {
   flights: Flight[];
   documents?: BookingDocument[];
+  travelers?: string[];
   onAddFlight: (flight: Flight) => void;
   onDeleteFlight: (id: string) => void;
   onAddDocument: (doc: BookingDocument) => void;
@@ -17,11 +18,13 @@ interface DocumentsAndTicketsHubProps {
 export const DocumentsAndTicketsHub: React.FC<DocumentsAndTicketsHubProps> = ({
   flights,
   documents = [],
+  travelers = [],
   onAddFlight,
   onDeleteFlight,
   onAddDocument,
   onDeleteDocument,
 }) => {
+  const effectiveTravelers = travelers && travelers.length > 0 ? travelers : ['John', 'Jane'];
   const [activePillar, setActivePillar] = useState<'flights' | 'hotels' | 'all'>('flights');
   const [searchQuery, setSearchQuery] = useState('');
   
@@ -275,14 +278,14 @@ export const DocumentsAndTicketsHub: React.FC<DocumentsAndTicketsHubProps> = ({
         onClose={() => setIsFlightModalOpen(false)}
         onSave={(f) => { onAddFlight(f); setIsFlightModalOpen(false); }}
         initialFlight={editingFlight}
-        travelers={['Safvan', 'Riyana']}
+        travelers={effectiveTravelers}
       />
       <HotelModal
         isOpen={isHotelModalOpen}
         onClose={() => setIsHotelModalOpen(false)}
         onSave={(h) => { onAddDocument(h); setIsHotelModalOpen(false); }}
         initialHotel={editingHotel}
-        travelers={['Safvan', 'Riyana']}
+        travelers={effectiveTravelers}
       />
     </div>
   );

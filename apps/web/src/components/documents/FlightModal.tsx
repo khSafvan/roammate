@@ -67,11 +67,18 @@ export const FlightModal: React.FC<FlightModalProps> = ({ isOpen, onClose, onSav
           </div>
           <div className="form-group full-span">
             <label>Traveler / Passenger</label>
-            <select name="passengerName" className="form-input" defaultValue={initialFlight?.passengerName}>
-              <option value="">Select Passenger...</option>
-              {travelers.map(t => <option key={t} value={t}>{t}</option>)}
-              <option value={travelers.join(' & ')}>Both ({travelers.join(' & ')})</option>
-            </select>
+            <input
+              type="text"
+              name="passengerName"
+              className="form-input"
+              list="flight-travelers-list"
+              defaultValue={initialFlight?.passengerName || (travelers[0] || 'John')}
+              placeholder="e.g. John, Jane, or John & Jane"
+            />
+            <datalist id="flight-travelers-list">
+              {travelers.map(t => <option key={t} value={t} />)}
+              {travelers.length > 1 && <option value={travelers.join(' & ')} />}
+            </datalist>
           </div>
           <div className="form-group full-span">
             <label>Booking Reference (PNR)</label>

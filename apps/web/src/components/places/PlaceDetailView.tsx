@@ -20,6 +20,7 @@ import {
   Phone,
   Plus,
   Shirt,
+  Sparkles,
   Star,
   Tag,
   Trash2,
@@ -28,6 +29,7 @@ import { DayWeather, ItineraryStop, Look, StopCategory } from '@mojolog/shared';
 import { ApiClient } from '@mojolog/api-client';
 import { MarkdownText } from '../MarkdownText';
 import { LookCard } from '../outfits/LookCard';
+import { SelectFromWardrobeModal } from '../outfits/SelectFromWardrobeModal';
 
 export interface PlaceDetailViewProps {
   stop: ItineraryStop;
@@ -87,6 +89,9 @@ export const PlaceDetailView: React.FC<PlaceDetailViewProps> = ({
   // Single Note Editing State
   const [isEditingNote, setIsEditingNote] = useState(false);
   const [draftNote, setDraftNote] = useState(stop.notes || '');
+
+  // Wardrobe Selection Modal State
+  const [isWardrobeModalOpen, setIsWardrobeModalOpen] = useState(false);
 
   // Delete Confirmation State
   const [isDeleteConfirming, setIsDeleteConfirming] = useState(false);
@@ -582,14 +587,29 @@ export const PlaceDetailView: React.FC<PlaceDetailViewProps> = ({
 
         {/* JOHN & JANE COORDINATED OUTFITS SECTION */}
         <div className="place-detail-section-card">
-          <div className="section-card-header">
-            <Shirt size={16} className="text-secondary" />
-            <div>
-              <span className="section-card-title">Outfits · {person1Name} &amp; {person2Name}</span>
-              <p className="section-card-subtitle">
-                Plan and preview coordinated clothing and looks for this location
-              </p>
+          <div className="section-card-header" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '8px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <Shirt size={16} className="text-secondary" />
+              <div>
+                <span className="section-card-title">Outfits · {person1Name} &amp; {person2Name}</span>
+                <p className="section-card-subtitle">
+                  Plan and preview coordinated clothing and looks for this location
+                </p>
+              </div>
             </div>
+
+            {existingLooks.length > 0 && (
+              <button
+                type="button"
+                className="btn-secondary btn-sm"
+                onClick={() => setIsWardrobeModalOpen(true)}
+                style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', fontSize: '11px', padding: '4px 10px' }}
+                title="Select an outfit from your wardrobe capsule"
+              >
+                <Sparkles size={12} className="text-primary" />
+                <span>Pick from Wardrobe</span>
+              </button>
+            )}
           </div>
 
           <div className="place-outfit-container">
@@ -607,6 +627,41 @@ export const PlaceDetailView: React.FC<PlaceDetailViewProps> = ({
             />
           </div>
         </div>
+
+        {/* Select From Wardrobe Picker Modal */}
+        {isWardrobeModalOpen && (
+          <SelectFromWardrobeModal
+            isOpen={isWardrobeModalOpen}
+            targetDayNumber={dayNumber}
+            targetEventId={stop.id}
+            targetEventTitle={stop.title}
+            availableLooks={existingLooks}
+            person1Name={person1Name}
+            person2Name={person2Name}
+            onSelectLook={(selectedLook, mode) => {
+              if (mode === 'assign') {
+                onSaveLook({
+                  ...selectedLook,
+                  dayNumber,
+                  eventId: stop.id,
+                  updatedAt: Date.now(),
+                });
+              } else {
+                onSaveLook({
+                  ...selectedLook,
+                  id: `look_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
+                  dayNumber,
+                  eventId: stop.id,
+                  packed: false,
+                  createdAt: Date.now(),
+                  updatedAt: Date.now(),
+                });
+              }
+              setIsWardrobeModalOpen(false);
+            }}
+            onClose={() => setIsWardrobeModalOpen(false)}
+          />
+        )}
 
         {/* DANGER ZONE: DELETE STOP */}
         <div className="place-detail-danger-card">
