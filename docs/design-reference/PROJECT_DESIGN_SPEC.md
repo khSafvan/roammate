@@ -62,140 +62,140 @@ App Shell (Header & Vault Status)
 ### 📁 `01-auth-modal/`
 - **`passcode-auth-modal.png`**: The master password entry screen securing the zero-knowledge vault. Displays brand icon, secure master password field, show/hide toggle, and end-to-end edge encryption badge.
 
-![Passcode Auth Modal](./01-auth-modal/passcode-auth-modal.png)
+
 
 ---
 
 ### 📁 `02-trips-list/`
 - **`trips-list-overview.png`**: The primary landing view when browsing multiple journeys. Includes hero stats (Total Journeys, Itinerary Days, Flight Tickets) and filter pills (All, Upcoming, Completed).
 
-![Trips List Overview](./02-trips-list/trips-list-overview.png)
+
 
 - **`trip-card-detail.png`**: High-density journey card featuring destination pill, active status tag, dates, duration badge, readiness percentage ring, and quick-action buttons (Open Journey, Edit Settings, Export Backup).
 
-![Trip Card Detail](./02-trips-list/trip-card-detail.png)
+
 
 ---
 
 ### 📁 `03-timeline-itinerary/`
 - **`timeline-full-view.png`**: Two-column layout with the day's chronological timeline on the left and the interactive map panel on the right.
 
-![Timeline Workspace Full View](./03-timeline-itinerary/timeline-full-view.png)
+
 
 - **`day-selector-strip.png`**: Horizontal tab bar showing "Places to Visit (ideas count)" followed by daily tabs annotated with weekday, date, and forecast temperature (`Day 1 Jan 7 24°`).
 
-![Day Selector Strip](./03-timeline-itinerary/day-selector-strip.png)
+
 
 - **`timeline-cards-detail.png`**: Cards for various stop types (`transit`, `lodging`, `dining`, `sight`), showing drag handles, time badges, duration estimates, fixed base locks, transit buffer pills (`36m · 10.8 km drive`), and attached note callouts.
 
-![Timeline Stop Cards](./03-timeline-itinerary/timeline-cards-detail.png)
+
 
 ---
 
 ### 📁 `04-bookings-and-tickets/`
 - **`flight-ticket-16-9-john.png` & `flight-ticket-16-9-jane.png`**: 16:9 ratio airline boarding passes. Features flight carrier, departure/arrival airport codes, local times, overnight `+1` indicator, dashed flight path with center plane icon, personalized passenger tag (`PASSENGER: John` / `Jane`), and a perforated tear-off stub containing flight number, PNR, and seat class.
 
-![16:9 Airline Boarding Pass - John](./04-bookings-and-tickets/flight-ticket-16-9-john.png)
-![16:9 Airline Boarding Pass - Jane](./04-bookings-and-tickets/flight-ticket-16-9-jane.png)
+
+
 
 - **`hotels-view.png` & `hotel-key-card-4-3.png`**: 4:3 ratio hotel reservation cards styled as modern room key cards. Finished with deep blue gradient, gold EMV microchip graphic, vertical magnetic stripe, suite description, dates, and booking reference.
 
-![4:3 Hotel Key Card](./04-bookings-and-tickets/hotel-key-card-4-3.png)
+
 
 - **`horizontal-booking-card.png`**: Compact horizontal list cards for non-hotel/non-flight bookings (desert safaris, museums, observation decks, ferries).
 
-![Horizontal Activity Booking Card](./04-bookings-and-tickets/horizontal-booking-card.png)
+
 
 - **`all-bookings-viewport.png` & `all-bookings-full-page.png`**: Complete vault showing category filter pills (`All Bookings`, `Hotels`, `Flights`) and search bar with dynamic count tags.
 
-![All Bookings Vault](./04-bookings-and-tickets/all-bookings-viewport.png)
+
 
 ---
 
 ### 📁 `05-expense-tracker/`
 - **`expense-tracker-overview.png`**: Financial dashboard showing total trip spend, live currency conversion strip (`1 AED = 0.2725 USD · offline rates`), and quick entry CTA.
 
-![Expense Tracker Overview](./05-expense-tracker/expense-tracker-overview.png)
+
 
 - **`expense-breakdown-analytics.png`**: Spending progress bars and percentage distribution across 7 standard travel categories.
 
-![Category Budget Breakdown](./05-expense-tracker/expense-breakdown-analytics.png)
+
 
 - **`recent-transactions-list.png`**: Chronological ledger with category glyphs, descriptions, dates, amounts, and delete options.
 
-![Recent Transactions Ledger](./05-expense-tracker/recent-transactions-list.png)
+
 
 - **`log-expense-modal.png`**: Quick-entry modal with numeric amount input, category picker pills, date selector, and description field.
 
-![Log Expense Modal](./05-expense-tracker/log-expense-modal.png)
+
 
 ---
 
 ### 📁 `06-outfit-packing/`
 - **`outfit-itinerary-looks-view.png`**: Daily itinerary view aligning planned outfits with temperature, destination dress codes, occasion pill badges (Casual, Dining, Beach, Cultural), and 1-click "Pick from Wardrobe" integration.
 
-![Daily Itinerary Looks](./06-outfit-packing/outfit-itinerary-looks-view.png)
+
 
 - **`outfit-wardrobe-closet-view.png`**: Full digital wardrobe capsule collection with multi-filter search, traveler pills (John/Jane), occasion filters, packing toggles, duplicate ("wear again"), and day-assignment popover.
 
-![Digital Wardrobe Closet](./06-outfit-packing/outfit-wardrobe-closet-view.png)
+
 
 - **`modal-select-from-wardrobe.png`**: Wardrobe selector modal allowing travelers to browse their wardrobe capsule and either re-assign an outfit or duplicate ("wear again") to a specific Day or Stop.
 
-![Select from Wardrobe Modal](./06-outfit-packing/modal-select-from-wardrobe.png)
+
 
 - **`modal-add-outfit-with-occasions.png`**: Outfit creator modal featuring occasion vibe pills, toggle between "Assign to Day/Place" and "Save to Wardrobe (Unassigned)", and couple duo inputs for John and Jane.
 
-![Outfit Creator Modal](./06-outfit-packing/modal-add-outfit-with-occasions.png)
+
 
 - **`luggage-packing-view.png` & `luggage-packing-full-page.png`**: Comprehensive packing matrix with completion percentage, item checkboxes, and category filters (Clothing, Toiletries, Electronics, Documents, Medicine).
 
-![Luggage Packing Matrix](./06-outfit-packing/luggage-packing-view.png)
+
 
 ---
 
 ### 📁 `07-trip-settings/`
 - **`trip-settings-viewport.png` & `trip-settings-full-page.png`**: Central configuration dashboard.
 
-![Trip Settings Overview](./07-trip-settings/trip-settings-viewport.png)
+
 
 - **`emergency-contacts-scratchpad.png`**: Critical travel utility section for embassy numbers, local police/ambulance, hotel concierge, and offline Wi-Fi passwords.
 
-![Emergency Contacts Scratchpad](./07-trip-settings/emergency-contacts-scratchpad.png)
+
 
 ---
 
 ### 📁 `08-modals-and-drawers/`
 - **`drawer-places-to-visit.png` & `drawer-places-to-visit-full-page.png`**: Drawer displaying unscheduled places to visit with quick "Assign to Day" actions and category icons.
 
-![Places to Visit Drawer](./08-modals-and-drawers/drawer-places-to-visit.png)
+
 
 - **`modal-add-place-stop.png`**: Comprehensive place creation modal with Google/Nominatim place search, category tagging, time assignment, and duration sliders.
 
-![Add Stop Modal](./08-modals-and-drawers/modal-add-place-stop.png)
+
 
 - **`modal-stop-detail.png`**: Full stop inspection modal showing coordinates, photos, operating hours, and custom notes.
 
-![Stop Detail Modal](./08-modals-and-drawers/modal-stop-detail.png)
+
 
 - **`modal-route-optimizer.png`**: TSP 2-opt route optimization modal calculating minutes saved and re-sequenced waypoints.
 
-![Route Optimizer Modal](./08-modals-and-drawers/modal-route-optimizer.png)
+
 
 - **`modal-trip-readiness.png`**: Interactive audit checklist scoring packing, flight confirmation, hotel bookings, and travel insurance readiness.
 
-![Trip Readiness Audit Modal](./08-modals-and-drawers/modal-trip-readiness.png)
+
 
 - **`modal-share-export.png`**: Export modal for iCal calendar feed, GPX navigation tracks, and raw JSON vaults.
 
-![Share and Export Modal](./08-modals-and-drawers/modal-share-export.png)
+
 
 ---
 
 ### 📁 `09-interactive-map/`
 - **`terraway-map-panel.png`**: Vector map panel with multi-modal path rendering, distance metrics, GPX export, and waypoint interaction buttons.
 
-![TerraWay Vector Map Panel](./09-interactive-map/terraway-map-panel.png)
+
 
 ---
 

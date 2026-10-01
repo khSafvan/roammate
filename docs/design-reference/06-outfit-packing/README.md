@@ -9,7 +9,7 @@ This section covers the visual design, interactive workflows, and component spec
 
 Aligns couple outfits day-by-day directly against destination weather forecasts, temperature tags, and local dress code tips (such as modest clothing requirements for mosque or religious site visits).
 
-![Daily Itinerary Looks](./outfit-itinerary-looks-view.png)
+
 
 ### Key Features:
 - **Lookbook Canvas**: Duo card pairing side-by-side outfit slots for traveler 1 (**John**) and traveler 2 (**Jane**).
@@ -24,7 +24,7 @@ Aligns couple outfits day-by-day directly against destination weather forecasts,
 
 A dedicated closet capsule for browsing, curating, and organizing outfits before or during a trip.
 
-![Digital Wardrobe Capsule](./outfit-wardrobe-closet-view.png)
+
 
 ### Key Features:
 - **Unassigned Look Creation**: Create outfits without committing them to an itinerary day in advance.
@@ -39,7 +39,7 @@ A dedicated closet capsule for browsing, curating, and organizing outfits before
 
 Accessible from any itinerary day header, empty day dropzone, or stop detail panel.
 
-![Select from Wardrobe Modal](./modal-select-from-wardrobe.png)
+
 
 ### Key Features:
 - **Context Header**: Clear indicator of target day/place destination.
@@ -54,7 +54,7 @@ Accessible from any itinerary day header, empty day dropzone, or stop detail pan
 
 Comprehensive creation and editing modal for single or coordinated couple looks.
 
-![Outfit Creator Modal](./modal-add-outfit-with-occasions.png)
+
 
 ### Key Features:
 - **Occasion Vibe Selector**: One-click occasion pills with matching emojis.
@@ -68,7 +68,7 @@ Comprehensive creation and editing modal for single or coordinated couple looks.
 
 Luggage checklist organized into independent columns for each traveler.
 
-![Luggage Packing Matrix](./luggage-packing-view.png)
+
 
 ### Key Features:
 - Real-time progress bar and percentage counter.

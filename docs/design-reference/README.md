@@ -25,8 +25,8 @@ This directory contains high-resolution component captures and the full design s
 
 | Daily Itinerary Looks | Digital Wardrobe Closet Capsule |
 | :---: | :---: |
-| ![Daily Itinerary Looks](./06-outfit-packing/outfit-itinerary-looks-view.png) | ![Digital Wardrobe Closet](./06-outfit-packing/outfit-wardrobe-closet-view.png) |
+|  |
 
 | Select from Wardrobe Modal | Outfit Creator with Occasion Vibes |
 | :---: | :---: |
-| ![Select from Wardrobe Modal](./06-outfit-packing/modal-select-from-wardrobe.png) | ![Outfit Creator Modal](./06-outfit-packing/modal-add-outfit-with-occasions.png) |
+|  |

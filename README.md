@@ -4,23 +4,7 @@
 
 ---
 
-## 📸 Client-Facing UI Showcase
 
-### 1. Smart Autofill & Database Integrations
-The itinerary builder natively integrates with Google Places, OSM, and Aviation Data. Instead of typing manual details, you simply search, and Roammate instantly resolves and populates coordinates, opening hours, ratings, and terminal gates directly into your vault.
-
-| Place Search Autofill | Flight Data Resolution |
-| :---: | :---: |
-| ![Place Search Autofill](./docs/design-reference/12-new-feature-place-search.png) | ![Flight Data Resolution](./docs/design-reference/10-new-feature-flight-booking.png) |
-
----
-
-### 2. Dual-Pane Itinerary Workspace & TerraWay Vector Map
-The central command center splits your daily schedule on the left with a responsive vector map on the right. Time-sequenced stops show estimated durations, drag-and-drop reordering, transit buffers (`36m · 10.8 km drive`), attached travel notes, and temperature dress code tags.
-
-![Dual-Pane Itinerary Workspace](./docs/design-reference/03-timeline-itinerary/timeline-full-view.png)
-
----
 
 > 🎨 **Comprehensive Component & Design Reference:**  
 > For the complete visual tour of all 35+ screens, modals, and drawers (including the **Digital Wardrobe Capsule**, **Multi-Currency Expense Tracker**, **Places to Visit Drawer**, **Route Optimizer**, and **Emergency Scratchpad**), explore:  

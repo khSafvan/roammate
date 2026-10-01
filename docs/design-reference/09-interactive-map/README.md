@@ -8,7 +8,7 @@ This directory contains visual captures and specifications for the TerraWay map 
 
 High-performance vector map engine powered by MapLibre GL.
 
-![TerraWay Vector Map Panel](./terraway-map-panel.png)
+
 
 ### Key Features:
 - **Calm Cartography**: Clean Positron vector tiles designed for high contrast and sunlight legibility.

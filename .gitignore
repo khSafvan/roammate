@@ -54,3 +54,5 @@ graphify-out/
 .gemini/
 .aider*
 *.log
+docs/design-reference/**/*.png
+docs/design-reference/*.png

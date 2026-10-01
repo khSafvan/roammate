@@ -8,7 +8,7 @@ This directory contains visual captures and specifications for trip identity, cu
 
 Central configuration dashboard for travelers.
 
-![Trip Settings Overview](./trip-settings-viewport.png)
+
 
 ### Key Features:
 - **Traveler Names Configuration**: Set personalized names for travelers (**John** and **Jane** by default).
@@ -22,7 +22,7 @@ Central configuration dashboard for travelers.
 
 Critical travel safety details accessible offline.
 
-![Emergency Contacts Scratchpad](./emergency-contacts-scratchpad.png)
+
 
 ### Key Features:
 - Embassy and consulate phone numbers and addresses.
