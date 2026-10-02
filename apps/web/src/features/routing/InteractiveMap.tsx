@@ -59,7 +59,7 @@ export const InteractiveMap: React.FC<InteractiveMapProps> = ({
   const routeRequestIdRef = useRef(0);
 
   const geographicStops = useMemo(
-    () => day.stops.filter((s) => s.category !== 'note'),
+    () => day.stops.filter((s) => s.category !== 'note' && s.coordinates?.latitude !== undefined && s.coordinates?.longitude !== undefined),
     [day.stops]
   );
 
