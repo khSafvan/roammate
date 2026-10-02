@@ -271,23 +271,18 @@ export function loadLocalTrip(tripId?: string): Trip | null {
 
 export async function fetchItinerariesFromEdge(): Promise<Trip[]> {
   if (!API_BASE_URL) {
-    return loadAllLocalTrips();
+    throw new Error('API_BASE_URL is not configured. Cloud Backend is required as source of truth.');
   }
 
-  try {
-    const edgeTrips = await apiClient.fetchItineraries();
-    if (edgeTrips && edgeTrips.length > 0) {
-      const sanitized = edgeTrips.map(sanitizeTrip);
-      sanitized.forEach((t) => {
-        localStorage.setItem(`${STORAGE_KEYS.TRIP_PREFIX}${t.id}`, JSON.stringify(t));
-      });
-      return sanitized;
-    }
-  } catch (e) {
-    console.warn('Edge itineraries fetch error, falling back to local vault:', e);
+  const edgeTrips = await apiClient.fetchItineraries();
+  if (edgeTrips && edgeTrips.length > 0) {
+    const sanitized = edgeTrips.map(sanitizeTrip);
+    sanitized.forEach((t) => {
+      localStorage.setItem(`${STORAGE_KEYS.TRIP_PREFIX}${t.id}`, JSON.stringify(t));
+    });
+    return sanitized;
   }
-
-  return loadAllLocalTrips();
+  return [];
 }
 
 export async function fetchSharedTrip(token: string): Promise<Trip | null> {

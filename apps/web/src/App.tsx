@@ -144,6 +144,8 @@ function AppContent() {
     deleteTrip,
     handleLogout,
     exitReadOnly,
+    fatalError,
+    isSyncing,
   } = useVault();
 
   // Check for incoming QR code scan or vault parameter
@@ -1157,6 +1159,22 @@ function AppContent() {
     currentView === 'trip_detail' &&
     activeTab === 'timeline' &&
     !isPlacesToVisitActive;
+
+  if (fatalError) {
+    return (
+      <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', justifyContent: 'center', alignItems: 'center', backgroundColor: 'var(--bg-app)', color: 'var(--text-primary)', textAlign: 'center', padding: '20px' }}>
+        <AlertTriangle size={64} style={{ color: 'var(--brand-ruby)', marginBottom: '24px' }} />
+        <h1 style={{ fontSize: '24px', fontWeight: 700, marginBottom: '12px' }}>Database Unreachable</h1>
+        <p style={{ fontSize: '15px', color: 'var(--text-secondary)' }}>{fatalError}</p>
+        <button className="btn-primary" style={{ marginTop: '24px' }} onClick={() => window.location.reload()}>Retry Connection</button>
+      </div>
+    );
+  }
+
+  // Use isSyncing to show a global loader if needed, or just let it load
+  if (isSyncing) {
+    // Optionally render a small overlay, but we'll just let suspense handle the rest unless fatalError pops up.
+  }
 
   return (
     <div className={`app-shell ${isViewportLocked ? 'viewport-locked' : ''}`}>
