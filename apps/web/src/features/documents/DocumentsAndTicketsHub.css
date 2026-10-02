@@ -49,15 +49,15 @@
 
 .hub-add-dropdown {
   position: absolute;
-  top: calc(100% + 4px);
+  top: calc(100% + 8px);
   right: 0;
-  background: white;
-  border-radius: 8px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+  background: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05), 0 4px 6px rgba(0, 0, 0, 0.02);
   border: 1px solid var(--border-color);
-  min-width: 200px;
+  min-width: 220px;
   z-index: 100;
-  padding: 4px;
+  padding: 6px;
 }
 
 .hub-add-dropdown-item {
@@ -67,17 +67,19 @@
   width: 100%;
   padding: 10px 12px;
   border: none;
-  background: none;
+  background: transparent;
   text-align: left;
   font-size: 14px;
+  font-family: var(--font-family-base, system-ui, -apple-system, sans-serif);
   font-weight: 500;
   color: var(--text-primary);
-  border-radius: 4px;
+  border-radius: 8px;
   cursor: pointer;
+  transition: background-color 0.15s ease;
 }
 
 .hub-add-dropdown-item:hover {
-  background: var(--bg-subtle);
+  background-color: #f1f5f9;
 }
 
 .pass-flight-num {
