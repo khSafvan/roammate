@@ -30,7 +30,7 @@ export const TimelineActivityTicketCard: React.FC<TimelineActivityTicketCardProp
           style={{
             backgroundColor: 'var(--bg-card, #ffffff)',
             borderRadius: 'var(--radius-card, 16px)',
-            boxShadow: 'var(--shadow-card)',
+            boxShadow: 'none',
             padding: '16px 18px',
             border: '1px solid var(--border-light, rgba(15, 23, 42, 0.08))',
           }}
@@ -176,7 +176,7 @@ export const TimelineActivityTicketCard: React.FC<TimelineActivityTicketCardProp
               width: '100%',
               padding: '24px',
               textAlign: 'center',
-              boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.2)',
+              boxShadow: 'none',
             }}
             onClick={(e) => e.stopPropagation()}
           >

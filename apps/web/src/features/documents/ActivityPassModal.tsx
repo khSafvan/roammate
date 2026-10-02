@@ -91,7 +91,7 @@ export const ActivityPassModal: React.FC<ActivityPassModalProps> = ({ isOpen, on
           </div>
           
           {docData.title && !showAdvanced ? (
-            <div className="full-span" style={{ padding: '16px', backgroundColor: 'var(--bg-subtle)', borderRadius: '12px', border: '1px solid rgba(0,0,0,0.04)', boxShadow: '0 1px 3px rgba(0,0,0,0.05)', marginTop: '8px' }}>
+            <div className="full-span" style={{ padding: '16px', backgroundColor: 'var(--bg-subtle)', borderRadius: '12px', border: '1px solid rgba(0,0,0,0.04)', boxShadow: 'none', marginTop: '8px' }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                   <span style={{ fontSize: '24px' }}>🎟️</span>

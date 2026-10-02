@@ -212,7 +212,7 @@ export const PlacesToVisitDrawer: React.FC<PlacesToVisitDrawerProps> = ({
           padding: '16px 20px',
           borderRadius: 'var(--radius-lg, 16px)',
           border: '1px solid var(--border-light)',
-          boxShadow: 'var(--shadow-sm)',
+          boxShadow: 'none',
           marginBottom: '20px',
         }}
       >
@@ -242,7 +242,7 @@ export const PlacesToVisitDrawer: React.FC<PlacesToVisitDrawerProps> = ({
                 disabled={isDiscovering}
                 style={{
                   padding: '6px 12px',
-                  borderRadius: 'var(--radius-pill, 9999px)',
+                  borderRadius: 'var(--radius-pill, 6px)',
                   backgroundColor: activePreset === preset.label ? 'rgba(59, 130, 246, 0.12)' : 'var(--bg-subtle)',
                   border: `1px solid ${activePreset === preset.label ? 'var(--brand-blue, #3B82F6)' : 'var(--border-light)'}`,
                   color: activePreset === preset.label ? 'var(--brand-blue, #3B82F6)' : 'var(--text-secondary)',

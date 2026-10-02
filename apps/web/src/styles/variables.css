@@ -64,7 +64,7 @@
   --radius-xl: 20px;
   --radius-2xl: 24px;
   --radius-pill: 6px;        /* Pill shapes for chips, tags, small badges */
-  --radius-full: 9999px;
+  --radius-full: 6px;
 
   /* 7. Typography Scale & Hierarchy */
   --font-xs: 11px;

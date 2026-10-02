@@ -109,7 +109,7 @@ export const ScratchpadModal: React.FC<ScratchpadModalProps> = ({
                   alignItems: 'center',
                   gap: '4px',
                   padding: '4px 10px',
-                  borderRadius: 'var(--radius-pill, 9999px)',
+                  borderRadius: 'var(--radius-pill, 6px)',
                   backgroundColor: 'var(--brand-blue, #3B82F6)',
                   color: '#fff',
                   border: 'none',

@@ -52,7 +52,7 @@ export const AnchorLocationCard: React.FC<AnchorLocationCardProps> = ({
         marginTop: isStart ? '8px' : '12px',
         marginBottom: '12px',
         gap: '12px',
-        boxShadow: 'var(--shadow-card)',
+        boxShadow: 'none',
         userSelect: 'none',
       }}
     >
@@ -69,7 +69,7 @@ export const AnchorLocationCard: React.FC<AnchorLocationCardProps> = ({
             justifyContent: 'center',
             color: '#ffffff',
             flexShrink: 0,
-            boxShadow: '0 2px 6px rgba(0, 0, 0, 0.08)',
+            boxShadow: 'none',
           }}
         >
           <Hotel size={18} />
@@ -97,7 +97,7 @@ export const AnchorLocationCard: React.FC<AnchorLocationCardProps> = ({
                 fontSize: '11px',
                 fontWeight: 700,
                 padding: '2px 8px',
-                borderRadius: '9999px',
+                borderRadius: '6px',
                 backgroundColor: 'rgba(255, 255, 255, 0.85)',
                 color: accentColor,
                 border: `1px solid ${borderStroke}`,
@@ -151,7 +151,7 @@ export const AnchorLocationCard: React.FC<AnchorLocationCardProps> = ({
           style={{
             fontSize: '12px',
             padding: '6px 14px',
-            borderRadius: '9999px',
+            borderRadius: '6px',
             flexShrink: 0,
             cursor: 'pointer',
           }}

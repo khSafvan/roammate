@@ -228,7 +228,7 @@ export const SelectFromWardrobeModal: React.FC<SelectFromWardrobeModalProps> = (
                       display: 'flex',
                       flexDirection: 'column',
                       gap: '10px',
-                      boxShadow: '0 2px 8px rgba(0,0,0,0.03)',
+                      boxShadow: 'none',
                       transition: 'transform 0.15s, box-shadow 0.15s',
                     }}
                   >
