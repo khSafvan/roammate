@@ -13,6 +13,7 @@ import {
 import { Trip } from '../../types/trip';
 import { CreateTripParams } from '../../hooks/useVault';
 import { Modal } from '../../components/ui/Modal';
+import { Button } from "../../components/ui/Button";
 
 interface TripManagerModalProps {
   isOpen: boolean;
@@ -360,17 +361,17 @@ export const TripManagerModal: React.FC<TripManagerModalProps> = ({
             </div>
 
             <div className="modal-actions-row">
-              <button
+              <Button
                 type="button"
                 className="secondary-action-btn flex-1"
-                onClick={() => setViewMode('list')}
+                onClick={() => setViewMode('list')} variant="secondary"
               >
                 Back to List
-              </button>
-              <button type="submit" className="primary-modal-btn flex-1">
+              </Button>
+              <Button type="submit" className="primary-modal-btn flex-1" variant="primary">
                 <Plus size={15} />
                 <span>Initialize Trip</span>
-              </button>
+              </Button>
             </div>
           </form>
         )}
@@ -445,17 +446,17 @@ export const TripManagerModal: React.FC<TripManagerModalProps> = ({
             </div>
 
             <div className="modal-actions-row">
-              <button
+              <Button
                 type="button"
                 className="secondary-action-btn flex-1"
-                onClick={() => setViewMode('list')}
+                onClick={() => setViewMode('list')} variant="secondary"
               >
                 Cancel
-              </button>
-              <button type="submit" className="primary-modal-btn flex-1">
+              </Button>
+              <Button type="submit" className="primary-modal-btn flex-1" variant="primary">
                 <Check size={15} />
                 <span>Save Changes</span>
-              </button>
+              </Button>
             </div>
           </form>
         )}

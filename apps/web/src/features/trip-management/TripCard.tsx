@@ -11,6 +11,7 @@ import {
   Trash2,
 } from 'lucide-react';
 import { Trip } from '../../types/trip';
+import { Button } from '../../components/ui/Button';
 
 export interface TripCardProps {
   trip: Trip;
@@ -57,7 +58,7 @@ export const TripCard: React.FC<TripCardProps> = ({
                     padding: '1px 7px',
                     borderRadius: '9999px',
                     backgroundColor: 'rgba(37, 99, 235, 0.08)',
-                    color: 'var(--brand-blue, #2563EB)',
+                    color: 'var(--brand-blue, #10B981)',
                     border: '1px solid rgba(37, 99, 235, 0.22)',
                   }}
                 >
@@ -141,42 +142,45 @@ export const TripCard: React.FC<TripCardProps> = ({
         )}
 
         {/* Actions Row */}
-        <div className="trip-card-actions-row">
-          <button
+        <div className="trip-card-actions-row" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: '16px' }}>
+          <Button
             type="button"
-            className="open-trip-primary-btn"
+            variant="primary"
             onClick={() => onSelectTrip(trip.id)}
             title="Open trip itinerary and spatial route map"
           >
             <span>Open Journey</span>
-            <span className="arrow-glyph">→</span>
-          </button>
+            <span className="arrow-glyph" style={{ marginLeft: '8px' }}>→</span>
+          </Button>
 
-          <div className="trip-card-secondary-btns">
-            <button
+          <div className="trip-card-secondary-btns" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <Button
               type="button"
-              className="card-icon-action-btn"
+              variant="secondary"
+              style={{ padding: '8px' }}
               onClick={() => onOpenSettings(trip.id)}
               title="Edit Trip Settings & Schedule"
               aria-label="Edit Trip Settings"
             >
               <Settings size={15} />
-            </button>
+            </Button>
 
-            <button
+            <Button
               type="button"
-              className="card-icon-action-btn"
+              variant="secondary"
+              style={{ padding: '8px' }}
               onClick={() => onShareTrip(trip)}
               title="Export or Backup Trip"
               aria-label="Export or Backup Trip"
             >
               <Share2 size={15} />
-            </button>
+            </Button>
 
             {canDelete && (
-              <button
+              <Button
                 type="button"
-                className="card-icon-action-btn text-rose-hover"
+                variant="secondary"
+                style={{ padding: '8px', color: '#ef4444' }}
                 onClick={() =>
                   onToggleDeleteConfirm(isDeleteConfirming ? null : trip.id)
                 }
@@ -184,7 +188,7 @@ export const TripCard: React.FC<TripCardProps> = ({
                 aria-label="Delete Trip"
               >
                 <Trash2 size={15} />
-              </button>
+              </Button>
             )}
           </div>
         </div>

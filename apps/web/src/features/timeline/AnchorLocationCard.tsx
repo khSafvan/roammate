@@ -22,7 +22,7 @@ export const AnchorLocationCard: React.FC<AnchorLocationCardProps> = ({
     ? '#EA580C' // Terracotta for check-out
     : isCheckIn
     ? '#059669' // Alpine Emerald for check-in
-    : '#2563EB'; // Cobalt Blue for standard start/end base
+    : '#10B981'; // Cobalt Blue for standard start/end base
 
   const borderStroke = isCheckOut
     ? 'rgba(234, 88, 12, 0.20)'

@@ -5,6 +5,7 @@ import { Coordinates, StopCategory } from '../../types/trip';
 import { fuzzySortResults } from '../../utils/fuzzySearch';
 
 import { inferPlaceCategory } from '@roammate/core';
+import { Input } from "../../components/ui/Input";
 
 export interface PlaceSearchResult {
   title: string;
@@ -220,7 +221,7 @@ export const PlaceSearchInput: React.FC<PlaceSearchInputProps> = ({
             pointerEvents: 'none',
           }}
         />
-        <input
+        <Input
           type="text"
           role="combobox"
           aria-expanded={isOpen && results.length > 0}
@@ -334,7 +335,7 @@ export const PlaceSearchInput: React.FC<PlaceSearchInputProps> = ({
                         padding: '2px 6px',
                         borderRadius: '4px',
                         backgroundColor: r.isHotel ? 'rgba(59, 130, 246, 0.08)' : r.isThemeParkOrAttraction ? 'rgba(236, 72, 153, 0.08)' : 'rgba(100, 116, 139, 0.08)',
-                        color: r.isHotel ? '#2563eb' : r.isThemeParkOrAttraction ? '#db2777' : 'var(--text-secondary, #475569)',
+                        color: r.isHotel ? '#10b981' : r.isThemeParkOrAttraction ? '#db2777' : 'var(--text-secondary, #475569)',
                         flexShrink: 0,
                       }}
                     >

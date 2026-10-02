@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Clock, QrCode, Ticket, Users, X } from 'lucide-react';
 import { BookingDocument } from '../../types/trip';
+import { Button } from "../../components/ui/Button";
 
 interface TimelineActivityTicketCardProps {
   tickets: BookingDocument[];
@@ -229,14 +230,14 @@ export const TimelineActivityTicketCard: React.FC<TimelineActivityTicketCardProp
               </p>
             )}
 
-            <button
+            <Button
               type="button"
               className="primary-action-btn"
               onClick={() => setSelectedQrTicket(null)}
-              style={{ width: '100%', marginTop: '16px', justifyContent: 'center' }}
+              style={{ width: '100%', marginTop: '16px', justifyContent: 'center' }} variant="primary"
             >
               <span>Done</span>
-            </button>
+            </Button>
           </div>
         </div>
       )}

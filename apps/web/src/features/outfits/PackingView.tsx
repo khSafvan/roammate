@@ -18,6 +18,7 @@ import { ApiClient } from '@roammate/api-client';
 import { OutfitModal } from './OutfitModal';
 import { WardrobeClosetView } from './WardrobeClosetView';
 import { SelectFromWardrobeModal } from './SelectFromWardrobeModal';
+import { Button } from "../../components/ui/Button";
 
 interface PackingViewProps {
   trip: Trip;
@@ -222,7 +223,7 @@ export const PackingView: React.FC<PackingViewProps> = ({
             </div>
 
             {/* Prominent Primary + Add Outfit Button */}
-            <button
+            <Button
               type="button"
               className="primary-action-btn flex items-center gap-2"
               onClick={() => {
@@ -231,11 +232,11 @@ export const PackingView: React.FC<PackingViewProps> = ({
                 } else {
                   handleOpenAddLookForDay(1);
                 }
-              }}
+              }} variant="primary"
             >
               <Plus size={15} />
               <span>{viewMode === 'wardrobe' ? 'Add to Wardrobe' : 'Add Outfit Look'}</span>
-            </button>
+            </Button>
           </div>
         </div>
 
@@ -362,14 +363,14 @@ export const PackingView: React.FC<PackingViewProps> = ({
                     <span className="not-found-title">No outfits assigned to Day {day.dayNumber} yet</span>
                     <span className="not-found-hint">Design a brand new look or wear a saved outfit from your digital wardrobe</span>
                     <div className="flex items-center gap-3 flex-wrap justify-center mt-3">
-                      <button
+                      <Button
                         type="button"
                         className="primary-action-btn flex items-center gap-2"
-                        onClick={() => handleOpenAddLookForDay(day.dayNumber)}
+                        onClick={() => handleOpenAddLookForDay(day.dayNumber)} variant="primary"
                       >
                         <Plus size={13} />
                         <span>Create New Look</span>
-                      </button>
+                      </Button>
                       {looks.length > 0 && (
                         <button
                           type="button"
@@ -589,14 +590,14 @@ export const PackingView: React.FC<PackingViewProps> = ({
               <span className="not-found-icon">🧳</span>
               <span className="not-found-title">No outfits planned yet</span>
               <span className="not-found-hint">Create coordinated outfits to generate your couple packing checklist!</span>
-              <button
+              <Button
                 type="button"
                 className="primary-action-btn flex items-center gap-2 mt-3"
-                onClick={() => handleOpenAddLookForDay(1)}
+                onClick={() => handleOpenAddLookForDay(1)} variant="primary"
               >
                 <Plus size={14} />
                 <span>Add Your First Look</span>
-              </button>
+              </Button>
             </div>
           ) : (
             <div className="packing-columns-grid">

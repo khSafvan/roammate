@@ -68,7 +68,7 @@
 
 .form-input:focus {
   border-color: var(--brand-blue);
-  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.12);
 }
 
 .form-input::placeholder {
@@ -162,7 +162,7 @@
   font-size: 13.5px;
   font-weight: 600;
   cursor: pointer;
-  box-shadow: 0 1px 3px rgba(37, 99, 235, 0.25);
+  box-shadow: 0 1px 3px rgba(16, 185, 129, 0.25);
   transition: all 0.15s ease;
 }
 
@@ -547,7 +547,7 @@
 
 .auth-textarea:focus {
   border-color: var(--brand-blue);
-  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.12);
 }
 
 .word-count-hint {
@@ -615,7 +615,7 @@
 
 .auth-text-input:focus {
   border-color: var(--brand-blue);
-  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.12);
 }
 
 .password-input-wrapper {
@@ -913,7 +913,7 @@
 
 .share-link-input:focus {
   border-color: var(--brand-blue);
-  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.12);
 }
 
 /* 6. Error Boundary & Diagnostics System */
@@ -1230,8 +1230,8 @@
 
 .trip-item-row.active-trip-row {
   background-color: #F8FAFC;
-  border-color: rgba(37, 99, 235, 0.35);
-  box-shadow: 0 0 0 1px rgba(37, 99, 235, 0.15);
+  border-color: rgba(16, 185, 129, 0.35);
+  box-shadow: 0 0 0 1px rgba(16, 185, 129, 0.15);
 }
 
 .trip-item-clickable {
@@ -1263,7 +1263,7 @@
   font-size: 10.5px;
   font-weight: 600;
   color: var(--brand-blue);
-  background-color: rgba(37, 99, 235, 0.1);
+  background-color: rgba(16, 185, 129, 0.1);
   padding: 2px 7px;
   border-radius: var(--radius-pill);
 }
@@ -1330,7 +1330,7 @@
 
 .trip-switch-btn:hover {
   background-color: #EFF6FF;
-  border-color: rgba(37, 99, 235, 0.3);
+  border-color: rgba(16, 185, 129, 0.3);
   color: var(--brand-blue);
 }
 
@@ -1406,7 +1406,7 @@
 
 .add-new-trip-cta:hover {
   background-color: #EFF6FF;
-  border-color: rgba(37, 99, 235, 0.4);
+  border-color: rgba(16, 185, 129, 0.4);
 }
 
 .trip-form-container {
@@ -1444,7 +1444,7 @@
   align-items: center;
   justify-content: center;
   padding: 24px 16px;
-  background: radial-gradient(circle at 50% 20%, rgba(37, 99, 235, 0.08) 0%, transparent 60%),
+  background: radial-gradient(circle at 50% 20%, rgba(16, 185, 129, 0.08) 0%, transparent 60%),
               var(--bg-base);
 }
 
@@ -1470,8 +1470,8 @@
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  background-color: rgba(37, 99, 235, 0.08);
-  border: 1px solid rgba(37, 99, 235, 0.2);
+  background-color: rgba(16, 185, 129, 0.08);
+  border: 1px solid rgba(16, 185, 129, 0.2);
   border-radius: var(--radius-pill);
   padding: 4px 12px;
   margin-bottom: 12px;
@@ -1581,7 +1581,7 @@
   align-items: center;
   justify-content: center;
   padding: 24px 16px;
-  background: radial-gradient(circle at 50% 12%, rgba(37, 99, 235, 0.08) 0%, rgba(248, 249, 250, 0.98) 55%), #F8F9FA;
+  background: radial-gradient(circle at 50% 12%, rgba(16, 185, 129, 0.08) 0%, rgba(248, 249, 250, 0.98) 55%), #F8F9FA;
   position: relative;
   overflow: hidden;
 }
@@ -1624,10 +1624,10 @@
   text-transform: uppercase;
   letter-spacing: 0.05em;
   padding: 3px 9px;
-  background: rgba(37, 99, 235, 0.08);
-  color: #2563EB;
+  background: rgba(16, 185, 129, 0.08);
+  color: #10B981;
   border-radius: var(--radius-pill);
-  border: 1px solid rgba(37, 99, 235, 0.18);
+  border: 1px solid rgba(16, 185, 129, 0.18);
 }
 
 .passcode-auth-card {
@@ -1652,14 +1652,14 @@
   width: 56px;
   height: 56px;
   border-radius: 18px;
-  background: linear-gradient(135deg, rgba(37, 99, 235, 0.12), rgba(59, 130, 246, 0.06));
-  border: 1.5px solid rgba(37, 99, 235, 0.2);
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.12), rgba(59, 130, 246, 0.06));
+  border: 1.5px solid rgba(16, 185, 129, 0.2);
   display: flex;
   align-items: center;
   justify-content: center;
   margin: 0 auto 20px auto;
-  color: #2563EB;
-  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.08);
+  color: #10B981;
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.08);
 }
 
 .passcode-title {
@@ -1745,8 +1745,8 @@
 
 .passcode-input:focus {
   outline: none;
-  border-color: #2563EB;
-  box-shadow: 0 0 0 3.5px rgba(37, 99, 235, 0.14);
+  border-color: #10B981;
+  box-shadow: 0 0 0 3.5px rgba(16, 185, 129, 0.14);
 }
 
 .passcode-input::placeholder {
@@ -1797,7 +1797,7 @@
 .passcode-submit-btn {
   width: 100%;
   height: 48px;
-  background: linear-gradient(135deg, #2563EB, #1D4ED8);
+  background: linear-gradient(135deg, #10B981, #059669);
   color: #FFFFFF;
   font-size: 15px;
   font-weight: 600;
@@ -1808,13 +1808,13 @@
   justify-content: center;
   gap: 9px;
   cursor: pointer;
-  box-shadow: 0 4px 14px rgba(37, 99, 235, 0.25);
+  box-shadow: 0 4px 14px rgba(16, 185, 129, 0.25);
   transition: all 0.18s ease;
 }
 
 .passcode-submit-btn:hover:not(:disabled) {
-  background: linear-gradient(135deg, #1D4ED8, #1E40AF);
-  box-shadow: 0 4px 14px rgba(37, 99, 235, 0.25);
+  background: linear-gradient(135deg, #059669, #1E40AF);
+  box-shadow: 0 4px 14px rgba(16, 185, 129, 0.25);
 }
 
 .passcode-submit-btn:active:not(:disabled) {

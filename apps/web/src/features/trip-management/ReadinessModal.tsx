@@ -10,6 +10,8 @@ import {
 } from 'lucide-react';
 import { PackingCategory, PackingItem, ReadinessItem } from '../../types/trip';
 import { Modal } from '../../components/ui/Modal';
+import { Button } from "../../components/ui/Button";
+import { Input } from "../../components/ui/Input";
 
 interface ReadinessModalProps {
   isOpen: boolean;
@@ -165,7 +167,7 @@ export const ReadinessModal: React.FC<ReadinessModalProps> = ({
                     </option>
                   ))}
                 </select>
-                <input
+                <Input
                   type="text"
                   placeholder="Add item e.g. Passport, Power Bank..."
                   className="form-input"
@@ -173,9 +175,9 @@ export const ReadinessModal: React.FC<ReadinessModalProps> = ({
                   value={newItemName}
                   onChange={(e) => setNewItemName(e.target.value)}
                 />
-                <button type="submit" className="primary-action-btn" style={{ padding: '6px 12px' }}>
+                <Button type="submit" className="primary-action-btn" style={{ padding: '6px 12px' }} variant="primary">
                   <Plus size={15} />
-                </button>
+                </Button>
               </form>
             )}
 
@@ -264,9 +266,9 @@ export const ReadinessModal: React.FC<ReadinessModalProps> = ({
 
         {/* Footer */}
         <div className="modal-footer">
-          <button className="primary-modal-btn" onClick={onClose}>
+          <Button className="primary-modal-btn" onClick={onClose} variant="primary">
             Done
-          </button>
+          </Button>
         </div>
     </Modal>
   );

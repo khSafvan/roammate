@@ -1,3 +1,4 @@
+import { Input } from "../../components/ui/Input";
 import React, { useState } from 'react';
 import {
   ArrowLeft,
@@ -12,6 +13,7 @@ import { PlaceSearchInput, PlaceSearchResult } from '../places/PlaceSearchInput'
 import { useModalA11y } from '../../hooks';
 import { DiscoveryResultCard } from '../places/DiscoveryResultCard';
 import { PlaceIdeaCard } from '../places/PlaceIdeaCard';
+import { Button } from "../../components/ui/Button";
 
 interface PlacesToVisitDrawerProps {
   places: ItineraryStop[];
@@ -193,13 +195,13 @@ export const PlacesToVisitDrawer: React.FC<PlacesToVisitDrawerProps> = ({
               <span>Back to Itinerary</span>
             </button>
           )}
-          <button
+          <Button
             className="secondary-action-btn"
-            onClick={() => setIsManualAddOpen(!isManualAddOpen)}
+            onClick={() => setIsManualAddOpen(!isManualAddOpen)} variant="secondary"
           >
             <Plus size={15} />
             <span>{isManualAddOpen ? 'Close Form' : 'Custom Place'}</span>
-          </button>
+          </Button>
         </div>
       </div>
 
@@ -303,7 +305,7 @@ export const PlacesToVisitDrawer: React.FC<PlacesToVisitDrawerProps> = ({
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '12px' }}>
             <div>
               <label className="form-label">Place Name *</label>
-              <input
+              <Input
                 type="text"
                 required
                 className="form-input"
@@ -316,7 +318,7 @@ export const PlacesToVisitDrawer: React.FC<PlacesToVisitDrawerProps> = ({
 
           <div>
             <label className="form-label">Address or Area</label>
-            <input
+            <Input
               type="text"
               className="form-input"
               placeholder="e.g. Al Fahidi Historical Neighbourhood, Bur Dubai"
@@ -327,7 +329,7 @@ export const PlacesToVisitDrawer: React.FC<PlacesToVisitDrawerProps> = ({
 
           <div>
             <label className="form-label">Travel Notes / Recommendations</label>
-            <input
+            <Input
               type="text"
               className="form-input"
               placeholder="e.g. Try the lamb machboos, make reservations 2 days prior"
@@ -339,7 +341,7 @@ export const PlacesToVisitDrawer: React.FC<PlacesToVisitDrawerProps> = ({
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
             <div>
               <label className="form-label text-xs">Latitude (GPS)</label>
-              <input
+              <Input
                 type="text"
                 className="form-input text-xs font-mono"
                 placeholder="25.1972"
@@ -349,7 +351,7 @@ export const PlacesToVisitDrawer: React.FC<PlacesToVisitDrawerProps> = ({
             </div>
             <div>
               <label className="form-label text-xs">Longitude (GPS)</label>
-              <input
+              <Input
                 type="text"
                 className="form-input text-xs font-mono"
                 placeholder="55.2744"
@@ -360,13 +362,13 @@ export const PlacesToVisitDrawer: React.FC<PlacesToVisitDrawerProps> = ({
           </div>
 
           <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
-            <button type="button" className="secondary-action-btn" onClick={() => setIsManualAddOpen(false)}>
+            <Button type="button" className="secondary-action-btn" onClick={() => setIsManualAddOpen(false)} variant="secondary">
               Cancel
-            </button>
-            <button type="submit" className="primary-modal-btn">
+            </Button>
+            <Button type="submit" className="primary-modal-btn" variant="primary">
               <Plus size={15} />
               <span>Save to Ideas</span>
-            </button>
+            </Button>
           </div>
         </form>
       )}
@@ -431,7 +433,7 @@ export const PlacesToVisitDrawer: React.FC<PlacesToVisitDrawerProps> = ({
             <form onSubmit={handleSaveEdit} className="auth-content-col">
               <div>
                 <label className="form-label">Title</label>
-                <input
+                <Input
                   type="text"
                   required
                   className="form-input"
@@ -441,7 +443,7 @@ export const PlacesToVisitDrawer: React.FC<PlacesToVisitDrawerProps> = ({
               </div>
               <div>
                 <label className="form-label">Subtitle</label>
-                <input
+                <Input
                   type="text"
                   className="form-input"
                   value={editingPlace.subtitle || ''}
@@ -450,7 +452,7 @@ export const PlacesToVisitDrawer: React.FC<PlacesToVisitDrawerProps> = ({
               </div>
               <div>
                 <label className="form-label">Address</label>
-                <input
+                <Input
                   type="text"
                   className="form-input"
                   value={editingPlace.address || ''}
@@ -467,12 +469,12 @@ export const PlacesToVisitDrawer: React.FC<PlacesToVisitDrawerProps> = ({
                 />
               </div>
               <div className="modal-actions-row">
-                <button type="button" className="secondary-action-btn" onClick={() => setEditingPlace(null)}>
+                <Button type="button" className="secondary-action-btn" onClick={() => setEditingPlace(null)} variant="secondary">
                   Cancel
-                </button>
-                <button type="submit" className="primary-modal-btn">
+                </Button>
+                <Button type="submit" className="primary-modal-btn" variant="primary">
                   Save Changes
-                </button>
+                </Button>
               </div>
             </form>
           </div>

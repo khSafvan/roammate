@@ -13,6 +13,7 @@ import {
 } from '../../utils/exportImport';
 import { downloadIcsCalendar } from '@roammate/core';
 import { Modal } from '../../components/ui/Modal';
+import { Button } from "../../components/ui/Button";
 
 interface ShareModalProps {
   isOpen: boolean;
@@ -78,19 +79,19 @@ export const ShareModal: React.FC<ShareModalProps> = ({
             </p>
 
             <div className="auth-actions-row">
-              <button className="secondary-action-btn flex-1" onClick={handleDownloadFile}>
+              <Button className="secondary-action-btn flex-1" onClick={handleDownloadFile} variant="secondary">
                 <Download size={15} />
                 <span>Export (.json)</span>
-              </button>
+              </Button>
 
-              <button
+              <Button
                 className="secondary-action-btn flex-1"
                 onClick={() => fileInputRef.current?.click()}
-                disabled={isImporting}
+                disabled={isImporting} variant="secondary"
               >
                 <Upload size={15} />
                 <span>{isImporting ? 'Importing...' : 'Import (.json)'}</span>
-              </button>
+              </Button>
 
               <input
                 ref={fileInputRef}
@@ -120,13 +121,13 @@ export const ShareModal: React.FC<ShareModalProps> = ({
               Import all flights, hotel stays, and timed itinerary stops into Google Calendar, Apple Calendar, or Outlook.
             </p>
 
-            <button
+            <Button
               className="primary-action-btn w-full flex items-center justify-center gap-2"
-              onClick={() => downloadIcsCalendar(trip)}
+              onClick={() => downloadIcsCalendar(trip)} variant="primary"
             >
               <Calendar size={15} />
               <span>Download iCalendar (.ics)</span>
-            </button>
+            </Button>
           </div>
 
           {/* Option 3: Printable Travel Packet */}
@@ -141,13 +142,13 @@ export const ShareModal: React.FC<ShareModalProps> = ({
               Printer-friendly offline document with flight boarding passes, hotel reservations, and daily schedules.
             </p>
 
-            <button
+            <Button
               className="secondary-action-btn w-full flex items-center justify-center gap-2"
-              onClick={() => window.print()}
+              onClick={() => window.print()} variant="secondary"
             >
               <Printer size={15} />
               <span>Print Travel Packet</span>
-            </button>
+            </Button>
           </div>
         </div>
     </Modal>

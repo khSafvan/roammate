@@ -45,7 +45,7 @@
   font-size: 13px;
   font-weight: 600;
   cursor: pointer;
-  box-shadow: 0 1px 3px rgba(37, 99, 235, 0.25);
+  box-shadow: 0 1px 3px rgba(16, 185, 129, 0.25);
   transition: all 0.15s ease;
 }
 
@@ -142,7 +142,7 @@
 
 .passenger-chip.active {
   background-color: #EFF6FF;
-  border-color: rgba(37, 99, 235, 0.4);
+  border-color: rgba(16, 185, 129, 0.4);
   color: var(--brand-blue);
   font-weight: 600;
 }
@@ -305,8 +305,8 @@
   gap: 5px;
   font-size: 11px;
   font-weight: 600;
-  background-color: rgba(37, 99, 235, 0.08);
-  border: 1px solid rgba(37, 99, 235, 0.18);
+  background-color: rgba(16, 185, 129, 0.08);
+  border: 1px solid rgba(16, 185, 129, 0.18);
   color: var(--brand-blue);
   border-radius: var(--radius-pill);
   padding: 2px 8px;
@@ -670,7 +670,7 @@
 
 .cat-chip-btn.selected {
   background-color: var(--brand-blue-subtle);
-  border-color: rgba(37, 99, 235, 0.25);
+  border-color: rgba(16, 185, 129, 0.25);
   color: var(--brand-blue);
   font-weight: 600;
 }
@@ -986,7 +986,7 @@
 
 .create-trip-card-dashed:hover {
   border-color: var(--brand-blue);
-  background-color: rgba(37, 99, 235, 0.02);
+  background-color: rgba(16, 185, 129, 0.02);
 }
 
 .create-dashed-inner {
@@ -1242,7 +1242,7 @@
 .settings-textarea:focus {
   outline: none;
   border-color: var(--brand-blue);
-  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.12);
+  box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.12);
 }
 
 .settings-input-icon-wrap {
@@ -1286,7 +1286,7 @@
 
 .color-swatch-btn.selected {
   border-color: var(--brand-blue);
-  background-color: rgba(37, 99, 235, 0.04);
+  background-color: rgba(16, 185, 129, 0.04);
 }
 
 .swatch-circle {
@@ -1584,8 +1584,8 @@
   align-items: center;
   gap: 4px;
   padding: 2px 8px;
-  background-color: rgba(37, 99, 235, 0.06);
-  border: 1px solid rgba(37, 99, 235, 0.15);
+  background-color: rgba(16, 185, 129, 0.06);
+  border: 1px solid rgba(16, 185, 129, 0.15);
   border-radius: var(--radius-pill);
   font-size: 11px;
   font-weight: 600;
@@ -1643,7 +1643,7 @@
   width: 36px;
   height: 36px;
   border-radius: var(--radius-sm, 8px);
-  background-color: var(--brand-blue-subtle, rgba(37, 99, 235, 0.08));
+  background-color: var(--brand-blue-subtle, rgba(16, 185, 129, 0.08));
   display: flex;
   align-items: center;
   justify-content: center;
@@ -2172,7 +2172,7 @@
   align-items: center;
   gap: 6px;
   padding: 4px 10px;
-  background-color: var(--brand-blue-subtle, rgba(37, 99, 235, 0.08));
+  background-color: var(--brand-blue-subtle, rgba(16, 185, 129, 0.08));
   border-radius: var(--radius-pill);
   font-size: 12px;
   font-weight: var(--fw-medium, 500);
@@ -2287,7 +2287,7 @@
 
 .search-input-box:focus-within {
   border-color: var(--brand-blue);
-  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.08);
+  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.08);
 }
 
 .search-field {
@@ -2353,7 +2353,7 @@
 }
 
 .traveler-filter-chip.active {
-  background-color: var(--brand-blue-subtle, rgba(37, 99, 235, 0.08));
+  background-color: var(--brand-blue-subtle, rgba(16, 185, 129, 0.08));
   border-color: var(--brand-blue);
   color: var(--brand-blue);
   font-weight: var(--fw-semibold, 600);
@@ -2462,7 +2462,7 @@
   color: #7C3AED;
 }
 .booking-voucher-card.color-activity .voucher-type-row {
-  color: #2563EB;
+  color: #10B981;
 }
 .booking-voucher-card.color-transit .voucher-type-row {
   color: #059669;
@@ -3211,7 +3211,7 @@
 }
 
 .modal-type-tab.active {
-  background-color: var(--brand-blue-subtle, rgba(37, 99, 235, 0.08));
+  background-color: var(--brand-blue-subtle, rgba(16, 185, 129, 0.08));
   border-color: var(--brand-blue);
   color: var(--brand-blue);
   font-weight: var(--fw-semibold, 600);
@@ -3222,8 +3222,8 @@
   align-items: center;
   gap: 4px;
   padding: 2px 7px;
-  background-color: rgba(37, 99, 235, 0.08);
-  border: 1px solid rgba(37, 99, 235, 0.2);
+  background-color: rgba(16, 185, 129, 0.08);
+  border: 1px solid rgba(16, 185, 129, 0.2);
   border-radius: var(--radius-pill);
   font-size: 11px;
   font-weight: var(--fw-medium, 500);

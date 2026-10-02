@@ -12,6 +12,7 @@ import {
   X,
 } from 'lucide-react';
 import { Look, LookOccasion, Trip } from '@roammate/shared';
+import { Button } from "../../components/ui/Button";
 
 export interface WardrobeClosetViewProps {
   trip: Trip;
@@ -179,14 +180,14 @@ export const WardrobeClosetView: React.FC<WardrobeClosetViewProps> = ({
           </div>
 
           {/* Primary Add CTA */}
-          <button
+          <Button
             type="button"
             className="primary-action-btn flex items-center gap-2 whitespace-nowrap"
-            onClick={onOpenAddLook}
+            onClick={onOpenAddLook} variant="primary"
           >
             <Plus size={15} />
             <span>New Wardrobe Look</span>
-          </button>
+          </Button>
         </div>
 
         {/* Occasion Tags Bar */}
@@ -220,14 +221,14 @@ export const WardrobeClosetView: React.FC<WardrobeClosetViewProps> = ({
           <span className="not-found-icon">✨</span>
           <span className="not-found-title">Your Wardrobe Closet is Empty</span>
           <span className="not-found-hint">Create wardrobe looks here before assigning them, or plan outfits you can wear across multiple days of your trip.</span>
-          <button
+          <Button
             type="button"
             className="primary-action-btn flex items-center gap-2 mt-4 mx-auto"
-            onClick={onOpenAddLook}
+            onClick={onOpenAddLook} variant="primary"
           >
             <Plus size={15} />
             <span>Create First Outfit Look</span>
-          </button>
+          </Button>
         </div>
       ) : (
         <div
@@ -496,16 +497,16 @@ export const WardrobeClosetView: React.FC<WardrobeClosetViewProps> = ({
 
                   {/* Assign to Day Popover Trigger */}
                   <div style={{ position: 'relative' }}>
-                    <button
+                    <Button
                       type="button"
                       className="secondary-action-btn"
                       onClick={() => setAssigningLookId(isAssigningThis ? null : look.id)}
-                      style={{ fontSize: '11px', padding: '4px 8px', gap: '4px' }}
+                      style={{ fontSize: '11px', padding: '4px 8px', gap: '4px' }} variant="secondary"
                     >
                       <Calendar size={12} />
                       <span>{isAssigned ? `Day ${look.dayNumber} Assigned` : 'Assign to Day'}</span>
                       <ChevronDown size={11} />
-                    </button>
+                    </Button>
 
                     {isAssigningThis && (
                       <div

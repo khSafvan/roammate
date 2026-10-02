@@ -9,6 +9,8 @@ import {
 import { Expense, EXPENSE_CATEGORIES, ExpenseCategory } from '../../types/trip';
 import { computeExpenseBreakdown } from '@roammate/core';
 import { fetchRate, RateResult } from '../../utils/currencyService';
+import { Button } from "../../components/ui/Button";
+import { Input } from "../../components/ui/Input";
 
 interface ExpenseTrackerProps {
   expenses: Expense[];
@@ -112,10 +114,10 @@ export const ExpenseTracker = React.memo<ExpenseTrackerProps>(function ExpenseTr
         </div>
 
         <div style={{ display: 'flex', gap: '8px' }}>
-          <button className="primary-action-btn" onClick={() => setIsModalOpen(true)}>
+          <Button className="primary-action-btn" onClick={() => setIsModalOpen(true)} variant="primary">
             <Plus size={16} />
             <span>Log Expense</span>
-          </button>
+          </Button>
         </div>
       </div>
 
@@ -275,7 +277,7 @@ export const ExpenseTracker = React.memo<ExpenseTrackerProps>(function ExpenseTr
             <form onSubmit={handleSubmit} className="auth-content-col">
               <div>
                 <label className="form-label">Amount ({baseCurrency}) *</label>
-                <input
+                <Input
                   type="number"
                   step="0.01"
                   required
@@ -310,7 +312,7 @@ export const ExpenseTracker = React.memo<ExpenseTrackerProps>(function ExpenseTr
 
               <div>
                 <label className="form-label">Date</label>
-                <input
+                <Input
                   type="date"
                   className="form-input"
                   value={date}
@@ -320,7 +322,7 @@ export const ExpenseTracker = React.memo<ExpenseTrackerProps>(function ExpenseTr
 
               <div>
                 <label className="form-label">Description / Note</label>
-                <input
+                <Input
                   type="text"
                   placeholder="e.g. Ramen dinner, museum tickets, souvenirs"
                   className="form-input"
@@ -329,9 +331,9 @@ export const ExpenseTracker = React.memo<ExpenseTrackerProps>(function ExpenseTr
                 />
               </div>
 
-              <button type="submit" className="primary-modal-btn">
+              <Button type="submit" className="primary-modal-btn" variant="primary">
                 Add Expense
-              </button>
+              </Button>
             </form>
           </div>
         </div>
