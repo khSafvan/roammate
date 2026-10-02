@@ -3,17 +3,17 @@ import {
   CalendarDays,
   CheckSquare,
   CloudSun,
-  Copy,
-  Edit2,
+  
+  
   Luggage,
   Plus,
   Shirt,
   Sparkles,
   Square,
-  Trash2,
+  
   User,
 } from 'lucide-react';
-import { Look, LookOccasion, Trip } from '@roammate/shared';
+import { Look, Trip } from '@roammate/shared';
 import { ApiClient } from '@roammate/api-client';
 import { OutfitModal } from './OutfitModal';
 import { WardrobeClosetView } from './WardrobeClosetView';
@@ -28,16 +28,6 @@ interface PackingViewProps {
   onDeleteLook?: (lookId: string) => void;
   onNavigateToDay?: (dayNumber: number) => void;
 }
-
-const OCCASION_BADGES: Record<LookOccasion, { label: string; emoji: string; bg: string; color: string }> = {
-  casual: { label: 'Casual', emoji: '☀️', bg: '#fef3c7', color: '#92400e' },
-  dining: { label: 'Dining', emoji: '🍷', bg: '#fce7f3', color: '#9d174d' },
-  beach: { label: 'Beach & Pool', emoji: '🏖️', bg: '#e0f2fe', color: '#075985' },
-  cultural: { label: 'Cultural', emoji: '🕌', bg: '#ecfdf5', color: '#065f46' },
-  active: { label: 'Active', emoji: '👟', bg: '#f3e8ff', color: '#6b21a8' },
-  formal: { label: 'Formal', emoji: '✨', bg: '#fef9c3', color: '#854d0e' },
-  other: { label: 'Other', emoji: '🏷️', bg: '#f1f5f9', color: '#475569' },
-};
 
 export const PackingView: React.FC<PackingViewProps> = ({
   trip,
@@ -174,14 +164,6 @@ export const PackingView: React.FC<PackingViewProps> = ({
     }
   };
 
-  const handleMoveToWardrobe = (look: Look) => {
-    onUpdateLook({
-      ...look,
-      dayNumber: undefined,
-      eventId: 'unassigned',
-      updatedAt: Date.now(),
-    });
-  };
 
   return (
     <div className="packing-view-root">
@@ -390,172 +372,66 @@ export const PackingView: React.FC<PackingViewProps> = ({
                     </div>
                   </div>
                 ) : (
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '16px' }}>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginTop: '12px' }}>
                     {dayLooks.map((l) => {
-                      const stop = stopLookup.get(l.eventId);
+                      
                       const p1Thumb = l.person1UseCutout ? l.person1Cutout || l.person1Original : l.person1Original;
                       const p2Thumb = l.person2UseCutout ? l.person2Cutout || l.person2Original : l.person2Original;
-                      const occasionMeta = l.occasion ? OCCASION_BADGES[l.occasion] : null;
-
+                      
                       return (
                         <div
                           key={l.id}
-                          className="lookbook-canvas"
-                          style={{ padding: '14px', margin: 0 }}
+                          className="compact-outfit-thumbnail"
+                          style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '8px',
+                            padding: '6px 8px',
+                            border: '1px solid var(--border-subtle, #e2e8f0)',
+                            borderRadius: '6px',
+                            backgroundColor: 'var(--bg-surface, #ffffff)',
+                          }}
                         >
-                          <div className="lookbook-header" style={{ marginBottom: '10px', paddingBottom: '8px' }}>
-                            <div>
-                              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
-                                <span className="lookbook-title" style={{ fontSize: '13px' }}>
-                                  {l.title || 'Coordinated Look'}
-                                </span>
-                                {occasionMeta && (
-                                  <span
-                                    style={{
-                                      fontSize: '11px',
-                                      fontWeight: 600,
-                                      padding: '1px 7px',
-                                      borderRadius: '9999px',
-                                      background: occasionMeta.bg,
-                                      color: occasionMeta.color,
-                                      display: 'inline-flex',
-                                      alignItems: 'center',
-                                      gap: '3px',
-                                    }}
-                                  >
-                                    <span>{occasionMeta.emoji}</span>
-                                    <span>{occasionMeta.label}</span>
-                                  </span>
-                                )}
-                              </div>
-                              {stop && (
-                                <p style={{ fontSize: '11px', color: 'var(--color-text-secondary, #64748b)', margin: '2px 0 0' }}>
-                                  📍 {stop.title} {stop.time ? `(${stop.time})` : ''}
-                                </p>
-                              )}
-                            </div>
-
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '5px', flexWrap: 'wrap' }}>
-                              <button
-                                type="button"
-                                className="slot-action-btn"
-                                onClick={() => {
-                                  const duplicated: Look = {
-                                    ...l,
-                                    id: `look_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
-                                    title: `${l.title || 'Look'} (Wear Again)`,
-                                    packed: false,
-                                    createdAt: Date.now(),
-                                    updatedAt: Date.now(),
-                                  };
-                                  onUpdateLook(duplicated);
-                                }}
-                                title="Duplicate look to wear again"
-                              >
-                                <Copy size={11} />
-                                <span>Duplicate</span>
-                              </button>
-
-                              <button
-                                type="button"
-                                className="slot-action-btn"
-                                onClick={() => handleMoveToWardrobe(l)}
-                                title="Unassign from this day and keep in wardrobe closet"
-                              >
-                                <Shirt size={11} />
-                                <span>To Closet</span>
-                              </button>
-
-                              <button
-                                type="button"
-                                className="slot-action-btn"
-                                onClick={() => handleOpenEditLook(l)}
-                                title="Edit outfit look"
-                              >
-                                <Edit2 size={11} />
-                                <span>Edit</span>
-                              </button>
-
-                              {onDeleteLook && (
-                                <button
-                                  type="button"
-                                  className="slot-action-btn btn-danger"
-                                  onClick={() => onDeleteLook(l.id)}
-                                  title="Delete look"
-                                >
-                                  <Trash2 size={11} />
-                                </button>
-                              )}
-                            </div>
-                          </div>
-
-                          {/* Side-by-Side Cutout Display */}
-                          <div className="lookbook-stage" style={{ minHeight: '180px', gap: '10px', padding: '4px 0' }}>
-                            {/* Person 1 */}
-                            <div className="lookbook-slot" style={{ padding: '8px' }}>
-                              <span className="slot-person-tag" style={{ fontSize: '10px', marginBottom: '4px' }}>
-                                <User size={10} />
-                                <span>{person1Name}</span>
-                              </span>
-                              <div className="slot-image-display" style={{ height: '140px' }}>
-                                {p1Thumb ? (
-                                  <img
-                                    src={p1Thumb}
-                                    alt={l.person1Label || `${person1Name}'s outfit`}
-                                    className={`slot-cutout-img ${!l.person1UseCutout ? 'original-mode' : ''}`}
-                                    loading="lazy"
-                                  />
-                                ) : (
-                                  <span style={{ fontSize: '11px', color: '#94a3b8' }}>No photo</span>
-                                )}
-                              </div>
-                              <span style={{ fontSize: '11px', fontWeight: 600, color: 'var(--color-text-primary, #0f172a)', marginTop: '4px', textAlign: 'center' }}>
-                                {l.person1Label || 'Outfit'}
-                              </span>
-                            </div>
-
-                            {/* Person 2 */}
-                            <div className="lookbook-slot" style={{ padding: '8px', marginLeft: '-10px', zIndex: 2 }}>
-                              <span className="slot-person-tag" style={{ fontSize: '10px', marginBottom: '4px' }}>
-                                <User size={10} />
-                                <span>{person2Name}</span>
-                              </span>
-                              <div className="slot-image-display" style={{ height: '140px' }}>
-                                {p2Thumb ? (
-                                  <img
-                                    src={p2Thumb}
-                                    alt={l.person2Label || `${person2Name}'s outfit`}
-                                    className={`slot-cutout-img ${!l.person2UseCutout ? 'original-mode' : ''}`}
-                                    loading="lazy"
-                                  />
-                                ) : (
-                                  <span style={{ fontSize: '11px', color: '#94a3b8' }}>No photo</span>
-                                )}
-                              </div>
-                              <span style={{ fontSize: '11px', fontWeight: 600, color: 'var(--color-text-primary, #0f172a)', marginTop: '4px', textAlign: 'center' }}>
-                                {l.person2Label || 'Outfit'}
-                              </span>
-                            </div>
-                          </div>
-
-                          {/* Footer with Packed Status */}
-                          <div className="lookbook-footer" style={{ marginTop: '8px', paddingTop: '8px' }}>
-                            <label className="packed-toggle-label" style={{ fontSize: '11px' }}>
-                              <input
-                                type="checkbox"
-                                className="packed-checkbox"
-                                checked={Boolean(l.packed)}
-                                onChange={() => handleTogglePacked(l)}
+                          <div style={{ display: 'flex', gap: '4px' }}>
+                            {p1Thumb && (
+                              <img
+                                src={p1Thumb}
+                                alt="Outfit 1"
+                                style={{ width: '32px', height: '32px', objectFit: 'contain', borderRadius: '4px', backgroundColor: 'var(--bg-subtle)' }}
+                                loading="lazy"
                               />
-                              <span>Packed in Luggage</span>
-                            </label>
-
-                            {l.packed && (
-                              <span style={{ fontSize: '10px', color: '#10b981', display: 'flex', alignItems: 'center', gap: '3px' }}>
-                                <CheckSquare size={12} />
-                                <span>Ready</span>
-                              </span>
                             )}
+                            {p2Thumb && (
+                              <img
+                                src={p2Thumb}
+                                alt="Outfit 2"
+                                style={{ width: '32px', height: '32px', objectFit: 'contain', borderRadius: '4px', backgroundColor: 'var(--bg-subtle)' }}
+                                loading="lazy"
+                              />
+                            )}
+                          </div>
+                          
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '2px', paddingRight: '4px' }}>
+                            <span style={{ fontSize: '11px', fontWeight: 600, color: 'var(--text-primary)' }}>
+                              {l.title || 'Coordinated Look'}
+                            </span>
+                            <div style={{ display: 'flex', gap: '6px' }}>
+                              <button
+                                type="button"
+                                onClick={() => handleOpenEditLook(l)}
+                                style={{ fontSize: '10px', color: 'var(--text-tertiary)', background: 'none', border: 'none', padding: 0, cursor: 'pointer', fontWeight: 500 }}
+                              >
+                                Edit
+                              </button>
+                              <span style={{ color: 'var(--border-strong)', fontSize: '10px' }}>|</span>
+                              <button
+                                type="button"
+                                onClick={() => onDeleteLook?.(l.id)}
+                                style={{ fontSize: '10px', color: '#ef4444', background: 'none', border: 'none', padding: 0, cursor: 'pointer', fontWeight: 500 }}
+                              >
+                                Remove
+                              </button>
+                            </div>
                           </div>
                         </div>
                       );
@@ -621,8 +497,8 @@ export const PackingView: React.FC<PackingViewProps> = ({
                       <span className="not-found-hint">No looks for {person1Name} under current filter.</span>
                     </div>
                   ) : (
-                    p1Looks.map((l) => {
-                      const stop = stopLookup.get(l.eventId);
+                    p1Looks.map((l) => { const stop = stopLookup.get(l.eventId || "");
+                      
                       const thumb = l.person1UseCutout
                         ? l.person1Cutout || l.person1Original
                         : l.person1Original;
@@ -693,8 +569,8 @@ export const PackingView: React.FC<PackingViewProps> = ({
                       <span className="not-found-hint">No looks for {person2Name} under current filter.</span>
                     </div>
                   ) : (
-                    p2Looks.map((l) => {
-                      const stop = stopLookup.get(l.eventId);
+                    p2Looks.map((l) => { const stop = stopLookup.get(l.eventId || "");
+                      
                       const thumb = l.person2UseCutout
                         ? l.person2Cutout || l.person2Original
                         : l.person2Original;

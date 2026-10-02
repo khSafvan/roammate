@@ -292,7 +292,7 @@ export const TimelineCard = React.memo<TimelineCardProps>(function TimelineCard(
               
               <span className="card-time">{stop.startTime}</span>
               {etaWeather && (
-                <div className="flex items-center gap-1 ml-2 px-1.5 py-0.5 bg-slate-50 border border-slate-100 rounded text-[10px] font-medium text-slate-600">
+                <div className="card-weather-pill">
                   {getMiniWeatherIcon(etaWeather.condition, 10)}
                   <span>{etaWeather.tempC}°</span>
                 </div>

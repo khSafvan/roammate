@@ -2,7 +2,7 @@ import React, { useMemo, useState } from 'react';
 import {
   Compass,
   Plus,
-  Sparkles,
+  
 } from 'lucide-react';
 import { Trip } from '../types/trip';
 import { VaultSession } from '../auth/crypto';
@@ -111,39 +111,11 @@ export const TripsListPage: React.FC<TripsListPageProps> = ({
 
       {/* Main Content Workspace */}
       <main className="trips-dashboard-container">
-        {/* Hero Banner */}
-        <section className="trips-hero-card">
-          <div className="trips-hero-content">
-            <div className="hero-eyebrow">
-              <Sparkles size={14} className="text-blue" />
-              <span>Your Personal Travel Vault</span>
-            </div>
-            <h1 className="trips-hero-title">Where to next?</h1>
-            <p className="trips-hero-desc">
-              Organize multi-modal itineraries, flight passes, hotel check-ins, and expenses in one secure, zero-knowledge vault.
-            </p>
-
-            <div className="trips-stats-strip">
-              <div className="trips-stat-item">
-                <span className="stat-number tabular">{trips.length}</span>
-                <span className="stat-label">Total Journeys</span>
-              </div>
-              <div className="trips-stat-divider" />
-              <div className="trips-stat-item">
-                <span className="stat-number tabular">
-                  {trips.reduce((acc, t) => acc + (t.days?.length || 0), 0)}
-                </span>
-                <span className="stat-label">Itinerary Days</span>
-              </div>
-              <div className="trips-stat-divider" />
-              <div className="trips-stat-item">
-                <span className="stat-number tabular">
-                  {trips.reduce((acc, t) => acc + (t.flights?.length || 0), 0)}
-                </span>
-                <span className="stat-label">Flight Tickets</span>
-              </div>
-            </div>
-          </div>
+        {/* Hero Section */}
+        <section style={{ marginBottom: '24px' }}>
+          <h1 style={{ fontSize: '24px', fontWeight: 'bold', color: 'var(--text-primary)', margin: 0 }}>
+            Where to next?
+          </h1>
         </section>
 
         {/* Toolbar & Filter Tabs */}
@@ -172,16 +144,13 @@ export const TripsListPage: React.FC<TripsListPageProps> = ({
         {/* Trips Grid */}
         <div className="trips-grid">
           {filteredTrips.length === 0 ? (
-            <div className="trips-empty-state">
-              <Compass size={40} className="text-slate" />
-              <h2 style={{ marginTop: '8px', fontSize: '18px', fontWeight: 'bold' }}>No journeys found</h2>
-              <p>Start by planning your first destination or import an itinerary file.</p>
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '64px 0' }}>
+              <h2 style={{ fontSize: '18px', fontWeight: 'bold', marginBottom: '8px' }}>No journeys found</h2>
+              <p style={{ fontSize: '14px', color: 'var(--text-secondary)', marginBottom: '24px' }}>Plan your next adventure...</p>
               <Button
                 variant="primary"
-                style={{ marginTop: '16px' }}
                 onClick={() => setIsCreateModalOpen(true)}
               >
-                <Plus size={15} style={{ marginRight: '8px' }} />
                 <span>Create Your First Trip</span>
               </Button>
             </div>

@@ -515,32 +515,7 @@
   color: var(--brand-blue);
 }
 
-.card-fixed-pill {
-  display: inline-flex;
-  align-items: center;
-  gap: 3px;
-  font-size: 10px;
-  font-weight: 600;
-  color: #B45309;
-  background-color: rgba(245, 158, 11, 0.1);
-  border: 1px solid rgba(245, 158, 11, 0.25);
-  padding: 1px 6px;
-  border-radius: var(--radius-pill);
-}
-
-.card-hours-pill {
-  display: inline-flex;
-  align-items: center;
-  font-size: 10px;
-  font-weight: 500;
-  font-variant-numeric: tabular-nums;
-  color: var(--text-tertiary);
-  background-color: var(--bg-subtle);
-  border: 1px solid var(--border-subtle);
-  padding: 1px 6px;
-  border-radius: var(--radius-pill);
-}
-
+/* Unified Timeline Pill System */
 .card-body {
   width: 100%;
 }
@@ -548,20 +523,68 @@
 .card-meta-line {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
   flex-wrap: wrap;
-  margin-bottom: 5px;
+  margin-bottom: 8px;
 }
 
-.card-order-pill {
-  font-size: 11px;
+.card-order-pill,
+.card-hours-pill,
+.card-fixed-pill,
+.card-duration-pill,
+.card-ticket-pill,
+.card-weather-pill,
+.card-category-sublabel {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 10px;
   font-weight: 600;
-  font-variant-numeric: tabular-nums;
+  height: 20px;
+  padding: 0 6px;
+  border-radius: var(--radius-pill);
+  box-sizing: border-box;
+  white-space: nowrap;
+}
+
+.card-order-pill,
+.card-hours-pill,
+.card-weather-pill {
   color: var(--text-secondary);
   background-color: var(--bg-subtle);
-  padding: 1px 7px;
-  border-radius: var(--radius-pill);
   border: 1px solid var(--border-subtle);
+  font-variant-numeric: tabular-nums;
+}
+
+.card-category-sublabel {
+  color: var(--text-tertiary);
+  background-color: transparent;
+  border: 1px solid transparent;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.card-duration-pill {
+  color: var(--text-tertiary);
+  background-color: var(--bg-subtle);
+  border: 1px solid var(--border-subtle);
+  font-variant-numeric: tabular-nums;
+}
+
+.card-fixed-pill {
+  color: #B45309;
+  background-color: rgba(245, 158, 11, 0.1);
+  border: 1px solid rgba(245, 158, 11, 0.25);
+}
+
+.card-time {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-primary);
+  font-variant-numeric: tabular-nums;
+  display: inline-flex;
+  align-items: center;
+  height: 20px;
 }
 
 .card-reorder-actions {
@@ -577,36 +600,23 @@
   cursor: grab;
   color: var(--text-tertiary);
   padding: 1px 2px;
-  transition: color 0.15s ease;
 }
 
 .card-drag-grip:hover {
   color: var(--text-primary);
 }
 
-.card-drag-grip:active {
-  cursor: grabbing;
-}
-
 .reorder-arrow-btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 19px;
-  height: 19px;
+  width: 20px;
+  height: 20px;
   border-radius: var(--radius-pill);
   border: 1px solid var(--border-subtle);
   background-color: var(--bg-subtle);
   color: var(--text-tertiary);
   cursor: pointer;
-  padding: 0;
-  transition: all 0.15s ease;
-}
-
-.reorder-arrow-btn:hover {
-  background-color: var(--bg-card);
-  color: var(--brand-blue);
-  border-color: var(--border-strong);
 }
 
 .timeline-item-wrapper.is-dragging {
@@ -615,31 +625,6 @@
 
 .timeline-item-wrapper.is-drag-over .timeline-card {
   border-color: var(--brand-blue);
-  box-shadow: none;
-}
-
-.card-time {
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--text-primary);
-  font-variant-numeric: tabular-nums;
-}
-
-.card-category-sublabel {
-  font-size: 11px;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  color: var(--text-tertiary);
-}
-
-.card-duration-pill {
-  display: inline-flex;
-  align-items: center;
-  gap: 3px;
-  font-size: 11px;
-  color: var(--text-tertiary);
-  font-variant-numeric: tabular-nums;
 }
 
 .card-ticket-pill {
