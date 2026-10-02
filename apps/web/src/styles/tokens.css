@@ -17,8 +17,8 @@
   
   --radius-sm: 4px;
   --radius-md: 8px;
-  --radius-pill: 9999px;
+  --radius-pill: 6px;
   
-  --shadow-card: 0px 1px 3px 0px rgba(0,0,0,0.1), 0px 1px 2px -1px rgba(0,0,0,0.1);
-  --shadow-modal: 0px 10px 25px -5px rgba(0,0,0,0.1), 0px 8px 10px -6px rgba(0,0,0,0.1);
+  --shadow-card: none;
+  --shadow-modal: none;
 }

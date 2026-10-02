@@ -90,9 +90,12 @@ export const DocumentsAndTicketsHub: React.FC<DocumentsAndTicketsHubProps> = ({
 
   if (isLoading) {
     return (
-      <div className="loading-spinner-container">
-        <div className="loading-spinner" />
-        <span className="loading-text">Loading...</span>
+      <div className="bookings-hub-container" style={{ padding: '24px' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(400px, 1fr))', gap: '24px' }}>
+          <div className="skeleton" style={{ height: '140px' }} />
+          <div className="skeleton" style={{ height: '140px' }} />
+          <div className="skeleton" style={{ height: '140px' }} />
+        </div>
       </div>
     );
   }
@@ -243,32 +246,46 @@ export const DocumentsAndTicketsHub: React.FC<DocumentsAndTicketsHubProps> = ({
         </div>
 
         {filteredDocs.filter(d => d.category === 'hotel').length > 0 && (
-          <div className="hotels-key-grid" style={{ marginTop: filteredFlights.length > 0 ? '24px' : '0' }}>
+          <div className="flights-ticket-grid" style={{ marginTop: filteredFlights.length > 0 ? '24px' : '0' }}>
             {filteredDocs.filter(d => d.category === 'hotel').map((doc) => (
-              <div key={doc.id} className="hotel-key-card">
-                <div className="key-card-strip" />
-                <div>
-                  <div className="key-card-chip" />
-                  <div className="hotel-header">
-                    <h3 className="hotel-title">{doc.title}</h3>
-                    <div className="hotel-actions">
-                      <button className="pass-delete-btn hotel-btn" onClick={() => { setEditingDoc(doc); setIsHotelModalOpen(true); }}><FileText size={13} /></button>
-                      <button className="pass-delete-btn hotel-btn" onClick={() => onDeleteDocument(doc.id)}><Trash2 size={13} /></button>
+              <div key={doc.id} className="airline-ticket-card">
+                <div className="ticket-main-section">
+                  <div className="pass-header">
+                    <div className="pass-carrier-row">
+                      <Hotel size={16} className="text-emerald" />
+                      <span className="pass-carrier">{doc.title}</span>
+                    </div>
+                    <div className="pass-header-actions">
+                      <button className="pass-delete-btn" onClick={() => { setEditingDoc(doc); setIsHotelModalOpen(true); }}><FileText size={13} /></button>
+                      <button className="pass-delete-btn" onClick={() => onDeleteDocument(doc.id)}><Trash2 size={13} /></button>
                     </div>
                   </div>
-                  {doc.subtitle && <p className="hotel-subtitle">{doc.subtitle}</p>}
+                  
+                  {doc.subtitle && <p className="doc-subtitle mt-4">{doc.subtitle}</p>}
+                  
+                  <div className="pass-route-row my-auto">
+                    <div className="doc-meta">
+                      {doc.date && <span>Check-in: {doc.date}</span>}
+                      {doc.endDate && <span>Check-out: {doc.endDate}</span>}
+                    </div>
+                  </div>
+                  
+                  {(doc.passengerOrGuestName) && (
+                    <div className="pass-footer no-border p-0">
+                      <span className="pass-passenger">GUEST: {doc.passengerOrGuestName}</span>
+                    </div>
+                  )}
                 </div>
                 
-                <div className="hotel-footer">
-                  <div className="hotel-dates">
-                    <span>{doc.date}</span>
-                    {doc.endDate && <span>→ {doc.endDate}</span>}
+                <div className="ticket-stub-section">
+                  <div className="text-center w-full">
+                    <div className="meta-label">HOTEL VOUCHER</div>
                   </div>
-                  {(doc.passengerOrGuestName || doc.confirmationCode) && (
-                    <div className="hotel-guests">
-                      {doc.passengerOrGuestName && <span>{doc.passengerOrGuestName}</span>}
-                      {doc.passengerOrGuestName && doc.confirmationCode && <span> • </span>}
-                      {doc.confirmationCode && <span>{doc.confirmationCode}</span>}
+                  
+                  {doc.confirmationCode && (
+                    <div className="text-center mt-4 w-full">
+                      <div className="meta-label">CONFIRMATION</div>
+                      <div className="stub-ref stub-ref-text">{doc.confirmationCode}</div>
                     </div>
                   )}
                 </div>
@@ -278,33 +295,48 @@ export const DocumentsAndTicketsHub: React.FC<DocumentsAndTicketsHubProps> = ({
         )}
 
         {filteredDocs.filter(d => d.category !== 'hotel').length > 0 && (
-          <div className="other-bookings-grid" style={{ marginTop: (filteredFlights.length > 0 || filteredDocs.filter(d => d.category === 'hotel').length > 0) ? '24px' : '0' }}>
+          <div className="flights-ticket-grid" style={{ marginTop: (filteredFlights.length > 0 || filteredDocs.filter(d => d.category === 'hotel').length > 0) ? '24px' : '0' }}>
             {filteredDocs.filter(d => d.category !== 'hotel').map((doc) => {
               const isActivity = doc.category === 'activity';
               const isTransit = doc.category === 'transit';
               const CategoryIcon = isActivity ? Ticket : isTransit ? Train : FileText;
+              const iconClass = isActivity ? 'text-purple' : isTransit ? 'text-green' : 'text-slate';
               
               return (
-                <div key={doc.id} className="horizontal-booking-card">
-                  <div className="horizontal-booking-card-icon">
-                    <CategoryIcon size={20} className={isActivity ? 'text-purple' : isTransit ? 'text-green' : 'text-slate'} />
-                  </div>
-                  
-                  <div className="horizontal-booking-card-content">
-                    <div className="doc-header">
-                      <h3 className="doc-title">{doc.title}</h3>
-                      <div className="doc-actions">
+                <div key={doc.id} className="airline-ticket-card">
+                  <div className="ticket-main-section">
+                    <div className="pass-header">
+                      <div className="pass-carrier-row">
+                        <CategoryIcon size={16} className={iconClass} />
+                        <span className="pass-carrier">{doc.title}</span>
+                      </div>
+                      <div className="pass-header-actions">
                         <button className="pass-delete-btn" onClick={() => { setEditingDoc(doc); setIsActivityModalOpen(true); }}><FileText size={13} /></button>
                         <button className="pass-delete-btn" onClick={() => onDeleteDocument(doc.id)}><Trash2 size={13} /></button>
                       </div>
                     </div>
                     
-                    {doc.subtitle && <p className="doc-subtitle">{doc.subtitle}</p>}
+                    {doc.subtitle && <p className="doc-subtitle mt-4">{doc.subtitle}</p>}
                     
-                    <div className="doc-meta">
-                      {doc.date && <span>{doc.date} {doc.time ? doc.time : ''}</span>}
-                      {doc.location && <span>{doc.location}</span>}
+                    <div className="pass-route-row my-auto">
+                      <div className="doc-meta">
+                        {doc.date && <span>Date: {doc.date} {doc.time ? `at ${doc.time}` : ''}</span>}
+                        {doc.location && <span>Loc: {doc.location}</span>}
+                      </div>
                     </div>
+                  </div>
+                  
+                  <div className="ticket-stub-section">
+                    <div className="text-center w-full">
+                      <div className="meta-label">PASS / TICKET</div>
+                    </div>
+                    
+                    {doc.confirmationCode && (
+                      <div className="text-center mt-4 w-full">
+                        <div className="meta-label">REFERENCE</div>
+                        <div className="stub-ref stub-ref-text">{doc.confirmationCode}</div>
+                      </div>
+                    )}
                   </div>
                 </div>
               );

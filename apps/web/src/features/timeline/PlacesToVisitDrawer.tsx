@@ -261,9 +261,10 @@ export const PlacesToVisitDrawer: React.FC<PlacesToVisitDrawerProps> = ({
 
           {/* Discovery Loading State */}
           {isDiscovering && (
-            <div className="loading-spinner-container mt-4">
-              <div className="loading-spinner" />
-              <span className="loading-text">Loading...</span>
+            <div style={{ marginTop: '12px', display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: '10px' }}>
+              <div className="skeleton" style={{ height: '80px' }} />
+              <div className="skeleton" style={{ height: '80px' }} />
+              <div className="skeleton" style={{ height: '80px' }} />
             </div>
           )}
 

@@ -106,7 +106,7 @@ button, a, input, select, .icon-btn, [role="button"], [role="option"] {
   justify-content: center;
   cursor: pointer;
   color: var(--text-secondary);
-  box-shadow: var(--shadow-sm);
+  box-shadow: none;
 }
 
 .icon-btn:hover {

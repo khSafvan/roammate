@@ -1160,7 +1160,16 @@ function AppContent() {
 
   return (
     <div className={`app-shell ${isViewportLocked ? 'viewport-locked' : ''}`}>
-      <Suspense fallback={<div className="loading-spinner-container"><div className="loading-spinner"></div><span className="loading-text">Loading...</span></div>}>
+      <Suspense fallback={
+        <div style={{ padding: '32px', display: 'flex', flexDirection: 'column', gap: '24px', height: '100vh', width: '100%' }}>
+          <div className="skeleton" style={{ height: '300px', width: '100%' }}></div>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '24px' }}>
+            <div className="skeleton" style={{ height: '180px' }}></div>
+            <div className="skeleton" style={{ height: '180px' }}></div>
+            <div className="skeleton" style={{ height: '180px' }}></div>
+          </div>
+        </div>
+      }>
       {/* 1. TRIPS LIST LANDING VIEW */}
       {currentView === 'trips_list' && (
         <TripsListPage
@@ -1557,7 +1566,7 @@ function AppContent() {
             <section
               className={`map-pane ${mobileView === 'timeline' ? 'mobile-hidden' : ''}`}
             >
-              <Suspense fallback={<div className="map-loading-state" aria-label="Loading map" />}>
+              <Suspense fallback={<div className="skeleton" style={{ width: '100%', height: '100%' }} />}>
                 <InteractiveMap
                   day={activeDay}
                   onSelectStop={(s) => {

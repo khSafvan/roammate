@@ -14,7 +14,7 @@
 }
 
 .btn:active:not(:disabled) {
-  transform: scale(0.98) !important;
+  /* Flat design: no active scaling */
 }
 
 .btn:focus-visible {
@@ -58,7 +58,7 @@
   transition: border-color 150ms ease-in-out, box-shadow 150ms ease-in-out;
 }
 .input:hover:not(:disabled) { border-color: #cbd5e1; }
-.input:focus { border-color: var(--color-focus-ring); box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1); outline: none; }
+.input:focus { border-color: var(--color-focus-ring); outline: 2px solid var(--color-focus-ring); outline-offset: -1px; }
 .input:disabled { background-color: #f1f5f9; color: var(--color-text-secondary); cursor: not-allowed; }
 
 /* Tabs */

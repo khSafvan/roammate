@@ -11,20 +11,19 @@
   gap: 24px;
 }
 
+/* General Ticket Card (Flat Design) */
 .airline-ticket-card {
   display: flex;
-  background: white;
-  border-radius: 12px;
+  background: var(--bg-card);
+  border-radius: var(--radius-sm);
   overflow: hidden;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
-  border: 1px solid rgba(0,0,0,0.04);
-  aspect-ratio: 16 / 9;
+  border: 1px solid var(--border-strong);
   position: relative;
-  transition: transform 0.2s, box-shadow 0.2s;
+  transition: border-color 0.15s ease;
+  min-height: 140px;
 }
 .airline-ticket-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+  border-color: var(--brand-blue);
 }
 
 .ticket-main-section {
@@ -37,8 +36,8 @@
 
 .ticket-stub-section {
   width: 25%;
-  min-width: 120px;
-  background: #fcfcfc;
+  min-width: 130px;
+  background: var(--bg-subtle);
   border-left: 2px dashed var(--border-medium);
   padding: 20px 12px;
   display: flex;
@@ -46,111 +45,6 @@
   justify-content: space-between;
   align-items: center;
   position: relative;
-}
-
-/* Cutouts for ticket effect */
-.ticket-stub-section::before,
-.ticket-stub-section::after {
-  content: '';
-  position: absolute;
-  left: -10px;
-  width: 20px;
-  height: 20px;
-  background: var(--bg-canvas); /* Match background so it looks like a hole */
-  border-radius: 50%;
-  border: 1px solid var(--border-medium);
-}
-.ticket-stub-section::before {
-  top: -11px;
-  border-top-color: transparent;
-  border-left-color: transparent;
-  transform: rotate(-45deg);
-}
-.ticket-stub-section::after {
-  bottom: -11px;
-  border-bottom-color: transparent;
-  border-left-color: transparent;
-  transform: rotate(45deg);
-}
-
-/* Hotel Key Card (4:3) */
-.hotels-key-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-  gap: 24px;
-}
-
-.hotel-key-card {
-  background: linear-gradient(135deg, #2c3e50 0%, #3498db 100%);
-  color: white;
-  border-radius: 12px;
-  padding: 24px;
-  aspect-ratio: 4 / 3;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  box-shadow: 0 6px 16px rgba(0,0,0,0.1);
-  position: relative;
-  overflow: hidden;
-  transition: transform 0.2s;
-}
-.hotel-key-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 20px rgba(0,0,0,0.15);
-}
-
-.key-card-chip {
-  width: 38px;
-  height: 28px;
-  background: #ffd700;
-  border-radius: 4px;
-  background-image: linear-gradient(to right, #d4af37 20%, #ffdf00 50%, #d4af37 80%);
-  opacity: 0.9;
-  margin-bottom: 16px;
-  border: 1px solid #b8860b;
-}
-
-.key-card-strip {
-  position: absolute;
-  top: 0;
-  right: 30px;
-  width: 30px;
-  height: 100%;
-  background: rgba(0, 0, 0, 0.15);
-}
-
-/* Other Bookings (Horizontal) */
-.other-bookings-grid {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 16px;
-}
-
-.horizontal-booking-card {
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  background: white;
-  border: 1px solid rgba(0,0,0,0.04);
-  border-radius: 12px;
-  padding: 16px 20px;
-  gap: 20px;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
-}
-.horizontal-booking-card-icon {
-  width: 48px;
-  height: 48px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: var(--bg-subtle);
-  flex-shrink: 0;
-}
-.horizontal-booking-card-content {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
 }
 
 .hub-add-dropdown {
