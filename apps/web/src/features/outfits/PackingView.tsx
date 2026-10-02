@@ -4,16 +4,16 @@ import {
   CheckSquare,
   CloudSun,
   
-  
+  Edit2,
   Luggage,
   Plus,
   Shirt,
   Sparkles,
   Square,
-  
+  Trash2,
   User,
 } from 'lucide-react';
-import { Look, Trip } from '@roammate/shared';
+import { Look, LookOccasion, Trip } from '@roammate/shared';
 import { ApiClient } from '@roammate/api-client';
 import { OutfitModal } from './OutfitModal';
 import { WardrobeClosetView } from './WardrobeClosetView';
@@ -28,6 +28,16 @@ interface PackingViewProps {
   onDeleteLook?: (lookId: string) => void;
   onNavigateToDay?: (dayNumber: number) => void;
 }
+
+const OCCASION_BADGES: Record<LookOccasion, { label: string; emoji: string; bg: string; color: string }> = {
+  casual: { label: 'Casual', emoji: '☀️', bg: '#fef3c7', color: '#92400e' },
+  dining: { label: 'Dining', emoji: '🍷', bg: '#fce7f3', color: '#9d174d' },
+  beach: { label: 'Beach & Pool', emoji: '🏖️', bg: '#e0f2fe', color: '#075985' },
+  cultural: { label: 'Cultural', emoji: '🕌', bg: '#ecfdf5', color: '#065f46' },
+  active: { label: 'Active', emoji: '👟', bg: '#f3e8ff', color: '#6b21a8' },
+  formal: { label: 'Formal', emoji: '✨', bg: '#fef9c3', color: '#854d0e' },
+  other: { label: 'Other', emoji: '🏷️', bg: '#f1f5f9', color: '#475569' },
+};
 
 export const PackingView: React.FC<PackingViewProps> = ({
   trip,
@@ -372,66 +382,123 @@ export const PackingView: React.FC<PackingViewProps> = ({
                     </div>
                   </div>
                 ) : (
-                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginTop: '12px' }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '16px' }}>
                     {dayLooks.map((l) => {
-                      
+                      const stop = stopLookup.get(l.eventId);
                       const p1Thumb = l.person1UseCutout ? l.person1Cutout || l.person1Original : l.person1Original;
                       const p2Thumb = l.person2UseCutout ? l.person2Cutout || l.person2Original : l.person2Original;
-                      
+                      const occasionMeta = l.occasion ? OCCASION_BADGES[l.occasion] : null;
+
                       return (
                         <div
                           key={l.id}
-                          className="compact-outfit-thumbnail"
-                          style={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '8px',
-                            padding: '6px 8px',
-                            border: '1px solid var(--border-subtle, #e2e8f0)',
-                            borderRadius: '6px',
-                            backgroundColor: 'var(--bg-surface, #ffffff)',
-                          }}
+                          className="lookbook-canvas"
+                          style={{ padding: 0, margin: 0, overflow: 'hidden', border: '1px solid var(--border-light)', borderRadius: '12px' }}
                         >
-                          <div style={{ display: 'flex', gap: '4px' }}>
-                            {p1Thumb && (
-                              <img
-                                src={p1Thumb}
-                                alt="Outfit 1"
-                                style={{ width: '32px', height: '32px', objectFit: 'contain', borderRadius: '4px', backgroundColor: 'var(--bg-subtle)' }}
-                                loading="lazy"
-                              />
-                            )}
-                            {p2Thumb && (
-                              <img
-                                src={p2Thumb}
-                                alt="Outfit 2"
-                                style={{ width: '32px', height: '32px', objectFit: 'contain', borderRadius: '4px', backgroundColor: 'var(--bg-subtle)' }}
-                                loading="lazy"
-                              />
-                            )}
-                          </div>
-                          
-                          <div style={{ display: 'flex', flexDirection: 'column', gap: '2px', paddingRight: '4px' }}>
-                            <span style={{ fontSize: '11px', fontWeight: 600, color: 'var(--text-primary)' }}>
-                              {l.title || 'Coordinated Look'}
-                            </span>
-                            <div style={{ display: 'flex', gap: '6px' }}>
-                              <button
-                                type="button"
-                                onClick={() => handleOpenEditLook(l)}
-                                style={{ fontSize: '10px', color: 'var(--text-tertiary)', background: 'none', border: 'none', padding: 0, cursor: 'pointer', fontWeight: 500 }}
-                              >
-                                Edit
-                              </button>
-                              <span style={{ color: 'var(--border-strong)', fontSize: '10px' }}>|</span>
-                              <button
-                                type="button"
-                                onClick={() => onDeleteLook?.(l.id)}
-                                style={{ fontSize: '10px', color: '#ef4444', background: 'none', border: 'none', padding: 0, cursor: 'pointer', fontWeight: 500 }}
-                              >
-                                Remove
-                              </button>
+                          <div className="lookbook-header" style={{ margin: 0, padding: '12px 14px', borderBottom: '1px solid var(--border-light)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', backgroundColor: '#fafafa' }}>
+                            <div>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
+                                <span className="lookbook-title" style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-primary)' }}>
+                                  {l.title || 'Coordinated Look'}
+                                </span>
+                                {occasionMeta && (
+                                  <span
+                                    style={{
+                                      fontSize: '11px',
+                                      fontWeight: 600,
+                                      padding: '2px 8px',
+                                      borderRadius: '6px',
+                                      background: occasionMeta.bg,
+                                      color: occasionMeta.color,
+                                      display: 'inline-flex',
+                                      alignItems: 'center',
+                                      gap: '4px',
+                                    }}
+                                  >
+                                    <span>{occasionMeta.emoji}</span>
+                                    <span>{occasionMeta.label}</span>
+                                  </span>
+                                )}
+                              </div>
+                              {stop && (
+                                <p style={{ fontSize: '11px', color: 'var(--text-secondary)', margin: '4px 0 0', fontWeight: 500 }}>
+                                  📍 {stop.title} {stop.time ? `(${stop.time})` : ''}
+                                </p>
+                              )}
                             </div>
+
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                               <button onClick={() => handleOpenEditLook(l)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '4px', color: 'var(--text-secondary)' }} title="Edit"><Edit2 size={13} /></button>
+                               <button onClick={() => { if(confirm('Delete?')) onDeleteLook?.(l.id) }} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '4px', color: '#ef4444' }} title="Delete"><Trash2 size={13} /></button>
+                            </div>
+                          </div>
+
+                          {/* Side-by-Side Cutout Display */}
+                          <div className="lookbook-stage" style={{ display: 'flex', minHeight: '220px', backgroundColor: '#ffffff' }}>
+                            {/* Person 1 */}
+                            <div className="lookbook-slot" style={{ flex: 1, display: 'flex', flexDirection: 'column', position: 'relative', borderRight: '1px solid var(--border-light)' }}>
+                              <div style={{ padding: '8px 12px', backgroundColor: '#f8fafc', borderBottom: '1px solid var(--border-light)', display: 'flex', alignItems: 'center', gap: '6px', fontSize: '11px', fontWeight: 600, color: 'var(--text-primary)' }}>
+                                <User size={12} />
+                                <span>{person1Name}</span>
+                              </div>
+                              <div style={{ flex: 1, position: 'relative', overflow: 'hidden', padding: '12px 12px 40px 12px', display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}>
+                                {p1Thumb ? (
+                                  <img
+                                    src={p1Thumb}
+                                    alt={person1Name}
+                                    style={{ maxHeight: '100%', maxWidth: '100%', objectFit: 'contain', transformOrigin: 'bottom', objectPosition: 'bottom' }}
+                                    loading="lazy"
+                                  />
+                                ) : (
+                                  <span style={{ fontSize: '11px', color: '#94a3b8', margin: 'auto' }}>No photo</span>
+                                )}
+                              </div>
+                              <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, padding: '8px 12px', backgroundColor: 'rgba(255,255,255,0.9)', backdropFilter: 'blur(4px)', borderTop: '1px solid var(--border-light)', fontSize: '11px', color: 'var(--text-secondary)', textAlign: 'center', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                {l.person1Label || 'No details'}
+                              </div>
+                            </div>
+
+                            {/* Person 2 */}
+                            <div className="lookbook-slot" style={{ flex: 1, display: 'flex', flexDirection: 'column', position: 'relative' }}>
+                              <div style={{ padding: '8px 12px', backgroundColor: '#f8fafc', borderBottom: '1px solid var(--border-light)', display: 'flex', alignItems: 'center', gap: '6px', fontSize: '11px', fontWeight: 600, color: 'var(--text-primary)' }}>
+                                <User size={12} />
+                                <span>{person2Name}</span>
+                              </div>
+                              <div style={{ flex: 1, position: 'relative', overflow: 'hidden', padding: '12px 12px 40px 12px', display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}>
+                                {p2Thumb ? (
+                                  <img
+                                    src={p2Thumb}
+                                    alt={person2Name}
+                                    style={{ maxHeight: '100%', maxWidth: '100%', objectFit: 'contain', transformOrigin: 'bottom', objectPosition: 'bottom' }}
+                                    loading="lazy"
+                                  />
+                                ) : (
+                                  <span style={{ fontSize: '11px', color: '#94a3b8', margin: 'auto' }}>No photo</span>
+                                )}
+                              </div>
+                              <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, padding: '8px 12px', backgroundColor: 'rgba(255,255,255,0.9)', backdropFilter: 'blur(4px)', borderTop: '1px solid var(--border-light)', fontSize: '11px', color: 'var(--text-secondary)', textAlign: 'center', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                {l.person2Label || 'No details'}
+                              </div>
+                            </div>
+                          </div>
+
+                          <div className="lookbook-footer" style={{ padding: '10px 14px', borderTop: '1px solid var(--border-light)', backgroundColor: '#fafafa' }}>
+                            <label className="packed-toggle-label" style={{ fontSize: '11px' }}>
+                              <input
+                                type="checkbox"
+                                className="packed-checkbox"
+                                checked={Boolean(l.packed)}
+                                onChange={() => handleTogglePacked(l)}
+                              />
+                              <span>Packed in Luggage</span>
+                            </label>
+
+                            {l.packed && (
+                              <span style={{ fontSize: '10px', color: '#10b981', display: 'flex', alignItems: 'center', gap: '3px' }}>
+                                <CheckSquare size={12} />
+                                <span>Ready</span>
+                              </span>
+                            )}
                           </div>
                         </div>
                       );
@@ -497,8 +564,8 @@ export const PackingView: React.FC<PackingViewProps> = ({
                       <span className="not-found-hint">No looks for {person1Name} under current filter.</span>
                     </div>
                   ) : (
-                    p1Looks.map((l) => { const stop = stopLookup.get(l.eventId || "");
-                      
+                    p1Looks.map((l) => {
+                      const stop = stopLookup.get(l.eventId);
                       const thumb = l.person1UseCutout
                         ? l.person1Cutout || l.person1Original
                         : l.person1Original;
@@ -569,8 +636,8 @@ export const PackingView: React.FC<PackingViewProps> = ({
                       <span className="not-found-hint">No looks for {person2Name} under current filter.</span>
                     </div>
                   ) : (
-                    p2Looks.map((l) => { const stop = stopLookup.get(l.eventId || "");
-                      
+                    p2Looks.map((l) => {
+                      const stop = stopLookup.get(l.eventId);
                       const thumb = l.person2UseCutout
                         ? l.person2Cutout || l.person2Original
                         : l.person2Original;
