@@ -4,12 +4,12 @@ import {
   Cloud,
   CloudRain,
   CloudSun,
-  Droplets,
+  
   Shirt,
   Sparkles,
   Sun,
-  SunMedium,
-  Umbrella,
+  
+  
 } from 'lucide-react';
 import { DayWeather, WeatherCondition } from '../../types/trip';
 import { getWeatherComfortLabel } from '@roammate/core';
@@ -59,104 +59,40 @@ export const WeatherBanner = React.memo<WeatherBannerProps>(function WeatherBann
   );
 
   return (
-    <div className="weather-card">
-      {/* Top Main Section */}
-      <div className="weather-header-row">
-        <div className="weather-left">
-          <div className="weather-temp-block">
-            <div className="weather-icon-wrapper" style={{ backgroundColor: `${themeColor}15` }}>
-              {getWeatherIcon(weather.condition, 24)}
-            </div>
-            <div>
-              <div className="weather-temp-main tabular">
-                {weather.tempC}°<span className="weather-unit">C</span>
-              </div>
-              <div className="weather-highlow tabular">
-                <span>H: {weather.highC}°</span>
-                <span className="sep">•</span>
-                <span>L: {weather.lowC}°</span>
+    <div className="weather-card" style={{ padding: '16px' }}>
+      <div className="flex items-center justify-between gap-4">
+        <div className="flex items-center gap-3">
+          <div className="weather-icon-wrapper" style={{ backgroundColor: `${themeColor}15`, width: '48px', height: '48px', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            {getWeatherIcon(weather.condition, 24)}
+          </div>
+          <div>
+            <div className="flex items-center gap-2">
+              <span className="text-lg font-semibold tabular" style={{ lineHeight: 1 }}>{weather.tempC}°C</span>
+              <div className="weather-comfort-pill" style={{ padding: '2px 6px', fontSize: '10px' }}>
+                <Sparkles size={10} strokeWidth={1.75} className="text-amber" />
+                <span>{comfortLabel}</span>
               </div>
             </div>
-          </div>
-
-          <div className="weather-condition-info">
-            <div className="weather-condition-text">{weather.conditionText}</div>
-            <div className="weather-comfort-pill">
-              <Sparkles size={11} strokeWidth={1.75} className="text-amber" />
-              <span>{comfortLabel}</span>
+            <div className="text-xs text-secondary mt-1 tabular">
+              {weather.conditionText} • H: {weather.highC}° L: {weather.lowC}°
+              {weather.rainProbability > 0 && ` • ${weather.rainProbability}% Rain`}
             </div>
-          </div>
-        </div>
-
-        {/* Metrics Grid */}
-        <div className="weather-metrics">
-          <div className="metric-cell">
-            <div className="metric-label">
-              <Umbrella size={12} strokeWidth={1.75} />
-              <span>Rain Chance</span>
-            </div>
-            <div className={`metric-value tabular ${weather.rainProbability >= 50 ? 'text-rain' : ''}`}>
-              {weather.rainProbability}%
-            </div>
-          </div>
-
-          <div className="metric-cell">
-            <div className="metric-label">
-              <Droplets size={12} strokeWidth={1.75} />
-              <span>Humidity</span>
-            </div>
-            <div className="metric-value tabular">{weather.humidity}%</div>
-          </div>
-
-          <div className="metric-cell">
-            <div className="metric-label">
-              <SunMedium size={12} strokeWidth={1.75} />
-              <span>UV Index</span>
-            </div>
-            <div className="metric-value tabular">{weather.uvIndex} of 10</div>
           </div>
         </div>
       </div>
 
-      {/* Attire Tip */}
-      <div className="weather-tip-strip">
-        <Shirt size={14} strokeWidth={1.75} className="text-slate flex-shrink-0" />
-        <span className="weather-tip-text">
-          <strong>Attire Tip:</strong> {weather.clothingTip}
-        </span>
+      <div className="flex flex-col gap-2 mt-3 pt-3 border-t border-slate-100">
+        <div className="flex items-center gap-2 text-xs text-secondary">
+          <Shirt size={12} strokeWidth={2} className="text-slate" />
+          <span><strong>Attire:</strong> {weather.clothingTip}</span>
+        </div>
+        {(weather.sunset || weather.goldenHour) && (
+          <div className="flex items-center gap-2 text-xs text-amber-700">
+            <Camera size={12} strokeWidth={2} />
+            <span><strong>Golden Hour:</strong> {weather.goldenHour ? `${weather.goldenHour} – ${weather.sunset}` : weather.sunset}</span>
+          </div>
+        )}
       </div>
-
-      {/* Sunset & Golden Hour Photography Strip */}
-      {(weather.sunset || weather.goldenHour) && (
-        <div className="weather-tip-strip" style={{ backgroundColor: 'rgba(245, 158, 11, 0.08)', borderColor: 'rgba(245, 158, 11, 0.25)' }}>
-          <Camera size={14} strokeWidth={1.75} className="text-amber flex-shrink-0" />
-          <span className="weather-tip-text">
-            <strong>Golden Hour:</strong> {weather.goldenHour ? `${weather.goldenHour} – ${weather.sunset}` : weather.sunset} · Best warm daylight for photography &amp; outdoor sights
-          </span>
-        </div>
-      )}
-
-      {/* Hourly Forecast Stream */}
-      {weather.hourly && weather.hourly.length > 0 && (
-        <div className="hourly-forecast-row">
-          {weather.hourly.map((hour, idx) => {
-            const hasRain = typeof hour.rainChance === 'number' && hour.rainChance > 10;
-            return (
-              <div key={idx} className="hourly-chip">
-                <span className="hourly-time">{hour.time}</span>
-                <div className="hourly-icon">{getWeatherIcon(hour.condition, 15)}</div>
-                <span className="hourly-temp tabular">{hour.tempC}°</span>
-                <span
-                  className="hourly-rain tabular"
-                  style={{ visibility: hasRain ? 'visible' : 'hidden' }}
-                >
-                  {hasRain ? `${hour.rainChance}%` : '0%'}
-                </span>
-              </div>
-            );
-          })}
-        </div>
-      )}
     </div>
   );
 });

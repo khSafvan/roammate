@@ -23,11 +23,13 @@ import {
   UtensilsCrossed,
 } from 'lucide-react';
 import { Look } from '@roammate/shared';
-import { ItineraryStop, StopCategory } from '../../types/trip';
+import { ItineraryStop, StopCategory, DayWeather, WeatherCondition } from '../../types/trip';
+import { Sun, CloudSun, CloudRain, Cloud } from 'lucide-react';
 import { MarkdownText } from '../../components/ui/MarkdownText';
 
 interface TimelineCardProps {
   stop: ItineraryStop;
+  dayWeather?: DayWeather;
   themeColor: string;
   isSelected?: boolean;
   index?: number;
@@ -46,7 +48,20 @@ interface TimelineCardProps {
   onDrop?: (e: React.DragEvent, index: number) => void;
   isDragging?: boolean;
   isDragOver?: boolean;
+
+
+
 }
+
+const getMiniWeatherIcon = (condition: WeatherCondition, size = 12) => {
+  switch (condition) {
+    case 'sunny':
+    case 'clear': return <Sun size={size} strokeWidth={2} className="text-amber" />;
+    case 'partly_cloudy': return <CloudSun size={size} strokeWidth={2} className="text-amber" />;
+    case 'rainy': return <CloudRain size={size} strokeWidth={2} className="text-blue" />;
+    case 'cloudy': default: return <Cloud size={size} strokeWidth={2} className="text-slate" />;
+  }
+};
 
 const getCategoryIcon = (category: StopCategory) => {
   switch (category) {
@@ -67,6 +82,7 @@ const getCategoryIcon = (category: StopCategory) => {
 
 export const TimelineCard = React.memo<TimelineCardProps>(function TimelineCard({
   stop,
+  dayWeather,
   isSelected,
   index,
   totalStops,
@@ -85,7 +101,12 @@ export const TimelineCard = React.memo<TimelineCardProps>(function TimelineCard(
   isDragging,
   isDragOver,
 }) {
+  
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  
+  // Find weather forecast for this specific time
+  const etaWeather = stop.startTime && dayWeather?.hourly ? dayWeather.hourly.find(h => h.time.startsWith(stop.startTime.split(':')[0])) : null;
+
   const menuRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
@@ -239,7 +260,15 @@ export const TimelineCard = React.memo<TimelineCardProps>(function TimelineCard(
                 #{String(stop.orderIndex).padStart(2, '0')}
               </span>
               {reorderControls}
+              
               <span className="card-time">{stop.startTime}</span>
+              {etaWeather && (
+                <div className="flex items-center gap-1 ml-2 px-1.5 py-0.5 bg-slate-50 border border-slate-100 rounded text-[10px] font-medium text-slate-600">
+                  {getMiniWeatherIcon(etaWeather.condition, 10)}
+                  <span>{etaWeather.tempC}°</span>
+                </div>
+              )}
+
 
               <span className="card-category-sublabel">
                 {stop.category}
