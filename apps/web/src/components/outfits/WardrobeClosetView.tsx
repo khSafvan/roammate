@@ -120,21 +120,10 @@ export const WardrobeClosetView: React.FC<WardrobeClosetViewProps> = ({
   };
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+    <div className="flex flex-col gap-5">
       {/* 1. Filter and Control Bar */}
-      <div
-        style={{
-          background: 'var(--bg-card)',
-          border: '1px solid var(--border-light)',
-          borderRadius: '12px',
-          padding: '16px',
-          display: 'flex',
-          flexDirection: 'column',
-          gap: '12px',
-          boxShadow: '0 1px 3px rgba(0,0,0,0.03)',
-        }}
-      >
-        <div style={{ display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap' }}>
+      <div className="flex flex-col gap-3 p-4 bg-surface rounded-xl border border-subtle shadow-sm">
+        <div className="flex gap-2 items-center flex-wrap">
           {/* Search Field */}
           <div className="search-input-box" style={{ flex: 1, minWidth: '240px', minHeight: '38px' }}>
             <Search size={14} className="text-secondary" />
@@ -158,21 +147,11 @@ export const WardrobeClosetView: React.FC<WardrobeClosetViewProps> = ({
           </div>
 
           {/* Scope Pills */}
-          <div
-            style={{
-              display: 'inline-flex',
-              background: 'var(--bg-subtle)',
-              padding: '3px',
-              borderRadius: '8px',
-              border: '1px solid var(--border-light)',
-              flexWrap: 'wrap',
-            }}
-          >
+          <div className="flex gap-1 p-1 bg-surface rounded-lg border border-subtle flex-wrap">
             <button
               type="button"
               className={`slot-action-btn ${scopeFilter === 'all' ? 'active-toggle' : ''}`}
               onClick={() => setScopeFilter('all')}
-              style={{ border: 'none', background: scopeFilter === 'all' ? 'var(--bg-card)' : 'transparent' }}
             >
               All Outfits ({looks.length})
             </button>
@@ -180,7 +159,6 @@ export const WardrobeClosetView: React.FC<WardrobeClosetViewProps> = ({
               type="button"
               className={`slot-action-btn ${scopeFilter === 'unassigned' ? 'active-toggle' : ''}`}
               onClick={() => setScopeFilter('unassigned')}
-              style={{ border: 'none', background: scopeFilter === 'unassigned' ? 'var(--bg-card)' : 'transparent' }}
             >
               Ready to Wear ({unassignedCount})
             </button>
@@ -188,7 +166,6 @@ export const WardrobeClosetView: React.FC<WardrobeClosetViewProps> = ({
               type="button"
               className={`slot-action-btn ${scopeFilter === 'p1' ? 'active-toggle' : ''}`}
               onClick={() => setScopeFilter('p1')}
-              style={{ border: 'none', background: scopeFilter === 'p1' ? 'var(--bg-card)' : 'transparent' }}
             >
               {person1Name}
             </button>
@@ -196,7 +173,6 @@ export const WardrobeClosetView: React.FC<WardrobeClosetViewProps> = ({
               type="button"
               className={`slot-action-btn ${scopeFilter === 'p2' ? 'active-toggle' : ''}`}
               onClick={() => setScopeFilter('p2')}
-              style={{ border: 'none', background: scopeFilter === 'p2' ? 'var(--bg-card)' : 'transparent' }}
             >
               {person2Name}
             </button>
@@ -205,9 +181,8 @@ export const WardrobeClosetView: React.FC<WardrobeClosetViewProps> = ({
           {/* Primary Add CTA */}
           <button
             type="button"
-            className="primary-action-btn"
+            className="primary-action-btn flex items-center gap-2 whitespace-nowrap"
             onClick={onOpenAddLook}
-            style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', whiteSpace: 'nowrap' }}
           >
             <Plus size={15} />
             <span>New Wardrobe Look</span>
@@ -215,7 +190,7 @@ export const WardrobeClosetView: React.FC<WardrobeClosetViewProps> = ({
         </div>
 
         {/* Occasion Tags Bar */}
-        <div style={{ display: 'flex', gap: '6px', overflowX: 'auto', paddingBottom: '2px' }}>
+        <div className="flex gap-2 overflow-x-auto pb-1">
           <button
             type="button"
             className={`category-filter-btn ${occasionFilter === 'all' ? 'active' : ''}`}
@@ -241,28 +216,14 @@ export const WardrobeClosetView: React.FC<WardrobeClosetViewProps> = ({
 
       {/* 2. Grid of Wardrobe Looks */}
       {filteredLooks.length === 0 ? (
-        <div
-          style={{
-            background: 'var(--bg-card)',
-            border: '1px dashed var(--border-medium)',
-            borderRadius: '16px',
-            padding: '48px 24px',
-            textAlign: 'center',
-            color: 'var(--text-secondary)',
-          }}
-        >
-          <div style={{ fontSize: '42px', marginBottom: '12px' }}>✨</div>
-          <h3 style={{ margin: '0 0 6px 0', fontSize: '18px', fontWeight: 600, color: 'var(--text-primary)' }}>
-            Your Wardrobe Closet is Empty
-          </h3>
-          <p style={{ margin: '0 auto 16px auto', maxWidth: '440px', fontSize: '13px', lineHeight: 1.5 }}>
-            Create wardrobe looks here before assigning them, or plan outfits you can wear across multiple days of your trip.
-          </p>
+        <div className="not-found-state">
+          <span className="not-found-icon">✨</span>
+          <span className="not-found-title">Your Wardrobe Closet is Empty</span>
+          <span className="not-found-hint">Create wardrobe looks here before assigning them, or plan outfits you can wear across multiple days of your trip.</span>
           <button
             type="button"
-            className="primary-action-btn"
+            className="primary-action-btn flex items-center gap-2 mt-4 mx-auto"
             onClick={onOpenAddLook}
-            style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', margin: '0 auto' }}
           >
             <Plus size={15} />
             <span>Create First Outfit Look</span>

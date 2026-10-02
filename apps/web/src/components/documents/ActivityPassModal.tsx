@@ -81,7 +81,7 @@ export const ActivityPassModal: React.FC<ActivityPassModalProps> = ({ isOpen, on
         </div>
         <form onSubmit={handleSave} className="modal-body form-grid" style={{ overflow: 'visible' }}>
           <div className="form-group full-span" style={{ zIndex: 50 }}>
-            <label>Search Venue or Activity (Google Places / TripAdvisor)</label>
+            <label>Search Venue or Activity (Foursquare / OSM)</label>
             <PlaceSearchInput
               onSelectPlace={handleSelectPlace}
               placeholder="Search activity, restaurant, or location..."

@@ -10,6 +10,7 @@ interface DocumentsAndTicketsHubProps {
   flights: Flight[];
   documents?: BookingDocument[];
   travelers?: string[];
+  isLoading?: boolean;
   onAddFlight: (flight: Flight) => void;
   onDeleteFlight: (id: string) => void;
   onAddDocument: (doc: BookingDocument) => void;
@@ -20,6 +21,7 @@ export const DocumentsAndTicketsHub: React.FC<DocumentsAndTicketsHubProps> = ({
   flights,
   documents = [],
   travelers = [],
+  isLoading,
   onAddFlight,
   onDeleteFlight,
   onAddDocument,
@@ -85,6 +87,15 @@ export const DocumentsAndTicketsHub: React.FC<DocumentsAndTicketsHubProps> = ({
     return result;
   }, [flights, activePillar, searchQuery]);
 
+  if (isLoading) {
+    return (
+      <div className="loading-spinner-container">
+        <div className="loading-spinner" />
+        <span className="loading-text">Loading...</span>
+      </div>
+    );
+  }
+
   return (
     <div className="bookings-hub-container">
       <div className="section-toolbar">
@@ -93,11 +104,11 @@ export const DocumentsAndTicketsHub: React.FC<DocumentsAndTicketsHubProps> = ({
           <p className="section-subheading">Flights, hotel vouchers, and travel passes</p>
         </div>
 
-        <div style={{ position: 'relative' }} ref={dropdownRef}>
+        <div className="dropdown-wrapper" ref={dropdownRef}>
           <button className="primary-action-btn" onClick={() => setIsDropdownOpen(!isDropdownOpen)}>
             <Plus size={16} />
             <span>Add Booking</span>
-            <ChevronDown size={14} style={{ marginLeft: '4px' }} />
+            <ChevronDown size={14} className="ml-1" />
           </button>
           
           {isDropdownOpen && (
@@ -145,7 +156,7 @@ export const DocumentsAndTicketsHub: React.FC<DocumentsAndTicketsHubProps> = ({
         </button>
       </div>
 
-      <div className="search-and-travelers-bar" style={{ marginTop: '16px' }}>
+      <div className="search-and-travelers-bar mt-4">
         <div className="search-input-box">
           <Search size={16} className="text-secondary" />
           <input
@@ -160,10 +171,10 @@ export const DocumentsAndTicketsHub: React.FC<DocumentsAndTicketsHubProps> = ({
 
       <div className="hub-content-area">
         {filteredFlights.length === 0 && filteredDocs.length === 0 && (
-          <div className="empty-state-box">
-            <Ticket size={32} className="text-secondary mb-2" strokeWidth={1.5} />
-            <h3 className="empty-state-text">No bookings found</h3>
-            <p className="empty-hint">Add your flights, hotels, and activities to keep them organized.</p>
+          <div className="not-found-state">
+            <span className="not-found-icon">🔍</span>
+            <span className="not-found-title">No items found</span>
+            <span className="not-found-hint">Add your flights, hotels, and activities to keep them organized.</span>
           </div>
         )}
 
@@ -182,7 +193,7 @@ export const DocumentsAndTicketsHub: React.FC<DocumentsAndTicketsHubProps> = ({
                   </div>
                 </div>
 
-                <div className="pass-route-row" style={{ marginTop: 'auto', marginBottom: 'auto' }}>
+                <div className="pass-route-row my-auto">
                   <div className="airport-block">
                     <div className="airport-code-row"><span className="airport-code">{fl.departure?.airport || '???'}</span></div>
                     <div className="airport-time">{fl.departure?.time || '00:00'}</div>
@@ -193,7 +204,7 @@ export const DocumentsAndTicketsHub: React.FC<DocumentsAndTicketsHubProps> = ({
                     <div className="route-line-decor" />
                   </div>
                   <div className="airport-block text-right">
-                    <div className="airport-code-row" style={{ justifyContent: 'flex-end' }}>
+                    <div className="airport-code-row justify-end">
                       <span className="airport-code">{fl.arrival?.airport || '???'}</span>
                       {fl.arrival?.nextDay && <span className="next-day-sup">+1</span>}
                     </div>
@@ -202,28 +213,28 @@ export const DocumentsAndTicketsHub: React.FC<DocumentsAndTicketsHubProps> = ({
                 </div>
                 
                 {fl.passengerName && (
-                  <div className="pass-footer" style={{ borderTop: 'none', paddingTop: 0 }}>
-                    <span style={{ fontSize: '11px', fontWeight: 600, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>PASSENGER: {fl.passengerName}</span>
+                  <div className="pass-footer no-border p-0">
+                    <span className="pass-passenger">PASSENGER: {fl.passengerName}</span>
                   </div>
                 )}
               </div>
               
               <div className="ticket-stub-section">
-                <div style={{ textAlign: 'center', width: '100%' }}>
+                <div className="text-center w-full">
                   <div className="meta-label">FLIGHT</div>
-                  <div className="pass-flight-num" style={{ marginTop: '4px' }}>{fl.flightNumber}</div>
+                  <div className="pass-flight-num mt-1">{fl.flightNumber}</div>
                 </div>
                 
                 {fl.bookingRef && (
-                  <div style={{ textAlign: 'center', marginTop: '16px', width: '100%' }}>
+                  <div className="text-center mt-4 w-full">
                     <div className="meta-label">PNR</div>
-                    <div className="stub-ref" style={{ fontSize: '13px', marginTop: '2px', fontWeight: 600 }}>{fl.bookingRef}</div>
+                    <div className="stub-ref stub-ref-text">{fl.bookingRef}</div>
                   </div>
                 )}
                 
-                <div style={{ textAlign: 'center', marginTop: 'auto', width: '100%' }}>
+                <div className="text-center mt-auto w-full">
                   <div className="meta-label">CLASS</div>
-                  <div style={{ fontSize: '12px', fontWeight: 700, marginTop: '2px' }}>{fl.cabinClass || 'ECONOMY'}</div>
+                  <div className="stub-class-text">{fl.cabinClass || 'ECONOMY'}</div>
                 </div>
               </div>
             </div>
@@ -237,23 +248,23 @@ export const DocumentsAndTicketsHub: React.FC<DocumentsAndTicketsHubProps> = ({
                 <div className="key-card-strip" />
                 <div>
                   <div className="key-card-chip" />
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                    <h3 style={{ fontSize: '16px', fontWeight: 600, margin: 0, paddingRight: '20px' }}>{doc.title}</h3>
-                    <div style={{ display: 'flex', gap: '8px', zIndex: 1 }}>
-                      <button className="pass-delete-btn" style={{ color: 'rgba(255,255,255,0.7)' }} onClick={() => { setEditingDoc(doc); setIsHotelModalOpen(true); }}><FileText size={13} /></button>
-                      <button className="pass-delete-btn" style={{ color: 'rgba(255,255,255,0.7)' }} onClick={() => onDeleteDocument(doc.id)}><Trash2 size={13} /></button>
+                  <div className="hotel-header">
+                    <h3 className="hotel-title">{doc.title}</h3>
+                    <div className="hotel-actions">
+                      <button className="pass-delete-btn hotel-btn" onClick={() => { setEditingDoc(doc); setIsHotelModalOpen(true); }}><FileText size={13} /></button>
+                      <button className="pass-delete-btn hotel-btn" onClick={() => onDeleteDocument(doc.id)}><Trash2 size={13} /></button>
                     </div>
                   </div>
-                  {doc.subtitle && <p style={{ fontSize: '13px', opacity: 0.8, marginTop: '4px' }}>{doc.subtitle}</p>}
+                  {doc.subtitle && <p className="hotel-subtitle">{doc.subtitle}</p>}
                 </div>
                 
-                <div style={{ marginTop: 'auto' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', opacity: 0.9, marginBottom: '8px' }}>
+                <div className="hotel-footer">
+                  <div className="hotel-dates">
                     <span>{doc.date}</span>
                     {doc.endDate && <span>→ {doc.endDate}</span>}
                   </div>
                   {(doc.passengerOrGuestName || doc.confirmationCode) && (
-                    <div style={{ fontSize: '13px', fontFamily: 'monospace', letterSpacing: '1px', opacity: 0.9 }}>
+                    <div className="hotel-guests">
                       {doc.passengerOrGuestName && <span>{doc.passengerOrGuestName}</span>}
                       {doc.passengerOrGuestName && doc.confirmationCode && <span> • </span>}
                       {doc.confirmationCode && <span>{doc.confirmationCode}</span>}
@@ -279,17 +290,17 @@ export const DocumentsAndTicketsHub: React.FC<DocumentsAndTicketsHubProps> = ({
                   </div>
                   
                   <div className="horizontal-booking-card-content">
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <h3 style={{ fontSize: '15px', fontWeight: 600, margin: 0 }}>{doc.title}</h3>
-                      <div style={{ display: 'flex', gap: '8px' }}>
+                    <div className="doc-header">
+                      <h3 className="doc-title">{doc.title}</h3>
+                      <div className="doc-actions">
                         <button className="pass-delete-btn" onClick={() => { setEditingDoc(doc); setIsActivityModalOpen(true); }}><FileText size={13} /></button>
                         <button className="pass-delete-btn" onClick={() => onDeleteDocument(doc.id)}><Trash2 size={13} /></button>
                       </div>
                     </div>
                     
-                    {doc.subtitle && <p style={{ fontSize: '13px', color: 'var(--text-secondary)', marginTop: '2px' }}>{doc.subtitle}</p>}
+                    {doc.subtitle && <p className="doc-subtitle">{doc.subtitle}</p>}
                     
-                    <div style={{ display: 'flex', gap: '16px', marginTop: '8px', fontSize: '12px', color: 'var(--text-secondary)' }}>
+                    <div className="doc-meta">
                       {doc.date && <span>{doc.date} {doc.time ? doc.time : ''}</span>}
                       {doc.location && <span>{doc.location}</span>}
                     </div>

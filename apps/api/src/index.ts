@@ -826,8 +826,8 @@ app.get('/api/places/search', async (c) => {
   if (!q) return c.json([]);
 
   const now = Date.now();
-  const googleApiKey = c.env.GOOGLE_PLACES_API_KEY;
-  const tripAdvisorKey = c.env.TRIPADVISOR_API_KEY;
+  const foursquareApiKey = c.env.FOURSQUARE_API_KEY;
+  const yelpApiKey = c.env.YELP_API_KEY;
 
   try {
     let turso: Client | null = null;
@@ -841,77 +841,82 @@ app.get('/api/places/search', async (c) => {
 
     let results = [];
 
-    // --- 1. Google Places API (Primary for Places & Hotels) ---
-    if (googleApiKey) {
-      const googleUrl = 'https://places.googleapis.com/v1/places:searchText';
-      let googleRes;
+    // --- 1. Foursquare Places API (Primary for Places) ---
+    if (foursquareApiKey) {
+      const fsqUrl = \`https://api.foursquare.com/v3/places/search?query=\${encodeURIComponent(q)}&limit=5&fields=fsq_id,name,location,rating,geocodes,categories,website,tel\`;
+      let fsqRes;
       try {
-        googleRes = await fetch(googleUrl, {
-          method: 'POST',
+        fsqRes = await fetch(fsqUrl, {
           headers: {
-            'Content-Type': 'application/json',
-            'X-Goog-Api-Key': googleApiKey,
-            'X-Goog-FieldMask': 'places.id,places.displayName,places.formattedAddress,places.location,places.rating,places.regularOpeningHours,places.websiteUri,places.nationalPhoneNumber,places.primaryType'
-          },
-          body: JSON.stringify({ textQuery: q })
+            'Accept': 'application/json',
+            'Authorization': foursquareApiKey
+          }
         });
       } catch (err) {
-        console.warn('Google Places API network error, falling back:', err);
+        console.warn('Foursquare API network error, falling back:', err);
       }
       
-      if (googleRes && googleRes.ok) {
-        const googleData: any = await googleRes.json();
-        if (googleData.places && googleData.places.length > 0) {
-          results = googleData.places.map((place: any) => {
-            let openTime, closeTime;
-            if (place.regularOpeningHours?.periods?.length > 0) {
-              const period = place.regularOpeningHours.periods[0];
-              if (period.open && period.close) {
-                 openTime = `${period.open.hour.toString().padStart(2, '0')}:${period.open.minute.toString().padStart(2, '0')}`;
-                 closeTime = `${period.close.hour.toString().padStart(2, '0')}:${period.close.minute.toString().padStart(2, '0')}`;
-              }
-            }
-            
+      if (fsqRes && fsqRes.ok) {
+        const fsqData: any = await fsqRes.json();
+        if (fsqData.results && fsqData.results.length > 0) {
+          results = fsqData.results.map((place: any) => {
             return {
-              placeId: place.id,
-              title: place.displayName?.text || q,
-              address: place.formattedAddress,
-              coordinates: { latitude: place.location?.latitude, longitude: place.location?.longitude },
-              osmClass: 'google',
-              osmType: place.primaryType,
-              openTime,
-              closeTime,
-              website: place.websiteUri,
-              phoneNumber: place.nationalPhoneNumber,
-              rating: place.rating
+              placeId: \`fsq_\${place.fsq_id}\`,
+              title: place.name || q,
+              address: place.location?.formatted_address,
+              coordinates: { 
+                latitude: place.geocodes?.main?.latitude, 
+                longitude: place.geocodes?.main?.longitude 
+              },
+              osmClass: 'foursquare',
+              osmType: place.categories?.[0]?.name,
+              openTime: undefined,
+              closeTime: undefined,
+              website: place.website,
+              phoneNumber: place.tel,
+              rating: place.rating ? place.rating / 2 : undefined // Foursquare rating is out of 10
             };
           });
         }
       }
-    } 
-    // --- 2. TripAdvisor API (Optional primary for attractions) ---
-    else if (tripAdvisorKey) {
-       // Placeholder for TripAdvisor location search if Google key isn't provided but TripAdvisor is
-       const taUrl = `https://api.content.tripadvisor.com/api/v1/location/search?searchQuery=${encodeURIComponent(q)}&key=${tripAdvisorKey}`;
-       let taRes;
-       try {
-         taRes = await fetch(taUrl, { headers: { 'Accept': 'application/json' } });
-       } catch (err) {
-         console.warn('TripAdvisor API network error, falling back:', err);
-       }
-       if (taRes && taRes.ok) {
-         const taData: any = await taRes.json();
-         if (taData.data && taData.data.length > 0) {
-           results = taData.data.slice(0, 5).map((item: any) => ({
-              placeId: `ta_${item.location_id}`,
-              title: item.name,
-              address: item.address_obj?.address_string,
-              coordinates: { latitude: 0, longitude: 0 },
-              osmClass: 'tripadvisor',
-              rating: 4.0 
-           }));
-         }
-       }
+    }
+    
+    // --- 2. Yelp Fusion API (Backup for Attractions & Restaurants) ---
+    if (results.length === 0 && yelpApiKey) {
+      const term = q.split(',')[0].trim();
+      const yelpUrl = \`https://api.yelp.com/v3/businesses/search?location=\${encodeURIComponent(q)}&term=\${encodeURIComponent(term)}&limit=5&sort_by=best_match\`;
+      let yelpRes;
+      try {
+        yelpRes = await fetch(yelpUrl, {
+          headers: {
+            'Accept': 'application/json',
+            'Authorization': \`Bearer \${yelpApiKey}\`
+          }
+        });
+      } catch (err) {
+        console.warn('Yelp API network error, falling back:', err);
+      }
+      
+      if (yelpRes && yelpRes.ok) {
+        const yelpData: any = await yelpRes.json();
+        if (yelpData.businesses && yelpData.businesses.length > 0) {
+          results = yelpData.businesses.map((biz: any) => {
+            return {
+              placeId: \`yelp_\${biz.id}\`,
+              title: biz.name || q,
+              address: biz.location?.display_address?.join(', '),
+              coordinates: { latitude: biz.coordinates?.latitude, longitude: biz.coordinates?.longitude },
+              osmClass: 'yelp',
+              osmType: biz.categories?.[0]?.alias,
+              openTime: undefined,
+              closeTime: undefined,
+              website: biz.url,
+              phoneNumber: biz.display_phone || biz.phone,
+              rating: biz.rating // Yelp rating is already out of 5
+            };
+          });
+        }
+      }
     }
     
     // --- 3. Nominatim Fallback (If no keys or no results) ---

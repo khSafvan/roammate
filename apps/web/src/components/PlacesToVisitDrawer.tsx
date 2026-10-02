@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import {
   ArrowLeft,
-  Compass,
+
   Lightbulb,
   Plus,
   Sparkles,
@@ -259,8 +259,9 @@ export const PlacesToVisitDrawer: React.FC<PlacesToVisitDrawerProps> = ({
 
           {/* Discovery Loading State */}
           {isDiscovering && (
-            <div style={{ padding: '16px 0', fontSize: '12px', color: 'var(--text-tertiary)', textAlign: 'center' }}>
-              Finding top spots via OpenStreetMap...
+            <div className="loading-spinner-container mt-4">
+              <div className="loading-spinner" />
+              <span className="loading-text">Loading...</span>
             </div>
           )}
 
@@ -386,22 +387,10 @@ export const PlacesToVisitDrawer: React.FC<PlacesToVisitDrawerProps> = ({
 
       {/* Places Cards Grid */}
       {filteredPlaces.length === 0 ? (
-        <div
-          style={{
-            padding: '48px 24px',
-            textAlign: 'center',
-            backgroundColor: 'var(--bg-card, #ffffff)',
-            borderRadius: 'var(--radius-xl, 16px)',
-            border: '1px dashed var(--border-light, #e2e8f0)',
-          }}
-        >
-          <Compass size={36} style={{ margin: '0 auto 12px', color: '#94a3b8' }} />
-          <h4 style={{ fontSize: '15px', fontWeight: 600, color: 'var(--text-primary, #0f172a)', margin: '0 0 6px' }}>
-            No ideas in this category yet
-          </h4>
-          <p style={{ fontSize: '13px', color: 'var(--text-secondary, #64748b)', margin: 0 }}>
-            Use the search bar above to look up sights, museums, or cafes and save them to this bucket.
-          </p>
+        <div className="not-found-state">
+          <span className="not-found-icon">🔍</span>
+          <span className="not-found-title">No items found</span>
+          <span className="not-found-hint">Use the search bar above to look up sights, museums, or cafes and save them to this bucket.</span>
         </div>
       ) : (
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(310px, 1fr))', gap: '16px' }}>

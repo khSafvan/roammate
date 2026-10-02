@@ -192,28 +192,13 @@ export const PackingView: React.FC<PackingViewProps> = ({
             <span>Couple Outfits &amp; Luggage Hub</span>
           </div>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
+          <div className="flex items-center gap-3 flex-wrap">
             {/* 3-Tab View Mode Toggle: Itinerary Looks vs. Wardrobe Closet vs. Luggage Packing */}
-            <div
-              style={{
-                display: 'inline-flex',
-                background: 'var(--color-bg-elevated, #f1f5f9)',
-                padding: '3px',
-                borderRadius: '8px',
-                border: '1px solid var(--color-border-subtle, #e2e8f0)',
-                gap: '2px',
-              }}
-            >
+            <div className="flex items-center gap-1 p-1">
               <button
                 type="button"
                 className={`slot-action-btn ${viewMode === 'itinerary' ? 'active-toggle' : ''}`}
                 onClick={() => setViewMode('itinerary')}
-                style={{
-                  border: 'none',
-                  background: viewMode === 'itinerary' ? '#ffffff' : 'transparent',
-                  fontWeight: viewMode === 'itinerary' ? 700 : 500,
-                  boxShadow: viewMode === 'itinerary' ? '0 1px 3px rgba(0,0,0,0.06)' : 'none',
-                }}
               >
                 <CalendarDays size={13} />
                 <span>📅 Itinerary Looks</span>
@@ -222,12 +207,6 @@ export const PackingView: React.FC<PackingViewProps> = ({
                 type="button"
                 className={`slot-action-btn ${viewMode === 'wardrobe' ? 'active-toggle' : ''}`}
                 onClick={() => setViewMode('wardrobe')}
-                style={{
-                  border: 'none',
-                  background: viewMode === 'wardrobe' ? '#ffffff' : 'transparent',
-                  fontWeight: viewMode === 'wardrobe' ? 700 : 500,
-                  boxShadow: viewMode === 'wardrobe' ? '0 1px 3px rgba(0,0,0,0.06)' : 'none',
-                }}
               >
                 <Shirt size={13} />
                 <span>🧥 Wardrobe Closet ({looks.length})</span>
@@ -236,12 +215,6 @@ export const PackingView: React.FC<PackingViewProps> = ({
                 type="button"
                 className={`slot-action-btn ${viewMode === 'packing' ? 'active-toggle' : ''}`}
                 onClick={() => setViewMode('packing')}
-                style={{
-                  border: 'none',
-                  background: viewMode === 'packing' ? '#ffffff' : 'transparent',
-                  fontWeight: viewMode === 'packing' ? 700 : 500,
-                  boxShadow: viewMode === 'packing' ? '0 1px 3px rgba(0,0,0,0.06)' : 'none',
-                }}
               >
                 <Luggage size={13} />
                 <span>🧳 Luggage Packing</span>
@@ -251,7 +224,7 @@ export const PackingView: React.FC<PackingViewProps> = ({
             {/* Prominent Primary + Add Outfit Button */}
             <button
               type="button"
-              className="primary-action-btn"
+              className="primary-action-btn flex items-center gap-2"
               onClick={() => {
                 if (viewMode === 'wardrobe') {
                   handleOpenAddLookForDay(undefined, 'unassigned');
@@ -259,7 +232,6 @@ export const PackingView: React.FC<PackingViewProps> = ({
                   handleOpenAddLookForDay(1);
                 }
               }}
-              style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', padding: '6px 14px' }}
             >
               <Plus size={15} />
               <span>{viewMode === 'wardrobe' ? 'Add to Wardrobe' : 'Add Outfit Look'}</span>
@@ -268,7 +240,7 @@ export const PackingView: React.FC<PackingViewProps> = ({
         </div>
 
         {/* Progress Strip */}
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: '14px', flexWrap: 'wrap', gap: '8px' }}>
+        <div className="flex items-center justify-between mt-3 flex-wrap gap-2">
           <div className="packing-stats-strip">
             <span>
               <strong>{totalLooks}</strong> Total Look{totalLooks !== 1 ? 's' : ''} Planned
@@ -280,7 +252,7 @@ export const PackingView: React.FC<PackingViewProps> = ({
           </div>
 
           {viewMode === 'packing' && (
-            <div style={{ display: 'flex', gap: '6px' }}>
+            <div className="flex gap-2">
               <button
                 type="button"
                 className={`slot-action-btn ${filterMode === 'all' ? 'active-toggle' : ''}`}
@@ -313,7 +285,7 @@ export const PackingView: React.FC<PackingViewProps> = ({
 
       {/* 2. VIEW MODE A: Itinerary-Organized Looks */}
       {viewMode === 'itinerary' && (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+        <div className="flex flex-col gap-5">
           {trip.days.map((day) => {
             const dayLooks = looksByDay.get(day.dayNumber) || [];
             const weather = day.weather;
@@ -321,54 +293,28 @@ export const PackingView: React.FC<PackingViewProps> = ({
             return (
               <div
                 key={day.id}
-                style={{
-                  background: 'var(--color-bg-surface, #ffffff)',
-                  border: '1px solid var(--color-border-subtle, #e2e8f0)',
-                  borderRadius: '16px',
-                  padding: '20px',
-                  boxShadow: '0 2px 8px rgba(0,0,0,0.02)',
-                }}
+                className="bg-surface border-subtle p-5 rounded-2xl shadow-sm"
               >
                 {/* Day Header Row */}
-                <div
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                    flexWrap: 'wrap',
-                    gap: '10px',
-                    marginBottom: '16px',
-                    paddingBottom: '12px',
-                    borderBottom: '1px solid var(--color-border-subtle, #e2e8f0)',
-                  }}
-                >
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                    <span
-                      style={{
-                        padding: '4px 10px',
-                        borderRadius: '8px',
-                        background: 'rgba(99, 102, 241, 0.12)',
-                        color: '#4f46e5',
-                        fontWeight: 700,
-                        fontSize: '13px',
-                      }}
-                    >
+                <div className="flex items-center justify-between flex-wrap gap-3 mb-4 pb-3 border-b border-subtle">
+                  <div className="flex items-center gap-3">
+                    <span className="text-primary font-bold text-sm bg-primary-10 rounded-lg py-1 px-3">
                       Day {day.dayNumber}
                     </span>
 
                     <div>
-                      <h3 style={{ fontSize: '15px', fontWeight: 700, color: 'var(--color-text-primary, #0f172a)', margin: 0 }}>
+                      <h3 className="text-base font-bold text-primary m-0">
                         {day.title || 'Day Schedule'}
                       </h3>
                       {day.dateStr && (
-                        <span style={{ fontSize: '11px', color: 'var(--color-text-secondary, #64748b)' }}>
+                        <span className="text-xs text-secondary">
                           {day.dateStr}
                         </span>
                       )}
                     </div>
                   </div>
 
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                  <div className="flex items-center gap-2 flex-wrap">
                     {weather && (
                       <div className="lookbook-weather-chip" title={weather.clothingTip}>
                         <CloudSun size={12} />
@@ -382,7 +328,7 @@ export const PackingView: React.FC<PackingViewProps> = ({
                     {looks.length > 0 && (
                       <button
                         type="button"
-                        className="slot-action-btn"
+                        className="slot-action-btn flex items-center gap-1"
                         onClick={() =>
                           setWardrobeSelectTarget({
                             dayNumber: day.dayNumber,
@@ -391,7 +337,6 @@ export const PackingView: React.FC<PackingViewProps> = ({
                           })
                         }
                         title={`Select an existing outfit from wardrobe for Day ${day.dayNumber}`}
-                        style={{ display: 'inline-flex', alignItems: 'center', gap: '5px' }}
                       >
                         <Sparkles size={12} className="text-primary" />
                         <span>Pick from Wardrobe</span>
@@ -400,7 +345,7 @@ export const PackingView: React.FC<PackingViewProps> = ({
 
                     <button
                       type="button"
-                      className="slot-action-btn"
+                      className="slot-action-btn flex items-center gap-1"
                       onClick={() => handleOpenAddLookForDay(day.dayNumber)}
                       title={`Add an outfit for Day ${day.dayNumber}`}
                     >
@@ -412,25 +357,15 @@ export const PackingView: React.FC<PackingViewProps> = ({
 
                 {/* Looks on this Day */}
                 {dayLooks.length === 0 ? (
-                  <div
-                    className="slot-empty-dropzone"
-                    style={{ height: 'auto', minHeight: '120px', padding: '20px 16px', cursor: 'default' }}
-                  >
-                    <div className="dropzone-icon" style={{ width: '32px', height: '32px', marginBottom: '4px' }}>
-                      <Shirt size={16} />
-                    </div>
-                    <span className="dropzone-text" style={{ fontSize: '13px', fontWeight: 600 }}>
-                      No outfits assigned to Day {day.dayNumber} yet
-                    </span>
-                    <span className="dropzone-subtext" style={{ marginBottom: '12px' }}>
-                      Design a brand new look or wear a saved outfit from your digital wardrobe
-                    </span>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap', justifyContent: 'center' }}>
+                  <div className="not-found-state">
+                    <span className="not-found-icon">👕</span>
+                    <span className="not-found-title">No outfits assigned to Day {day.dayNumber} yet</span>
+                    <span className="not-found-hint">Design a brand new look or wear a saved outfit from your digital wardrobe</span>
+                    <div className="flex items-center gap-3 flex-wrap justify-center mt-3">
                       <button
                         type="button"
-                        className="primary-action-btn"
+                        className="primary-action-btn flex items-center gap-2"
                         onClick={() => handleOpenAddLookForDay(day.dayNumber)}
-                        style={{ fontSize: '12px', padding: '6px 14px' }}
                       >
                         <Plus size={13} />
                         <span>Create New Look</span>
@@ -438,7 +373,7 @@ export const PackingView: React.FC<PackingViewProps> = ({
                       {looks.length > 0 && (
                         <button
                           type="button"
-                          className="slot-action-btn"
+                          className="slot-action-btn flex items-center gap-2"
                           onClick={() =>
                             setWardrobeSelectTarget({
                               dayNumber: day.dayNumber,
@@ -446,7 +381,6 @@ export const PackingView: React.FC<PackingViewProps> = ({
                               eventTitle: `Day ${day.dayNumber}: ${day.title || 'Schedule'}`,
                             })
                           }
-                          style={{ fontSize: '12px', padding: '6px 14px', background: '#ffffff' }}
                         >
                           <Sparkles size={13} className="text-primary" />
                           <span>Select from Wardrobe ({looks.length})</span>
@@ -651,26 +585,13 @@ export const PackingView: React.FC<PackingViewProps> = ({
       {viewMode === 'packing' && (
         <div>
           {totalLooks === 0 ? (
-            <div
-              className="empty-state-box"
-              style={{
-                textAlign: 'center',
-                padding: '48px 16px',
-                background: 'var(--color-bg-surface, #ffffff)',
-                borderRadius: '16px',
-                border: '1px solid var(--color-border-subtle, #e2e8f0)',
-              }}
-            >
-              <Sparkles size={32} style={{ color: '#6366f1', margin: '0 auto 12px' }} />
-              <h3 style={{ fontSize: '16px', fontWeight: 600, color: '#0f172a', marginBottom: '6px' }}>
-                No outfits planned yet
-              </h3>
-              <p style={{ fontSize: '13px', color: '#64748b', maxWidth: '400px', margin: '0 auto 16px' }}>
-                Create coordinated outfits to generate your couple packing checklist!
-              </p>
+            <div className="not-found-state">
+              <span className="not-found-icon">🧳</span>
+              <span className="not-found-title">No outfits planned yet</span>
+              <span className="not-found-hint">Create coordinated outfits to generate your couple packing checklist!</span>
               <button
                 type="button"
-                className="primary-action-btn"
+                className="primary-action-btn flex items-center gap-2 mt-3"
                 onClick={() => handleOpenAddLookForDay(1)}
               >
                 <Plus size={14} />
@@ -686,16 +607,18 @@ export const PackingView: React.FC<PackingViewProps> = ({
                     <User size={16} className="text-primary" />
                     <span>{person1Name}&apos;s Wardrobe</span>
                   </div>
-                  <span style={{ fontSize: '12px', color: '#64748b' }}>
+                  <span className="text-sm text-secondary">
                     {p1Looks.length} item{p1Looks.length !== 1 ? 's' : ''}
                   </span>
                 </div>
 
                 <div className="packing-items-list">
                   {p1Looks.length === 0 ? (
-                    <p style={{ fontSize: '12px', color: '#94a3b8', textAlign: 'center', padding: '16px 0' }}>
-                      No looks for {person1Name} under current filter.
-                    </p>
+                    <div className="not-found-state">
+                      <span className="not-found-icon">🔍</span>
+                      <span className="not-found-title">No items found</span>
+                      <span className="not-found-hint">No looks for {person1Name} under current filter.</span>
+                    </div>
                   ) : (
                     p1Looks.map((l) => {
                       const stop = stopLookup.get(l.eventId);
@@ -710,15 +633,9 @@ export const PackingView: React.FC<PackingViewProps> = ({
                         >
                           <button
                             type="button"
-                            className="packed-checkbox-btn"
+                            className="packed-checkbox-btn pointer no-bg no-border p-0"
                             onClick={() => handleTogglePacked(l)}
-                            style={{
-                              background: 'none',
-                              border: 'none',
-                              cursor: 'pointer',
-                              padding: 0,
-                              color: l.packed ? '#10b981' : '#94a3b8',
-                            }}
+                            style={{ color: l.packed ? '#10b981' : '#94a3b8' }}
                             title={l.packed ? 'Mark unpacked' : 'Mark packed'}
                           >
                             {l.packed ? <CheckSquare size={18} /> : <Square size={18} />}
@@ -762,16 +679,18 @@ export const PackingView: React.FC<PackingViewProps> = ({
                     <User size={16} className="text-primary" />
                     <span>{person2Name}&apos;s Wardrobe</span>
                   </div>
-                  <span style={{ fontSize: '12px', color: '#64748b' }}>
+                  <span className="text-sm text-secondary">
                     {p2Looks.length} item{p2Looks.length !== 1 ? 's' : ''}
                   </span>
                 </div>
 
                 <div className="packing-items-list">
                   {p2Looks.length === 0 ? (
-                    <p style={{ fontSize: '12px', color: '#94a3b8', textAlign: 'center', padding: '16px 0' }}>
-                      No looks for {person2Name} under current filter.
-                    </p>
+                    <div className="not-found-state">
+                      <span className="not-found-icon">🔍</span>
+                      <span className="not-found-title">No items found</span>
+                      <span className="not-found-hint">No looks for {person2Name} under current filter.</span>
+                    </div>
                   ) : (
                     p2Looks.map((l) => {
                       const stop = stopLookup.get(l.eventId);

@@ -223,9 +223,39 @@ export async function fetchLegRouteGeometry(
       }
     }
   } catch (err) {
-    // Offline or timeout -> fall back to corridor simulation
+    // Offline or timeout -> fall through to backup
   }
 
+  // 4. Mapbox Directions API Fallback (High-availability)
+  const mapboxToken = typeof process !== 'undefined' && process.env ? process.env.VITE_MAPBOX_ACCESS_TOKEN : (import.meta as any).env?.VITE_MAPBOX_ACCESS_TOKEN;
+  
+  if (mapboxToken) {
+    const mapboxProfile = mode === 'walk' ? 'walking' : 'driving';
+    const mapboxUrl = `https://api.mapbox.com/directions/v5/mapbox/${mapboxProfile}/${from.coordinates.longitude},${from.coordinates.latitude};${to.coordinates.longitude},${to.coordinates.latitude}?geometries=geojson&access_token=${mapboxToken}`;
+    
+    try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 4000);
+      const res = await fetch(mapboxUrl, { signal: controller.signal });
+      clearTimeout(timeoutId);
+
+      if (res.ok) {
+        const data = await res.json();
+        if (data?.routes?.[0]?.geometry?.coordinates && data.routes[0].geometry.coordinates.length >= 2) {
+          const coords = data.routes[0].geometry.coordinates as [number, number][];
+          routeCache.set(cacheKey, coords);
+          idbSet(cacheKey, coords);
+          const distKm = Number((data.routes[0].distance / 1000).toFixed(1));
+          const durMins = Math.round(data.routes[0].duration / 60);
+          return { coordinates: coords, distanceKm: distKm, durationMinutes: durMins };
+        }
+      }
+    } catch (err) {
+      // Offline or timeout -> fall back to corridor simulation
+    }
+  }
+
+  // 5. Corridor Simulation (Absolute Fallback)
   const fallback = generateCorridorFallback(from.coordinates, to.coordinates);
   routeCache.set(cacheKey, fallback);
   idbSet(cacheKey, fallback);

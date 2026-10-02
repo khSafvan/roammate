@@ -13,7 +13,13 @@ export const TimelineActivityTicketCard: React.FC<TimelineActivityTicketCardProp
 }) => {
   const [selectedQrTicket, setSelectedQrTicket] = useState<BookingDocument | null>(null);
 
-  if (!tickets || tickets.length === 0) return null;
+  if (!tickets || tickets.length === 0) return (
+    <div className="not-found-state">
+      <span className="not-found-icon">🔍</span>
+      <span className="not-found-title">No items found</span>
+      <span className="not-found-hint">No tickets found</span>
+    </div>
+  );
 
   return (
     <>
@@ -28,7 +34,7 @@ export const TimelineActivityTicketCard: React.FC<TimelineActivityTicketCardProp
             border: '1px solid var(--border-light, rgba(15, 23, 42, 0.08))',
           }}
         >
-          <div style={{ display: 'flex', alignItems: 'flex-start', gap: '12px' }}>
+          <div className="flex items-start gap-3">
             <div
               style={{
                 width: '36px',
@@ -45,9 +51,9 @@ export const TimelineActivityTicketCard: React.FC<TimelineActivityTicketCardProp
               <Ticket size={18} />
             </div>
 
-            <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '6px' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <div className="flex-1">
+              <div className="flex items-center justify-between flex-wrap gap-2">
+                <div className="flex items-center gap-2">
                   <span
                     style={{
                       fontSize: '11px',
@@ -65,9 +71,8 @@ export const TimelineActivityTicketCard: React.FC<TimelineActivityTicketCardProp
                 </div>
                 <button
                   type="button"
-                  className="timeline-action-pill"
+                  className="timeline-action-pill text-xs pointer px-2 py-1"
                   onClick={onViewBookingsTab}
-                  style={{ fontSize: '11px', padding: '3px 8px' }}
                 >
                   <span>Open Bookings Hub</span>
                 </button>
@@ -86,7 +91,7 @@ export const TimelineActivityTicketCard: React.FC<TimelineActivityTicketCardProp
                     gap: '12px',
                   }}
                 >
-                  <div style={{ flex: 1, minWidth: 0 }}>
+                  <div className="flex-1">
                     <div style={{ fontSize: '14px', fontWeight: 600, color: 'var(--text-primary)' }}>
                       {t.title}
                     </div>
