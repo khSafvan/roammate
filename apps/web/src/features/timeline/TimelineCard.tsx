@@ -23,7 +23,7 @@ import {
   UtensilsCrossed,
 } from 'lucide-react';
 import { Look } from '@roammate/shared';
-import { ItineraryStop, StopCategory, DayWeather, WeatherCondition } from '../../types/trip';
+import { ItineraryStop, StopCategory, DayWeather, WeatherCondition, HourlyForecast } from '../../types/trip';
 import { Sun, CloudSun, CloudRain, Cloud } from 'lucide-react';
 import { MarkdownText } from '../../components/ui/MarkdownText';
 
@@ -80,7 +80,22 @@ const getCategoryIcon = (category: StopCategory) => {
   }
 };
 
+
+const parseTimeHour = (timeStr: string) => {
+  if (!timeStr) return -1;
+  const upper = timeStr.toUpperCase();
+  if (upper.includes('PM') || upper.includes('AM')) {
+     const parts = upper.split(' ');
+     let h = parseInt(parts[0], 10);
+     if (parts[1] === 'PM' && h !== 12) h += 12;
+     if (parts[1] === 'AM' && h === 12) h = 0;
+     return h;
+  }
+  return parseInt(timeStr.split(':')[0], 10);
+};
+
 export const TimelineCard = React.memo<TimelineCardProps>(function TimelineCard({
+
   stop,
   dayWeather,
   isSelected,
@@ -105,7 +120,21 @@ export const TimelineCard = React.memo<TimelineCardProps>(function TimelineCard(
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   
   // Find weather forecast for this specific time
-  const etaWeather = stop.startTime && dayWeather?.hourly ? dayWeather.hourly.find(h => h.time.startsWith(stop.startTime.split(':')[0])) : null;
+  const stopHour = stop.startTime ? parseTimeHour(stop.startTime) : -1;
+  let etaWeather: HourlyForecast | null = null;
+  if (stopHour !== -1 && dayWeather?.hourly?.length) {
+    let minDiff = 999;
+    for (const h of dayWeather.hourly) {
+      const hHour = parseTimeHour(h.time);
+      if (hHour !== -1) {
+        const diff = Math.abs(hHour - stopHour);
+        if (diff < minDiff && diff <= 3) {
+          minDiff = diff;
+          etaWeather = h;
+        }
+      }
+    }
+  }
 
   const menuRef = useRef<HTMLDivElement | null>(null);
 
