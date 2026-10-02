@@ -21,8 +21,9 @@ A quick reference chart of all environment variables used across the frontend (R
 | `TURSO_AUTH_TOKEN` | **Backend** | API (Secret) | Authentication token to read/write to your Turso database. | Run `turso db tokens create roammate-db`. |
 | `JWT_SECRET` | **Backend** | API (Secret) | Cryptographic secret used to sign secure session tokens. | Generate securely via `openssl rand -hex 32` in your terminal. |
 | `ALLOWED_ORIGINS` | **Backend** | API (Secret) | *(Optional)* Comma-separated list of domains permitted to access your API (CORS). | Enter the URL of your frontend (e.g., `https://mojolog-web.pages.dev`). |
-| `GOOGLE_MAPS_API_KEY` | **Backend** | API (Secret) | *(Optional)* API key to fetch high-quality place details via Google Places API. | Google Cloud Console (APIs & Services ➔ Credentials). |
-| `TRIPADVISOR_API_KEY` | **Backend** | API (Secret) | *(Optional)* API key for TripAdvisor location fallback. | TripAdvisor Developer Portal. |
+| `FOURSQUARE_API_KEY` | **Backend** | API (Secret) | *(Optional)* Primary API key for robust global POI search and location data via Foursquare. | Foursquare Developer Portal (Projects ➔ API Keys). |
+| `YELP_API_KEY` | **Backend** | API (Secret) | *(Optional)* Fallback API key for rich restaurant reviews and high-quality location details via Yelp Fusion. | Yelp Developer Portal (Manage App ➔ API Key). |
+| `VITE_MAPBOX_ACCESS_TOKEN`| **Frontend/Backend** | ALL | *(Optional)* Mapbox Directions API token for high-availability production routing geometry. | Mapbox Account Dashboard ➔ Tokens. |
 | `CLOUDFLARE_API_TOKEN`| **CI/CD** | GitHub Actions | Authorizes GitHub Actions to deploy to your Cloudflare account automatically. | Cloudflare Dashboard ➔ My Profile ➔ API Tokens. |
 | `CLOUDFLARE_ACCOUNT_ID`| **CI/CD** | GitHub Actions | Identifies your Cloudflare account for automated deployments. | Cloudflare Dashboard ➔ Workers & Pages ➔ Account ID (Right Sidebar). |
 
