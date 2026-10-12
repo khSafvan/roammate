@@ -1,0 +1,185 @@
+import React, { useEffect, useMemo, useState } from 'react';
+import { FileText, PhoneCall, Save, Sparkles, Wifi } from 'lucide-react';
+import { Trip, TripDay } from '../../types/trip';
+import {
+  formatEmergencySnippet,
+  formatTravelUtilitySnippet,
+  getCountryIntelligence,
+} from '@roammate/core';
+import { Modal } from '../../components/ui/Modal';
+
+interface ScratchpadModalProps {
+  isOpen: boolean;
+  trip: Trip;
+  activeDay?: TripDay;
+  onUpdateTrip: (updated: Partial<Trip>) => void;
+  onClose: () => void;
+}
+
+export const ScratchpadModal: React.FC<ScratchpadModalProps> = ({
+  isOpen,
+  trip,
+  activeDay,
+  onUpdateTrip,
+  onClose,
+}) => {
+  const [emergencyContacts, setEmergencyContacts] = useState(trip.emergencyContacts || '');
+  const [generalNotes, setGeneralNotes] = useState(trip.generalNotes || '');
+  const [dayNotes, setDayNotes] = useState(activeDay?.notes || '');
+  const [isSaved, setIsSaved] = useState(false);
+
+  useEffect(() => {
+    if (isOpen) {
+      setEmergencyContacts(trip.emergencyContacts || '');
+      setGeneralNotes(trip.generalNotes || '');
+      setDayNotes(activeDay?.notes || '');
+      setIsSaved(false);
+    }
+  }, [isOpen, trip.emergencyContacts, trip.generalNotes, activeDay?.notes]);
+
+  const intel = useMemo(
+    () => getCountryIntelligence(trip.countryCode, trip.destination),
+    [trip.countryCode, trip.destination]
+  );
+
+  const handleAutoFillIntel = () => {
+    if (!intel) return;
+    const emSnippet = formatEmergencySnippet(intel);
+    const utilSnippet = formatTravelUtilitySnippet(intel);
+    setEmergencyContacts((prev) => (prev ? `${prev}\n\n${emSnippet}` : emSnippet));
+    setGeneralNotes((prev) => (prev ? `${prev}\n\n${utilSnippet}` : utilSnippet));
+  };
+
+  const handleSave = (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+
+    const updatedDays = activeDay
+      ? (trip.days || []).map((d) => (d.id === activeDay.id ? { ...d, notes: dayNotes.trim() || undefined } : d))
+      : trip.days;
+
+    onUpdateTrip({
+      emergencyContacts: emergencyContacts.trim() || undefined,
+      generalNotes: generalNotes.trim() || undefined,
+      days: updatedDays,
+    });
+
+    setIsSaved(true);
+    setTimeout(() => {
+      setIsSaved(false);
+      onClose();
+    }, 800);
+  };
+
+  return (
+    <Modal
+      isOpen={isOpen}
+      onClose={onClose}
+      title="Trip Scratchpad & Emergency Notes"
+      subtitle="Quick-reference contacts, embassy details, wifi codes & day notes"
+      icon={
+        <div className="stop-badge-lg" style={{ backgroundColor: 'var(--brand-amber)' }}>
+          <FileText size={18} />
+        </div>
+      }
+    >
+      <form onSubmit={handleSave} className="auth-content-col">
+        {/* Quick Pre-fill from Destination Intelligence */}
+        {intel && (
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                padding: '8px 12px',
+                borderRadius: 'var(--radius-md, 8px)',
+                backgroundColor: 'rgba(59, 130, 246, 0.08)',
+                border: '1px solid rgba(59, 130, 246, 0.2)',
+                fontSize: '12px',
+              }}
+            >
+              <span>
+                Destination detected: <strong>{intel.name}</strong> ({intel.countryCode})
+              </span>
+              <button
+                type="button"
+                onClick={handleAutoFillIntel}
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '4px',
+                  padding: '4px 10px',
+                  borderRadius: 'var(--radius-pill, 9999px)',
+                  backgroundColor: 'var(--brand-blue, #3B82F6)',
+                  color: '#fff',
+                  border: 'none',
+                  fontSize: '11px',
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                }}
+              >
+                <Sparkles size={12} />
+                <span>Auto-Fill Info</span>
+              </button>
+            </div>
+          )}
+
+          {/* Emergency & Embassy Contacts */}
+          <div>
+            <label className="form-label" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <PhoneCall size={14} className="text-red-500" />
+              <span>Emergency Contacts &amp; Embassy Details</span>
+            </label>
+            <textarea
+              className="form-input text-xs font-mono"
+              rows={4}
+              placeholder="e.g. Police: 999, Embassy: +971 4 309 4000, Insurance Policy #..."
+              value={emergencyContacts}
+              onChange={(e) => setEmergencyContacts(e.target.value)}
+            />
+          </div>
+
+          {/* General Notes & Wifi codes */}
+          <div>
+            <label className="form-label" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <Wifi size={14} className="text-blue" />
+              <span>General Trip Notes, Wifi Passwords &amp; Codes</span>
+            </label>
+            <textarea
+              className="form-input text-xs font-mono"
+              rows={4}
+              placeholder="e.g. Hotel Wifi: PalaceGuest / pass123, Door code: #8821, Metro card balance..."
+              value={generalNotes}
+              onChange={(e) => setGeneralNotes(e.target.value)}
+            />
+          </div>
+
+          {/* Active Day Notes */}
+          {activeDay && (
+            <div>
+              <label className="form-label" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <FileText size={14} style={{ color: activeDay.themeColor }} />
+                <span>Day {activeDay.dayNumber} Specific Notes ({activeDay.dateStr})</span>
+              </label>
+              <textarea
+                className="form-input text-xs"
+                rows={3}
+                placeholder={`Specific reminders for Day ${activeDay.dayNumber}...`}
+                value={dayNotes}
+                onChange={(e) => setDayNotes(e.target.value)}
+              />
+            </div>
+          )}
+
+          <div className="modal-actions-row mt-2">
+            <button type="button" className="secondary-action-btn flex-1" onClick={onClose}>
+              Cancel
+            </button>
+            <button type="submit" className="primary-modal-btn flex-1">
+              <Save size={15} />
+              <span>{isSaved ? 'Saved!' : 'Save Scratchpad'}</span>
+            </button>
+          </div>
+        </form>
+    </Modal>
+  );
+};
