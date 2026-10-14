@@ -1160,7 +1160,7 @@ function AppContent() {
 
   return (
     <div className={`app-shell ${isViewportLocked ? 'viewport-locked' : ''}`}>
-      <Suspense fallback={<div className="loading-spinner">Loading...</div>}>
+      <Suspense fallback={<div className="loading-spinner-container"><div className="loading-spinner"></div><span className="loading-text">Loading...</span></div>}>
       {/* 1. TRIPS LIST LANDING VIEW */}
       {currentView === 'trips_list' && (
         <TripsListPage
@@ -1468,6 +1468,7 @@ function AppContent() {
                   {placeStops.map((stop, index) => (
                       <React.Fragment key={stop.id}>
                         <TimelineCard
+                          dayWeather={activeDay.weather}
                           stop={stop}
                           index={index}
                           totalStops={placeStops.length}

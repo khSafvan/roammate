@@ -20,5 +20,10 @@
     "secret:list": "wrangler secret list --config apps/api/wrangler.toml",
     "ui-skills": "npx -y ui-skills",
     "trip:create": "node scripts/agent-create-trip.js"
+  },
+  "devDependencies": {
+    "@babel/core": "^8.0.6",
+    "@babel/preset-react": "^8.0.1",
+    "@babel/preset-typescript": "^8.0.1"
   }
 }
