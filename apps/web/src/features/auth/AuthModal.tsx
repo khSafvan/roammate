@@ -3,6 +3,7 @@ import { Key, Lock, LogOut, AlertCircle, CheckCircle2 } from 'lucide-react';
 import { VaultSession } from '../../auth/crypto';
 import { loginAccountOnEdge } from '../../auth/syncService';
 import { Modal } from '../../components/ui/Modal';
+import { Input } from "../../components/ui/Input";
 
 interface AuthModalProps {
   isOpen: boolean;
@@ -110,7 +111,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
               </label>
               <div className="passcode-input-wrapper">
                 <Key size={16} className="passcode-input-icon" />
-                <input
+                <Input
                   id="auth-modal-password"
                   type="password"
                   className="passcode-input"

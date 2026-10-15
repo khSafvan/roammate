@@ -18,6 +18,7 @@ import {
 } from 'lucide-react';
 import { VaultSession } from '../../auth/crypto';
 import { useUI } from '../../contexts/UIContext';
+import { Button } from ".//Button";
 
 export interface HeaderProps {
   title?: string;
@@ -244,25 +245,25 @@ export const Header: React.FC<HeaderProps> = ({
               </button>
 
               {activeSession && onLogout && (
-                <button
+                <Button
                   className="secondary-action-btn text-rose"
                   onClick={onLogout}
-                  title="Lock Vault & Log Out"
+                  title="Lock Vault & Log Out" variant="secondary"
                 >
                   <LogOut size={13} />
                   <span>Lock</span>
-                </button>
+                </Button>
               )}
 
               {onOpenCreateTrip && (
-                <button
+                <Button
                   className="primary-action-btn"
                   onClick={onOpenCreateTrip}
-                  title="Plan a new journey"
+                  title="Plan a new journey" variant="primary"
                 >
                   <Plus size={15} />
                   <span>Plan New Trip</span>
-                </button>
+                </Button>
               )}
             </>
           ) : currentView === 'trip_settings' ? (
