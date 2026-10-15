@@ -1,6 +1,6 @@
 import { Component, ErrorInfo, ReactNode } from 'react';
 import { AlertTriangle, RefreshCw, Terminal, Trash2 } from 'lucide-react';
-
+import { Button } from ".//Button";
 
 interface Props {
   children: ReactNode;
@@ -61,15 +61,15 @@ export class ErrorBoundary extends Component<Props, State> {
             </p>
 
             <div className="error-actions-group">
-              <button className="primary-brand-btn" onClick={this.handleReload}>
+              <Button className="primary-brand-btn" onClick={this.handleReload} variant="primary">
                 <RefreshCw size={15} />
                 <span>Reload Itinerary</span>
-              </button>
+              </Button>
 
-              <button className="secondary-action-btn" onClick={this.handleResetStorage}>
+              <Button className="secondary-action-btn" onClick={this.handleResetStorage} variant="secondary">
                 <Trash2 size={15} />
                 <span>Reset Local Cache</span>
-              </button>
+              </Button>
 
               <button
                 className="ghost-action-btn"

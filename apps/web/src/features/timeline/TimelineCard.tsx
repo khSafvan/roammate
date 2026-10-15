@@ -23,11 +23,13 @@ import {
   UtensilsCrossed,
 } from 'lucide-react';
 import { Look } from '@roammate/shared';
-import { ItineraryStop, StopCategory } from '../../types/trip';
+import { ItineraryStop, StopCategory, DayWeather, WeatherCondition, HourlyForecast } from '../../types/trip';
+import { Sun, CloudSun, CloudRain, Cloud } from 'lucide-react';
 import { MarkdownText } from '../../components/ui/MarkdownText';
 
 interface TimelineCardProps {
   stop: ItineraryStop;
+  dayWeather?: DayWeather;
   themeColor: string;
   isSelected?: boolean;
   index?: number;
@@ -46,7 +48,20 @@ interface TimelineCardProps {
   onDrop?: (e: React.DragEvent, index: number) => void;
   isDragging?: boolean;
   isDragOver?: boolean;
+
+
+
 }
+
+const getMiniWeatherIcon = (condition: WeatherCondition, size = 12) => {
+  switch (condition) {
+    case 'sunny':
+    case 'clear': return <Sun size={size} strokeWidth={2} className="text-amber" />;
+    case 'partly_cloudy': return <CloudSun size={size} strokeWidth={2} className="text-amber" />;
+    case 'rainy': return <CloudRain size={size} strokeWidth={2} className="text-blue" />;
+    case 'cloudy': default: return <Cloud size={size} strokeWidth={2} className="text-slate" />;
+  }
+};
 
 const getCategoryIcon = (category: StopCategory) => {
   switch (category) {
@@ -65,8 +80,24 @@ const getCategoryIcon = (category: StopCategory) => {
   }
 };
 
+
+const parseTimeHour = (timeStr: string) => {
+  if (!timeStr) return -1;
+  const upper = timeStr.toUpperCase();
+  if (upper.includes('PM') || upper.includes('AM')) {
+     const parts = upper.split(' ');
+     let h = parseInt(parts[0], 10);
+     if (parts[1] === 'PM' && h !== 12) h += 12;
+     if (parts[1] === 'AM' && h === 12) h = 0;
+     return h;
+  }
+  return parseInt(timeStr.split(':')[0], 10);
+};
+
 export const TimelineCard = React.memo<TimelineCardProps>(function TimelineCard({
+
   stop,
+  dayWeather,
   isSelected,
   index,
   totalStops,
@@ -85,7 +116,26 @@ export const TimelineCard = React.memo<TimelineCardProps>(function TimelineCard(
   isDragging,
   isDragOver,
 }) {
+  
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  
+  // Find weather forecast for this specific time
+  const stopHour = stop.startTime ? parseTimeHour(stop.startTime) : -1;
+  let etaWeather: HourlyForecast | null = null;
+  if (stopHour !== -1 && dayWeather?.hourly?.length) {
+    let minDiff = 999;
+    for (const h of dayWeather.hourly) {
+      const hHour = parseTimeHour(h.time);
+      if (hHour !== -1) {
+        const diff = Math.abs(hHour - stopHour);
+        if (diff < minDiff && diff <= 3) {
+          minDiff = diff;
+          etaWeather = h;
+        }
+      }
+    }
+  }
+
   const menuRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
@@ -239,7 +289,15 @@ export const TimelineCard = React.memo<TimelineCardProps>(function TimelineCard(
                 #{String(stop.orderIndex).padStart(2, '0')}
               </span>
               {reorderControls}
+              
               <span className="card-time">{stop.startTime}</span>
+              {etaWeather && (
+                <div className="flex items-center gap-1 ml-2 px-1.5 py-0.5 bg-slate-50 border border-slate-100 rounded text-[10px] font-medium text-slate-600">
+                  {getMiniWeatherIcon(etaWeather.condition, 10)}
+                  <span>{etaWeather.tempC}°</span>
+                </div>
+              )}
+
 
               <span className="card-category-sublabel">
                 {stop.category}
