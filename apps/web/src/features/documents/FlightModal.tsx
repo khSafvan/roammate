@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Plane, Search, Loader2, X } from 'lucide-react';
 import { Flight } from '../../types/trip';
+import { Button } from "../../components/ui/Button";
+import { Input } from "../../components/ui/Input";
 
 interface FlightModalProps {
   isOpen: boolean;
@@ -111,7 +113,7 @@ export const FlightModal: React.FC<FlightModalProps> = ({ isOpen, onClose, onSav
           <div className="form-group full-span" style={{ position: 'relative' }}>
             <label>Flight Number</label>
             <div style={{ display: 'flex', gap: '8px' }}>
-              <input
+              <Input
                 type="text"
                 className="form-input"
                 value={flightData.flightNumber || ''}
@@ -120,61 +122,61 @@ export const FlightModal: React.FC<FlightModalProps> = ({ isOpen, onClose, onSav
                 required
                 style={{ flex: 1 }}
               />
-              <button
+              <Button
                 type="button"
                 className="secondary-action-btn"
                 onClick={handleLookup}
                 disabled={isLookingUp || !flightData.flightNumber}
-                style={{ display: 'flex', alignItems: 'center', gap: '6px' }}
+                style={{ display: 'flex', alignItems: 'center', gap: '6px' }} variant="secondary"
               >
                 {isLookingUp ? <Loader2 size={16} className="animate-spin" /> : <Search size={16} />}
                 Lookup
-              </button>
+              </Button>
             </div>
           </div>
           <div className="form-group">
             <label>Carrier</label>
-            <input type="text" className="form-input" value={flightData.carrier || ''} onChange={e => updateField('carrier', e.target.value)} required />
+            <Input type="text" className="form-input" value={flightData.carrier || ''} onChange={e => updateField('carrier', e.target.value)} required />
           </div>
           <div className="form-group">
             <label>Date</label>
-            <input type="date" className="form-input" value={flightData.date || ''} onChange={e => updateField('date', e.target.value)} required />
+            <Input type="date" className="form-input" value={flightData.date || ''} onChange={e => updateField('date', e.target.value)} required />
           </div>
 
           <div className="form-group">
             <label>Dep Airport Code</label>
-            <input type="text" className="form-input" value={flightData.departure?.airport || ''} onChange={e => updateNestedField('departure', 'airport', e.target.value)} required />
+            <Input type="text" className="form-input" value={flightData.departure?.airport || ''} onChange={e => updateNestedField('departure', 'airport', e.target.value)} required />
           </div>
           <div className="form-group">
             <label>Arr Airport Code</label>
-            <input type="text" className="form-input" value={flightData.arrival?.airport || ''} onChange={e => updateNestedField('arrival', 'airport', e.target.value)} required />
+            <Input type="text" className="form-input" value={flightData.arrival?.airport || ''} onChange={e => updateNestedField('arrival', 'airport', e.target.value)} required />
           </div>
           
           <div className="form-group">
             <label>Dep City</label>
-            <input type="text" className="form-input" value={flightData.departure?.city || ''} onChange={e => updateNestedField('departure', 'city', e.target.value)} />
+            <Input type="text" className="form-input" value={flightData.departure?.city || ''} onChange={e => updateNestedField('departure', 'city', e.target.value)} />
           </div>
           <div className="form-group">
             <label>Arr City</label>
-            <input type="text" className="form-input" value={flightData.arrival?.city || ''} onChange={e => updateNestedField('arrival', 'city', e.target.value)} />
+            <Input type="text" className="form-input" value={flightData.arrival?.city || ''} onChange={e => updateNestedField('arrival', 'city', e.target.value)} />
           </div>
 
           <div className="form-group">
             <label>Dep Time</label>
-            <input type="time" className="form-input" value={flightData.departure?.time || ''} onChange={e => updateNestedField('departure', 'time', e.target.value)} />
+            <Input type="time" className="form-input" value={flightData.departure?.time || ''} onChange={e => updateNestedField('departure', 'time', e.target.value)} />
           </div>
           <div className="form-group">
             <label>Arr Time</label>
-            <input type="time" className="form-input" value={flightData.arrival?.time || ''} onChange={e => updateNestedField('arrival', 'time', e.target.value)} />
+            <Input type="time" className="form-input" value={flightData.arrival?.time || ''} onChange={e => updateNestedField('arrival', 'time', e.target.value)} />
           </div>
 
           <div className="form-group">
             <label>Dep Terminal</label>
-            <input type="text" className="form-input" value={flightData.departure?.terminal || ''} onChange={e => updateNestedField('departure', 'terminal', e.target.value)} />
+            <Input type="text" className="form-input" value={flightData.departure?.terminal || ''} onChange={e => updateNestedField('departure', 'terminal', e.target.value)} />
           </div>
           <div className="form-group">
             <label>Arr Terminal</label>
-            <input type="text" className="form-input" value={flightData.arrival?.terminal || ''} onChange={e => updateNestedField('arrival', 'terminal', e.target.value)} />
+            <Input type="text" className="form-input" value={flightData.arrival?.terminal || ''} onChange={e => updateNestedField('arrival', 'terminal', e.target.value)} />
           </div>
 
           <div className="form-group">
@@ -188,12 +190,12 @@ export const FlightModal: React.FC<FlightModalProps> = ({ isOpen, onClose, onSav
           </div>
           <div className="form-group">
             <label>Seat</label>
-            <input type="text" className="form-input" value={flightData.seat || ''} onChange={e => updateField('seat', e.target.value)} />
+            <Input type="text" className="form-input" value={flightData.seat || ''} onChange={e => updateField('seat', e.target.value)} />
           </div>
 
           <div className="form-group full-span">
             <label>Traveler / Passenger</label>
-            <input
+            <Input
               type="text"
               className="form-input"
               list="flight-travelers-list"
@@ -208,11 +210,11 @@ export const FlightModal: React.FC<FlightModalProps> = ({ isOpen, onClose, onSav
           </div>
           <div className="form-group full-span">
             <label>Booking Reference (PNR)</label>
-            <input type="text" className="form-input" value={flightData.bookingRef || ''} onChange={e => updateField('bookingRef', e.target.value)} />
+            <Input type="text" className="form-input" value={flightData.bookingRef || ''} onChange={e => updateField('bookingRef', e.target.value)} />
           </div>
           
           <div className="form-group full-span" style={{ marginTop: '16px' }}>
-            <button type="submit" className="primary-action-btn" style={{ width: '100%' }}>Save Flight</button>
+            <Button type="submit" className="primary-action-btn" style={{ width: '100%' }} variant="primary">Save Flight</Button>
           </div>
         </form>
       </div>

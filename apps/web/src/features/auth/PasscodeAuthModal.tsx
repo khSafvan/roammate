@@ -5,7 +5,6 @@ import {
   Eye,
   EyeOff,
   KeyRound,
-  Loader2,
   Lock,
   ShieldCheck,
   X,
@@ -13,6 +12,8 @@ import {
 import { loginAccountOnEdge } from '../../auth/syncService';
 import { VaultSession } from '../../auth/crypto';
 import { useModalA11y } from '../../hooks';
+import { Button } from '../../components/ui/Button';
+import { Input } from '../../components/ui/Input';
 
 interface PasscodeAuthModalProps {
   isOpen: boolean;
@@ -90,9 +91,9 @@ export const PasscodeAuthModal: React.FC<PasscodeAuthModalProps> = ({
         <Lock size={26} strokeWidth={2.2} />
       </div>
 
-      <h2 id="passcode-auth-title" className="passcode-title">
+      <h1 id="passcode-auth-title" className="passcode-title">
         Personal Vault Access
-      </h2>
+      </h1>
       <p className="passcode-desc">
         Enter your master password to unlock and decrypt your itineraries, flight tickets, and vouchers.
       </p>
@@ -120,7 +121,7 @@ export const PasscodeAuthModal: React.FC<PasscodeAuthModalProps> = ({
 
           <div className="passcode-input-wrapper">
             <KeyRound size={17} className="passcode-input-icon" />
-            <input
+            <Input
               id="passcode-password"
               type={showPassword ? 'text' : 'password'}
               className="passcode-input"
@@ -133,6 +134,7 @@ export const PasscodeAuthModal: React.FC<PasscodeAuthModalProps> = ({
               autoComplete="current-password"
               spellCheck={false}
               disabled={loading}
+              error={!!error}
             />
             <button
               type="button"
@@ -146,23 +148,16 @@ export const PasscodeAuthModal: React.FC<PasscodeAuthModalProps> = ({
           </div>
         </div>
 
-        <button
+        <Button
           type="submit"
-          disabled={loading || !password.trim()}
+          disabled={!password.trim()}
+          isLoading={loading}
           className="passcode-submit-btn"
+          style={{ width: '100%', marginTop: '16px' }}
         >
-          {loading ? (
-            <>
-              <Loader2 size={18} className="passcode-spinner" />
-              <span>Verifying Password...</span>
-            </>
-          ) : (
-            <>
-              <span>Unlock Vault</span>
-              <ArrowRight size={17} />
-            </>
-          )}
-        </button>
+          <span>Unlock Vault</span>
+          <ArrowRight size={17} />
+        </Button>
       </form>
 
       <div className="passcode-security-footer">

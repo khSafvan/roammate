@@ -5,6 +5,7 @@ import { FlightModal } from './FlightModal';
 import { HotelModal } from './HotelModal';
 import { ActivityPassModal } from './ActivityPassModal';
 import "./DocumentsAndTicketsHub.css";
+import { Button } from "../../components/ui/Button";
 
 interface DocumentsAndTicketsHubProps {
   flights: Flight[];
@@ -105,11 +106,11 @@ export const DocumentsAndTicketsHub: React.FC<DocumentsAndTicketsHubProps> = ({
         </div>
 
         <div className="dropdown-wrapper" ref={dropdownRef}>
-          <button className="primary-action-btn" onClick={() => setIsDropdownOpen(!isDropdownOpen)}>
+          <Button className="primary-action-btn" onClick={() => setIsDropdownOpen(!isDropdownOpen)} variant="primary">
             <Plus size={16} />
             <span>Add Booking</span>
             <ChevronDown size={14} className="ml-1" />
-          </button>
+          </Button>
           
           {isDropdownOpen && (
             <div className="hub-add-dropdown">

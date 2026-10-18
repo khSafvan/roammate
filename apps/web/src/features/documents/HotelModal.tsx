@@ -1,7 +1,9 @@
+import { Input } from "../../components/ui/Input";
 import React, { useState, useEffect } from 'react';
 import { Hotel, X } from 'lucide-react';
 import { BookingDocument } from '../../types/trip';
 import { PlaceSearchInput, PlaceSearchResult } from '../../features/places/PlaceSearchInput';
+import { Button } from "../../components/ui/Button";
 
 interface HotelModalProps {
   isOpen: boolean;
@@ -101,40 +103,40 @@ export const HotelModal: React.FC<HotelModalProps> = ({ isOpen, onClose, onSave,
           
           <div className="form-group full-span">
             <label>Hotel Name</label>
-            <input type="text" className="form-input" value={docData.title || ''} onChange={e => updateField('title', e.target.value)} required />
+            <Input type="text" className="form-input" value={docData.title || ''} onChange={e => updateField('title', e.target.value)} required />
           </div>
           
           <div className="form-group">
             <label>Check-in Date</label>
-            <input type="date" className="form-input" value={docData.date || ''} onChange={e => updateField('date', e.target.value)} required />
+            <Input type="date" className="form-input" value={docData.date || ''} onChange={e => updateField('date', e.target.value)} required />
           </div>
           <div className="form-group">
             <label>Check-out Date</label>
-            <input type="date" className="form-input" value={docData.endDate || ''} onChange={e => updateField('endDate', e.target.value)} required />
+            <Input type="date" className="form-input" value={docData.endDate || ''} onChange={e => updateField('endDate', e.target.value)} required />
           </div>
 
           <div className="form-group">
             <label>Check-in Time</label>
-            <input type="time" className="form-input" value={docData.time || ''} onChange={e => updateField('time', e.target.value)} />
+            <Input type="time" className="form-input" value={docData.time || ''} onChange={e => updateField('time', e.target.value)} />
           </div>
           <div className="form-group">
             <label>Check-out Time</label>
-            <input type="time" className="form-input" value={docData.endTime || ''} onChange={e => updateField('endTime', e.target.value)} />
+            <Input type="time" className="form-input" value={docData.endTime || ''} onChange={e => updateField('endTime', e.target.value)} />
           </div>
 
           <div className="form-group full-span">
             <label>Room Type</label>
-            <input type="text" className="form-input" value={docData.cabinOrRoomType || ''} onChange={e => updateField('cabinOrRoomType', e.target.value)} placeholder="e.g. Fountain View Deluxe Suite" />
+            <Input type="text" className="form-input" value={docData.cabinOrRoomType || ''} onChange={e => updateField('cabinOrRoomType', e.target.value)} placeholder="e.g. Fountain View Deluxe Suite" />
           </div>
           
           <div className="form-group full-span">
             <label>Location / Address</label>
-            <input type="text" className="form-input" value={docData.location || ''} onChange={e => updateField('location', e.target.value)} />
+            <Input type="text" className="form-input" value={docData.location || ''} onChange={e => updateField('location', e.target.value)} />
           </div>
           
           <div className="form-group full-span">
             <label>Traveler / Guest</label>
-            <input
+            <Input
               type="text"
               className="form-input"
               list="hotel-travelers-list"
@@ -150,7 +152,7 @@ export const HotelModal: React.FC<HotelModalProps> = ({ isOpen, onClose, onSave,
           
           <div className="form-group full-span">
             <label>Confirmation Code</label>
-            <input type="text" className="form-input" value={docData.confirmationCode || ''} onChange={e => updateField('confirmationCode', e.target.value)} />
+            <Input type="text" className="form-input" value={docData.confirmationCode || ''} onChange={e => updateField('confirmationCode', e.target.value)} />
           </div>
 
           <div className="form-group full-span">
@@ -159,7 +161,7 @@ export const HotelModal: React.FC<HotelModalProps> = ({ isOpen, onClose, onSave,
           </div>
           
           <div className="form-group full-span" style={{ marginTop: '16px' }}>
-            <button type="submit" className="primary-action-btn" style={{ width: '100%' }}>Save Hotel</button>
+            <Button type="submit" className="primary-action-btn" style={{ width: '100%' }} variant="primary">Save Hotel</Button>
           </div>
         </form>
       </div>

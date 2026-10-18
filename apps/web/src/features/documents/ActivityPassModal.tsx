@@ -1,7 +1,9 @@
+import { Input } from "../../components/ui/Input";
 import React, { useState, useEffect } from 'react';
 import { Ticket, X } from 'lucide-react';
 import { BookingDocument } from '../../types/trip';
 import { PlaceSearchInput, PlaceSearchResult } from '../../features/places/PlaceSearchInput';
+import { Button } from "../../components/ui/Button";
 
 interface ActivityPassModalProps {
   isOpen: boolean;
@@ -113,26 +115,26 @@ export const ActivityPassModal: React.FC<ActivityPassModalProps> = ({ isOpen, on
             <>
               <div className="form-group full-span">
                 <label>Title</label>
-                <input type="text" className="form-input" value={docData.title || ''} onChange={e => updateField('title', e.target.value)} required />
+                <Input type="text" className="form-input" value={docData.title || ''} onChange={e => updateField('title', e.target.value)} required />
               </div>
               
               <div className="form-group full-span">
                 <label>Description / Subtitle</label>
-                <input type="text" className="form-input" value={docData.subtitle || ''} onChange={e => updateField('subtitle', e.target.value)} />
+                <Input type="text" className="form-input" value={docData.subtitle || ''} onChange={e => updateField('subtitle', e.target.value)} />
               </div>
 
               <div className="form-group">
                 <label>Date</label>
-                <input type="date" className="form-input" value={docData.date || ''} onChange={e => updateField('date', e.target.value)} required />
+                <Input type="date" className="form-input" value={docData.date || ''} onChange={e => updateField('date', e.target.value)} required />
               </div>
               <div className="form-group">
                 <label>Time</label>
-                <input type="time" className="form-input" value={docData.time || ''} onChange={e => updateField('time', e.target.value)} />
+                <Input type="time" className="form-input" value={docData.time || ''} onChange={e => updateField('time', e.target.value)} />
               </div>
 
               <div className="form-group full-span">
                 <label>Location / Address</label>
-                <input type="text" className="form-input" value={docData.location || ''} onChange={e => updateField('location', e.target.value)} />
+                <Input type="text" className="form-input" value={docData.location || ''} onChange={e => updateField('location', e.target.value)} />
               </div>
               
               <div className="form-group">
@@ -145,7 +147,7 @@ export const ActivityPassModal: React.FC<ActivityPassModalProps> = ({ isOpen, on
               </div>
               <div className="form-group">
                 <label>Confirmation Code</label>
-                <input type="text" className="form-input" value={docData.confirmationCode || ''} onChange={e => updateField('confirmationCode', e.target.value)} />
+                <Input type="text" className="form-input" value={docData.confirmationCode || ''} onChange={e => updateField('confirmationCode', e.target.value)} />
               </div>
 
               <div className="form-group full-span">
@@ -156,7 +158,7 @@ export const ActivityPassModal: React.FC<ActivityPassModalProps> = ({ isOpen, on
           )}
           
           <div className="form-group full-span" style={{ marginTop: '16px' }}>
-            <button type="submit" className="primary-action-btn" style={{ width: '100%', minHeight: '44px' }}>Save Booking</button>
+            <Button type="submit" className="primary-action-btn" style={{ width: '100%', minHeight: '44px' }} variant="primary">Save Booking</Button>
           </div>
         </form>
       </div>
