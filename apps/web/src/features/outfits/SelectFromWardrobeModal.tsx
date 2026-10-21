@@ -2,6 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { X, Sparkles, Copy, Check, Search } from 'lucide-react';
 import { Look, LookOccasion } from '@roammate/shared';
 import { useModalA11y } from '../../hooks';
+import { Button } from "../../components/ui/Button";
 
 export interface SelectFromWardrobeModalProps {
   isOpen: boolean;
@@ -379,20 +380,20 @@ export const SelectFromWardrobeModal: React.FC<SelectFromWardrobeModalProps> = (
 
                     {/* Action Buttons */}
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px', marginTop: 'auto', paddingTop: '4px' }}>
-                      <button
+                      <Button
                         type="button"
                         className="primary-action-btn"
                         style={{ fontSize: '12px', padding: '6px 8px', justifyContent: 'center' }}
                         onClick={() => {
                           onSelectLook(look, 'assign');
                           onClose();
-                        }}
+                        }} variant="primary"
                       >
                         <Check size={13} />
                         <span>Assign Here</span>
-                      </button>
+                      </Button>
 
-                      <button
+                      <Button
                         type="button"
                         className="secondary-action-btn"
                         style={{ fontSize: '12px', padding: '6px 8px', justifyContent: 'center' }}
@@ -400,11 +401,11 @@ export const SelectFromWardrobeModal: React.FC<SelectFromWardrobeModalProps> = (
                           onSelectLook(look, 'duplicate');
                           onClose();
                         }}
-                        title="Duplicate look to wear again on this day"
+                        title="Duplicate look to wear again on this day" variant="secondary"
                       >
                         <Copy size={13} />
                         <span>Wear Again</span>
-                      </button>
+                      </Button>
                     </div>
                   </div>
                 );

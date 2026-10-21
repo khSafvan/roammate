@@ -20,6 +20,8 @@ import { useModalA11y } from '../../hooks';
 import { downscaleAndStripExif, validateImageFile } from '../../utils/imagePipeline';
 import { uploadOutfitImage } from '../../utils/storageUpload';
 import { ImagePreviewModal } from './ImagePreviewModal';
+import { Button } from "../../components/ui/Button";
+import { Input } from "../../components/ui/Input";
 
 const OCCASIONS: { label: string; value: LookOccasion; emoji: string }[] = [
   { label: 'Casual', value: 'casual', emoji: '☀️' },
@@ -486,7 +488,7 @@ export const OutfitModal: React.FC<OutfitModalProps> = ({
               <label className="form-label" htmlFor="outfit-title-input">
                 Look Title
               </label>
-              <input
+              <Input
                 id="outfit-title-input"
                 type="text"
                 className="form-input"
@@ -823,10 +825,10 @@ export const OutfitModal: React.FC<OutfitModalProps> = ({
                 <button type="button" className="slot-action-btn" onClick={onClose}>
                   Cancel
                 </button>
-                <button type="submit" className="primary-modal-btn">
+                <Button type="submit" className="primary-modal-btn" variant="primary">
                   <Check size={14} />
                   <span>{initialLook ? 'Save Look' : 'Add Look'}</span>
-                </button>
+                </Button>
               </div>
             </div>
           </form>
