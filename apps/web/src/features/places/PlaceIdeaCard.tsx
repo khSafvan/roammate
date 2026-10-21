@@ -11,7 +11,7 @@ export interface PlaceIdeaCardProps {
 }
 
 const CATEGORY_COLORS: Record<StopCategory, string> = {
-  sight: 'var(--cat-sight, #2563EB)',
+  sight: 'var(--cat-sight, #10B981)',
   dining: 'var(--cat-dining, #EA580C)',
   lodging: 'var(--cat-lodging, #7C3AED)',
   transit: 'var(--cat-transit, #059669)',

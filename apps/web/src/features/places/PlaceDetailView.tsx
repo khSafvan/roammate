@@ -30,6 +30,7 @@ import { ApiClient } from '@roammate/api-client';
 import { MarkdownText } from '../../components/ui/MarkdownText';
 import { LookCard } from '../../features/outfits/LookCard';
 import { SelectFromWardrobeModal } from '../../features/outfits/SelectFromWardrobeModal';
+import { Input } from "../../components/ui/Input";
 
 export interface PlaceDetailViewProps {
   stop: ItineraryStop;
@@ -317,7 +318,7 @@ export const PlaceDetailView: React.FC<PlaceDetailViewProps> = ({
 
             <div className="form-field">
               <label className="form-label">Title *</label>
-              <input
+              <Input
                 type="text"
                 required
                 className="form-input"
@@ -328,7 +329,7 @@ export const PlaceDetailView: React.FC<PlaceDetailViewProps> = ({
 
             <div className="form-field">
               <label className="form-label">Subtitle / Subcategory</label>
-              <input
+              <Input
                 type="text"
                 className="form-input"
                 value={editSubtitle}
@@ -339,7 +340,7 @@ export const PlaceDetailView: React.FC<PlaceDetailViewProps> = ({
             <div className="form-row-2">
               <div className="form-field">
                 <label className="form-label">Start Time</label>
-                <input
+                <Input
                   type="text"
                   placeholder="09:30 AM"
                   className="form-input"
@@ -349,7 +350,7 @@ export const PlaceDetailView: React.FC<PlaceDetailViewProps> = ({
               </div>
               <div className="form-field">
                 <label className="form-label">Duration (Minutes)</label>
-                <input
+                <Input
                   type="number"
                   min="5"
                   step="5"
@@ -362,7 +363,7 @@ export const PlaceDetailView: React.FC<PlaceDetailViewProps> = ({
 
             <div className="form-field">
               <label className="form-label">Address</label>
-              <input
+              <Input
                 type="text"
                 className="form-input"
                 value={editAddress}
@@ -373,7 +374,7 @@ export const PlaceDetailView: React.FC<PlaceDetailViewProps> = ({
             <div className="form-row-2">
               <div className="form-field">
                 <label className="form-label">Confirmation / Booking Ref</label>
-                <input
+                <Input
                   type="text"
                   className="form-input"
                   placeholder="e.g. RES-94821"

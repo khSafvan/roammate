@@ -55,7 +55,7 @@ export const DiscoveryResultCard: React.FC<DiscoveryResultCardProps> = ({
         style={{
           padding: '4px 10px',
           borderRadius: 'var(--radius-pill, 9999px)',
-          backgroundColor: 'var(--brand-blue, #2563EB)',
+          backgroundColor: 'var(--brand-blue, #10B981)',
           color: '#ffffff',
           border: 'none',
           fontSize: '11px',
