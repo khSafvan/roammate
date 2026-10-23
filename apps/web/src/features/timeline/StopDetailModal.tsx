@@ -15,6 +15,8 @@ import {
 import { ItineraryStop, StopCategory, TripDay } from '../../types/trip';
 import { MarkdownText } from '../../components/ui/MarkdownText';
 import { Modal } from '../../components/ui/Modal';
+import { Button } from "../../components/ui/Button";
+import { Input } from "../../components/ui/Input";
 
 interface StopDetailModalProps {
   stop: ItineraryStop | null;
@@ -151,7 +153,7 @@ export const StopDetailModal: React.FC<StopDetailModalProps> = ({
 
             <div>
               <label className="form-label">Title *</label>
-              <input
+              <Input
                 type="text"
                 required
                 className="form-input font-medium"
@@ -162,7 +164,7 @@ export const StopDetailModal: React.FC<StopDetailModalProps> = ({
 
             <div>
               <label className="form-label">Subtitle</label>
-              <input
+              <Input
                 type="text"
                 className="form-input"
                 value={subtitle}
@@ -173,7 +175,7 @@ export const StopDetailModal: React.FC<StopDetailModalProps> = ({
             <div className="form-row-2">
               <div>
                 <label className="form-label">Start Time</label>
-                <input
+                <Input
                   type="text"
                   placeholder="09:30 AM or 09:30"
                   className="form-input"
@@ -183,7 +185,7 @@ export const StopDetailModal: React.FC<StopDetailModalProps> = ({
               </div>
               <div>
                 <label className="form-label">Duration (Minutes)</label>
-                <input
+                <Input
                   type="number"
                   min="5"
                   step="5"
@@ -196,7 +198,7 @@ export const StopDetailModal: React.FC<StopDetailModalProps> = ({
 
             <div>
               <label className="form-label">Address</label>
-              <input
+              <Input
                 type="text"
                 className="form-input"
                 value={address}
@@ -207,7 +209,7 @@ export const StopDetailModal: React.FC<StopDetailModalProps> = ({
             <div className="form-row-2">
               <div>
                 <label className="form-label">Confirmation Ref</label>
-                <input
+                <Input
                   type="text"
                   className="form-input font-mono"
                   value={bookingRef}
@@ -227,17 +229,17 @@ export const StopDetailModal: React.FC<StopDetailModalProps> = ({
             </div>
 
             <div className="modal-actions-row mt-3">
-              <button
+              <Button
                 type="button"
                 className="secondary-action-btn flex-1"
-                onClick={() => setIsEditing(false)}
+                onClick={() => setIsEditing(false)} variant="secondary"
               >
                 Cancel
-              </button>
-              <button type="submit" className="primary-modal-btn flex-1">
+              </Button>
+              <Button type="submit" className="primary-modal-btn flex-1" variant="primary">
                 <Check size={15} />
                 <span>Save Changes</span>
-              </button>
+              </Button>
             </div>
           </form>
         ) : (
@@ -357,9 +359,9 @@ export const StopDetailModal: React.FC<StopDetailModalProps> = ({
                     <span>Delete Stop</span>
                   </button>
                 )}
-                <button className="primary-modal-btn flex-1" onClick={onClose}>
+                <Button className="primary-modal-btn flex-1" onClick={onClose} variant="primary">
                   Done
-                </button>
+                </Button>
               </div>
             )}
           </>
