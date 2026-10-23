@@ -1,9 +1,11 @@
+import { Input } from "../../components/ui/Input";
 import React, { useEffect, useState } from 'react';
 import { Bold, Clock, Code, Eye, EyeOff, Italic, Link2, List, ListOrdered, MapPin, Plus, Sparkles } from 'lucide-react';
 import { Coordinates, ItineraryStop, StopCategory, BookingDocument } from '../../types/trip';
 import { PlaceSearchInput, PlaceSearchResult } from '../places/PlaceSearchInput';
 import { MarkdownText } from '../../components/ui/MarkdownText';
 import { Modal } from '../../components/ui/Modal';
+import { Button } from "../../components/ui/Button";
 
 interface AddStopModalProps {
   isOpen: boolean;
@@ -247,7 +249,7 @@ export const AddStopModal: React.FC<AddStopModalProps> = ({
                 <label className="form-label">
                   {isNote ? 'Note Topic / Heading (Optional)' : 'Place / Activity Title *'}
                 </label>
-                <input
+                <Input
                   type="text"
                   required={!isNote}
                   placeholder={isNote ? 'e.g. Metro Transfer Tips' : 'e.g. Senso-ji Temple'}
@@ -260,7 +262,7 @@ export const AddStopModal: React.FC<AddStopModalProps> = ({
               {!isNote && (
                 <div>
                   <label className="form-label">Subtitle / Brief Description</label>
-                  <input
+                  <Input
                     type="text"
                     placeholder="e.g. Historic Buddhist temple with lively market street"
                     className="form-input"
@@ -277,7 +279,7 @@ export const AddStopModal: React.FC<AddStopModalProps> = ({
                     <Clock size={12} className="inline mr-1" />
                     Scheduled Start Time
                   </label>
-                  <input
+                  <Input
                     type="text"
                     placeholder="10:00 AM or 10:00"
                     className="form-input"
@@ -288,7 +290,7 @@ export const AddStopModal: React.FC<AddStopModalProps> = ({
                 {!isNote && (
                   <div>
                     <label className="form-label">Duration (Minutes)</label>
-                    <input
+                    <Input
                       type="number"
                       min="5"
                       step="5"
@@ -306,7 +308,7 @@ export const AddStopModal: React.FC<AddStopModalProps> = ({
                     <MapPin size={12} className="inline mr-1" />
                     Address or Area
                   </label>
-                  <input
+                  <Input
                     type="text"
                     placeholder="e.g. 1-19-1 Kabukicho, Shinjuku City, Tokyo"
                     className="form-input"
@@ -319,7 +321,7 @@ export const AddStopModal: React.FC<AddStopModalProps> = ({
               {/* Booking Ref */}
               <div>
                 <label className="form-label">Booking Confirmation (Optional)</label>
-                <input
+                <Input
                   type="text"
                   placeholder="e.g. RES-9982"
                   className="form-input font-mono"
@@ -401,19 +403,19 @@ export const AddStopModal: React.FC<AddStopModalProps> = ({
           )}
 
           <div className="modal-actions-row mt-3">
-            <button
+            <Button
               type="button"
               className="secondary-action-btn flex-1"
-              onClick={onClose}
+              onClick={onClose} variant="secondary"
             >
               Cancel
-            </button>
-            <button type="submit" className="primary-modal-btn flex-1">
+            </Button>
+            <Button type="submit" className="primary-modal-btn flex-1" variant="primary">
               <Plus size={15} />
               <span>
                 {isNote ? `Add Note to Day ${dayNumber}` : `Add to Day ${dayNumber}`}
               </span>
-            </button>
+            </Button>
           </div>
         </form>
     </Modal>

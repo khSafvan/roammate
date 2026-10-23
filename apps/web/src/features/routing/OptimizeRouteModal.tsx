@@ -7,6 +7,7 @@ import {
 } from 'lucide-react';
 import { RouteOptimizationPreview } from '../../hooks/useTripOptimization';
 import { Modal } from '../../components/ui/Modal';
+import { Button } from "../../components/ui/Button";
 
 interface OptimizeRouteModalProps {
   preview: RouteOptimizationPreview | null;
@@ -65,9 +66,9 @@ export const OptimizeRouteModal: React.FC<OptimizeRouteModalProps> = ({
             <p style={{ fontSize: '13px', color: 'var(--text-secondary, #64748b)', margin: '0 0 20px' }}>
               The current stop sequence for Day {preview.dayNumber} already minimizes travel time and road transit distance. No changes needed.
             </p>
-            <button className="primary-modal-btn" onClick={onClose} style={{ width: '100%' }}>
+            <Button className="primary-modal-btn" onClick={onClose} style={{ width: '100%' }} variant="primary">
               Keep Current Route
-            </button>
+            </Button>
           </div>
         ) : (
           /* OPTIMIZATION PROMPT & METRICS */
@@ -244,21 +245,21 @@ export const OptimizeRouteModal: React.FC<OptimizeRouteModalProps> = ({
 
             {/* Action Buttons */}
             <div className="modal-actions-row">
-              <button
+              <Button
                 type="button"
                 className="secondary-action-btn flex-1"
-                onClick={onClose}
+                onClick={onClose} variant="secondary"
               >
                 Keep Current Route
-              </button>
-              <button
+              </Button>
+              <Button
                 type="button"
                 className="primary-modal-btn flex-1"
-                onClick={onApply}
+                onClick={onApply} variant="primary"
               >
                 <Zap size={15} />
                 <span>Apply Optimized Route</span>
-              </button>
+              </Button>
             </div>
           </div>
         )}

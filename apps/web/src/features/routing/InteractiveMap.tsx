@@ -173,7 +173,7 @@ export const InteractiveMap: React.FC<InteractiveMapProps> = ({
         'line-cap': 'round',
       },
       paint: {
-        'line-color': day.themeColor || '#2563EB',
+        'line-color': day.themeColor || '#10B981',
         'line-width': 4,
         'line-opacity': 0.95,
       },
@@ -274,7 +274,7 @@ export const InteractiveMap: React.FC<InteractiveMapProps> = ({
     ensureRouteLayers(map);
 
     if (map.getLayer('gpx-route-drive')) {
-      map.setPaintProperty('gpx-route-drive', 'line-color', day.themeColor || '#2563EB');
+      map.setPaintProperty('gpx-route-drive', 'line-color', day.themeColor || '#10B981');
     }
 
     if (geographicStops.length < 2) {
@@ -464,7 +464,7 @@ export const InteractiveMap: React.FC<InteractiveMapProps> = ({
         ? '#059669'
         : isFinish
         ? '#DC2626'
-        : day.themeColor || '#2563EB';
+        : day.themeColor || '#10B981';
 
       return {
         type: 'Feature' as const,
