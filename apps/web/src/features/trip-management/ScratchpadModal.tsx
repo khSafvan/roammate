@@ -7,6 +7,7 @@ import {
   getCountryIntelligence,
 } from '@roammate/core';
 import { Modal } from '../../components/ui/Modal';
+import { Button } from "../../components/ui/Button";
 
 interface ScratchpadModalProps {
   isOpen: boolean;
@@ -171,13 +172,13 @@ export const ScratchpadModal: React.FC<ScratchpadModalProps> = ({
           )}
 
           <div className="modal-actions-row mt-2">
-            <button type="button" className="secondary-action-btn flex-1" onClick={onClose}>
+            <Button type="button" className="secondary-action-btn flex-1" onClick={onClose} variant="secondary">
               Cancel
-            </button>
-            <button type="submit" className="primary-modal-btn flex-1">
+            </Button>
+            <Button type="submit" className="primary-modal-btn flex-1" variant="primary">
               <Save size={15} />
               <span>{isSaved ? 'Saved!' : 'Save Scratchpad'}</span>
-            </button>
+            </Button>
           </div>
         </form>
     </Modal>
