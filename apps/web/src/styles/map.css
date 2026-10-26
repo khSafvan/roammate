@@ -51,9 +51,9 @@
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  background-color: rgba(37, 99, 235, 0.08);
+  background-color: rgba(16, 185, 129, 0.08);
   color: var(--brand-blue);
-  border: 1px solid rgba(37, 99, 235, 0.2);
+  border: 1px solid rgba(16, 185, 129, 0.2);
   padding: 2px 8px;
   border-radius: var(--radius-pill);
 }
@@ -98,7 +98,7 @@
   font-size: 12px;
   font-weight: 600;
   cursor: pointer;
-  box-shadow: 0 1px 3px rgba(37, 99, 235, 0.25);
+  box-shadow: 0 1px 3px rgba(16, 185, 129, 0.25);
 }
 
 .optimize-route-btn:hover {
@@ -193,7 +193,7 @@
 
 .terralink-marker-shell.active .terralink-pin-head,
 .terraway-marker-shell.active .terraway-pin-head {
-  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.35), 0 4px 12px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.35), 0 4px 12px rgba(0, 0, 0, 0.3);
 }
 
 .terraink-pin-label,
@@ -441,7 +441,7 @@
 .dock-edit-btn:hover {
   background-color: var(--brand-blue-subtle);
   color: var(--brand-blue);
-  border-color: rgba(37, 99, 235, 0.3);
+  border-color: rgba(16, 185, 129, 0.3);
 }
 
 .dock-focus-btn {

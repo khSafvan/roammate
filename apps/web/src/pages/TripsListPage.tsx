@@ -10,6 +10,9 @@ import { CreateTripParams } from '../hooks/useVault';
 import { useModalA11y } from '../hooks';
 import { Header } from '../components/ui/Header';
 import { TripCard } from '../features/trip-management/TripCard';
+import { Button } from '../components/ui/Button';
+import { Tabs } from '../components/ui/Tabs';
+import { Input } from "../components/ui/Input";
 
 interface TripsListPageProps {
   trips: Trip[];
@@ -144,35 +147,26 @@ export const TripsListPage: React.FC<TripsListPageProps> = ({
         </section>
 
         {/* Toolbar & Filter Tabs */}
-        <div className="trips-toolbar-row">
-          <div className="trips-filter-tabs">
-            <button
-              className={`trip-filter-tab ${filter === 'all' ? 'active' : ''}`}
-              onClick={() => setFilter('all')}
-            >
-              All Journeys ({trips.length})
-            </button>
-            <button
-              className={`trip-filter-tab ${filter === 'upcoming' ? 'active' : ''}`}
-              onClick={() => setFilter('upcoming')}
-            >
-              Upcoming
-            </button>
-            <button
-              className={`trip-filter-tab ${filter === 'completed' ? 'active' : ''}`}
-              onClick={() => setFilter('completed')}
-            >
-              Completed
-            </button>
-          </div>
+        <div className="trips-toolbar-row" style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+          <Tabs
+            tabs={[
+              { id: 'all', label: `All Journeys (${trips.length})` },
+              { id: 'upcoming', label: 'Upcoming' },
+              { id: 'completed', label: 'Completed' }
+            ]}
+            activeId={filter}
+            onChange={(id) => setFilter(id as any)}
+            className="trips-filter-tabs"
+          />
 
-          <button
-            className="secondary-action-btn"
+          <Button
+            variant="secondary"
             onClick={() => setIsCreateModalOpen(true)}
+            style={{ alignSelf: 'flex-start' }}
           >
-            <Plus size={14} />
+            <Plus size={14} style={{ marginRight: '8px' }} />
             <span>Add Journey</span>
-          </button>
+          </Button>
         </div>
 
         {/* Trips Grid */}
@@ -180,15 +174,16 @@ export const TripsListPage: React.FC<TripsListPageProps> = ({
           {filteredTrips.length === 0 ? (
             <div className="trips-empty-state">
               <Compass size={40} className="text-slate" />
-              <h3>No journeys found</h3>
+              <h2 style={{ marginTop: '8px', fontSize: '18px', fontWeight: 'bold' }}>No journeys found</h2>
               <p>Start by planning your first destination or import an itinerary file.</p>
-              <button
-                className="primary-action-btn mt-3"
+              <Button
+                variant="primary"
+                style={{ marginTop: '16px' }}
                 onClick={() => setIsCreateModalOpen(true)}
               >
-                <Plus size={15} />
+                <Plus size={15} style={{ marginRight: '8px' }} />
                 <span>Create Your First Trip</span>
-              </button>
+              </Button>
             </div>
           ) : (
             filteredTrips.map((t) => (
@@ -245,7 +240,7 @@ export const TripsListPage: React.FC<TripsListPageProps> = ({
             <form onSubmit={handleCreateSubmit} className="auth-content-col">
               <div>
                 <label className="form-label">Trip Title *</label>
-                <input
+                <Input
                   type="text"
                   required
                   placeholder="e.g. Summer in Amalfi Coast, Autumn in Kyoto"
@@ -257,7 +252,7 @@ export const TripsListPage: React.FC<TripsListPageProps> = ({
 
               <div>
                 <label className="form-label">Destination City &amp; Country *</label>
-                <input
+                <Input
                   type="text"
                   required
                   placeholder="e.g. Kyoto, Japan or Amalfi, Italy"
@@ -270,7 +265,7 @@ export const TripsListPage: React.FC<TripsListPageProps> = ({
               <div className="form-row-2">
                 <div>
                   <label className="form-label">Start Date</label>
-                  <input
+                  <Input
                     type="date"
                     className="form-input"
                     value={startDate}
@@ -279,7 +274,7 @@ export const TripsListPage: React.FC<TripsListPageProps> = ({
                 </div>
                 <div>
                   <label className="form-label">End Date</label>
-                  <input
+                  <Input
                     type="date"
                     className="form-input"
                     value={endDate}
@@ -291,7 +286,7 @@ export const TripsListPage: React.FC<TripsListPageProps> = ({
               <div className="form-row-2">
                 <div>
                   <label className="form-label">Daily Itinerary Start Time</label>
-                  <input
+                  <Input
                     type="time"
                     className="form-input"
                     value={startTime}
@@ -300,7 +295,7 @@ export const TripsListPage: React.FC<TripsListPageProps> = ({
                 </div>
                 <div>
                   <label className="form-label">Daily Itinerary End Time</label>
-                  <input
+                  <Input
                     type="time"
                     className="form-input"
                     value={endTime}
@@ -310,17 +305,17 @@ export const TripsListPage: React.FC<TripsListPageProps> = ({
               </div>
 
               <div className="modal-actions-row mt-3">
-                <button
+                <Button
                   type="button"
                   className="secondary-action-btn flex-1"
-                  onClick={() => setIsCreateModalOpen(false)}
+                  onClick={() => setIsCreateModalOpen(false)} variant="secondary"
                 >
                   Cancel
-                </button>
-                <button type="submit" className="primary-modal-btn flex-1">
+                </Button>
+                <Button type="submit" className="primary-modal-btn flex-1" variant="primary">
                   <Plus size={15} />
                   <span>Create Journey</span>
-                </button>
+                </Button>
               </div>
             </form>
           </div>

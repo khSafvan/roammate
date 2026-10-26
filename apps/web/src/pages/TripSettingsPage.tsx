@@ -23,6 +23,8 @@ import { Trip } from '../types/trip';
 import { exportItinerary } from '../utils/exportImport';
 import { Header } from '../components/ui/Header';
 import { VaultSession } from '../auth/crypto';
+import { Button } from "../components/ui/Button";
+import { Input } from "../components/ui/Input";
 
 interface TripSettingsPageProps {
   trip: Trip;
@@ -141,23 +143,23 @@ export const TripSettingsPage: React.FC<TripSettingsPageProps> = ({
         onBackToWorkspace={onBackToWorkspace}
         extraActions={
           <div className="flex items-center gap-2">
-            <button
+            <Button
               type="button"
               className="secondary-action-btn"
               onClick={() => window.print()}
-              title="Print formatted emergency travel packet"
+              title="Print formatted emergency travel packet" variant="secondary"
             >
               <Printer size={14} />
               <span className="btn-label-responsive">Print Travel Packet</span>
-            </button>
-            <button
+            </Button>
+            <Button
               type="button"
               className={`primary-action-btn ${isSaved ? 'bg-emerald' : ''}`}
-              onClick={() => handleSave()}
+              onClick={() => handleSave()} variant="primary"
             >
               {isSaved ? <Check size={14} /> : <Save size={14} />}
               <span>{isSaved ? 'Changes Saved!' : 'Save Settings'}</span>
-            </button>
+            </Button>
           </div>
         }
       />
@@ -181,7 +183,7 @@ export const TripSettingsPage: React.FC<TripSettingsPageProps> = ({
           <div className="settings-fields-stack">
             <div className="form-group">
               <label className="form-label">Trip Title</label>
-              <input
+              <Input
                 type="text"
                 className="form-input"
                 value={title}
@@ -195,7 +197,7 @@ export const TripSettingsPage: React.FC<TripSettingsPageProps> = ({
                   <MapPin size={12} className="inline mr-1" />
                   Destination
                 </label>
-                <input
+                <Input
                   type="text"
                   className="form-input"
                   value={destination}
@@ -208,7 +210,7 @@ export const TripSettingsPage: React.FC<TripSettingsPageProps> = ({
                   <MapPin size={12} className="inline mr-1" />
                   Country Code <span style={{ color: 'var(--text-tertiary)', fontWeight: 400 }}>(e.g. US, AE, MY)</span>
                 </label>
-                <input
+                <Input
                   type="text"
                   className="form-input"
                   maxLength={2}
@@ -298,7 +300,7 @@ export const TripSettingsPage: React.FC<TripSettingsPageProps> = ({
             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
               {travelers.map((name, idx) => (
                 <div key={idx} style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-                  <input
+                  <Input
                     type="text"
                     className="form-input"
                     value={name}
@@ -326,7 +328,7 @@ export const TripSettingsPage: React.FC<TripSettingsPageProps> = ({
             </div>
 
             <div style={{ display: 'flex', gap: '8px', marginTop: '6px' }}>
-              <input
+              <Input
                 type="text"
                 className="form-input"
                 placeholder="Add companion name (e.g. John, Jane)..."
@@ -342,7 +344,7 @@ export const TripSettingsPage: React.FC<TripSettingsPageProps> = ({
                   }
                 }}
               />
-              <button
+              <Button
                 type="button"
                 className="secondary-action-btn"
                 style={{ whiteSpace: 'nowrap' }}
@@ -351,11 +353,11 @@ export const TripSettingsPage: React.FC<TripSettingsPageProps> = ({
                     setTravelers([...travelers, newTravelerName.trim()]);
                     setNewTravelerName('');
                   }
-                }}
+                }} variant="secondary"
               >
                 <Plus size={14} />
                 <span>Add</span>
-              </button>
+              </Button>
             </div>
           </div>
         </div>
@@ -378,7 +380,7 @@ export const TripSettingsPage: React.FC<TripSettingsPageProps> = ({
             <div className="form-row-2">
               <div className="form-group">
                 <label className="form-label">Start Date</label>
-                <input
+                <Input
                   type="date"
                   className="form-input"
                   value={startDate}
@@ -387,7 +389,7 @@ export const TripSettingsPage: React.FC<TripSettingsPageProps> = ({
               </div>
               <div className="form-group">
                 <label className="form-label">End Date</label>
-                <input
+                <Input
                   type="date"
                   className="form-input"
                   value={endDate}
@@ -402,7 +404,7 @@ export const TripSettingsPage: React.FC<TripSettingsPageProps> = ({
                   <Clock size={12} className="inline mr-1" />
                   Default Daily Start Time
                 </label>
-                <input
+                <Input
                   type="time"
                   className="form-input"
                   value={startTime}
@@ -414,7 +416,7 @@ export const TripSettingsPage: React.FC<TripSettingsPageProps> = ({
                   <Clock size={12} className="inline mr-1" />
                   Default Daily End Time
                 </label>
-                <input
+                <Input
                   type="time"
                   className="form-input"
                   value={endTime}
@@ -449,14 +451,14 @@ export const TripSettingsPage: React.FC<TripSettingsPageProps> = ({
 
             {onLogout && (
               <div className="form-group pt-2">
-                <button
+                <Button
                   type="button"
                   className="secondary-action-btn text-rose flex items-center justify-center gap-2 w-full py-2.5"
-                  onClick={onLogout}
+                  onClick={onLogout} variant="secondary"
                 >
                   <LogOut size={15} />
                   <span>Lock Vault & Log Out</span>
-                </button>
+                </Button>
               </div>
             )}
           </div>
@@ -532,14 +534,14 @@ export const TripSettingsPage: React.FC<TripSettingsPageProps> = ({
                   Save a local JSON document with all stops, flights, and expenses.
                 </p>
               </div>
-              <button
+              <Button
                 type="button"
                 className="secondary-action-btn"
-                onClick={() => exportItinerary(trip)}
+                onClick={() => exportItinerary(trip)} variant="secondary"
               >
                 <Download size={14} />
                 <span>Export JSON</span>
-              </button>
+              </Button>
             </div>
 
             <div className="settings-danger-row">
