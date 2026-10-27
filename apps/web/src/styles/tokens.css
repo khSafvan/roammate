@@ -1,0 +1,24 @@
+:root {
+  --color-brand-primary: #10b981;
+  --color-brand-hover: #059669;
+  --color-brand-active: #047857;
+  
+  --color-bg-base: #f8fafc;
+  --color-surface-base: #ffffff;
+  
+  --color-text-primary: #0f172a;
+  --color-text-secondary: #64748b;
+  --color-text-inverse: #ffffff;
+  
+  --color-border-default: #e2e8f0;
+  --color-focus-ring: #3b82f6;
+
+  --font-family-base: "Plus Jakarta Sans", Inter, -apple-system, sans-serif;
+  
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-pill: 9999px;
+  
+  --shadow-card: 0px 1px 3px 0px rgba(0,0,0,0.1), 0px 1px 2px -1px rgba(0,0,0,0.1);
+  --shadow-modal: 0px 10px 25px -5px rgba(0,0,0,0.1), 0px 8px 10px -6px rgba(0,0,0,0.1);
+}
