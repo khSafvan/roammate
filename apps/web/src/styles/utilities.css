@@ -231,7 +231,7 @@
 }
 
 .text-blue {
-  color: var(--brand-blue, #2563eb);
+  color: var(--brand-blue, #10b981);
 }
 
 .text-slate {
@@ -239,7 +239,7 @@
 }
 
 .bg-blue-subtle {
-  background-color: var(--brand-blue-subtle, rgba(37, 99, 235, 0.08));
+  background-color: var(--brand-blue-subtle, rgba(16, 185, 129, 0.08));
 }
 
 .bg-emerald {
@@ -412,7 +412,7 @@
 
 .constraint-badge.fixed-badge {
   background-color: rgba(59, 130, 246, 0.1);
-  color: #2563EB;
+  color: #10B981;
   border: 1px solid rgba(59, 130, 246, 0.25);
 }
 
@@ -430,7 +430,7 @@
   width: 28px;
   height: 28px;
   border: 3px solid var(--bg-muted, #e2e8f0);
-  border-top-color: var(--brand-blue, #2563eb);
+  border-top-color: var(--brand-blue, #10b981);
   border-radius: 50%;
   animation: spin 0.7s linear infinite;
 }
@@ -439,7 +439,7 @@
   width: 18px;
   height: 18px;
   border: 2px solid var(--bg-muted, #e2e8f0);
-  border-top-color: var(--brand-blue, #2563eb);
+  border-top-color: var(--brand-blue, #10b981);
   border-radius: 50%;
   animation: spin 0.7s linear infinite;
 }
