@@ -24,7 +24,7 @@
   background-color: var(--bg-card);
   color: var(--text-secondary);
   cursor: pointer;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+  box-shadow: none;
   flex-shrink: 0;
   transition: all 0.15s ease;
   z-index: 5;
@@ -66,7 +66,7 @@
   cursor: pointer;
   white-space: nowrap;
   transition: border-color 0.15s ease, background-color 0.15s ease, color 0.15s ease, box-shadow 0.15s ease;
-  box-shadow: var(--shadow-sm);
+  box-shadow: none;
   color: var(--text-secondary);
   flex-shrink: 0;
   box-sizing: border-box;
@@ -83,7 +83,7 @@
   border-color: var(--day-theme-color, var(--brand-blue));
   background-color: var(--day-theme-bg, rgba(16, 185, 129, 0.08));
   color: var(--day-theme-color, var(--brand-blue));
-  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
+  box-shadow: none;
 }
 
 .day-tab-pill:focus-visible {
@@ -163,7 +163,7 @@
   border: 1px solid var(--border-light);
   border-radius: var(--radius-card);
   padding: 18px 20px;
-  box-shadow: var(--shadow-card);
+  box-shadow: none;
   display: flex;
   flex-direction: column;
   gap: 14px;
@@ -403,7 +403,7 @@
   justify-content: center;
   flex-shrink: 0;
   margin-top: 14px;
-  box-shadow: 0 0 0 3px var(--bg-canvas);
+  box-shadow: none;
   position: relative;
   z-index: 2;
   transition: all 0.15s ease;
@@ -471,7 +471,7 @@
   border: 1px solid var(--border-light);
   border-radius: var(--radius-card);
   padding: 18px 22px;
-  box-shadow: var(--shadow-card);
+  box-shadow: none;
   cursor: pointer;
   transition: border-color 0.15s ease, box-shadow 0.15s ease, background-color 0.15s ease;
   min-width: 0;
@@ -479,13 +479,13 @@
 }
 
 .timeline-card:hover {
-  box-shadow: var(--shadow-card-hover);
+  box-shadow: none;
   border-color: var(--border-strong);
 }
 
 .timeline-card.is-selected {
   border-color: var(--brand-blue);
-  box-shadow: 0 4px 14px rgba(16, 185, 129, 0.12);
+  box-shadow: none;
   background-color: var(--bg-card);
 }
 
@@ -615,7 +615,7 @@
 
 .timeline-item-wrapper.is-drag-over .timeline-card {
   border-color: var(--brand-blue);
-  box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.25);
+  box-shadow: none;
 }
 
 .card-time {
@@ -720,12 +720,12 @@
   background-color: rgba(217, 119, 6, 0.04);
   border: 1px solid rgba(217, 119, 6, 0.22);
   border-radius: var(--radius-card);
-  box-shadow: var(--shadow-sm);
+  box-shadow: none;
 }
 
 .timeline-card.is-note-card.is-selected {
   border-color: var(--brand-amber);
-  box-shadow: 0 2px 8px rgba(217, 119, 6, 0.15);
+  box-shadow: none;
 }
 
 .category-node.node-note {
@@ -883,13 +883,13 @@
   border: 1px solid var(--border-light);
   border-radius: var(--radius-card);
   padding: 16px 20px;
-  box-shadow: var(--shadow-card);
+  box-shadow: none;
   min-width: 0;
   box-sizing: border-box;
 }
 
 .timeline-flight-card:hover {
-  box-shadow: var(--shadow-card-hover);
+  box-shadow: none;
   border-color: var(--border-strong);
 }
 
@@ -1083,7 +1083,7 @@
   background-color: var(--bg-card);
   border: 1px solid var(--border-light);
   border-radius: var(--radius-md, 10px);
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+  box-shadow: none;
   padding: 4px;
   z-index: 50;
   min-width: 140px;
@@ -1162,7 +1162,7 @@
   border: 1px solid var(--border-light);
   border-radius: var(--radius-card);
   padding: 12px 16px;
-  box-shadow: var(--shadow-card);
+  box-shadow: none;
   user-select: none;
 }
 
@@ -1178,7 +1178,7 @@
   padding: 14px 18px;
   margin-top: 6px;
   margin-bottom: 12px;
-  box-shadow: var(--shadow-sm);
+  box-shadow: none;
 }
 
 .day-notes-header {
@@ -1304,7 +1304,7 @@
   border: 1px solid var(--border-light, #e2e8f0);
   border-radius: var(--radius-card, 12px);
   padding: 20px;
-  box-shadow: var(--shadow-sm, 0 1px 3px rgba(0, 0, 0, 0.04));
+  box-shadow: none;
 }
 
 .place-detail-category-row {
@@ -1437,7 +1437,7 @@
   color: var(--text-primary, #0f172a);
   background-color: var(--bg-subtle, #f8fafc);
   border: 1px solid var(--border-light, #e2e8f0);
-  border-radius: var(--radius-pill, 9999px);
+  border-radius: var(--radius-pill, 6px);
   padding: 6px 12px;
   text-decoration: none;
   cursor: pointer;
@@ -1453,7 +1453,7 @@
   border: 1px solid var(--border-light, #e2e8f0);
   border-radius: var(--radius-card, 12px);
   padding: 16px;
-  box-shadow: var(--shadow-sm, 0 1px 3px rgba(0, 0, 0, 0.04));
+  box-shadow: none;
 }
 
 .section-card-header {
@@ -1577,7 +1577,7 @@
   background-color: rgba(245, 158, 11, 0.08);
   border: 1px dashed rgba(245, 158, 11, 0.35);
   padding: 4px 10px;
-  border-radius: var(--radius-pill, 9999px);
+  border-radius: var(--radius-pill, 6px);
   cursor: pointer;
 }
 
@@ -1636,7 +1636,7 @@
   background-color: #ffffff;
   color: var(--text-primary, #0f172a);
   border-color: var(--border-light, #cbd5e1);
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  box-shadow: none;
 }
 
 .place-tags-row {
@@ -1657,7 +1657,7 @@
   background-color: var(--bg-subtle, #f1f5f9);
   border: 1px solid var(--border-light, #e2e8f0);
   padding: 3px 8px;
-  border-radius: var(--radius-pill, 9999px);
+  border-radius: var(--radius-pill, 6px);
 }
 
 .place-status-dot-open {
@@ -1813,7 +1813,7 @@
   font-size: 11px;
   font-weight: 500;
   padding: 2px 7px;
-  border-radius: var(--radius-pill, 9999px);
+  border-radius: var(--radius-pill, 6px);
   border: 1px solid transparent;
 }
 
@@ -1977,7 +1977,7 @@
   background-color: var(--bg-card, #ffffff);
   border: 1px solid var(--border-medium, #cbd5e1);
   border-radius: var(--radius-lg, 10px);
-  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.15), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+  box-shadow: none;
   padding: 6px;
   display: flex;
   flex-direction: column;
@@ -2080,7 +2080,7 @@
   background-color: var(--bg-card, #ffffff);
   border: 1px solid var(--border-medium, #cbd5e1);
   border-radius: var(--radius-lg, 10px);
-  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.15), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+  box-shadow: none;
   padding: 6px;
   display: flex;
   flex-direction: column;
@@ -2102,7 +2102,7 @@
   font-size: 10px;
   font-weight: 600;
   padding: 1px 5px;
-  border-radius: 9999px;
+  border-radius: 6px;
   background-color: var(--bg-subtle, #e2e8f0);
   color: var(--text-tertiary, #64748b);
 }
