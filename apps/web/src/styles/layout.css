@@ -9,7 +9,7 @@
   position: sticky;
   top: 0;
   z-index: 40;
-  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.02);
+  box-shadow: none;
   min-height: 56px;
   display: flex;
   align-items: center;
@@ -248,7 +248,7 @@
   background-color: var(--bg-card);
   color: var(--brand-blue);
   font-weight: 600;
-  box-shadow: var(--shadow-sm);
+  box-shadow: none;
 }
 
 .header-action-pill {
@@ -419,7 +419,7 @@
   font-size: 11.5px;
   font-weight: 600;
   cursor: pointer;
-  box-shadow: var(--shadow-sm);
+  box-shadow: none;
   transition: all 0.15s ease;
 }
 
@@ -488,7 +488,7 @@
   border-radius: var(--radius-card);
   padding: 36px 28px;
   text-align: center;
-  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  box-shadow: none;
 }
 
 .env-error-icon-box {
@@ -636,7 +636,7 @@
   font-weight: 500;
   color: var(--text-secondary);
   cursor: pointer;
-  box-shadow: var(--shadow-sm);
+  box-shadow: none;
   transition: all 0.15s ease;
 }
 
@@ -731,7 +731,7 @@
   font-size: 12.5px;
   font-weight: 600;
   cursor: pointer;
-  box-shadow: 0 1px 3px rgba(16, 185, 129, 0.25);
+  box-shadow: none;
 }
 
 .optimize-pill-btn:hover {
@@ -776,7 +776,7 @@
   font-size: 13.5px;
   font-weight: 600;
   cursor: pointer;
-  box-shadow: 0 1px 3px rgba(16, 185, 129, 0.2);
+  box-shadow: none;
   white-space: nowrap;
 }
 
@@ -798,7 +798,7 @@
   font-size: 12.5px;
   font-weight: 500;
   cursor: pointer;
-  box-shadow: var(--shadow-sm);
+  box-shadow: none;
   white-space: nowrap;
 }
 
