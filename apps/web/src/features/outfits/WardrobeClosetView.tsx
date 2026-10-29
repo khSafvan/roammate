@@ -254,7 +254,7 @@ export const WardrobeClosetView: React.FC<WardrobeClosetViewProps> = ({
                   display: 'flex',
                   flexDirection: 'column',
                   gap: '12px',
-                  boxShadow: '0 2px 8px rgba(0,0,0,0.04)',
+                  boxShadow: 'none',
                   position: 'relative',
                 }}
               >
@@ -518,7 +518,7 @@ export const WardrobeClosetView: React.FC<WardrobeClosetViewProps> = ({
                           background: 'var(--bg-card)',
                           border: '1px solid var(--border-medium)',
                           borderRadius: '8px',
-                          boxShadow: '0 8px 24px rgba(0,0,0,0.15)',
+                          boxShadow: 'none',
                           width: '220px',
                           zIndex: 50,
                           padding: '6px',

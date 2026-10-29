@@ -1521,7 +1521,7 @@ function AppContent() {
                           borderRadius: 'var(--radius-card)',
                           padding: '36px 24px',
                           textAlign: 'center',
-                          boxShadow: 'var(--shadow-card)',
+                          boxShadow: 'none',
                         }}
                       >
                         <div style={{ fontSize: '32px', marginBottom: '8px' }}>🗺️</div>
