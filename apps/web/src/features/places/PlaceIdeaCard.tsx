@@ -49,7 +49,7 @@ export const PlaceIdeaCard: React.FC<PlaceIdeaCardProps> = ({
         flexDirection: 'column',
         justifyContent: 'space-between',
         gap: '12px',
-        boxShadow: 'var(--shadow-sm, 0 1px 3px rgba(0,0,0,0.04))',
+        boxShadow: 'none',
       }}
     >
       <div>

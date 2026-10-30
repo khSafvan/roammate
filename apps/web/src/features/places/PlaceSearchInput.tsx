@@ -286,7 +286,7 @@ export const PlaceSearchInput: React.FC<PlaceSearchInputProps> = ({
             backgroundColor: 'var(--bg-card, #ffffff)',
             borderRadius: '8px',
             border: '1px solid rgba(0, 0, 0, 0.08)',
-            boxShadow: '0 4px 12px rgba(0, 0, 0, 0.05)',
+            boxShadow: 'none',
             zIndex: 120,
             maxHeight: '260px',
             overflowY: 'auto',

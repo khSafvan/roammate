@@ -196,7 +196,7 @@ export const AddStopModal: React.FC<AddStopModalProps> = ({
                     backgroundColor: 'var(--bg-subtle)', 
                     borderRadius: '12px',
                     border: '1px solid rgba(0,0,0,0.04)',
-                    boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
+                    boxShadow: 'none',
                     marginTop: '8px'
                   }}
                 >

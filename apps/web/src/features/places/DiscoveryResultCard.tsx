@@ -54,7 +54,7 @@ export const DiscoveryResultCard: React.FC<DiscoveryResultCardProps> = ({
         onClick={() => onAdd(result)}
         style={{
           padding: '4px 10px',
-          borderRadius: 'var(--radius-pill, 9999px)',
+          borderRadius: 'var(--radius-pill, 6px)',
           backgroundColor: 'var(--brand-blue, #10B981)',
           color: '#ffffff',
           border: 'none',
