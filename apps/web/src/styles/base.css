@@ -87,7 +87,7 @@ button, a, input, select, .icon-btn, [role="button"], [role="option"] {
 
 ::-webkit-scrollbar-thumb {
   background: var(--border-medium, #cbd5e1);
-  border-radius: 9999px;
+  border-radius: 6px;
 }
 
 ::-webkit-scrollbar-thumb:hover {

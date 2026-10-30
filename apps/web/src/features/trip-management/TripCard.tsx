@@ -56,7 +56,7 @@ export const TripCard: React.FC<TripCardProps> = ({
                     fontSize: '11px',
                     fontWeight: 600,
                     padding: '1px 7px',
-                    borderRadius: '9999px',
+                    borderRadius: '6px',
                     backgroundColor: 'rgba(37, 99, 235, 0.08)',
                     color: 'var(--brand-blue, #10B981)',
                     border: '1px solid rgba(37, 99, 235, 0.22)',
