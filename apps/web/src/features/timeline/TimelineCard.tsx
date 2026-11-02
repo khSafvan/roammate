@@ -5,7 +5,7 @@ import {
   ChevronUp,
   Clock,
   Compass,
-  Edit2,
+  Edit2, CircleDollarSign,
   Eye,
   FileCheck2,
   FileText,
@@ -25,7 +25,6 @@ import {
 import { Look } from '@roammate/shared';
 import { ItineraryStop, StopCategory, DayWeather, WeatherCondition, HourlyForecast } from '../../types/trip';
 import { Sun, CloudSun, CloudRain, Cloud } from 'lucide-react';
-import { MarkdownText } from '../../components/ui/MarkdownText';
 
 interface TimelineCardProps {
   stop: ItineraryStop;
@@ -214,16 +213,76 @@ export const TimelineCard = React.memo<TimelineCardProps>(function TimelineCard(
             <div className="category-node node-note" title="TRAVEL NOTE & ADVISORY">
               <FileText size={15} strokeWidth={1.75} />
             </div>
-            <div className="card-body">
-              <div className="card-meta-line">
-                {reorderControls}
-                <span className="card-category-sublabel note-label">💡 Note &amp; Travel Tip</span>
-                {isFixedAnchor && (
-                  <span className="card-fixed-pill" title="Immovable Boundary Location">
-                    <Pin size={10} strokeWidth={2} />
-                    <span>Fixed Pin</span>
-                  </span>
-                )}
+            
+          <div className="card-body card-body-stable">
+            <div className="card-stable-media">
+              {stop.imageUrl || (stop.photos && stop.photos?.[0]) ? (
+                <img src={stop.imageUrl || stop.photos?.[0]} alt={stop.title} loading="lazy" />
+              ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px' }}>
+                  {getCategoryIcon(stop.category)}
+                </div>
+              )}
+            </div>
+
+            <div className="card-stable-header">
+              <span className="card-order-pill" style={{ flexShrink: 0 }}>
+                #{String(stop.orderIndex).padStart(2, '0')}
+              </span>
+              <h3 className="card-stable-title" title={stop.title}>{stop.title || 'Unknown Place'}</h3>
+              <span className="card-category-sublabel" style={{ flexShrink: 0 }}>
+                {stop.category}
+              </span>
+            </div>
+
+            <div className="card-stable-meta">
+              <span className={`card-stable-meta-slot ${!stop.rating ? 'empty' : ''}`}>
+                <Star size={11} className={stop.rating ? 'fill-amber text-amber' : ''} />
+                {stop.rating ? stop.rating.toFixed(1) : '—'}
+              </span>
+              
+              <span className={`card-stable-meta-slot ${!stop.priceLevel ? 'empty' : ''}`}>
+                <CircleDollarSign size={11} />
+                {stop.priceLevel ? '$'.repeat(stop.priceLevel) : '—'}
+              </span>
+
+              <span className={`card-stable-meta-slot ${!stop.durationMinutes ? 'empty' : ''}`}>
+                <Clock size={11} />
+                {stop.durationMinutes ? `${stop.durationMinutes}m` : '—'}
+              </span>
+
+              <span className="card-stable-meta-slot">
+                <MapPin size={11} />
+                {stop.startTime || '—'}
+              </span>
+            </div>
+
+            <div className="card-stable-details">
+              {stop.address ? stop.address : (
+                 stop.notes ? stop.notes : (
+                   stop.subtitle ? stop.subtitle : 'No details provided.'
+                 )
+              )}
+            </div>
+
+            <div className="card-stable-footer">
+              {reorderControls}
+              
+              {stop.isFixedTime && (
+                <span className="card-fixed-pill" title="Locked reservation time">
+                  <Lock size={10} strokeWidth={2} />
+                  <span>Fixed</span>
+                </span>
+              )}
+
+              {stop.hasTicket && (
+                <span className="card-ticket-pill">
+                  <FileCheck2 size={11} strokeWidth={1.75} />
+                  <span>Ticket Ready</span>
+                </span>
+              )}
+
+              <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: '8px' }}>
                 {onEdit && (
                   <button
                     type="button"
@@ -232,18 +291,74 @@ export const TimelineCard = React.memo<TimelineCardProps>(function TimelineCard(
                       e.stopPropagation();
                       onEdit(stop);
                     }}
-                    title="Edit note"
+                    title="Edit stop"
                   >
                     <Edit2 size={12} strokeWidth={2} />
                   </button>
                 )}
-              </div>
-              {stop.title && stop.title !== 'Note' && <h3 className="card-title">{stop.title}</h3>}
-              <div className="card-notes-preview is-standalone">
-                <MarkdownText text={stop.notes || stop.subtitle} />
+
+                <div ref={menuRef} className="card-more-menu-wrapper" onClick={(e) => e.stopPropagation()}>
+                  <button
+                    type="button"
+                    className="card-more-menu-btn"
+                    onClick={() => setIsMenuOpen((prev) => !prev)}
+                    title="More actions"
+                    aria-label="More actions"
+                    aria-expanded={isMenuOpen}
+                  >
+                    <MoreVertical size={13} />
+                  </button>
+
+                  {isMenuOpen && (
+                    <div className="card-dropdown-menu">
+                      <button
+                        type="button"
+                        className="card-dropdown-item"
+                        onClick={() => {
+                          setIsMenuOpen(false);
+                          onSelect(stop);
+                        }}
+                      >
+                        <Eye size={12} />
+                        <span>View Details &amp; Outfits</span>
+                      </button>
+
+                      {onEdit && (
+                        <button
+                          type="button"
+                          className="card-dropdown-item"
+                          onClick={() => {
+                            setIsMenuOpen(false);
+                            onEdit(stop);
+                          }}
+                        >
+                          <Edit2 size={12} />
+                          <span>Edit</span>
+                        </button>
+                      )}
+
+                      {onDeleteStop && (
+                        <button
+                          type="button"
+                          className="card-dropdown-item text-red-600"
+                          onClick={() => {
+                            setIsMenuOpen(false);
+                            if (window.confirm('Remove this stop from itinerary?')) {
+                              onDeleteStop(stop.id);
+                            }
+                          }}
+                        >
+                          <Trash2 size={12} />
+                          <span>Remove</span>
+                        </button>
+                      )}
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
           </div>
+</div>
         </div>
       </div>
     );
