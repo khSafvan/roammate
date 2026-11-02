@@ -37,6 +37,8 @@ export interface UseVaultReturn {
   handleLogout: () => void;
   handleDeleteAccount: () => void;
   exitReadOnly: () => void;
+  fatalError: string | null;
+  isSyncing: boolean;
 }
 
 export function useVault(): UseVaultReturn {
@@ -48,6 +50,8 @@ export function useVault(): UseVaultReturn {
     return userTrips.find((t) => t.id === preferred) || userTrips[0] || null;
   });
   const [isReadOnly, setIsReadOnly] = useState(false);
+  const [fatalError, setFatalError] = useState<string | null>(null);
+  const [isSyncing, setIsSyncing] = useState(true);
   const isHydratedRef = useRef(false);
 
   useEffect(() => {
@@ -71,24 +75,39 @@ export function useVault(): UseVaultReturn {
       return;
     }
 
+    // Backend is strict source of truth. We load cache for immediate render, but enforce backend check.
     const localTrips = loadAllLocalTrips();
     setTrips(localTrips);
     const preferredId = getActiveTripIdLocal();
     const target = localTrips.find((t) => t.id === preferredId) || localTrips[0];
     if (target) {
       setActiveTrip(target);
-      setActiveTripIdLocal(target.id);
     }
-    fetchItinerariesFromEdge().then((edgeTrips) => {
-      if (edgeTrips && edgeTrips.length > 0) {
-        setTrips(edgeTrips);
-        const pref = getActiveTripIdLocal();
-        const edgeTarget = edgeTrips.find((t) => t.id === pref) || edgeTrips[0];
-        setActiveTrip(edgeTarget);
-        setActiveTripIdLocal(edgeTarget.id);
-      }
-      isHydratedRef.current = true;
-    });
+
+    setIsSyncing(true);
+    fetchItinerariesFromEdge()
+      .then((edgeTrips) => {
+        if (edgeTrips && edgeTrips.length > 0) {
+          setTrips(edgeTrips);
+          const pref = getActiveTripIdLocal();
+          const edgeTarget = edgeTrips.find((t) => t.id === pref) || edgeTrips[0];
+          setActiveTrip(edgeTarget);
+          setActiveTripIdLocal(edgeTarget.id);
+        } else if (edgeTrips && edgeTrips.length === 0) {
+          // If backend is empty, clear trips
+          setTrips([]);
+          setActiveTrip(null);
+        }
+        isHydratedRef.current = true;
+        setFatalError(null);
+      })
+      .catch((e) => {
+        console.error("Backend unreachable", e);
+        setFatalError("Cloud Database Unreachable. The application cannot proceed.");
+      })
+      .finally(() => {
+        setIsSyncing(false);
+      });
   }, []);
 
   useEffect(() => {
@@ -194,5 +213,7 @@ export function useVault(): UseVaultReturn {
     handleLogout,
     handleDeleteAccount,
     exitReadOnly,
+    fatalError,
+    isSyncing,
   };
 }
