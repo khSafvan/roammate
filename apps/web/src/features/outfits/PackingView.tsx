@@ -460,25 +460,27 @@ export const PackingView: React.FC<PackingViewProps> = ({
 
                             {/* Person 2 */}
                             <div className="lookbook-slot" style={{ flex: 1, display: 'flex', flexDirection: 'column', position: 'relative' }}>
-                              <div style={{ padding: '8px 12px', backgroundColor: '#f8fafc', borderBottom: '1px solid var(--border-light)', display: 'flex', alignItems: 'center', gap: '6px', fontSize: '11px', fontWeight: 600, color: 'var(--text-primary)' }}>
-                                <User size={12} />
+                              <div style={{ padding: '8px 12px', backgroundColor: '#fcfcfc', borderBottom: '1px solid var(--border-light)', display: 'flex', alignItems: 'center', gap: '6px', fontSize: '11px', fontWeight: 600, color: 'var(--text-primary)' }}>
+                                <User size={12} color="#64748b" />
                                 <span>{person2Name}</span>
                               </div>
-                              <div style={{ flex: 1, position: 'relative', overflow: 'hidden', padding: '12px 12px 40px 12px', display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}>
+                              <div style={{ flex: 1, position: 'relative', overflow: 'hidden', padding: '0px', height: '340px', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: '#ffffff' }}>
                                 {p2Thumb ? (
                                   <img
                                     src={p2Thumb}
                                     alt={person2Name}
-                                    style={{ maxHeight: '100%', maxWidth: '100%', objectFit: 'contain', transformOrigin: 'bottom', objectPosition: 'bottom' }}
+                                    style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'top' }}
                                     loading="lazy"
                                   />
                                 ) : (
                                   <span style={{ fontSize: '11px', color: '#94a3b8', margin: 'auto' }}>No photo</span>
                                 )}
                               </div>
-                              <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, padding: '8px 12px', backgroundColor: 'rgba(255,255,255,0.9)', backdropFilter: 'blur(4px)', borderTop: '1px solid var(--border-light)', fontSize: '11px', color: 'var(--text-secondary)', textAlign: 'center', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                                {l.person2Label || 'No details'}
-                              </div>
+                              {l.person2Label && (
+                                <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, padding: '8px 12px', backgroundColor: 'rgba(255,255,255,0.85)', backdropFilter: 'blur(8px)', borderTop: '1px solid var(--border-light)', fontSize: '11px', color: 'var(--text-primary)', fontWeight: 500, textAlign: 'center', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                  {l.person2Label}
+                                </div>
+                              )}
                             </div>
                           </div>
 

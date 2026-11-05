@@ -11,7 +11,6 @@ import { useModalA11y } from '../hooks';
 import { Header } from '../components/ui/Header';
 import { TripCard } from '../features/trip-management/TripCard';
 import { Button } from '../components/ui/Button';
-import { Tabs } from '../components/ui/Tabs';
 import { Input } from "../components/ui/Input";
 
 interface TripsListPageProps {
@@ -120,16 +119,26 @@ export const TripsListPage: React.FC<TripsListPageProps> = ({
 
         {/* Toolbar & Filter Tabs */}
         <div className="trips-toolbar-row" style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-          <Tabs
-            tabs={[
-              { id: 'all', label: `All Journeys (${trips.length})` },
-              { id: 'upcoming', label: 'Upcoming' },
-              { id: 'completed', label: 'Completed' }
-            ]}
-            activeId={filter}
-            onChange={(id) => setFilter(id as any)}
-            className="trips-filter-tabs"
-          />
+          <div className="trips-segmented-control">
+            <button
+              className={`segment-btn ${filter === 'all' ? 'active' : ''}`}
+              onClick={() => setFilter('all')}
+            >
+              All Journeys ({trips.length})
+            </button>
+            <button
+              className={`segment-btn ${filter === 'upcoming' ? 'active' : ''}`}
+              onClick={() => setFilter('upcoming')}
+            >
+              Upcoming
+            </button>
+            <button
+              className={`segment-btn ${filter === 'completed' ? 'active' : ''}`}
+              onClick={() => setFilter('completed')}
+            >
+              Completed
+            </button>
+          </div>
 
           <Button
             variant="secondary"
